@@ -15,7 +15,7 @@
             background-color: #0074D9;
             color: white;
             text-align: center;
-            padding: 1em;
+            padding: 2em;
         }
     </style>
 </head>
