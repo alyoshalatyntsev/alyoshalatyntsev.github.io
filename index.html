@@ -7,38 +7,34 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-image: url('shimashima3.jpg');
+            background-repeat: repeat; 
+            background-size: contain;
+            background-size: 60% auto;
             margin: 0;
             padding: 0;
         }
         header {
-            background-color: #0074D9;
-            color: white;
+            /*  background-color: #0074D9;*/
+            background-color: rgba(255, 255, 255, 0.7); /* White with 0.5 opacity */
+            color: black;
             text-align: left;
             padding-top: 2em;
             padding-bottom: 2em;
             padding-left: 4em;
             padding-right: 4em;
-        }
+        }    
         main {
             margin: 0 5%;
-        }
-        .blue-background {
-            background-image: url('https://raw.githubusercontent.com/alyoshalatyntsev/alyoshalatyntsev.github.io/main/shimashima1.jpg');
-            background-repeat: repeat; /* You can change this to 'no-repeat' or 'repeat-x' or 'repeat-y' as needed */
-            background-size: cover; /* This will cover the entire container with the image */
-            color: white;
-            padding: 2em;
-            margin-left: -5%;
-            margin-right: -5%;
+            margin-bottom: 2em; /* Adjust margin to match the margin-bottom of orange-box */
         }
         .green-column {
             width: calc(100% - 2em);
             display: inline-block;
             margin-right: 2%;
             padding: 1em;
-            background-color: green;
-            color: white;
+            background-color: rgba(255, 200, 200,1);
+            color: black;
             column-count: 2;
             column-gap: 2em;
             margin-top: 0; /* Removed margin-top */
@@ -46,14 +42,15 @@
             overflow: hidden;
         }
         .orange-box {
-            background-color: orange;
-            color: white;
+            background-color: rgba(255, 200, 200,1);
+            color: black;
             padding: 1em;
             margin-top: 0em; /* Add intrabox padding */
+            margin-bottom: 4em; /* Add intrabox padding */
         }
         .purple-box {
-            background-color: purple;
-            color: white;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: black;
             margin-top: 1em; /* Add intrabox padding */
             padding-top: 0.5em;
             padding-bottom: 0.5em;
@@ -93,7 +90,8 @@
             content: "";
             width: 25px; /* Width of the blue rectangle */
             height: 32px; /* Height of the blue rectangle */
-            background-color:  rgba(0, 0, 255, 0.7);
+            background-image: url('fileicon.png'); /* Add background image */
+            background-size: cover; /* Adjust sizing of the background image */
             position: absolute;
             top: 50%;
             left: 6px; /* Adjust the distance from the left side */
@@ -119,7 +117,7 @@
     </header>
     <main>
         
-        <div class="box purple-box" class="blue-background">
+        <div class="box purple-box">
             <p>Email: latyntsev@imada.sdu</p>
             <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p>
         </div>
