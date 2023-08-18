@@ -14,11 +14,31 @@
         header {
             background-color: #0074D9;
             color: white;
-            text-align: center;
+            text-align: left; /* Align title text to the left */
             padding: 2em;
         }
         main {
             margin: 0 1em; /* Add margin to create indents */
+        }
+        .green-column {
+            width: 48%; /* Two columns, each taking up 48% of the width */
+            display: inline-block;
+            margin-right: 2%;
+            color: green;
+        }
+        .orange-box {
+            background-color: orange;
+            color: white;
+            padding: 1em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 0.5em;
+            text-align: center;
         }
     </style>
 </head>
@@ -28,10 +48,38 @@
         <p>Personal Website</p>
     </header>
     <main>
-        <section>
-            <h2>About Me</h2>
-            <p>Contact email: alyoshalatyntsevmaths@gmail.com</p>
-        </section>
+        <div class="green-column">
+            <h2>Research and Interests</h2>
+            <p>Text for the first column goes here.</p>
+        </div>
+        <div class="green-column">
+            <h2>Research and Interests</h2>
+            <p>Text for the second column goes here.</p>
+        </div>
+        <div class="orange-box">
+            <h2>Notes and Teaching</h2>
+            <table>
+                <tr>
+                    <th>Heading 1</th>
+                    <th>Heading 2</th>
+                    <th>Heading 3</th>
+                    <th>Heading 4</th>
+                    <th>Heading 5</th>
+                    <th>Heading 6</th>
+                    <th>Heading 7</th>
+                </tr>
+                <tr>
+                    <td>Data 1</td>
+                    <td>Data 2</td>
+                    <td>Data 3</td>
+                    <td>Data 4</td>
+                    <td>Data 5</td>
+                    <td>Data 6</td>
+                    <td>Data 7</td>
+                </tr>
+                <!-- Add more rows as needed -->
+            </table>
+        </div>
     </main>
 </body>
 </html>
