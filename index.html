@@ -7,10 +7,10 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-image: url('shimashima2.jpg');
+            background-image: url('shimashima6.jpg');
             background-repeat: repeat; 
-            background-size: cover;
-            background-size: 600px auto;
+            background-size: 600px;
+            background-color: white;
             margin: 0;
             padding: 0;
         }
@@ -216,14 +216,14 @@
         </div>
     </main>
     <script>
-        function loadDynamicBackground() {
+        /*function loadDynamicBackground() {
             const currentDate = new Date();
             const currentWeek = Math.ceil(currentDate.getDate() / 7); // Calculate the week within the current month
             const backgroundImageNumber = (currentWeek % 6) + 1; // Calculate image number from 1 to 6
             document.body.style.backgroundImage = `url('shimashima${backgroundImageNumber}.jpg')`;
         }
 
-        window.onload = loadDynamicBackground; // Call the function when the page loads
+        window.onload = loadDynamicBackground; // Call the function when the page loads*/
 
         function copyToClipboard(text) {
             const tempInput = document.createElement('input');
