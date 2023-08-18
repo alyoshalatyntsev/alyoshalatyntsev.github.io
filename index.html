@@ -23,8 +23,11 @@
         main {
             margin: 0 5%;
         }
+
         .blue-background {
-            background-color: #0074D9;
+            background-image: url('shimashima1.jpg'); /* Replace with your image path */
+            background-repeat: repeat; /* You can change this to 'no-repeat' or 'repeat-x' or 'repeat-y' as needed */
+            background-size: cover; /* This will cover the entire container with the image */
             color: white;
             padding: 2em;
             margin-left: -5%;
@@ -81,7 +84,8 @@
         .red-rectangle {
             width: 120px;
             height: 60px; 
-            background-color: red;
+            background-color:  rgba(255, 0, 0, 0.0);
+            border: 2px solid rgba(255, 0, 0, 0.2); /* Add a 2px black border */
             display: inline-block;
             margin-bottom: 00px;
             position: relative;
@@ -90,7 +94,7 @@
             content: "";
             width: 25px; /* Width of the blue rectangle */
             height: 32px; /* Height of the blue rectangle */
-            background-color: blue;
+            background-color:  rgba(0, 0, 255, 0.7);
             position: absolute;
             top: 50%;
             left: 6px; /* Adjust the distance from the left side */
@@ -115,6 +119,12 @@
         <h1>Alyosha Latyntsev</h1>
     </header>
     <main>
+        
+        <div class="box purple-box">
+            <p>Email: latyntsev@imada.sdu</p>
+            <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p>
+        </div>
+
         <div class="box purple-box">
             <h2>Research and Interests</h2>
         </div>
@@ -127,6 +137,7 @@
                 Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam.
             </p>
         </div>
+
         <div class="box purple-box">
             <h2>Notes and Teaching</h2>
         </div>
@@ -171,6 +182,12 @@
                         <a href="Berio-Folksongs.pdf" class="pdf-link">
                             <div class="red-rectangle">  
                                 <div class="rectangle-text"> Introduction to W algebras  </div></div>
+                        </a>
+                        <a href="Berio-Folksongs.pdf" class="pdf-link">
+                            <div class="red-rectangle">  
+                                <div class="rectangle-text"> Introduction to D modules </div></div>
+                        </a>
+                        <a href="Berio-Folksongs.pdf" class="pdf-link">
                         </a>
                         <a href="Berio-Folksongs.pdf" class="pdf-link">
                             <div class="red-rectangle">  
