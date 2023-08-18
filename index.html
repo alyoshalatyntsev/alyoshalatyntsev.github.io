@@ -28,6 +28,31 @@
             margin: 0 5%;
             margin-bottom: 2em; /* Adjust margin to match the margin-bottom of orange-box */
         }
+        .clipboard-icon::after {
+            content: "";
+            display: inline-block;
+            width: 16pt;
+            height: 16pt;
+            background-image: url('clipboard.png'); /* Make sure the path is correct */
+            background-size: contain;
+            margin-left: 5px; /* Adjust spacing between icon and text */
+            vertical-align: middle; /* Vertically align the icon */
+        }
+        .clipboard-icon-container {
+            display: flex;
+            align-items: center;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000; /* Ensure the popup is above other elements */
+        }
         .green-column {
             width: calc(100% - 2em);
             display: inline-block;
@@ -109,6 +134,9 @@
             padding: 0.5em;
             text-align: center;
         }
+        .inline-div {
+            display: inline; /* or inline-block */
+        }
     </style>
 </head>
 <body>
@@ -118,7 +146,9 @@
     <main>
         
         <div class="box purple-box">
-            <p>Email: latyntsev@imada.sdu</p>
+            <div class="clipboard-icon-container">
+                <p>Email: latyntsev@imada.sdu</p><div class="clipboard-icon inline-div" onclick="copyToClipboard('latyntsev@imada.sdu')"></div>
+            </div>
             <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p>
         </div>
 
@@ -204,5 +234,24 @@
             </table>
         </div>
     </main>
+    <script>
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            const popup = document.createElement('div');
+            popup.textContent = 'Copied to Clipboard';
+            popup.className = 'popup';
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                document.body.removeChild(popup);
+            }, 300); // Remove the popup after 2 seconds
+        }
+    </script>
 </body>
 </html>
