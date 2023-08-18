@@ -14,22 +14,52 @@
         header {
             background-color: #0074D9;
             color: white;
-            text-align: left; /* Align title text to the left */
-            padding: 2em;
+            text-align: left;
+            padding-top: 2em;
+            padding-bottom: 2em;
+            padding-left: 4em;
+            padding-right: 4em;
         }
         main {
-            margin: 0 1em; /* Add margin to create indents */
+            margin: 0 5%;
+        }
+        .blue-background {
+            background-color: #0074D9;
+            color: white;
+            padding: 2em;
+            margin-left: -5%;
+            margin-right: -5%;
         }
         .green-column {
-            width: 48%; /* Two columns, each taking up 48% of the width */
+            width: calc(100% - 2em);
             display: inline-block;
             margin-right: 2%;
-            color: green;
+            padding: 1em;
+            background-color: green;
+            color: white;
+            column-count: 2;
+            column-gap: 2em;
+            margin-top: 0; /* Removed margin-top */
+            margin-bottom: 0; /* Removed margin-bottom */
+            overflow: hidden;
         }
         .orange-box {
             background-color: orange;
             color: white;
             padding: 1em;
+            margin-top: 0em; /* Add intrabox padding */
+        }
+        .purple-box {
+            background-color: purple;
+            color: white;
+            margin-top: 1em; /* Add intrabox padding */
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+            padding-left: 1em;
+            padding-right: 1em;
+        }
+        .box {
+            margin-bottom: 0; /* Removed vertical padding */
         }
         table {
             width: 100%;
@@ -48,34 +78,58 @@
         <p>Personal Website</p>
     </header>
     <main>
-        <div class="green-column">
+        <div class="box purple-box">
             <h2>Research and Interests</h2>
-            <p>Text for the first column goes here.</p>
         </div>
-        <div class="green-column">
-            <h2>Research and Interests</h2>
-            <p>Text for the second column goes here.</p>
+        <div class="box green-column">
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nunc eget sollicitudin auctor, dolor odio volutpat purus, sit amet vehicula ex dui sit amet enim.
+                Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam.
+                
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nunc eget sollicitudin auctor, dolor odio volutpat purus, sit amet vehicula ex dui sit amet enim.
+                Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam.
+            </p>
         </div>
-        <div class="orange-box">
+        <div class="box purple-box">
             <h2>Notes and Teaching</h2>
+        </div>
+        <div class="box orange-box">
             <table>
                 <tr>
-                    <th>Heading 1</th>
-                    <th>Heading 2</th>
-                    <th>Heading 3</th>
-                    <th>Heading 4</th>
-                    <th>Heading 5</th>
-                    <th>Heading 6</th>
-                    <th>Heading 7</th>
+                    <th></th>
+                    <th>Pamphlets (&lt;2pp)</th>
+                    <th>Monologues (&lt;15pp)</th>
+                    <th>Texts</th>
                 </tr>
-                <tr>
-                    <td>Data 1</td>
+                <tr style="background-color: rgba(0, 0, 0, 0.2);">
+                    <th >Complete</th>
+                    <td>Data 1 <a href="Berio-Folksongs.pdf">link to pdf</a>  </td>
                     <td>Data 2</td>
                     <td>Data 3</td>
+                </tr>
+                <tr style="background-color: rgba(0, 0, 0, 0.4);">
+                    <th>90%</th>
                     <td>Data 4</td>
                     <td>Data 5</td>
                     <td>Data 6</td>
+                </tr>
+                <tr style="background-color: rgba(0, 0, 0, 0.2);">
+                    <th>75%</th>
                     <td>Data 7</td>
+                    <td>Data 8</td>
+                    <td>Data 9</td>
+                </tr>
+                <tr style="background-color: rgba(0, 0, 0, 0.4);">
+                    <th>50%</th>
+                    <td>Data 10</td>
+                    <td>Data 11</td>
+                    <td>Data 12</td>
+                </tr>
+                <tr style="background-color: rgba(0, 0, 0, 0.2);">
+                    <th>25%</th>
+                    <td>Data 13</td>
+                    <td>Data 14</td>
+                    <td>Data 15</td>
                 </tr>
                 <!-- Add more rows as needed -->
             </table>
