@@ -200,43 +200,42 @@
 
                  <b><a href="https://arxiv.org/abs/2110.14356">Cohomological Hall algebras and vertex algebras</a></b> <br>
                 
-                  In , the cohomological Hall algebra construction is compatible with Joyce's vertex algebra!
+                  The moduli stack of coherent sheaves on a curve/representations of a quiver have two structures on their homology: an algebra, and a vertex coalgebra. This paper shows they are compatible. 
                     
 
                 <br> <br> 
 
                 <a href="https://arxiv.org/abs/2207.01652"><b>Localization theorems for algebraic stacks</b>
-                </a> (with D. Aranha, A. Khan, H. Park, and C. Ravi)
+                </a> 
                 <br> 
-                Proves 
+                Gives a characterisation of when equivariant localisation may be applied to Artin stacks. Joint with D. Aranha, A. Khan, H. Park, and C. Ravi.
                 
                 <p class="gray-text"> <b>Localised Euler classes for Artin stacks</b> <br>
-                    Gets torus localisation formulas in new situations (Artin stacky enumerative geometry situations, e.g. CoHAs) and for arbitrary sheaves (e.g. Borel-Moore, vanishing cycles, Joyce sheaves). Plugs a hole that existed in the literature.  
+                    Develops the theory of Euler classes for singular vector bundles on Artin stacks, valued in arbitrary sheaves (e.g. Borel-Moore, vanishing cycle, Joyce sheaves). Gets new a torus localisation formulas in situations necessary 
                     </p>
                     
 
                 <br> <a href="https://arxiv.org/abs/2312.07274"><b>Factorisation quantum groups</b></a><br>
 
-
-                Developing the basic theory of vertex analogues of quantum groups and their representations in .
+                Shows how to get spectral R-matrices (of affine quantum groups, etc.) purely geometrically from braided categories "over the Ran space". The paper builds up the categorical machinery needed to do this, and recovers previous notions of "q-vertex algebra".
 
                 <p class="gray-text"><br> 
-                    <br><br> <b>Localised coproducts, etc</b> <br>
+                    <br><br> <b>Cohomological Hall algebras are vertex quantum groups (coming ~Aug 2024)</b> <br>
                     
-                    Affine vertex algebras, W<sub>1+&infin;</sub> and doubling from CoHAs (with S. Jindal and <a href="https://sarkbr.github.io">S. Kaubrys </a>).
+                    Affine vertex algebras, W<sub>1+&infin;</sub> and doubling from CoHAs Joint with S. Jindal and <a href="https://sarkbr.github.io">S. Kaubrys </a>.
 
-                    <br> <br> <b>Orthosymplectic </b> <br>
+                    <br> <br> <b>Orthosymplectic (coming ~Aug 2024) </b> <br>
 
-                    Orthosymplectic instantons (with <a href="https://math.columbia.edu/~samdehority/">S. de Hority</a>).
+                    . Joint with <a href="https://math.columbia.edu/~samdehority/">S. de Hority</a>.
 
                    <br> <br> <b>W vertex algebras, Higgs branches and vertex quantisation of nilpotent orbits</b> <br>
                 
-                    W algebras and free field realisations from the Higgs branch (with E. Bouaziz).
+                    There is a classical theorem that representations of the (finite) W-algebra classify quantisations of nilpotent orbits. We prove a "loop space" analogue of this result, and connect this to Beem et al's vertex algebras attached to Higgs branches. Joint with E. Bouaziz.
     
 
                     <br> <br> <b>Chiral centres</b> <br>
                 
-                     (with W. Niu).
+                     Joint with W. Niu.
 
 
                     <br><br><br><i>Other mathematical interests</i> <br>
@@ -278,12 +277,14 @@
             <script>
                 // Array of data for table rows
                 var rowData = [
-                    { topic: "DT4 theory", link: "", data: "Data 4" },
-                    { topic: "Stable envelopes", link: "Berio-Folksongs.pdf", data: "" },
-                    { topic: "Deformation quantisation", link: "Berio-Folksongs.pdf", data: "" },
-                    { topic: "TQFTs", link: "Berio-Folksongs.pdf", data: "" },
-                    { topic: "W algebras", link: "Berio-Folksongs.pdf", data: "" },
-                    { topic: "A modern approach to qD-modules and difference modules", link: "Berio-Folksongs.pdf", data: "" }
+                    { topic: "What structures does W_1+\infty have?", link: "", data: "Data 4" },
+                    { topic: "(q)KZ equations and vertex quantum groups.", link: "", data: "Data 4" },
+                    { topic: "Stable envelopes.", link: "Berio-Folksongs.pdf", data: "" },
+                    { topic: "Shuffle algebra, operads and fixed loci.", link: "Berio-Folksongs.pdf", data: "" },
+                    { topic: "Deformation quantisation.", link: "Berio-Folksongs.pdf", data: "" },
+                    { topic: "TQFTs.", link: "Berio-Folksongs.pdf", data: "" },
+                    { topic: "W algebras.", link: "Berio-Folksongs.pdf", data: "" },
+                    { topic: "A modern approach to q-difference modules.", link: "Berio-Folksongs.pdf", data: "Defines the de Rham spaces attached to q-differece modules, their elliptic analogues, and generalisations. Develops the associated theory of vertex algebras." }
                     // Add more rows as needed
                 ];
         
@@ -309,7 +310,7 @@
                         // Create and populate second column
                         var topicCell = document.createElement("td");
                         if (item.topic !== "") {
-                            topicCell.innerHTML = "<b>" + item.topic + "</b><br>";
+                            topicCell.innerHTML = "<b>" + item.topic + "</b><td>&nbsp;&nbsp;</td>";
                         }
                         topicCell.innerHTML += item.data; // Append data to the second column
                         row.appendChild(topicCell);
@@ -341,7 +342,7 @@
 <!--     SHORTER NOTES      -->
 <!--*********************** -->
 <br>
-Short notes and talks. 
+Shorter (<15p.) notes and talks. 
 <br> <br>
 <table id="myTable2">
     <!-- Table body will be generated dynamically -->
@@ -351,10 +352,13 @@ Short notes and talks.
 <script>
     // Array of data for table rows
     var rowData2 = [
+        { topic: "What is a vertex algebra?", link: "", data: "Data 1" },
         { topic: "What should a cohomological Hall algebra be?", link: "", data: "Data 1" },
+        { topic: "DT4 theory.", link: "", data: "Data 4" },
         { topic: "Knot invariants from TQFTs", link: "aa", data: "Data 1" },
-        { topic: "The algebraic de Rham theorem", link: "", data: "Data 1" },
-        { topic: "DT4a theory", link: "", data: "Data 4" },
+        { topic: "The algebraic de Rham theorem", link: "", data: "Short note proving the algebraic de Rham theorem." },
+        { topic: "The Gaussian free field.", link: "", data: "Data 1" },
+        { topic: "D-modules.", link: "Berio-Folksongs.pdf", data: "Masters' Thesis (under Ian Grojnowski). Six functors and Beilinson-Bernstein; use with caution - contains some errors." }
         // Add more rows as needed
     ];
 
@@ -379,7 +383,7 @@ Short notes and talks.
                         // Create and populate second column
                         var topicCell = document.createElement("td");
                         if (item.topic !== "") {
-                            topicCell.innerHTML = "<b>" + item.topic + "</b><br>";
+                            topicCell.innerHTML = "<b>" + item.topic + "</b><td>&nbsp;&nbsp;</td>";
                         }
                         topicCell.innerHTML += item.data; // Append data to the second column
                         row.appendChild(topicCell);
