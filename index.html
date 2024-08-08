@@ -202,11 +202,14 @@
 
 
         
-<!-- PUBLICATIONS -->
+<!-- Notes -->
 <div class="box purple-box">
     <h2>Notes</h2>
 </div>
 <div class="box orange-box">
+
+    <i>Expository notes and proto-projects.</i> <br><br>
+
     <div id="table-container">
         <table id="myTable">
             <thead>
@@ -259,7 +262,7 @@
             rows.forEach(function(row, index) {
                 if (index > 0) { // Skip header row
                     var tr = document.createElement('tr');
-                    tr.innerHTML = `<td><a href="${row[0]}">pdf</a> <span style="font-size: smaller;">(${row[4]} pp.)</span></td><td><b>${row[1]}</b></td><td>${row[5]}</td>`;
+                    tr.innerHTML = `<td><a href="pdfs/Long/${row[1]}.pdf">pdf</a> <span style="font-size: smaller;">(${row[4]} pp.)</span></td><td><b>${row[1]}</b></td><td>${row[5]}</td>`;
 
                     // Alternate row colors
                     if (index % 2 === 0) {
