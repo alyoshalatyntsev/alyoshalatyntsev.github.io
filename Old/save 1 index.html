@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alyosha Latyntsev - Personal Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('shimashima6.jpg');
+            background-repeat: repeat; 
+            background-size: 600px;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            /*  background-color: #0074D9;*/
+            background-color: rgba(255, 255, 255, 0.7); /* White with 0.5 opacity */
+            color: black;
+            text-align: left;
+            padding-top: 2em;
+            padding-bottom: 2em;
+            padding-left: 4em;
+            padding-right: 4em;
+        }    
+        main {
+            margin: 0 5%;
+            margin-bottom: 2em; /* Adjust margin to match the margin-bottom of orange-box */
+        }
+        .clipboard-icon::after {
+            content: "";
+            display: inline-block;
+            width: 16pt;
+            height: 16pt;
+            background-image: url('clipboard.png'); /* Make sure the path is correct */
+            background-size: contain;
+            margin-left: 5px; /* Adjust spacing between icon and text */
+            vertical-align: middle; /* Vertically align the icon */
+        }
+        .clipboard-icon-container {
+            display: flex;
+            align-items: center;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000; /* Ensure the popup is above other elements */
+        }
+        .green-column {
+            width: calc(100% - 2em);
+            display: inline-block;
+            margin-right: 2%;
+            padding: 1em;
+            background-color: rgba(255, 200, 200,1);
+            color: black;
+            column-count: 2;
+            column-gap: 2em;
+            margin-top: 0; /* Removed margin-top */
+            margin-bottom: 0; /* Removed margin-bottom */
+            overflow: hidden;
+        }
+        .orange-box {
+            background-color: rgba(255, 200, 200,1);
+            color: black;
+            padding: 1em;
+            margin-top: 0em; /* Add intrabox padding */
+            margin-bottom: 4em; /* Add intrabox padding */
+        }
+        .purple-box {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: black;
+            margin-top: 1em; /* Add intrabox padding */
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+            padding-left: 1em;
+            padding-right: 1em;
+        }
+        .text-flow-container {
+            column-width: 100%;
+            row-gap: 10px; /* Add row gap between elements */
+            column-gap: 10px;
+            margin: 10px;
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .rectangle-text {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Change justify-content value */
+            width: calc(100% - 37px);
+            height: 100%;
+            font-size: 12px;
+            text-align: left;
+            color: black;
+            margin-left: auto; /* Align to the right side */
+        }        
+        .red-rectangle {
+            width: 120px;
+            height: 40px; 
+            background-color:  rgba(255, 0, 0, 0.0);
+            border: 2px solid rgba(255, 0, 0, 0.2); /* Add a 2px black border */
+            display: inline-block;
+            margin-bottom: 00px;
+            position: relative;
+        }
+        .red-rectangle::before {
+            content: "";
+            width: 25px; /* Width of the blue rectangle */
+            height: 32px; /* Height of the blue rectangle */
+            background-image: url('fileicon.png'); /* Add background image */
+            background-size: cover; /* Adjust sizing of the background image */
+            position: absolute;
+            top: 50%;
+            left: 6px; /* Adjust the distance from the left side */
+            transform: translateY(-50%);
+        }
+        .box {
+            margin-bottom: 0; /* Removed vertical padding */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid rgba(0, 0, 0, 0.2 );
+            padding: 0.5em;
+            text-align: center;
+        }
+        .inline-div {
+            display: inline; /* or inline-block */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Alyosha Latyntsev</h1>
+    </header>
+    <main>
+        
+        <div class="box purple-box">
+            <div class="clipboard-icon-container">
+                <p>Email: latyntsev@imada.sdu</p><div class="clipboard-icon inline-div" onclick="copyToClipboard('latyntsev@imada.sdu')"></div>
+            </div>
+            <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p>
+        </div>
+
+        <div class="box purple-box">
+            <h2>Research and Interests</h2>
+        </div>
+        <div class="box green-column">
+            <p>
+                Mathematician working in geometric representation theory and (...). I am a postdoc in Vivek Shende's group at the Centre for Quantum Mathematics, SDU.     <br><br>
+
+                <a href="https://www.example.com" target="_blank">Long version</a> 
+                
+                <br> <br> <b>Vertex algebras</b> <br>
+                
+
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nunc eget sollicitudin auctor, dolor odio volutpat purus, sit amet vehicula ex dui sit amet enim.
+                Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam.
+
+                <br> <br> <i>Localisation by algebraic group actions</i> <br>
+
+
+
+                <br> <br> <b>W algebras and quantisation</b> <br>
+                
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nunc eget sollicitudin auctor, dolor odio volutpat purus, sit amet vehicula ex dui sit amet enim.
+                Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam.
+
+
+                <br><br> <b>(more sections)</b> <br>
+                
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nunc eget sollicitudin auctor, dolor odio volutpat purus, sit amet vehicula ex dui sit amet enim.
+                Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam.
+                
+                <br><br><br><b>Other interests</b> <br>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nunc eget sollicitudin auctor, dolor odio volutpat purus, sit amet vehicula ex dui sit amet enim.
+                Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam.
+                <br>
+                Probability, Gaussian Free Field.
+            </p>
+        </div>
+
+
+
+        <div class="box purple-box">
+            <h2>Notes and Teaching</h2>
+        </div>
+        <div class="box orange-box">
+            <p> Below are some notes and talks written since 2017 and ordered by level of completion. Especially the less complete ones should be used with caution. Please email me with any comments, for instance if you find an error or would like me to prioritise completing a particular document.   </p>
+            <table>        
+                <tr style="background-color: rgba(255, 255, 255, 0.2);">
+                    <th style="width: 20px;">Complete</th>
+                    <td>
+                        Data 1
+                    </td>
+                </tr>
+                <tr style="background-color: rgba(255, 255, 255, 0.4);">
+                    <th>90%</th>
+                    <td>Data 4</td>
+                </tr>
+                <tr style="background-color: rgba(255, 255, 255, 0.2);">
+                    <th>75%</th>
+                    <td>Data 7</td>
+                </tr>
+                <tr style="background-color: rgba(255, 255, 255, 0.4);">
+                    <th>50%</th>
+                    <td>Data 10</td>
+                </tr>
+                <tr style="background-color: rgba(255, 255, 255, 0.2);">
+                    <th>25%</th>
+                <td>
+                    <div class="text-flow-container">
+                        <a href="Berio-Folksongs.pdf" class="pdf-link">
+                            <div class="red-rectangle">
+                                <div class="rectangle-text"> Introduction to W algebras  </div>
+                            </div>
+                        </a>
+                        <a href="Berio-Folksongs.pdf" class="pdf-link">
+                            <div class="red-rectangle">
+                                <div class="rectangle-text"> Introduction to D modules </div>
+                            </div>
+                        </a>
+                        <a href="Berio-Folksongs.pdf" class="pdf-link">
+                            <div class="red-rectangle">
+                                <div class="rectangle-text"> Introduction to D modules </div>
+                            </div>
+                        </a>
+                        <a href="Berio-Folksongs.pdf" class="pdf-link"></a>
+                    </div>
+                </td>
+            </tr>
+                <!-- Add more rows as needed -->
+            </table>
+        </div>
+
+
+
+        <div class="box purple-box">
+            <h2>Other</h2>
+        </div>
+        <div class="box green-column">
+            Email me<div class="clipboard-icon inline-div" onclick="copyToClipboard('latyntsev@imada.sdu')"></div> if you are interested in joining any of the following. 
+            <p>
+               Since Spring 2023 I have been running a reading seminar/research discussion session on factorisation algebras. <br><br>
+
+               From Autumn 2023 I will be giving a lecture course on (...) in SDU. <br><br>
+            </p>
+        </div>
+
+
+
+    </main>
+    <script>
+        /*function loadDynamicBackground() {
+            const currentDate = new Date();
+            const currentWeek = Math.ceil(currentDate.getDate() / 7); // Calculate the week within the current month
+            const backgroundImageNumber = (currentWeek % 6) + 1; // Calculate image number from 1 to 6
+            document.body.style.backgroundImage = `url('shimashima${backgroundImageNumber}.jpg')`;
+        }
+
+        window.onload = loadDynamicBackground; // Call the function when the page loads*/
+
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            const popup = document.createElement('div');
+            popup.textContent = 'Copied to Clipboard';
+            popup.className = 'popup';
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                document.body.removeChild(popup);
+            }, 300); // Remove the popup after 2 seconds
+        }
+    </script>
+</body>
+</html>

@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-image:  url('shimashima6_5.jpg');
+            background-image: url('shimashima6_5.jpg');
             background-repeat: repeat; 
             background-size: 600px;
             background-color: white;
@@ -15,8 +15,7 @@
             padding: 0;
         }
         header {
-            /*  background-color: #0074D9;*/
-            background-color: rgba(255, 255, 255, 0.7); /* White with 0.5 opacity */
+            background-color: rgba(255, 255, 255, 0.7);
             color: black;
             text-align: left;
             padding-top: 2em;
@@ -26,17 +25,17 @@
         }    
         main {
             margin: 0 5%;
-            margin-bottom: 2em; /* Adjust margin to match the margin-bottom of orange-box */
+            margin-bottom: 2em;
         }
         .clipboard-icon::after {
             content: "";
             display: inline-block;
             width: 16pt;
             height: 16pt;
-            background-image: url('clipboard.png'); /* Make sure the path is correct */
+            background-image: url('clipboard.png');
             background-size: contain;
-            margin-left: 5px; /* Adjust spacing between icon and text */
-            vertical-align: middle; /* Vertically align the icon */
+            margin-left: 5px;
+            vertical-align: middle;
         }
         .clipboard-icon-container {
             display: flex;
@@ -51,7 +50,7 @@
             color: white;
             padding: 10px;
             border-radius: 5px;
-            z-index: 1000; /* Ensure the popup is above other elements */
+            z-index: 1000;
         }
         .green-column {
             width: calc(100% - 2em);
@@ -64,21 +63,21 @@
             color: black;
             column-count: 2;
             column-gap: 2em;
-            margin-top: 0; /* Removed margin-top */
-            margin-bottom: 0; /* Removed margin-bottom */
+            margin-top: 0;
+            margin-bottom: 0;
             overflow: hidden;
         }
         .orange-box {
             background-color: rgba(255, 200, 200,1);
             color: black;
             padding: 1em;
-            margin-top: 0em; /* Add intrabox padding */
-            margin-bottom: 4em; /* Add intrabox padding */
+            margin-top: 0em;
+            margin-bottom: 4em;
         }
         .purple-box {
             background-color: rgba(255, 255, 255, 0.9);
             color: black;
-            margin-top: 1em; /* Add intrabox padding */
+            margin-top: 1em;
             padding-top: 0.5em;
             padding-bottom: 0.5em;
             padding-left: 1em;
@@ -86,7 +85,7 @@
         }
         .text-flow-container {
             column-width: 100%;
-            row-gap: 10px; /* Add row gap between elements */
+            row-gap: 10px;
             column-gap: 10px;
             margin: 10px;
             display: flex;
@@ -96,389 +95,147 @@
         .rectangle-text {
             display: flex;
             align-items: center;
-            justify-content: flex-end; /* Change justify-content value */
+            justify-content: flex-end;
             width: calc(100% - 37px);
             height: 100%;
             font-size: 12px;
             text-align: left;
             color: black;
-            margin-left: auto; /* Align to the right side */
+            margin-left: auto;
         }        
         .red-rectangle {
             width: 120px;
             height: 40px; 
-            background-color:  rgba(255, 0, 0, 0.0);
-            border: 2px solid rgba(255, 0, 0, 0.2); /* Add a 2px black border */
+            background-color: rgba(255, 0, 0, 0.0);
+            border: 2px solid rgba(255, 0, 0, 0.2);
             display: inline-block;
             margin-bottom: 00px;
             position: relative;
         }
         .red-rectangle::before {
             content: "";
-            width: 25px; /* Width of the blue rectangle */
-            height: 32px; /* Height of the blue rectangle */
-            background-image: url('fileicon.png'); /* Add background image */
-            background-size: cover; /* Adjust sizing of the background image */
+            width: 25px;
+            height: 32px;
+            background-image: url('fileicon.png');
+            background-size: cover;
             position: absolute;
             top: 50%;
-            left: 6px; /* Adjust the distance from the left side */
+            left: 6px;
             transform: translateY(-50%);
         }
         .box {
-            margin-bottom: 0; /* Removed vertical padding */
+            margin-bottom: 0;
         }
         table {
             width: 100%;
             border-collapse: collapse;
         }
         th, td {
-            border: 1px solid rgba(0, 0, 0, 0.2 );
+            border: 1px solid rgba(0, 0, 0, 0.2);
             padding: 0.5em;
             text-align: center;
         }
         .inline-div {
-            display: inline; /* or inline-block */
+            display: inline;
+        }
+        a {
+            text-decoration: none;
+            color: rgb(9, 9, 133);
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .gray-text {
+            color: #777777;
         }
     </style>
-     <style>
-        /* Style the hyperlink */
-        a {
-          text-decoration: none; /* Remove underline */
-          color: rgb(9, 9, 133); /* Set your desired color */
-        }
-    
-        /* Style the hyperlink on hover */
-        a:hover {
-          text-decoration: underline; /* Add underline on hover */
-        }
-      </style>
-      <style>
-        /* Style to make text gray */
-        .gray-text {
-          color: #777777; /* Hex code for a medium gray color */
-        }
-      </style>
 </head>
 <body>
     <header>
         <h1>Alyosha Latyntsev</h1>
     </header>
     <main>
-        
         <div class="box purple-box">
-            
             <p>
-                I am a mathematician interested in geometric representation theory, a postdoc in <a href = "https://sites.google.com/view/vivek-shende/">Vivek Shende's</a> group at the <a href="https://www.sdu.dk/en/qm">Centre for Quantum Mathematics</a>, Syddansk Universitet. Before that I was a PhD student at  <a href="https://www.maths.ox.ac.uk/">Oxford</a> under <a href="https://people.maths.ox.ac.uk/joyce/">Domimic Joyce</a> and an undergrad at <a href="https://www.damtp.cam.ac.uk/">Cambridge</a>.
+                I am a mathematician interested in geometric representation theory, a postdoc in <a href="https://sites.google.com/view/vivek-shende/">Vivek Shende's</a> group at the <a href="https://www.sdu.dk/en/qm">Centre for Quantum Mathematics</a>, Syddansk Universitet. Before that I was a PhD student at  <a href="https://www.maths.ox.ac.uk/">Oxford</a> under <a href="https://people.maths.ox.ac.uk/joyce/">Domimic Joyce</a> and an undergrad at <a href="https://www.damtp.cam.ac.uk/">Cambridge</a>.
                 <div class="clipboard-icon-container">
                     <p>Email: alyoshalatyntsev@gmail.com</p><div class="clipboard-icon inline-div" onclick="copyToClipboard('latyntsev@imada.sdu')"></div>
                 </div>
-
-                
-            <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p>
+                <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p>
+            </p>
         </div>
-
-
-
-
-
-
-
-
-
-
-
-        
-
-<!--*********************** -->
-<!--      RESEARCH          -->
-<!--*********************** -->
+        <!-- RESEARCH -->
         <div class="box purple-box">
             <h2>Research</h2>
         </div>
         <div class="box green-column">
-            
-
-                 <b><a href="https://arxiv.org/abs/2110.14356">Cohomological Hall algebras and vertex algebras</a></b> <br>
-                
-                  The moduli stack of coherent sheaves on a curve/representations of a quiver have two structures on their homology: an algebra, and a vertex coalgebra. This paper shows they are compatible. 
-                    
-
-                <br> <br> 
-
-                <a href="https://arxiv.org/abs/2207.01652"><b>Localization theorems for algebraic stacks</b>
-                </a> 
-                <br> 
-                Gives a characterisation of when equivariant localisation may be applied to Artin stacks. Joint with D. Aranha, A. Khan, H. Park, and C. Ravi.
-                
-                <p class="gray-text"> <b>Localised Euler classes for Artin stacks</b> <br>
-                    Develops the theory of Euler classes for singular vector bundles on Artin stacks, valued in arbitrary sheaves (e.g. Borel-Moore, vanishing cycle, Joyce sheaves). Gets new a torus localisation formulas in situations necessary 
-                    </p>
-                    
-
-                <br> <a href="https://arxiv.org/abs/2312.07274"><b>Factorisation quantum groups</b></a><br>
-
-                Shows how to get spectral R-matrices (of affine quantum groups, etc.) purely geometrically from braided categories "over the Ran space". The paper builds up the categorical machinery needed to do this, and recovers previous notions of "q-vertex algebra".
-
-                <p class="gray-text"><br> 
-                    <br><br> <b>Cohomological Hall algebras are vertex quantum groups (coming ~Aug 2024)</b> <br>
-                    
-                    Affine vertex algebras, W<sub>1+&infin;</sub> and doubling from CoHAs Joint with S. Jindal and <a href="https://sarkbr.github.io">S. Kaubrys </a>.
-
-                    <br> <br> <b>Orthosymplectic (coming ~Aug 2024) </b> <br>
-
-                    . Joint with <a href="https://math.columbia.edu/~samdehority/">S. de Hority</a>.
-
-                   <br> <br> <b>W vertex algebras, Higgs branches and vertex quantisation of nilpotent orbits</b> <br>
-                
-                    There is a classical theorem that representations of the (finite) W-algebra classify quantisations of nilpotent orbits. We prove a "loop space" analogue of this result, and connect this to Beem et al's vertex algebras attached to Higgs branches. Joint with E. Bouaziz.
-    
-
-                    <br> <br> <b>Chiral centres</b> <br>
-                
-                     Joint with W. Niu.
-
-
-                    <br><br><br><i>Other mathematical interests</i> <br>
-                    I have a casual interest in understanding probability, e.g. the Gaussian free field and Louisville theory. 
-                    <br>
-                    
-                    <br><br>
-    </p>
-
+            <b><a href="https://arxiv.org/abs/2110.14356">Cohomological Hall algebras and vertex algebras</a></b> <br>
+            The moduli stack of coherent sheaves on a curve/representations of a quiver have two structures on their homology: an algebra, and a vertex coalgebra. This paper shows they are compatible.
+            <br> <br> 
+            <a href="https://arxiv.org/abs/2207.01652"><b>Localization theorems for algebraic stacks</b></a> <br>
+            Gives a characterisation of when equivariant localisation may be applied to Artin stacks. Joint with D. Aranha, A. Khan, H. Park, and C. Ravi.
+            <p class="gray-text"> <b>Localised Euler classes for Artin stacks</b> <br>
+                Develops the theory of Euler classes for singular vector bundles on Artin stacks, valued in arbitrary sheaves (e.g. Borel-Moore, vanishing cycle, Joyce sheaves). Gets new a torus localisation formulas in situations necessary
+            </p>
+            <br> <a href="https://arxiv.org/abs/2312.07274"><b>Factorisation quantum groups</b></a><br>
+            Shows how to get spectral R-matrices (of affine quantum groups, etc.) purely geometrically from braided categories "over the Ran space". The paper builds up the categorical machinery needed to do this, and recovers previous notions of "q-vertex algebra".
+            <p class="gray-text"><br> <br> <b>Cohomological Hall algebras are vertex quantum groups (coming ~Aug 2024)</b> <br>
+                Affine vertex algebras, W<sub>1+&infin;</sub> and doubling from CoHAs Joint with S. Jindal and <a href="https://sarkbr.github.io">S. Kaubrys</a>.
+                <br> <br> <b>Orthosymplectic (coming ~Aug 2024)</b> <br>
+                Joint with <a href="https://math.columbia.edu/~samdehority/">S. de Hority</a>.
+                <br> <br> <b>W vertex algebras, Higgs branches and vertex quantisation of nilpotent orbits</b> <br>
+                There is a classical theorem that representations of the (finite) W-algebra classify quantisations of nilpotent orbits. We prove a "loop space" analogue of this result, and connect this to Beem et al's vertex algebras attached to Higgs branches. Joint with E. Bouaziz.
+                <br> <br> <b>Chiral centres</b> <br>
+                Joint with W. Niu.
+                <br><br><br><i>Other mathematical interests</i> <br>
+                I have a casual interest in understanding probability, e.g. the Gaussian free field and Louisville theory.
             </p>
         </div>
-
-        
-
-
-
-
-
-
-
-
-<!--*********************** -->
-<!--    NOTES AND PAPERS    -->
-<!--*********************** -->
+        <!-- PUBLICATIONS -->
         <div class="box purple-box">
-            <h2>Notes and Papers</h2>
-        </div>
-        <div class="box orange-box">
-            
-            Papers and longer expository notes.  
-                
-                <br> <br>
-            <table id="myTable">
-                <!-- Table body will be generated dynamically -->
-                <tbody id="tableBody">
-                </tbody>
-            </table>
-
-            <script>
-                // Array of data for table rows
-                var rowData = [
-                    { topic: "Factorisation quantum groups", link: "Holomorphic-En-Algebras.pdf", data: "Version may be more current than ArXiV." },
-                    { topic: "What should a cohomological Hall algebra be?", link: "", data: "Physics motivation: why and where we expect CoHAs, why vertex algebras, pointers towards DT4 definition." },
-                    { topic: "What structures does W_1+\infty have?", link: "", data: "Conjectural sketch of how W_1+\infty may be defined in the framework of factorisation quantum groups" },
-                    { topic: "(q)KZ equations and vertex quantum groups.", link: "", data: "Data 4" },
-                    { topic: "Stable envelopes.", link: "Berio-Folksongs.pdf", data: "" },
-                    { topic: "Deformation quantisation.", link: "Berio-Folksongs.pdf", data: "" },
-                    { topic: "W algebras.", link: "Berio-Folksongs.pdf", data: "" },
-                    { topic: "A modern approach to q-difference modules.", link: "Berio-Folksongs.pdf", data: "Defines the de Rham spaces attached to q-differece modules, their elliptic analogues, and generalisations. Develops the associated theory of vertex algebras." },
-                    // Add more rows as needed
-                ];
-        
-                // Function to generate table rows dynamically
-                function generateTableRows() {
-                    var tableBody = document.getElementById("tableBody");
-                    rowData.forEach(function(item, index) {
-                        var row = document.createElement("tr");
-        
-                        // Create and populate first column
-                        var pdfCell = document.createElement("td");
-                        if (item.link !== "") {
-                            var link = document.createElement("a");
-                            link.href = item.link;
-                            link.textContent = "pdf";
-                            pdfCell.appendChild(link);
-                        } else {
-                            pdfCell.textContent = "pdf";
-                        }
-                        row.appendChild(pdfCell);  
-                        pdfCell.style.width = "40px"; // Set width to 10px
-                        
-                        // Create and populate second column
-                        var topicCell = document.createElement("td");
-                        if (item.topic !== "") {
-                            topicCell.innerHTML = "<b>" + item.topic + "</b><td>&nbsp;&nbsp;</td>";
-                        }
-                        topicCell.innerHTML += item.data; // Append data to the second column
-                        row.appendChild(topicCell);
-                        topicCell.style.textAlign = "left"; // Left-align text
-        
-                        // Alternate row colors
-                        if (index % 2 === 0) {
-                            row.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                        } else {
-                            row.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
-                        }
-        
-                        tableBody.appendChild(row);
-                    });
-                }
-        
-                // Call the function to generate table rows
-                generateTableRows();
-            </script>
-
-
-
-
-
-
-
-
-<!--*********************** -->
-<!--     SHORTER NOTES      -->
-<!--*********************** -->
-<br>
-Shorter (<15p.) notes and talks. 
-<br> <br>
-<table id="myTable2">
-    <!-- Table body will be generated dynamically -->
-    <tbody id="tableBody2">
-    </tbody>
-</table>
-<script>
-    // Array of data for table rows
-    var rowData2 = [
-        { topic: "What is a vertex algebra?", link: "", data: "Data 1" },
-        { topic: "TQFTs.", link: "Berio-Folksongs.pdf", data: "." },
-        { topic: "Shuffle algebra, operads and fixed loci.", link: "Berio-Folksongs.pdf", data: "" },
-        { topic: "DT4 theory.", link: "", data: "Data 4" },
-        { topic: "Knot invariants from TQFTs.", link: "", data: "Brief note explaining how Reshetikhin-Turaev invariants are defined from fully extended 3d TQFTs, and the generalisation to higher dimensions." },
-        { topic: "The algebraic de Rham theorem", link: "", data: "Short note proving the algebraic de Rham theorem." },
-        { topic: "The Gaussian free field.", link: "", data: "Data 1" },
-        { topic: "D-modules.", link: "Berio-Folksongs.pdf", data: "Masters' Thesis (under Ian Grojnowski). Six functors and Beilinson-Bernstein; use with caution - contains some errors." }
-        // Add more rows as needed
-    ];
-
-    // Function to generate table rows dynamically
-    function generateTableRows2()  {
-                    var tableBody = document.getElementById("tableBody2");
-                    rowData2.forEach(function(item, index) {
-                        var row = document.createElement("tr");
-        
-                        // Create and populate first column
-                        var pdfCell = document.createElement("td");
-                        if (item.link !== "") {
-                            var link = document.createElement("a");
-                            link.href = item.link;
-                            link.textContent = "pdf";
-                            pdfCell.appendChild(link);
-                        } else {
-                            pdfCell.textContent = "pdf";
-                        }
-                        row.appendChild(pdfCell);  
-                        pdfCell.style.width = "40px"; // Set width to 10px
-                        // Create and populate second column
-                        var topicCell = document.createElement("td");
-                        if (item.topic !== "") {
-                            topicCell.innerHTML = "<b>" + item.topic + "</b><td>&nbsp;&nbsp;</td>";
-                        }
-                        topicCell.innerHTML += item.data; // Append data to the second column
-                        row.appendChild(topicCell);
-                        topicCell.style.textAlign = "left"; // Left-align text
-        
-                        // Alternate row colors
-                        if (index % 2 === 0) {
-                            row.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                        } else {
-                            row.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
-                        }
-        
-                        tableBody.appendChild(row);
-                    });
-                }
-
-    // Call the function to generate table rows
-    generateTableRows2();
-</script>
-        </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--*********************** -->
-<!-- SEMINARS AND TEACHING -->
-<!--*********************** -->
-
-        <div class="box purple-box">
-            <h2>Seminars and Teaching</h2>
+            <h2>Publications</h2>
         </div>
         <div class="box green-column">
-            Email me<div class="clipboard-icon inline-div" onclick="copyToClipboard('alyoshalatyntsev@gmail.com')"></div> if you are interested in joining any of the following. 
-            <p>
-
-                
-               <i><a href="https://odin.sdu.dk/sitecore/index.php?a=searchfagbesk&internkode=mm547&lang=en"> 
-                Ordinary Differential equations.</a></i> SDU course, Autumn 2024.
-               <br><br>
-
-               <i>Topics in Calabi-Yau threefolds.</i> Upcoming seminar, online/SDU, June 2024 -  
-               <br><br>
-
-
-                <br> 
-                <i>Factorisation algebras.</i> Reading group, helped run it spring-winter 2023. <br><br>
-
-                <i>W algebras.</i> PhD course, SDU, spring-winter 2023. <br><br>
-
-            </p>
+            <div id="table-container">
+                <table id="myTable">
+                    <thead>
+                        <tr>
+                            <th>Link</th>
+                            <th>Topic</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-
-
     </main>
+    <!-- Include the SheetJS library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        /*function loadDynamicBackground() {
-            const currentDate = new Date();
-            const currentWeek = Math.ceil(currentDate.getDate() / 7); // Calculate the week within the current month
-            const backgroundImageNumber = (currentWeek % 6) + 1; // Calculate image number from 1 to 6
-            document.body.style.backgroundImage = `url('shimashima${backgroundImageNumber}.jpg')`;
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load the ODS file
+            fetch('D:\Dropbox\alyoshalatyntsev.github.io\pdfs\List of pdfs.ods')
+                .then(response => response.arrayBuffer())
+                .then(data => {
+                    var workbook = XLSX.read(data, { type: 'array' });
+                    var sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-        window.onload = loadDynamicBackground; // Call the function when the page loads*/
-
-        function copyToClipboard(text) {
-            const tempInput = document.createElement('input');
-            tempInput.value = text;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            
-            const popup = document.createElement('div');
-            popup.textContent = 'Copied to Clipboard';
-            popup.className = 'popup';
-            document.body.appendChild(popup);
-            
-            setTimeout(() => {
-                document.body.removeChild(popup);
-            }, 300); // Remove the popup after 2 seconds
-        }
+                    // Populate table with rowData
+                    var tableBody = document.querySelector('#tableBody');
+                    rows.forEach(function(row, index) {
+                        if (index > 0) { // Skip header row
+                            var tr = document.createElement('tr');
+                            tr.innerHTML = `<td><a href="${row[0]}">pdf</a></td><td><b>${row[1]}</b></td><td>${row[4]}</td>`;
+                            tableBody.appendChild(tr);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading or parsing ODS file:', error));
+        });
     </script>
 </body>
 </html>
