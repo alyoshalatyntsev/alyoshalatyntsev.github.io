@@ -198,61 +198,80 @@
 
 
 
-        <!-- PUBLICATIONS -->
-        <div class="box purple-box">
-            <h2>Notes</h2>
-        </div>
-        <div class="box orange-box">
-            <div id="table-container">
-                <table id="myTable">
-                    <thead>
-                        <!-- <tr>
-                            <th>Link</th>
-                            <th>Topic</th>
-                            <th>Date</th>
-                        </tr> -->
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Data will be populated here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        
+<!-- PUBLICATIONS -->
+<div class="box purple-box">
+    <h2>Notes</h2>
+</div>
+<div class="box orange-box">
+    <div id="table-container">
+        <table id="myTable">
+            <thead>
+                <!-- <tr>
+                    <th>Link</th>
+                    <th>Topic</th>
+                    <th>Date</th>
+                </tr> -->
+            </thead>
+            <tbody id="tableBody">
+                <!-- Data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>
 
-    <!-- Include the SheetJS library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-    // Load the ODS file
-    fetch('pdfs/List%20of%20pdfs.ods')
-        .then(response => response.arrayBuffer())
-        .then(data => {
-            var workbook = XLSX.read(data, { type: 'array' });
-            var sheet = workbook.Sheets[workbook.SheetNames[0]];
-            var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+<!-- Add CSS for table column widths -->
+<style>
+    #myTable {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #myTable th, #myTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    #myTable th:first-child, #myTable td:first-child {
+        width: 200px; /* Adjust as needed */
+    }
+    #myTable th:nth-child(2), #myTable td:nth-child(2),
+    #myTable th:nth-child(3), #myTable td:nth-child(3) {
+        width: calc((100% - 200px) / 2); /* Half of the remaining width */
+    }
+</style>
 
-            // Populate table with rowData
-            var tableBody = document.querySelector('#tableBody');
-            rows.forEach(function(row, index) {
-                if (index > 0) { // Skip header row
-                    var tr = document.createElement('tr');
-                    tr.innerHTML = `<td><a href="${row[0]}">pdf</a></td><td><b>${row[1]}</b></td><td>${row[4]}</td>`;
-                    
-                    // Alternate row colors
-                    if (index % 2 === 0) {
-                        tr.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                    } else {
-                        tr.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+<!-- Include the SheetJS library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load the ODS file
+        fetch('pdfs/List%20of%20pdfs.ods')
+            .then(response => response.arrayBuffer())
+            .then(data => {
+                var workbook = XLSX.read(data, { type: 'array' });
+                var sheet = workbook.Sheets[workbook.SheetNames[0]];
+                var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                // Populate table with rowData
+                var tableBody = document.querySelector('#tableBody');
+                rows.forEach(function(row, index) {
+                    if (index > 0) { // Skip header row
+                        var tr = document.createElement('tr');
+                        tr.innerHTML = `<td><a href="${row[0]}">pdf</a></td><td><b>${row[1]}</b></td><td>${row[4]}</td>`;
+                        
+                        // Alternate row colors
+                        if (index % 2 === 0) {
+                            tr.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                        } else {
+                            tr.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+                        }
+
+                        tableBody.appendChild(tr);
                     }
-
-                    tableBody.appendChild(tr);
-                }
-            });
-        })
-        .catch(error => console.error('Error loading or parsing ODS file:', error));
-});
-    </script>
-
+                });
+            })
+            .catch(error => console.error('Error loading or parsing ODS file:', error));
+    });
+</script>
 
 
 
