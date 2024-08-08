@@ -179,15 +179,30 @@
             The moduli stack of coherent sheaves on a curve/representations of a quiver have two structures on their homology: an algebra, and a vertex coalgebra. This paper shows they are compatible.
             <br>
 
-            <p class="gray-text"><b>Orthosymplectisation and twisted Yangians (coming ~Aug 2024)</b> <br>
+            <p class="gray-text"><b>Orthosymplectisation and twisted Yangians</b> (coming ~Aug 2024) <br>
+                 
                 Joint with <a href="https://math.columbia.edu/~samdehority/">S. de Hority.</a></p>
 
-            <p class="gray-text"> <b>Cohomological Hall algebras are vertex quantum groups (coming ~Aug 2024)</b> <br>
-                Affine vertex algebras, W<sub>1+&infin;</sub> and doubling from CoHAs Joint with <a href="https://sites.google.com/view/jindalshiv/">S. Jindal</a> and <a href="https://sarkbr.github.io">S. Kaubrys</a>.</p>
+            <p class="gray-text"> <b>Cohomological Hall algebras are vertex quantum groups</b> (coming ~Aug 2024) <br>
+                Affine vertex algebras, W<sub>1+&infin;</sub> and doubling from CoHAs. Joint with <a href="https://sites.google.com/view/jindalshiv/">S. Jindal</a> and <a href="https://sarkbr.github.io">S. Kaubrys</a>.</p>
                 
                 
 
-            2. <i>Algebraic geometry</i> <br> 
+            2. <i>Quantum groups and factorisation algebras</i> <br> <br>
+
+            <a href="https://arxiv.org/abs/2312.07274"><b>Factorisation quantum groups</b></a><br>
+            Shows how to get spectral R-matrices (of affine quantum groups, etc.) purely geometrically from braided categories "over the Ran space". The paper builds up the categorical machinery needed to do this, and recovers previous notions of "q-vertex algebra".
+            <br> 
+
+
+            <p style="color: gray;"> <b>Chiral centres</b> <br>
+                Defining 
+                
+                Joint with W. Niu.
+            </p>
+                
+            
+            3. <i>Algebraic geometry</i> <br> 
 
             <p style="color: gray;"> <b>Localised Euler classes for Artin stacks</b> <br>
                 Develops the theory of Euler classes for singular vector bundles on Artin stacks, valued in arbitrary sheaves (e.g. Borel-Moore, vanishing cycle, Joyce sheaves). Gets new a torus localisation formulas in situations necessary
@@ -203,19 +218,8 @@
              Joint with D. Aranha, A. Khan, H. Park, and C. Ravi.
              <br> <br>
 
-            3. <i>Quantum groups and factorisation algebras</i> <br> <br>
-
-            <a href="https://arxiv.org/abs/2312.07274"><b>Factorisation quantum groups</b></a><br>
-            Shows how to get spectral R-matrices (of affine quantum groups, etc.) purely geometrically from braided categories "over the Ran space". The paper builds up the categorical machinery needed to do this, and recovers previous notions of "q-vertex algebra".
-            <br> 
 
 
-            <p style="color: gray;"> <b>Chiral centres</b> <br>
-                Defining 
-                
-                Joint with W. Niu.
-            </p>
-                
             4. <i>Other interests</i> <br> 
 
             <p class="gray-text"> 
@@ -237,7 +241,7 @@
 </div>
 <div class="box orange-box">
 
-    <i>Expository notes and proto-projects. Greyed-out rows are coming soon, and available on request.</i> <br><br>
+    <i>Expository notes and proto-projects. Greyed-out notes are coming soon, and available on request.</i> <br><br>
 
     <div id="table-container">
         <table id="myTable">
@@ -271,43 +275,47 @@
 }
 
 </style>
-
 <!-- Include the SheetJS library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    // Load the ODS file
-    fetch('pdfs/List%20of%20pdfs.ods')
-        .then(response => response.arrayBuffer())
-        .then(data => {
-            var workbook = XLSX.read(data, { type: 'array' });
-            var sheet = workbook.Sheets[workbook.SheetNames[0]];
-            var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        // Load the ODS file
+        fetch('pdfs/List%20of%20pdfs.ods')
+            .then(response => response.arrayBuffer())
+            .then(data => {
+                var workbook = XLSX.read(data, { type: 'array' });
+                var sheet = workbook.Sheets[workbook.SheetNames[0]];
+                var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            // Populate table with rowData
-            var tableBody = document.querySelector('#tableBody');
-            rows.forEach(function(row, index) {
-                if (index > 0) { // Skip header row
-                    var tr = document.createElement('tr');
-                    var linkType = row[2] === 'Long' ? 'Long' : 'Short';
-                    var href = `pdfs/${linkType}/${row[1]}.pdf`;
+                // Populate table with rowData
+                var tableBody = document.querySelector('#tableBody');
+                rows.forEach(function(row, index) {
+                    if (index > 0) { // Skip header row
+                        var tr = document.createElement('tr');
+                        var linkType = row[2] === 'Long' ? 'Long' : 'Short';
+                        var href = `pdfs/${linkType}/${row[1]}.pdf`;
 
-                    tr.innerHTML = `<td><a href="${href}"><b>${row[1]}</b><span style="font-size: smaller;"> (${row[4]} pp.)</span></a> </td><td>${row[5]}</td>`;
+                        if (row[3] === 'yes') {
+                            tr.innerHTML = `<td><a href="${href}"><b>${row[1]}</b><span style="font-size: smaller;"> (${row[4]} pp.)</span></a> </td><td>${row[5]}</td>`;
+                        } else {
+                            tr.innerHTML = `<td><span style="color: gray;"><b>${row[1]}</b><span style="font-size: smaller;"> (${row[4]} pp.)</span></span></td><td>${row[5]}</td>`;
+                        }
 
-                    // Alternate row colors
-                    if (index % 2 === 0) {
-                        tr.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                    } else {
-                        tr.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+                        // Alternate row colors
+                        if (index % 2 === 0) {
+                            tr.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                        } else {
+                            tr.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+                        }
+
+                        tableBody.appendChild(tr);
                     }
-
-                    tableBody.appendChild(tr);
-                }
-            });
-        })
-        .catch(error => console.error('Error loading or parsing ODS file:', error));
-});
+                });
+            })
+            .catch(error => console.error('Error loading or parsing ODS file:', error));
+    });
 </script>
+
 
 
 
