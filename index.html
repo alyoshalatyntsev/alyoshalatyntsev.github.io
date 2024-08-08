@@ -231,11 +231,11 @@
         padding: 8px;
     }
     #myTable th:first-child, #myTable td:first-child {
-        width: 200px; /* Adjust as needed */
+        width: 50px; /* Adjust as needed */
     }
     #myTable th:nth-child(2), #myTable td:nth-child(2),
     #myTable th:nth-child(3), #myTable td:nth-child(3) {
-        width: calc((100% - 200px) / 2); /* Half of the remaining width */
+        width: calc((100% - 50px) / 2); /* Half of the remaining width */
     }
 </style>
 
@@ -256,7 +256,7 @@
             rows.forEach(function(row, index) {
                 if (index > 0) { // Skip header row
                     var tr = document.createElement('tr');
-                    tr.innerHTML = `<td><a href="${row[0]}">pdf</a> (${row[5]} pp.)</td><td><b>${row[1]}</b></td><td>${row[2]}</td>`;
+                    tr.innerHTML = `<td><a href="${row[0]}">pdf</a> (${row[4]} pp.)</td><td><b>${row[1]}</b></td><td>${row[5]}</td>`;
                     
                     // Alternate row colors
                     if (index % 2 === 0) {
