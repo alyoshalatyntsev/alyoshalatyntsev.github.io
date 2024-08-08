@@ -164,6 +164,8 @@
                 <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p>
             </p>
         </div>
+
+        
         <!-- RESEARCH -->
         <div class="box purple-box">
             <h2>Research</h2>
@@ -220,26 +222,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Load the ODS file
-            fetch('pdfs/List%20of%20pdfs.ods')
-                .then(response => response.arrayBuffer())
-                .then(data => {
-                    var workbook = XLSX.read(data, { type: 'array' });
-                    var sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    // Load the ODS file
+    fetch('pdfs/List%20of%20pdfs.ods')
+        .then(response => response.arrayBuffer())
+        .then(data => {
+            var workbook = XLSX.read(data, { type: 'array' });
+            var sheet = workbook.Sheets[workbook.SheetNames[0]];
+            var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                    // Populate table with rowData
-                    var tableBody = document.querySelector('#tableBody');
-                    rows.forEach(function(row, index) {
-                        if (index > 0) { // Skip header row
-                            var tr = document.createElement('tr');
-                            tr.innerHTML = `<td><a href="${row[0]}">pdf</a></td><td><b>${row[1]}</b></td><td>${row[4]}</td>`;
-                            tableBody.appendChild(tr);
-                        }
-                    });
-                })
-                .catch(error => console.error('Error loading or parsing ODS file:', error));
-        });
+            // Populate table with rowData
+            var tableBody = document.querySelector('#tableBody');
+            rows.forEach(function(row, index) {
+                if (index > 0) { // Skip header row
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = `<td><a href="${row[0]}">pdf</a></td><td><b>${row[1]}</b></td><td>${row[4]}</td>`;
+                    
+                    // Alternate row colors
+                    if (index % 2 === 0) {
+                        tr.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                    } else {
+                        tr.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+                    }
+
+                    tableBody.appendChild(tr);
+                }
+            });
+        })
+        .catch(error => console.error('Error loading or parsing ODS file:', error));
+});
     </script>
 
 
