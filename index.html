@@ -172,6 +172,9 @@
             <h2>Research</h2>
         </div>
         <div class="box green-column">
+
+            <b></b> <br>
+
             <b><a href="https://arxiv.org/abs/2110.14356">Cohomological Hall algebras and vertex algebras</a></b> <br>
             The moduli stack of coherent sheaves on a curve/representations of a quiver have two structures on their homology: an algebra, and a vertex coalgebra. This paper shows they are compatible.
             <br> <br> 
@@ -256,8 +259,8 @@
             rows.forEach(function(row, index) {
                 if (index > 0) { // Skip header row
                     var tr = document.createElement('tr');
-                    tr.innerHTML = `<td><a href="${row[0]}">pdf</a> (${row[4]} pp.)</td><td><b>${row[1]}</b></td><td>${row[5]}</td>`;
-                    
+                    tr.innerHTML = `<td><a href="${row[0]}">pdf</a> <span style="font-size: smaller;">(${row[4]} pp.)</span></td><td><b>${row[1]}</b></td><td>${row[5]}</td>`;
+
                     // Alternate row colors
                     if (index % 2 === 0) {
                         tr.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
