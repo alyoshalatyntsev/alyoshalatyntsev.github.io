@@ -244,6 +244,7 @@
 #myTable th, #myTable td {
     border: 1px solid #ddd;
     padding: 8px;
+    text-align: left; 
 }
 #myTable th, #myTable td {
     width: 50%;
@@ -268,7 +269,7 @@
             rows.forEach(function(row, index) {
                 if (index > 0) { // Skip header row
                     var tr = document.createElement('tr');
-                    tr.innerHTML = `<td><a href="pdfs/Long/${row[1]}.pdf"><b>${row[1]}</b><span style="font-size: smaller;">(${row[4]} pp.)</span></a> </td><td>${row[5]}</td>`;
+                    tr.innerHTML = `<td><a href="pdfs/Long/${row[1]}.pdf"><b>${row[1]}</b><span style="font-size: smaller;"> (${row[4]} pp.)</span></a> </td><td>${row[5]}</td>`;
 
                     // Alternate row colors
                     if (index % 2 === 0) {
