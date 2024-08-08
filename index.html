@@ -237,21 +237,18 @@
 
 <!-- Add CSS for table column widths -->
 <style>
-    #myTable {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    #myTable th, #myTable td {
-        border: 1px solid #ddd;
-        padding: 8px;
-    }
-    #myTable th:first-child, #myTable td:first-child {
-        width: 70px; /* Adjust as needed */
-    }
-    #myTable th:nth-child(2), #myTable td:nth-child(2),
-    #myTable th:nth-child(3), #myTable td:nth-child(3) {
-        width: calc((100% - 70px) / 2); /* Half of the remaining width */
-    }
+#myTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+#myTable th, #myTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+#myTable th, #myTable td {
+    width: 50%;
+}
+
 </style>
 
 <!-- Include the SheetJS library -->
@@ -271,7 +268,7 @@
             rows.forEach(function(row, index) {
                 if (index > 0) { // Skip header row
                     var tr = document.createElement('tr');
-                    tr.innerHTML = `<td><a href="pdfs/Long/${row[1]}.pdf">pdf</a> <span style="font-size: smaller;">(${row[4]} pp.)</span></td><td><b>${row[1]}</b></td><td>${row[5]}</td>`;
+                    tr.innerHTML = `<td><a href="pdfs/Long/${row[1]}.pdf"><b>${row[1]}</b><span style="font-size: smaller;">(${row[4]} pp.)</span></a> </td><td>${row[5]}</td>`;
 
                     // Alternate row colors
                     if (index % 2 === 0) {
