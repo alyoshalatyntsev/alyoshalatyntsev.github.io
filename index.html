@@ -217,7 +217,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Load the ODS file
-            fetch('D:\Dropbox\alyoshalatyntsev.github.io\pdfs\List of pdfs.ods')
+            fetch('pdfs/List%20of%20pdfs.ods')
                 .then(response => response.arrayBuffer())
                 .then(data => {
                     var workbook = XLSX.read(data, { type: 'array' });
