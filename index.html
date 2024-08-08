@@ -237,5 +237,72 @@
                 .catch(error => console.error('Error loading or parsing ODS file:', error));
         });
     </script>
+
+
+
+
+
+
+
+
+<!--*********************** -->
+<!-- SEMINARS AND TEACHING -->
+<!--*********************** -->
+
+<div class="box purple-box">
+    <h2>Seminars and Teaching</h2>
+</div>
+<div class="box green-column">
+    Email me<div class="clipboard-icon inline-div" onclick="copyToClipboard('alyoshalatyntsev@gmail.com')"></div> if you are interested in joining any of the following. 
+    <p>
+
+        
+       <i><a href="https://odin.sdu.dk/sitecore/index.php?a=searchfagbesk&internkode=mm547&lang=en"> 
+        Ordinary Differential equations.</a></i> SDU course, Autumn 2024.
+       <br><br>
+
+       <i>Topics in Calabi-Yau threefolds.</i> Upcoming seminar, online/SDU, June 2024 -  
+       <br><br>
+
+
+        <br> 
+        <i>Factorisation algebras.</i> Reading group, helped run it spring-winter 2023. <br><br>
+
+        <i>W algebras.</i> PhD course, SDU, spring-winter 2023. <br><br>
+
+    </p>
+</div>
+
+
+
+</main>
+<script>
+/*function loadDynamicBackground() {
+    const currentDate = new Date();
+    const currentWeek = Math.ceil(currentDate.getDate() / 7); // Calculate the week within the current month
+    const backgroundImageNumber = (currentWeek % 6) + 1; // Calculate image number from 1 to 6
+    document.body.style.backgroundImage = `url('shimashima${backgroundImageNumber}.jpg')`;
+}
+
+window.onload = loadDynamicBackground; // Call the function when the page loads*/
+
+function copyToClipboard(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    
+    const popup = document.createElement('div');
+    popup.textContent = 'Copied to Clipboard';
+    popup.className = 'popup';
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+        document.body.removeChild(popup);
+    }, 300); // Remove the popup after 2 seconds
+}
+</script>
 </body>
 </html>
