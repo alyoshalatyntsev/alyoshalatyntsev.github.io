@@ -160,7 +160,27 @@
 
     <main>
         <div class="box purple-box">
-           %insert list here
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+            <script>
+                async function loadOdsFile() {
+                    const response = await fetch('questions/list_of_questions.ods');
+                    const data = await response.arrayBuffer();
+                    const workbook = XLSX.read(data, { type: 'array', bookType: 'ods' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    let bulletPoints = '<ul>';
+                    jsonData.forEach(row => {
+                        bulletPoints += `<li>${row[0]}</li>`;
+                    });
+                    bulletPoints += '</ul>';
+                    
+                    document.querySelector('.purple-box').innerHTML = bulletPoints;
+                }
+            
+                window.onload = loadOdsFile;
+            </script>
+            
         </div>
 </main>
 </body>
