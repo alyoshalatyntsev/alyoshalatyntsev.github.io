@@ -2,8 +2,8 @@ import shutil
 import os
 
 # Define source and updated destination paths
-source_path = r"C:\Users\alyos\Dropbox\NOTES\Research evil scheming\RES.pdf"
-destination_path = r"C:\Users\alyos\Dropbox\alyoshalatyntsev.github.io\plan\plan.pdf"
+source_path = r"C:\Users\alyos\Dropbox\NON MATHS\CV\CV.pdf"
+destination_path = r"C:\Users\alyos\Dropbox\alyoshalatyntsev.github.io\cv\cv.pdf"
 
 # Check if the source file exists
 if os.path.exists(source_path):
