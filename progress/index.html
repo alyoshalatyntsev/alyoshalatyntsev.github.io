@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alyosha Latyntsev - Website - Questions</title>
+    <title>Alyosha Latyntsev -  Progress</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -155,31 +155,19 @@
 
 <body>
     <header>
-        <h1>Questions</h1>
+        <h1>Progress</h1>
+
+        A secret page to organise what to write, in which order, and keep an eye on progress. 
     </header>
+
+
+
+
+    
 
     <main>
         <div class="box purple-box">
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-            <script>
-                async function loadOdsFile() {
-                    const response = await fetch('list_of_questions.ods');
-                    const data = await response.arrayBuffer();
-                    const workbook = XLSX.read(data, { type: 'array', bookType: 'ods' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                    
-                    let bulletPoints = '<ul>';
-                    jsonData.forEach(row => {
-                        bulletPoints += `<li>${row[0]}</li>`;
-                    });
-                    bulletPoints += '</ul>';
-                    
-                    document.querySelector('.purple-box').innerHTML = bulletPoints;
-                }
-            
-                window.onload = loadOdsFile;
-            </script>
+           Put things here
             
         </div>
 </main>
