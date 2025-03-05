@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alyosha Latyntsev - Writings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('shimashima4_3.jpg');
+            background-repeat: repeat; 
+            background-size: 600px;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: black;
+            text-align: left;
+            padding-top: 2em;
+            padding-bottom: 2em;
+            padding-left: 4em;
+            padding-right: 4em;
+        }    
+        main {
+            margin: 0 5%;
+            margin-bottom: 2em;
+        }
+        .purple-box {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: black;
+            margin-top: 1em;
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+            padding-left: 1em;
+            padding-right: 1em;
+        }
+        .large-font {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .slightly-large-font {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .normal-font {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>To-dos</h1>
+        A secret page to organise what to write (<i>excluding</i> papers I am currently pushing), in what order, and to keep an eye on progress. 
+    </header>
+
+    <main>
+        <div class="box purple-box" id="writing-list">
+            <!-- List will be populated here -->
+        </div>
+    </main>
+
+    <!-- Include SheetJS library for .ods parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Function to handle file upload and process .ods
+        function handleFile(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                processWritingList(jsonData);
+            };
+            reader.readAsArrayBuffer(e.target.files[0]);
+        }
+
+        // Function to process the list based on second column
+        function processWritingList(data) {
+            const writingListDiv = document.getElementById("writing-list");
+
+            // Separate items based on the second column (*, **, blank)
+            const doubleStarItems = [];
+            const singleStarItems = [];
+            const blankItems = [];
+
+            data.forEach(row => {
+                if (row[1] === '**') {
+                    doubleStarItems.push(row[0]);
+                } else if (row[1] === '*') {
+                    singleStarItems.push(row[0]);
+                } else {
+                    blankItems.push(row[0]);
+                }
+            });
+
+            // Render the sorted list
+            renderList(doubleStarItems, 'large-font', writingListDiv);
+            renderList(singleStarItems, 'slightly-large-font', writingListDiv);
+            renderList(blankItems, 'normal-font', writingListDiv);
+        }
+
+        // Function to render items in a list with specified class
+        function renderList(items, className, container) {
+            items.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.className = className;
+                listItem.textContent = item;
+                container.appendChild(listItem);
+            });
+        }
+
+        // Add a file input to the page to upload .ods file
+        document.body.insertAdjacentHTML('beforeend', '<input type="file" id="fileInput" accept=".ods">');
+        document.getElementById("fileInput").addEventListener('change', handleFile);
+    </script>
+</body>
+</html>
