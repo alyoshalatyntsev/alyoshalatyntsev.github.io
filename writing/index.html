@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alyosha Latyntsev - Writings</title>
+    <title>Alyosha Latyntsev -  Writings</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,6 +27,55 @@
             margin: 0 5%;
             margin-bottom: 2em;
         }
+        .clipboard-icon::after {
+            content: "";
+            display: inline-block;
+            width: 16pt;
+            height: 16pt;
+            background-image: url('clipboard.png');
+            background-size: contain;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .clipboard-icon-container {
+            display: flex;
+            align-items: center;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        .green-column {
+            width: calc(100% - 2em);
+            display: inline-block;
+            margin-right: 2%;
+            padding: 1em;
+            padding-top: 1.5em;
+            padding-bottom: 1.5em;
+            background-color: rgb(247, 255, 240); 
+            /* background-color: rgba(255, 200, 200,1); */
+            color: black;
+            column-count: 2;
+            column-gap: 2em;
+            margin-top: 0;
+            margin-bottom: 0;
+            overflow: hidden;
+        }
+        .orange-box {
+            background-color: rgb(247, 255, 240); 
+            /* background-color: rgba(255, 200, 200,1); */
+            color: black;
+            padding: 1em;
+            margin-top: 0em;
+            margin-bottom: 4em;
+        }
         .purple-box {
             background-color: rgba(255, 255, 255, 0.9);
             color: black;
@@ -36,86 +85,127 @@
             padding-left: 1em;
             padding-right: 1em;
         }
-        .large-font {
-            font-size: 24px;
-            font-weight: bold;
+        .text-flow-container {
+            column-width: 100%;
+            row-gap: 10px;
+            column-gap: 10px;
+            margin: 10px;
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
         }
-        .slightly-large-font {
-            font-size: 20px;
-            font-weight: bold;
+        .rectangle-text {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: calc(100% - 37px);
+            height: 100%;
+            font-size: 12px;
+            text-align: left;
+            color: black;
+            margin-left: auto;
+        }        
+        .red-rectangle {
+            width: 120px;
+            height: 40px; 
+            background-color: rgba(255, 0, 0, 0.0);
+            border: 2px solid rgba(255, 0, 0, 0.2);
+            display: inline-block;
+            margin-bottom: 00px;
+            position: relative;
         }
-        .normal-font {
-            font-size: 16px;
+        .red-rectangle::before {
+            content: "";
+            width: 25px;
+            height: 32px;
+            background-image: url('fileicon.png');
+            background-size: cover;
+            position: absolute;
+            top: 50%;
+            left: 6px;
+            transform: translateY(-50%);
+        }
+        .box {
+            margin-bottom: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            padding: 0.5em;
+            text-align: center;
+        }
+        .inline-div {
+            display: inline;
+        }
+        a {
+            text-decoration: none;
+            color: rgb(9, 9, 133);
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .gray-text {
+            color: #777777;
         }
     </style>
 </head>
+
 <body>
     <header>
         <h1>To-dos</h1>
+
         A secret page to organise what to write (<i>excluding</i> papers I am currently pushing), in what order, and to keep an eye on progress. 
     </header>
 
+
+
+
+    
+
     <main>
-        <div class="box purple-box" id="writing-list">
-            <!-- List will be populated here -->
+        <div class="box purple-box">
+           Put things here
+            
+           <div class="box purple-box">
+            <ul id="writingList"></ul>
         </div>
-    </main>
+        
+        <script>
+            // This function will fetch the ODS file, extract the first column, and populate the list
+            fetch('writing_list.ods')
+                .then(response => response.arrayBuffer())
+                .then(data => {
+                    const zip = new JSZip();
+                    return zip.loadAsync(data);
+                })
+                .then(zip => zip.file("content.xml").async("string"))
+                .then(contentXml => {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(contentXml, "text/xml");
+                    const rows = xmlDoc.getElementsByTagName("table:table-row");
+                    const ul = document.getElementById("writingList");
+        
+                    for (let i = 1; i < rows.length; i++) { // Skip the header
+                        const cells = rows[i].getElementsByTagName("table:table-cell");
+                        const firstColumnText = cells[0].textContent.trim();
+        
+                        if (firstColumnText) {
+                            const li = document.createElement("li");
+                            li.textContent = firstColumnText;
+                            ul.appendChild(li);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        </script>
 
-    <!-- Include SheetJS library for .ods parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-        // Function to handle file upload and process .ods
-        function handleFile(e) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const data = new Uint8Array(event.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
 
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                processWritingList(jsonData);
-            };
-            reader.readAsArrayBuffer(e.target.files[0]);
-        }
 
-        // Function to process the list based on second column
-        function processWritingList(data) {
-            const writingListDiv = document.getElementById("writing-list");
-
-            // Separate items based on the second column (*, **, blank)
-            const doubleStarItems = [];
-            const singleStarItems = [];
-            const blankItems = [];
-
-            data.forEach(row => {
-                if (row[1] === '**') {
-                    doubleStarItems.push(row[0]);
-                } else if (row[1] === '*') {
-                    singleStarItems.push(row[0]);
-                } else {
-                    blankItems.push(row[0]);
-                }
-            });
-
-            // Render the sorted list
-            renderList(doubleStarItems, 'large-font', writingListDiv);
-            renderList(singleStarItems, 'slightly-large-font', writingListDiv);
-            renderList(blankItems, 'normal-font', writingListDiv);
-        }
-
-        // Function to render items in a list with specified class
-        function renderList(items, className, container) {
-            items.forEach(item => {
-                const listItem = document.createElement('div');
-                listItem.className = className;
-                listItem.textContent = item;
-                container.appendChild(listItem);
-            });
-        }
-
-        // Add a file input to the page to upload .ods file
-        document.body.insertAdjacentHTML('beforeend', '<input type="file" id="fileInput" accept=".ods">');
-        document.getElementById("fileInput").addEventListener('change', handleFile);
-    </script>
+        
+        </div>
+</main>
 </body>
 </html>
