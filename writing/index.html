@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alyosha Latyntsev -  Writings</title>
+    <title>Alyosha Latyntsev - Writings</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,194 +18,56 @@
             background-color: rgba(255, 255, 255, 0.9);
             color: black;
             text-align: left;
-            padding-top: 2em;
-            padding-bottom: 2em;
-            padding-left: 4em;
-            padding-right: 4em;
+            padding: 2em 4em;
         }    
         main {
             margin: 0 5%;
             margin-bottom: 2em;
         }
-        .clipboard-icon::after {
-            content: "";
-            display: inline-block;
-            width: 16pt;
-            height: 16pt;
-            background-image: url('clipboard.png');
-            background-size: contain;
-            margin-left: 5px;
-            vertical-align: middle;
-        }
-        .clipboard-icon-container {
-            display: flex;
-            align-items: center;
-        }
-        .popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 1000;
-        }
-        .green-column {
-            width: calc(100% - 2em);
-            display: inline-block;
-            margin-right: 2%;
-            padding: 1em;
-            padding-top: 1.5em;
-            padding-bottom: 1.5em;
-            background-color: rgb(247, 255, 240); 
-            /* background-color: rgba(255, 200, 200,1); */
-            color: black;
-            column-count: 2;
-            column-gap: 2em;
-            margin-top: 0;
-            margin-bottom: 0;
-            overflow: hidden;
-        }
-        .orange-box {
-            background-color: rgb(247, 255, 240); 
-            /* background-color: rgba(255, 200, 200,1); */
-            color: black;
-            padding: 1em;
-            margin-top: 0em;
-            margin-bottom: 4em;
-        }
         .purple-box {
             background-color: rgba(255, 255, 255, 0.9);
             color: black;
             margin-top: 1em;
-            padding-top: 0.5em;
-            padding-bottom: 0.5em;
-            padding-left: 1em;
-            padding-right: 1em;
+            padding: 0.5em 1em;
         }
-        .text-flow-container {
-            column-width: 100%;
-            row-gap: 10px;
-            column-gap: 10px;
-            margin: 10px;
-            display: flex;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-        .rectangle-text {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            width: calc(100% - 37px);
-            height: 100%;
-            font-size: 12px;
-            text-align: left;
-            color: black;
-            margin-left: auto;
-        }        
-        .red-rectangle {
-            width: 120px;
-            height: 40px; 
-            background-color: rgba(255, 0, 0, 0.0);
-            border: 2px solid rgba(255, 0, 0, 0.2);
-            display: inline-block;
-            margin-bottom: 00px;
-            position: relative;
-        }
-        .red-rectangle::before {
-            content: "";
-            width: 25px;
-            height: 32px;
-            background-image: url('fileicon.png');
-            background-size: cover;
-            position: absolute;
-            top: 50%;
-            left: 6px;
-            transform: translateY(-50%);
-        }
-        .box {
-            margin-bottom: 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            padding: 0.5em;
-            text-align: center;
-        }
-        .inline-div {
-            display: inline;
-        }
-        a {
-            text-decoration: none;
-            color: rgb(9, 9, 133);
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .gray-text {
-            color: #777777;
+        ul {
+            padding-left: 1.5em;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
     <header>
         <h1>To-dos</h1>
-
-        A secret page to organise what to write (<i>excluding</i> papers I am currently pushing), in what order, and to keep an eye on progress. 
+        A secret page to organise what to write (<i>excluding</i> papers I am currently pushing), in what order, and to keep an eye on progress.
     </header>
-
-
-
-
-    
 
     <main>
         <div class="box purple-box">
-           Put things here
-            
-           <div class="box purple-box">
+            Put things here
             <ul id="writingList"></ul>
         </div>
-        
+
         <script>
-            // This function will fetch the ODS file, extract the first column, and populate the list
             fetch('writing_list.ods')
                 .then(response => response.arrayBuffer())
                 .then(data => {
-                    const zip = new JSZip();
-                    return zip.loadAsync(data);
-                })
-                .then(zip => zip.file("content.xml").async("string"))
-                .then(contentXml => {
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(contentXml, "text/xml");
-                    const rows = xmlDoc.getElementsByTagName("table:table-row");
+                    const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
                     const ul = document.getElementById("writingList");
-        
-                    for (let i = 1; i < rows.length; i++) { // Skip the header
-                        const cells = rows[i].getElementsByTagName("table:table-cell");
-                        const firstColumnText = cells[0].textContent.trim();
-        
-                        if (firstColumnText) {
+                    rows.forEach((row, index) => {
+                        if (index > 0 && row[0]) { // Skip first row (assuming header)
                             const li = document.createElement("li");
-                            li.textContent = firstColumnText;
+                            li.textContent = row[0];
                             ul.appendChild(li);
                         }
-                    }
+                    });
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => console.error('Error loading ODS:', error));
         </script>
-
-
-
-        
-        </div>
-</main>
+    </main>
 </body>
 </html>
