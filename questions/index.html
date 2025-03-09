@@ -72,7 +72,11 @@
                 .map(row => {
                     let size = "12pt";
                     let opacity = "1";
-                    const marker = String(row[1]).trim();
+                    
+                    let marker = "";
+                    if (row[1] !== undefined && row[1] !== null) {
+                        marker = String(row[1]).trim();
+                    }
     
                     if (marker === '**') {
                         size = "16pt";
@@ -80,7 +84,8 @@
                     } else if (marker === '*') {
                         size = "14pt";
                         opacity = "0.6";
-                    } else if (marker === "") {
+                    } else {
+                        // This will catch both empty strings and undefined/null values
                         size = "11pt";
                         opacity = "0.3";
                     }
