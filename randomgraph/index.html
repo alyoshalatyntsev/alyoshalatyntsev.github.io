@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Graph Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #faf5ff;
+            color: #4a5568;
+        }
+
+        h1 {
+            text-align: center;
+            color: #6b46c1;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            background-color: #f3e8ff;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #553c9a;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e9d5ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #9333ea;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #9333ea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #7c3aed;
+        }
+
+        button {
+            background-color: #9333ea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #7c3aed;
+        }
+
+        button:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        #graph-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        svg {
+            border: 2px solid #f3e8ff;
+            border-radius: 10px;
+        }
+
+        .node {
+            fill: #c084fc;
+            stroke: #9333ea;
+            stroke-width: 2;
+        }
+
+        .edge {
+            stroke: #f9a8d4;
+            stroke-width: 3;
+            opacity: 0.7;
+        }
+
+        .grid-background {
+            fill: #fdf4ff;
+        }
+
+        .marker {
+            fill: #fca5a5;
+            stroke: #ef4444;
+            stroke-width: 2;
+            rx: 3;
+            ry: 3;
+            cursor: pointer;
+        }
+
+        .value-label {
+            fill: #ef4444;
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Random Graph Generator</h1>
+    
+    <div class="controls">
+        <div class="slider-container">
+            <label for="n-slider">Number of rows (n): <span class="value-display" id="n-value">4</span></label>
+            <input type="range" id="n-slider" min="2" max="8" value="4" step="1">
+        </div>
+        
+        <div class="slider-container">
+            <label for="m-slider">Number of columns (m): <span class="value-display" id="m-value">4</span></label>
+            <input type="range" id="m-slider" min="2" max="8" value="4" step="1">
+        </div>
+        
+        <div class="slider-container">
+            <label for="p-slider">Edge probability (p): <span class="value-display" id="p-value">0.5</span></label>
+            <input type="range" id="p-slider" min="0" max="1" value="0.5" step="0.05">
+        </div>
+        
+        <button onclick="generateGraph()">Generate Graph</button>
+        <button onclick="startRandomWalk()" id="random-walk-btn">Random Walk</button>
+        <button onclick="toggleMode()" id="mode-btn">Mode: Single Path</button>
+        <button onclick="toggleNumbers()" id="numbers-btn" disabled>Show Numbers</button>
+    </div>
+    
+    <div id="graph-container">
+        <svg id="graph-svg" width="600" height="400">
+            <rect class="grid-background" width="600" height="400" />
+        </svg>
+    </div>
+
+    <script>
+        let n = 4;
+        let m = 4;
+        let p = 0.5;
+        const svg = document.getElementById('graph-svg');
+        const svgWidth = 600;
+        const svgHeight = 400;
+        const nodeRadius = 15;
+        const padding = 50;
+        let selectedNode = null;
+        let edges = [];
+        let walkInterval = null;
+        let mode = 'single'; // 'single' or 'all'
+        let nodeValues = {}; // Store n_v values for all paths mode
+        let showNumbers = true; // Whether to show numbers in all paths mode
+
+        // Update value displays
+        document.getElementById('n-slider').addEventListener('input', function(e) {
+            n = parseInt(e.target.value);
+            document.getElementById('n-value').textContent = n;
+            drawEmptyGrid();
+            removeMarker();
+            stopRandomWalk();
+            nodeValues = {};
+        });
+
+        document.getElementById('m-slider').addEventListener('input', function(e) {
+            m = parseInt(e.target.value);
+            document.getElementById('m-value').textContent = m;
+            drawEmptyGrid();
+            removeMarker();
+            stopRandomWalk();
+            nodeValues = {};
+        });
+
+        document.getElementById('p-slider').addEventListener('input', function(e) {
+            p = parseFloat(e.target.value);
+            document.getElementById('p-value').textContent = p;
+        });
+
+        function toggleMode() {
+            mode = mode === 'single' ? 'all' : 'single';
+            document.getElementById('mode-btn').textContent = mode === 'single' ? 'Mode: Single Path' : 'Mode: All Paths';
+            
+            // Update numbers button state
+            const numbersBtn = document.getElementById('numbers-btn');
+            if (mode === 'single') {
+                numbersBtn.disabled = true;
+            } else {
+                numbersBtn.disabled = false;
+            }
+            
+            removeMarker();
+            stopRandomWalk();
+            nodeValues = {};
+            drawMarkers();
+        }
+
+        function toggleNumbers() {
+            showNumbers = !showNumbers;
+            document.getElementById('numbers-btn').textContent = showNumbers ? 'Hide Numbers' : 'Show Numbers';
+            drawMarkers();
+        }
+
+        function getNodePosition(row, col) {
+            const xSpacing = (svgWidth - 2 * padding) / (m - 1);
+            const ySpacing = (svgHeight - 2 * padding) / (n - 1);
+            
+            // Handle edge cases where there's only one row or column
+            const x = m === 1 ? svgWidth / 2 : padding + col * xSpacing;
+            const y = n === 1 ? svgHeight / 2 : padding + row * ySpacing;
+            
+            return { x, y };
+        }
+
+        function removeMarker() {
+            const existingMarkers = svg.querySelectorAll('.marker');
+            existingMarkers.forEach(marker => marker.remove());
+            const existingLabels = svg.querySelectorAll('.value-label');
+            existingLabels.forEach(label => label.remove());
+            selectedNode = null;
+        }
+
+        function drawMarkers() {
+            removeMarker();
+            
+            if (mode === 'single') {
+                if (selectedNode) {
+                    placeMarker(selectedNode.row, selectedNode.col);
+                }
+            } else {
+                // Draw markers for all nodes with n_v > 0
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < m; j++) {
+                        const key = `${i}-${j}`;
+                        const value = nodeValues[key] || 0;
+                        if (value > 0) {
+                            const pos = getNodePosition(i, j);
+                            const size = Math.sqrt(value) * 40; // Scale by 40 to match single marker size
+                            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            rect.setAttribute('x', pos.x - size/2);
+                            rect.setAttribute('y', pos.y - size/2);
+                            rect.setAttribute('width', size);
+                            rect.setAttribute('height', size);
+                            rect.setAttribute('class', 'marker');
+                            rect.setAttribute('data-row', i);
+                            rect.setAttribute('data-col', j);
+                            
+                            // Add click handler
+                            rect.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                nodeValues = {};
+                                drawMarkers();
+                                stopRandomWalk();
+                            });
+                            
+                            svg.appendChild(rect);
+                            
+                            // Add text label showing the value if enabled
+                            if (showNumbers) {
+                                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                                text.setAttribute('x', pos.x);
+                                text.setAttribute('y', pos.y - 25);
+                                text.setAttribute('class', 'value-label');
+                                text.textContent = value.toFixed(4);
+                                svg.appendChild(text);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function placeMarker(row, col) {
+            if (mode === 'single') {
+                removeMarker();
+                selectedNode = { row, col };
+                
+                const pos = getNodePosition(row, col);
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', pos.x - 20);
+                rect.setAttribute('y', pos.y - 20);
+                rect.setAttribute('width', 40);
+                rect.setAttribute('height', 40);
+                rect.setAttribute('class', 'marker');
+                
+                // Add click handler to remove marker
+                rect.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent event from bubbling to the node underneath
+                    removeMarker();
+                    stopRandomWalk();
+                });
+                
+                svg.appendChild(rect);
+            } else {
+                // All paths mode
+                nodeValues = {};
+                nodeValues[`${row}-${col}`] = 1;
+                drawMarkers();
+            }
+        }
+
+        function drawEmptyGrid() {
+            // Clear the SVG
+            while (svg.firstChild.nextSibling) {
+                svg.removeChild(svg.firstChild.nextSibling);
+            }
+
+            // Reset edges array
+            edges = [];
+
+            // Draw nodes
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < m; j++) {
+                    const pos = getNodePosition(i, j);
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pos.x);
+                    circle.setAttribute('cy', pos.y);
+                    circle.setAttribute('r', nodeRadius);
+                    circle.setAttribute('class', 'node');
+                    circle.setAttribute('id', `node-${i}-${j}`);
+                    
+                    // Add click handler
+                    circle.addEventListener('click', function() {
+                        if (mode === 'single') {
+                            placeMarker(i, j);
+                            stopRandomWalk();
+                        } else {
+                            // In all paths mode
+                            const key = `${i}-${j}`;
+                            if (nodeValues[key] && nodeValues[key] > 0) {
+                                // Nonempty vertex - clear all
+                                nodeValues = {};
+                                drawMarkers();
+                                stopRandomWalk();
+                            } else {
+                                // Empty vertex - place single marker
+                                placeMarker(i, j);
+                                stopRandomWalk();
+                            }
+                        }
+                    });
+                    
+                    svg.appendChild(circle);
+                }
+            }
+        }
+
+        function getNeighbors(row, col) {
+            const neighbors = [];
+            
+            // Check all edges to find neighbors
+            for (const edge of edges) {
+                if (edge.from.row === row && edge.from.col === col) {
+                    neighbors.push(edge.to);
+                } else if (edge.to.row === row && edge.to.col === col) {
+                    neighbors.push(edge.from);
+                }
+            }
+            
+            return neighbors;
+        }
+
+        function getDegree(row, col) {
+            return getNeighbors(row, col).length;
+        }
+
+        function stopRandomWalk() {
+            if (walkInterval) {
+                clearInterval(walkInterval);
+                walkInterval = null;
+                document.getElementById('random-walk-btn').textContent = 'Random Walk';
+            }
+        }
+
+        function startRandomWalk() {
+            if (mode === 'single') {
+                // Single path mode - same as before
+                if (!selectedNode) {
+                    const randomRow = Math.floor(Math.random() * n);
+                    const randomCol = Math.floor(Math.random() * m);
+                    placeMarker(randomRow, randomCol);
+                }
+
+                if (walkInterval) {
+                    stopRandomWalk();
+                    return;
+                }
+
+                document.getElementById('random-walk-btn').textContent = 'Stop Walk';
+
+                walkInterval = setInterval(() => {
+                    if (!selectedNode) {
+                        stopRandomWalk();
+                        return;
+                    }
+
+                    const neighbors = getNeighbors(selectedNode.row, selectedNode.col);
+                    
+                    if (neighbors.length > 0) {
+                        const nextNode = neighbors[Math.floor(Math.random() * neighbors.length)];
+                        placeMarker(nextNode.row, nextNode.col);
+                    }
+                }, 250);
+            } else {
+                // All paths mode - spread probability mass
+                if (Object.keys(nodeValues).length === 0) {
+                    // No starting point, pick random
+                    const randomRow = Math.floor(Math.random() * n);
+                    const randomCol = Math.floor(Math.random() * m);
+                    nodeValues[`${randomRow}-${randomCol}`] = 1;
+                    drawMarkers();
+                }
+
+                if (walkInterval) {
+                    stopRandomWalk();
+                    return;
+                }
+
+                document.getElementById('random-walk-btn').textContent = 'Stop Walk';
+
+                walkInterval = setInterval(() => {
+                    const newValues = {};
+                    
+                    // For each vertex v, compute sum of n_w/deg(w) for all neighbors w
+                    for (let i = 0; i < n; i++) {
+                        for (let j = 0; j < m; j++) {
+                            const key = `${i}-${j}`;
+                            const neighbors = getNeighbors(i, j);
+                            let sum = 0;
+                            
+                            for (const neighbor of neighbors) {
+                                const neighborKey = `${neighbor.row}-${neighbor.col}`;
+                                const neighborValue = nodeValues[neighborKey] || 0;
+                                const neighborDegree = getDegree(neighbor.row, neighbor.col);
+                                if (neighborDegree > 0) {
+                                    sum += neighborValue / neighborDegree;
+                                }
+                            }
+                            
+                            if (sum > 0) {
+                                newValues[key] = sum;
+                            }
+                        }
+                    }
+                    
+                    nodeValues = newValues;
+                    drawMarkers();
+                    
+                    // Stop if all values are very small
+                    const totalMass = Object.values(nodeValues).reduce((a, b) => a + b, 0);
+                    if (totalMass < 0.001) {
+                        stopRandomWalk();
+                    }
+                }, 250);
+            }
+        }
+
+        function generateGraph() {
+            // First draw the empty grid
+            drawEmptyGrid();
+
+            // Create edges group to ensure edges are drawn below nodes
+            const edgesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            svg.insertBefore(edgesGroup, svg.querySelector('.node'));
+
+            // Generate edges between adjacent nodes
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < m; j++) {
+                    // Connect to right neighbor
+                    if (j < m - 1 && Math.random() < p) {
+                        const pos1 = getNodePosition(i, j);
+                        const pos2 = getNodePosition(i, j + 1);
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', pos1.x);
+                        line.setAttribute('y1', pos1.y);
+                        line.setAttribute('x2', pos2.x);
+                        line.setAttribute('y2', pos2.y);
+                        line.setAttribute('class', 'edge');
+                        edgesGroup.appendChild(line);
+                        
+                        // Store edge information
+                        edges.push({
+                            from: { row: i, col: j },
+                            to: { row: i, col: j + 1 }
+                        });
+                    }
+
+                    // Connect to bottom neighbor
+                    if (i < n - 1 && Math.random() < p) {
+                        const pos1 = getNodePosition(i, j);
+                        const pos2 = getNodePosition(i + 1, j);
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', pos1.x);
+                        line.setAttribute('y1', pos1.y);
+                        line.setAttribute('x2', pos2.x);
+                        line.setAttribute('y2', pos2.y);
+                        line.setAttribute('class', 'edge');
+                        edgesGroup.appendChild(line);
+                        
+                        // Store edge information
+                        edges.push({
+                            from: { row: i, col: j },
+                            to: { row: i + 1, col: j }
+                        });
+                    }
+                }
+            }
+        }
+
+        // Initialize with empty grid
+        drawEmptyGrid();
+    </script>
+</body>
+</html>
