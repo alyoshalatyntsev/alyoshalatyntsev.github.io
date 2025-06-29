@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Graph Generator with Spanning Tree</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #faf5ff;
+            color: #4a5568;
+        }
+
+        h1 {
+            text-align: center;
+            color: #6b46c1;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            background-color: #f3e8ff;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #553c9a;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e9d5ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #9333ea;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #9333ea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #7c3aed;
+        }
+
+        button {
+            background-color: #9333ea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #7c3aed;
+        }
+
+        button:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        #graph-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        svg {
+            border: 2px solid #f3e8ff;
+            border-radius: 10px;
+        }
+
+        .node {
+            fill: #c084fc;
+            stroke: #9333ea;
+            stroke-width: 2;
+            transition: fill 0.3s, stroke 0.3s;
+        }
+
+        .node.green-dark {
+            fill: #4ade80;
+            stroke: #16a34a;
+        }
+
+        .node.green-light {
+            fill: #bbf7d0;
+            stroke: #4ade80;
+        }
+
+        .node.green-super-dark {
+            fill: #16a34a;
+            stroke: #064e3b;
+        }
+
+        .edge {
+            stroke: #f9a8d4;
+            stroke-width: 3;
+            opacity: 0.7;
+            transition: stroke 0.3s, opacity 0.3s;
+        }
+
+        .edge.green {
+            stroke: #86efac;
+            opacity: 1;
+        }
+
+        .edge.red {
+            stroke: #a92929;
+            opacity: 1;
+        }
+
+        .walker {
+            fill: #fca5a5;
+            stroke: #ef4444;
+            stroke-width: 2;
+        }
+
+        .grid-background {
+            fill: #fdf4ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Random Graph Generator with Spanning Tree</h1>
+    
+    <div class="controls">
+        <div class="slider-container">
+            <label for="n-slider">Number of rows (n): <span class="value-display" id="n-value">4</span></label>
+            <input type="range" id="n-slider" min="2" max="8" value="4" step="1">
+        </div>
+        
+        <div class="slider-container">
+            <label for="m-slider">Number of columns (m): <span class="value-display" id="m-value">4</span></label>
+            <input type="range" id="m-slider" min="2" max="8" value="4" step="1">
+        </div>
+        
+        <div class="slider-container">
+            <label for="p-slider">Edge probability (p): <span class="value-display" id="p-value">0.5</span></label>
+            <input type="range" id="p-slider" min="0" max="1" value="0.5" step="0.05">
+        </div>
+        
+        <button onclick="generateGraph()">Generate Graph</button>
+        <button id="spanning-tree-btn" onclick="generateSpanningTree()">Generate Spanning Tree</button>
+    </div>
+    
+    <div id="graph-container">
+        <svg id="graph-svg" width="600" height="400">
+            <rect class="grid-background" width="600" height="400" />
+        </svg>
+    </div>
+
+    <script>
+        let n = 4;
+        let m = 4;
+        let p = 0.5;
+        const svg = document.getElementById('graph-svg');
+        const svgWidth = 600;
+        const svgHeight = 400;
+        const nodeRadius = 15;
+        const padding = 50;
+        let adjacencyList = {};
+        let edges = [];
+        let animationInProgress = false;
+
+        // Update value displays
+        document.getElementById('n-slider').addEventListener('input', function(e) {
+            n = parseInt(e.target.value);
+            document.getElementById('n-value').textContent = n;
+            drawEmptyGrid();
+        });
+
+        document.getElementById('m-slider').addEventListener('input', function(e) {
+            m = parseInt(e.target.value);
+            document.getElementById('m-value').textContent = m;
+            drawEmptyGrid();
+        });
+
+        document.getElementById('p-slider').addEventListener('input', function(e) {
+            p = parseFloat(e.target.value);
+            document.getElementById('p-value').textContent = p;
+        });
+
+        function getNodePosition(row, col) {
+            const xSpacing = (svgWidth - 2 * padding) / (m - 1);
+            const ySpacing = (svgHeight - 2 * padding) / (n - 1);
+            
+            const x = m === 1 ? svgWidth / 2 : padding + col * xSpacing;
+            const y = n === 1 ? svgHeight / 2 : padding + row * ySpacing;
+            
+            return { x, y };
+        }
+
+        function nodeToString(row, col) {
+            return `${row}-${col}`;
+        }
+
+        function stringToNode(str) {
+            const [row, col] = str.split('-').map(Number);
+            return { row, col };
+        }
+
+        function drawEmptyGrid() {
+            while (svg.firstChild.nextSibling) {
+                svg.removeChild(svg.firstChild.nextSibling);
+            }
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < m; j++) {
+                    const pos = getNodePosition(i, j);
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pos.x);
+                    circle.setAttribute('cy', pos.y);
+                    circle.setAttribute('r', nodeRadius);
+                    circle.setAttribute('class', 'node');
+                    circle.setAttribute('id', `node-${i}-${j}`);
+                    svg.appendChild(circle);
+                }
+            }
+        }
+
+        function generateGraph() {
+            drawEmptyGrid();
+            adjacencyList = {};
+            edges = [];
+
+            // Initialize adjacency list
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < m; j++) {
+                    adjacencyList[nodeToString(i, j)] = [];
+                }
+            }
+
+            const edgesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            svg.insertBefore(edgesGroup, svg.querySelector('.node'));
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < m; j++) {
+                    // Connect to right neighbor
+                    if (j < m - 1 && Math.random() < p) {
+                        const pos1 = getNodePosition(i, j);
+                        const pos2 = getNodePosition(i, j + 1);
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', pos1.x);
+                        line.setAttribute('y1', pos1.y);
+                        line.setAttribute('x2', pos2.x);
+                        line.setAttribute('y2', pos2.y);
+                        line.setAttribute('class', 'edge');
+                        line.setAttribute('id', `edge-${i}-${j}-${i}-${j+1}`);
+                        edgesGroup.appendChild(line);
+                        
+                        adjacencyList[nodeToString(i, j)].push(nodeToString(i, j + 1));
+                        adjacencyList[nodeToString(i, j + 1)].push(nodeToString(i, j));
+                        edges.push({ from: nodeToString(i, j), to: nodeToString(i, j + 1), id: `edge-${i}-${j}-${i}-${j+1}` });
+                    }
+
+                    // Connect to bottom neighbor
+                    if (i < n - 1 && Math.random() < p) {
+                        const pos1 = getNodePosition(i, j);
+                        const pos2 = getNodePosition(i + 1, j);
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', pos1.x);
+                        line.setAttribute('y1', pos1.y);
+                        line.setAttribute('x2', pos2.x);
+                        line.setAttribute('y2', pos2.y);
+                        line.setAttribute('class', 'edge');
+                        line.setAttribute('id', `edge-${i}-${j}-${i+1}-${j}`);
+                        edgesGroup.appendChild(line);
+                        
+                        adjacencyList[nodeToString(i, j)].push(nodeToString(i + 1, j));
+                        adjacencyList[nodeToString(i + 1, j)].push(nodeToString(i, j));
+                        edges.push({ from: nodeToString(i, j), to: nodeToString(i + 1, j), id: `edge-${i}-${j}-${i+1}-${j}` });
+                    }
+                }
+            }
+        }
+
+        function getConnectedComponent(start) {
+            const visited = new Set();
+            const queue = [start];
+            const component = [];
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (visited.has(current)) continue;
+                
+                visited.add(current);
+                component.push(current);
+                
+                for (const neighbor of adjacencyList[current]) {
+                    if (!visited.has(neighbor)) {
+                        queue.push(neighbor);
+                    }
+                }
+            }
+            
+            return component;
+        }
+
+        async function generateSpanningTree() {
+            if (animationInProgress) return;
+            if (edges.length === 0) {
+                alert('Please generate a graph first!');
+                return;
+            }
+
+            animationInProgress = true;
+            document.getElementById('spanning-tree-btn').disabled = true;
+
+            // Reset all colors
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('green-dark', 'green-light', 'green-super-dark');
+            });
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('green', 'red');
+            });
+
+            // Step 1: Pick a random vertex W
+            const allNodes = Object.keys(adjacencyList);
+            const w = allNodes[Math.floor(Math.random() * allNodes.length)];
+            const wNode = stringToNode(w);
+            document.getElementById(`node-${wNode.row}-${wNode.col}`).classList.add('green-super-dark');
+
+            // Step 2: Pick another vertex V from the same connected component
+            const component = getConnectedComponent(w);
+            if (component.length < 2) {
+                alert('The starting node is isolated!');
+                animationInProgress = false;
+                document.getElementById('spanning-tree-btn').disabled = false;
+                return;
+            }
+
+            let v;
+            do {
+                v = component[Math.floor(Math.random() * component.length)];
+            } while (v === w);
+            
+            const vNode = stringToNode(v);
+            document.getElementById(`node-${vNode.row}-${vNode.col}`).classList.add('green-super-dark');
+
+            // Create red walker square
+            const walker = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            walker.setAttribute('width', '20');
+            walker.setAttribute('height', '20');
+            walker.setAttribute('class', 'walker');
+            const vPos = getNodePosition(vNode.row, vNode.col);
+            walker.setAttribute('x', vPos.x - 10);
+            walker.setAttribute('y', vPos.y - 10);
+            svg.appendChild(walker);
+
+            // Step 3: Random walk
+            const visitedNodes = [v]; // Track all nodes in order
+            const greenNodes = new Set([w, v]);
+            let current = v;
+            
+            // Random walk until we reach W
+            while (current !== w) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Get neighbors
+                const neighbors = adjacencyList[current];
+                if (neighbors.length === 0) break;
+                
+                // Choose random neighbor
+                const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                
+                // Mark edge as green
+                const edgeId = getEdgeId(current, next);
+                if (edgeId) {
+                    document.getElementById(edgeId).classList.add('green');
+                }
+                
+                // Mark node as green
+                const nextNode = stringToNode(next);
+                if (next !== w) {
+                    document.getElementById(`node-${nextNode.row}-${nextNode.col}`).classList.add('green-light');
+                }
+                greenNodes.add(next);
+                
+                // Move walker
+                const nextPos = getNodePosition(nextNode.row, nextNode.col);
+                walker.setAttribute('x', nextPos.x - 10);
+                walker.setAttribute('y', nextPos.y - 10);
+                
+                visitedNodes.push(next);
+                current = next;
+            }
+
+            // Step 4: Remove walker after reaching W
+            await new Promise(resolve => setTimeout(resolve, 250));
+            walker.remove();
+
+            // Step 5: Loop erasure process
+            await performLoopErasure(visitedNodes);
+
+            animationInProgress = false;
+            document.getElementById('spanning-tree-btn').disabled = false;
+        }
+
+        async function performLoopErasure(path) {
+            // Create a copy of the path to work with
+            let currentPath = [...path];
+            let i = 0;
+            
+            while (i < currentPath.length - 1) {
+                const currentNode = currentPath[i];
+                
+                // Find the last occurrence of currentNode in the remaining path
+                let lastOccurrence = i;
+                for (let j = i + 1; j < currentPath.length; j++) {
+                    if (currentPath[j] === currentNode) {
+                        lastOccurrence = j;
+                    }
+                }
+                
+                if (lastOccurrence > i) {
+                    // We found a loop! Color the loop edges red
+                    const loopEdges = [];
+                    for (let j = i; j < lastOccurrence; j++) {
+                        const edgeId = getEdgeId(currentPath[j], currentPath[j + 1]);
+                        if (edgeId) {
+                            loopEdges.push(edgeId);
+                            document.getElementById(edgeId).classList.remove('green');
+                            document.getElementById(edgeId).classList.add('red');
+                        }
+                    }
+                    
+                    // Wait 0.5 seconds
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Remove red coloring
+                    for (const edgeId of loopEdges) {
+                        document.getElementById(edgeId).classList.remove('red');
+                    }
+                    
+                    // Remove green coloring from loop nodes (except if they're V or W)
+                    for (let j = i + 1; j < lastOccurrence; j++) {
+                        const node = currentPath[j];
+                        const nodeObj = stringToNode(node);
+                        const nodeElement = document.getElementById(`node-${nodeObj.row}-${nodeObj.col}`);
+                        if (!nodeElement.classList.contains('green-super-dark')) {
+                            nodeElement.classList.remove('green-light');
+                        }
+                    }
+                    
+                    // Erase the loop from the path
+                    currentPath.splice(i + 1, lastOccurrence - i);
+                    
+                    // Re-color the remaining path green
+                    for (let j = i; j < currentPath.length - 1; j++) {
+                        const edgeId = getEdgeId(currentPath[j], currentPath[j + 1]);
+                        if (edgeId) {
+                            document.getElementById(edgeId).classList.add('green');
+                        }
+
+                        for (const node of [currentPath[j], currentPath[j + 1]]) {
+                            if (node !== path[path.length - 1]) { // Don't recolor W
+                                const nodeObj = stringToNode(node);
+                                const nodeElement = document.getElementById(`node-${nodeObj.row}-${nodeObj.col}`);
+                                if (!nodeElement.classList.contains('green-super-dark')) {
+                                    nodeElement.classList.add('green-light');
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                i++;
+            }
+        }
+
+        function getEdgeId(node1, node2) {
+            for (const edge of edges) {
+                if ((edge.from === node1 && edge.to === node2) || 
+                    (edge.from === node2 && edge.to === node1)) {
+                    return edge.id;
+                }
+            }
+            return null;
+        }
+
+        function buildSpanningTree(greenEdges, greenNodes) {
+            const spanningTree = new Set();
+            const visited = new Set();
+            
+            // Start from any green node
+            const startNode = Array.from(greenNodes)[0];
+            const queue = [startNode];
+            visited.add(startNode);
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                
+                for (const edgeId of greenEdges) {
+                    const edge = edges.find(e => e.id === edgeId);
+                    if (!edge) continue;
+                    
+                    let neighbor = null;
+                    if (edge.from === current && !visited.has(edge.to)) {
+                        neighbor = edge.to;
+                    } else if (edge.to === current && !visited.has(edge.from)) {
+                        neighbor = edge.from;
+                    }
+                    
+                    if (neighbor && greenNodes.has(neighbor)) {
+                        visited.add(neighbor);
+                        spanningTree.add(edgeId);
+                        queue.push(neighbor);
+                    }
+                }
+            }
+            
+            return spanningTree;
+        }
+
+        // Initialize with empty grid
+        drawEmptyGrid();
+    </script>
+</body>
+</html>
