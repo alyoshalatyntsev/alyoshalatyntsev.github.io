@@ -41,9 +41,14 @@ input[type="range"] {
 <div class="controls">
     <label>
         n: <span id="nval">5</span><br>
-        <input type="range" id="slider" min="1" max="10" value="5">
+        <input type="range" id="slider" min="1" max="15" value="5">
+    </label>
+    <label style="margin-top: 15px; display: block;">
+        Speed: <span id="speedval">0.25</span>s<br>
+        <input type="range" id="speedSlider" min="0.01" max="1" step="0.01" value="0.25">
     </label>
     <button id="tileBtn" style="margin-top: 15px; padding: 8px 16px; background: #9333ea; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Make New Tiling</button>
+    <button id="randomWalkBtn" style="margin-top: 15px; margin-left: 10px; padding: 8px 16px; background: #9333ea; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Random Walk in Set of Tilings</button>
     <div class="info">Click on a vertex surrounded by 3 different colored rhombi to rotate them!</div>
 </div>
 <canvas id="canvas"></canvas>
@@ -56,6 +61,9 @@ const ctx = c.getContext('2d');
 const s = document.getElementById('slider');
 const nv = document.getElementById('nval');
 const tileBtn = document.getElementById('tileBtn');
+const randomWalkBtn = document.getElementById('randomWalkBtn');
+const speedSlider = document.getElementById('speedSlider');
+const speedval = document.getElementById('speedval');
 
 // Grid parameters
 const spacing = 40;
@@ -63,6 +71,12 @@ const dotRadius = 4;
 
 // Store rhombi
 let rhombi = [];
+
+// Store list L of vertices with 3 adjacent rhombi
+let L = [];
+
+// Store interval ID for random walk
+let randomWalkInterval = null;
 
 function draw() {
     const n = parseInt(s.value);
@@ -302,6 +316,10 @@ function makeTiling() {
         }
     }
     
+    // Initialize L with (0,0)
+    L = [[0, 0]];
+    console.log('L initialized to:', L);
+    
     draw();
 }
 
@@ -318,6 +336,46 @@ function findRhombiAtVertex(vx, vy) {
     }
     
     return rhombiAtVertex;
+}
+
+// Check if a vertex has exactly 3 adjacent rhombi
+function hasThreeAdjacentRhombi(vx, vy) {
+    const rhombiAtVertex = findRhombiAtVertex(vx, vy);
+    return rhombiAtVertex.length === 3;
+}
+
+// Update L based on current rhombi configuration
+function updateL(vx, vy) {
+    // Check if (vx, vy) still has 3 adjacent rhombi
+    if (!hasThreeAdjacentRhombi(vx, vy)) {
+        // Remove (vx, vy) from L if it exists
+        L = L.filter(coord => !(coord[0] === vx && coord[1] === vy));
+    }
+    
+    // Check neighbors of (vx, vy)
+    const neighbors = [
+        [vx + 1, vy],
+        [vx + 1, vy - 1],
+        [vx, vy - 1],
+        [vx - 1, vy],
+        [vx - 1, vy + 1],
+        [vx, vy + 1]
+    ];
+    
+    for (const [nx, ny] of neighbors) {
+        const hasThree = hasThreeAdjacentRhombi(nx, ny);
+        const inL = L.some(coord => coord[0] === nx && coord[1] === ny);
+        
+        if (hasThree && !inL) {
+            // Add to L
+            L.push([nx, ny]);
+        } else if (!hasThree && inL) {
+            // Remove from L
+            L = L.filter(coord => !(coord[0] === nx && coord[1] === ny));
+        }
+    }
+    
+    console.log('L updated to:', L);
 }
 
 // Rotate a rhombus 180 degrees around a vertex
@@ -383,6 +441,9 @@ function rotateAtVertex(vx, vy) {
         }
     }
     
+    // Update L after rotation
+    updateL(vx, vy);
+    
     // Redraw
     draw();
 }
@@ -390,12 +451,92 @@ function rotateAtVertex(vx, vy) {
 s.addEventListener('input', () => {
     console.log('Slider changed to:', s.value);
     rhombi = []; // Clear rhombi when n changes
+    L = []; // Clear L when n changes
+    
+    // Stop random walk if it's running
+    if (randomWalkInterval) {
+        clearInterval(randomWalkInterval);
+        randomWalkInterval = null;
+        randomWalkBtn.textContent = 'Random Walk in Set of Tilings';
+        randomWalkBtn.style.background = '#9333ea';
+    }
+    
     draw();
 });
 
 tileBtn.addEventListener('click', () => {
     console.log('Make New Tiling button clicked');
     makeTiling();
+});
+
+randomWalkBtn.addEventListener('click', () => {
+    console.log('Random Walk button clicked');
+    
+    if (randomWalkInterval) {
+        // Stop the random walk if it's running
+        clearInterval(randomWalkInterval);
+        randomWalkInterval = null;
+        randomWalkBtn.textContent = 'Random Walk in Set of Tilings';
+        randomWalkBtn.style.background = '#9333ea';
+    } else {
+        // Start the random walk
+        if (L.length === 0) {
+            console.log('L is empty, cannot start random walk');
+            return;
+        }
+        
+        randomWalkBtn.textContent = 'Stop Random Walk';
+        randomWalkBtn.style.background = '#dc2626';
+        
+        const startRandomWalk = () => {
+            const stepTime = parseFloat(speedSlider.value) * 1000; // Convert to milliseconds
+            
+            randomWalkInterval = setInterval(() => {
+                if (L.length > 0) {
+                    // Pick a random vertex from L
+                    const randomIndex = Math.floor(Math.random() * L.length);
+                    const [vx, vy] = L[randomIndex];
+                    console.log(`Random walk: rotating at (${vx}, ${vy})`);
+                    rotateAtVertex(vx, vy);
+                } else {
+                    console.log('L became empty, stopping random walk');
+                    clearInterval(randomWalkInterval);
+                    randomWalkInterval = null;
+                    randomWalkBtn.textContent = 'Random Walk in Set of Tilings';
+                    randomWalkBtn.style.background = '#9333ea';
+                }
+            }, stepTime);
+        };
+        
+        startRandomWalk();
+    }
+});
+
+speedSlider.addEventListener('input', () => {
+    speedval.textContent = parseFloat(speedSlider.value).toFixed(2);
+    
+    // If random walk is running, restart it with new speed
+    if (randomWalkInterval) {
+        clearInterval(randomWalkInterval);
+        
+        const stepTime = parseFloat(speedSlider.value) * 1000; // Convert to milliseconds
+        
+        randomWalkInterval = setInterval(() => {
+            if (L.length > 0) {
+                // Pick a random vertex from L
+                const randomIndex = Math.floor(Math.random() * L.length);
+                const [vx, vy] = L[randomIndex];
+                console.log(`Random walk: rotating at (${vx}, ${vy})`);
+                rotateAtVertex(vx, vy);
+            } else {
+                console.log('L became empty, stopping random walk');
+                clearInterval(randomWalkInterval);
+                randomWalkInterval = null;
+                randomWalkBtn.textContent = 'Random Walk in Set of Tilings';
+                randomWalkBtn.style.background = '#9333ea';
+            }
+        }, stepTime);
+    }
 });
 
 c.addEventListener('click', (event) => {
