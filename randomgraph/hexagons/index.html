@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+    font-family: Arial;
+    background: #faf5ff;
+    padding: 20px;
+}
+.controls {
+    background: #f3e8ff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+#canvas {
+    border: 2px solid #f3e8ff;
+    background: white;
+    display: block;
+    margin: auto;
+    border-radius: 4px;
+    cursor: pointer;
+}
+label {
+    color: #553c9a;
+    font-weight: bold;
+}
+input[type="range"] {
+    width: 100%;
+    margin-top: 10px;
+}
+.info {
+    margin-top: 10px;
+    color: #6b46c1;
+    font-size: 14px;
+}
+</style>
+</head>
+<body>
+<h1 style="color:#6b46c1;text-align:center">Hexagonal Grid with Rotation</h1>
+<div class="controls">
+    <label>
+        n: <span id="nval">5</span><br>
+        <input type="range" id="slider" min="1" max="10" value="5">
+    </label>
+    <button id="tileBtn" style="margin-top: 15px; padding: 8px 16px; background: #9333ea; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Make New Tiling</button>
+    <div class="info">Click on a vertex surrounded by 3 different colored rhombi to rotate them!</div>
+</div>
+<canvas id="canvas"></canvas>
+
+<script>
+console.log('Script loaded!');
+
+const c = document.getElementById('canvas');
+const ctx = c.getContext('2d');
+const s = document.getElementById('slider');
+const nv = document.getElementById('nval');
+const tileBtn = document.getElementById('tileBtn');
+
+// Grid parameters
+const spacing = 40;
+const dotRadius = 4;
+
+// Store rhombi
+let rhombi = [];
+
+function draw() {
+    const n = parseInt(s.value);
+    nv.textContent = n;
+    
+    // Calculate canvas size
+    const padding = 60;
+    const width = (2 * n + 1) * spacing + padding;
+    const height = (2 * n + 1) * spacing + padding;
+    
+    c.width = width;
+    c.height = height;
+    
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Draw rhombi first if they exist
+    if(rhombi.length > 0) {
+        drawRhombi(centerX, centerY);
+    }
+    
+    // First draw all edges
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 2;
+    
+    for(let x = -n; x <= n; x++) {
+        for(let y = -n; y <= n; y++) {
+            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+                // Draw edges to adjacent points
+                drawEdges(x, y, n, centerX, centerY);
+            }
+        }
+    }
+    
+    // Then draw all dots on top
+    ctx.fillStyle = '#9333ea';
+    
+    for(let x = -n; x <= n; x++) {
+        for(let y = -n; y <= n; y++) {
+            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+                drawDot(x, y, centerX, centerY);
+            }
+        }
+    }
+    
+    // // Finally draw coordinate labels
+    // ctx.fillStyle = '#553c9a';
+    // ctx.font = '11px Arial';
+    // ctx.textAlign = 'center';
+    // ctx.textBaseline = 'middle';
+    
+    // for(let x = -n; x <= n; x++) {
+    //     for(let y = -n; y <= n; y++) {
+    //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+    //             drawLabel(x, y, centerX, centerY);
+    //         }
+    //     }
+    // }
+}
+
+function hexToPixel(hx, hy, centerX, centerY) {
+    // Convert hexagonal coordinates to pixel coordinates
+    // Rotated by 60 degrees: swap x contribution to y and y contribution to x
+    const px = centerX + hx * spacing * Math.sqrt(3) / 2;
+    const py = centerY + (hy + hx * 0.5) * spacing;
+    return {x: px, y: py};
+}
+
+function drawDot(hx, hy, centerX, centerY) {
+    const {x, y} = hexToPixel(hx, hy, centerX, centerY);
+    
+    ctx.beginPath();
+    ctx.arc(x, y, dotRadius, 0, 2 * Math.PI);
+    ctx.fill();
+}
+
+function drawEdges(hx, hy, n, centerX, centerY) {
+    const {x: x1, y: y1} = hexToPixel(hx, hy, centerX, centerY);
+    
+    // Six possible neighbors in hexagonal coordinates
+    const neighbors = [
+        [hx + 1, hy],
+        [hx - 1, hy],
+        [hx, hy + 1],
+        [hx, hy - 1],
+        [hx + 1, hy - 1],
+        [hx - 1, hy + 1]
+    ];
+    
+    for(const [nx, ny] of neighbors) {
+        // Check if neighbor is within bounds
+        if(Math.max(Math.abs(nx), Math.abs(ny), Math.abs(nx + ny)) <= n) {
+            const {x: x2, y: y2} = hexToPixel(nx, ny, centerX, centerY);
+            
+            // Only draw edge in one direction to avoid duplicates
+            if(nx > hx || (nx === hx && ny > hy)) {
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+function drawLabel(hx, hy, centerX, centerY) {
+    const {x, y} = hexToPixel(hx, hy, centerX, centerY);
+    
+    // Draw label below the dot
+    ctx.fillText(`(${hx},${hy})`, x, y + dotRadius + 12);
+}
+
+function getRhombusColor(p1, p2) {
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    
+    // Vertical edges: (0, ±1)
+    if(dx === 0 && Math.abs(dy) === 1) return '#ff9500'; // orange
+    
+    // Horizontal edges: (±1, 0)
+    if(Math.abs(dx) === 1 && dy === 0) return '#007aff'; // blue
+    
+    // Diagonal edges: (±1, ∓1)
+    if(Math.abs(dx) === 1 && Math.abs(dy) === 1 && dx * dy < 0) return '#34c759'; // green
+    
+    return '#cccccc'; // default gray
+}
+
+function getRhombusVertices(p1, p2) {
+    // Given two adjacent points that form a short side, find the other two vertices
+    const x = p1[0];
+    const y = p1[1];
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    
+    // GREEN: diagonal edge (1, -1)
+    if(dx === 1 && dy === -1) {
+        // (x,y) -- (x,y-1) -- (x+1,y-1) -- (x+1,y)
+        return [[x, y], [x, y-1], [x+1, y-1], [x+1, y]];
+    }
+    // GREEN: diagonal edge (-1, 1) - need to handle reverse direction
+    else if(dx === -1 && dy === 1) {
+        // This is actually from (x,y) to (x-1,y+1), so we need to adjust
+        // We want the rhombus from the lower point
+        const x2 = p2[0];
+        const y2 = p2[1];
+        return [[x2, y2], [x2, y2-1], [x2+1, y2-1], [x2+1, y2]];
+    }
+    // ORANGE: vertical edge (0, 1)
+    else if(dx === 0 && dy === 1) {
+        // (x,y) -- (x+1,y) -- (x,y+1) -- (x-1,y+1)
+        return [[x, y], [x+1, y], [x, y+1], [x-1, y+1]];
+    }
+    // ORANGE: vertical edge (0, -1) - reverse direction
+    else if(dx === 0 && dy === -1) {
+        const x2 = p2[0];
+        const y2 = p2[1];
+        return [[x2, y2], [x2+1, y2], [x2, y2+1], [x2-1, y2+1]];
+    }
+    // BLUE: horizontal edge (-1, 0)
+    else if(dx === -1 && dy === 0) {
+        // (x,y) -- (x-1,y+1) -- (x-1,y) -- (x,y-1)
+        return [[x, y], [x-1, y+1], [x-1, y], [x, y-1]];
+    }
+    // BLUE: horizontal edge (1, 0) - reverse direction
+    else if(dx === 1 && dy === 0) {
+        const x2 = p2[0];
+        const y2 = p2[1];
+        return [[x2, y2], [x2-1, y2+1], [x2-1, y2], [x2, y2-1]];
+    }
+    
+    // Fallback (shouldn't happen)
+    return [p1, p2, p1, p2];
+}
+
+function drawRhombi(centerX, centerY) {
+    ctx.globalAlpha = 0.5;
+    
+    for(const rhombus of rhombi) {
+        const vertices = getRhombusVertices(rhombus.p1, rhombus.p2);
+        
+        ctx.fillStyle = rhombus.color;
+        ctx.beginPath();
+        
+        for(let i = 0; i < vertices.length; i++) {
+            const {x, y} = hexToPixel(vertices[i][0], vertices[i][1], centerX, centerY);
+            if(i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        ctx.closePath();
+        ctx.fill();
+    }
+    
+    ctx.globalAlpha = 1.0;
+}
+
+function makeTiling() {
+    const n = parseInt(s.value);
+    rhombi = [];
+    
+    for(let x = -n; x <= n; x++) {
+        for(let y = -n; y <= n; y++) {
+            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+                let p1 = [x, y];
+                
+                // Create orange rhombus if conditions met
+                if(y >= 0 && x + y >= 0) {
+                    let p2 = [x, y + 1];
+                    if(p2 && Math.max(Math.abs(p2[0]), Math.abs(p2[1]), Math.abs(p2[0] + p2[1])) <= n) {
+                        const color = getRhombusColor(p1, p2);
+                        rhombi.push({p1, p2, color});
+                    }
+                }
+                
+                // Create green rhombus if conditions met
+                if(y < 0 && x > 0) {
+                    let p2 = [x - 1, y + 1];
+                    if(p2 && Math.max(Math.abs(p2[0]), Math.abs(p2[1]), Math.abs(p2[0] + p2[1])) <= n) {
+                        const color = getRhombusColor(p1, p2);
+                        rhombi.push({p1, p2, color});
+                    }
+                }
+                
+                // Create blue rhombus if conditions met
+                if(x <= 0 && x + y <= 0) {
+                    let p2 = [x - 1, y];
+                    if(p2 && Math.max(Math.abs(p2[0]), Math.abs(p2[1]), Math.abs(p2[0] + p2[1])) <= n) {
+                        const color = getRhombusColor(p1, p2);
+                        rhombi.push({p1, p2, color});
+                    }
+                }
+            }
+        }
+    }
+    
+    draw();
+}
+
+// Find rhombi that have a vertex at the given point
+function findRhombiAtVertex(vx, vy) {
+    const rhombiAtVertex = [];
+    
+    for(const rhombus of rhombi) {
+        // Check if either p1 or p2 matches the given vertex
+        if((rhombus.p1[0] === vx && rhombus.p1[1] === vy) || 
+           (rhombus.p2[0] === vx && rhombus.p2[1] === vy)) {
+            rhombiAtVertex.push(rhombus);
+        }
+    }
+    
+    return rhombiAtVertex;
+}
+
+// Rotate a rhombus 180 degrees around a vertex
+function rotateRhombusAroundVertex(rhombus, vx, vy) {
+    // Check if the rotation vertex is one of the rhombus's defining points
+    let otherPoint = null;
+    
+    if(rhombus.p1[0] === vx && rhombus.p1[1] === vy) {
+        // The rotation vertex is p1, so we rotate p2
+        otherPoint = rhombus.p2;
+    } else if(rhombus.p2[0] === vx && rhombus.p2[1] === vy) {
+        // The rotation vertex is p2, so we rotate p1
+        otherPoint = rhombus.p1;
+    } else {
+        // This rhombus doesn't have the rotation vertex as one of its defining points
+        return null;
+    }
+    
+    // Calculate the rotated point: (2*vx - x, 2*vy - y)
+    const rotatedPoint = [2 * vx - otherPoint[0], 2 * vy - otherPoint[1]];
+    
+    // Create the new rhombus with the same color
+    // Make sure p1 is always the rotation vertex for consistency
+    return {
+        p1: [vx, vy],
+        p2: rotatedPoint,
+        color: rhombus.color
+    };
+}
+
+// Main rotation function
+function rotateAtVertex(vx, vy) {
+    console.log(`Attempting to rotate at vertex (${vx}, ${vy})`);
+    
+    // Find all rhombi that have this vertex
+    const rhombiAtVertex = findRhombiAtVertex(vx, vy);
+    console.log(`Found ${rhombiAtVertex.length} rhombi at this vertex`);
+    
+    // Check if we have exactly 3 rhombi of different colors
+    if(rhombiAtVertex.length !== 3) {
+        console.log('Need exactly 3 rhombi at vertex for rotation');
+        return;
+    }
+    
+    const colors = rhombiAtVertex.map(r => r.color);
+    const uniqueColors = [...new Set(colors)];
+    
+    if(uniqueColors.length !== 3) {
+        console.log('Need 3 different colored rhombi for rotation');
+        return;
+    }
+    
+    console.log('Valid rotation! Rotating 3 rhombi...');
+    
+    // Remove the old rhombi
+    rhombi = rhombi.filter(r => !rhombiAtVertex.includes(r));
+    
+    // Add the rotated rhombi
+    for(const rhombus of rhombiAtVertex) {
+        const rotated = rotateRhombusAroundVertex(rhombus, vx, vy);
+        if(rotated) {
+            rhombi.push(rotated);
+        }
+    }
+    
+    // Redraw
+    draw();
+}
+
+s.addEventListener('input', () => {
+    console.log('Slider changed to:', s.value);
+    rhombi = []; // Clear rhombi when n changes
+    draw();
+});
+
+tileBtn.addEventListener('click', () => {
+    console.log('Make New Tiling button clicked');
+    makeTiling();
+});
+
+c.addEventListener('click', (event) => {
+    console.log('CANVAS CLICKED!');
+    
+    const rect = c.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+    
+    const centerX = c.width / 2;
+    const centerY = c.height / 2;
+    const n = parseInt(s.value);
+    
+    console.log(`Click at pixel coordinates: (${clickX.toFixed(1)}, ${clickY.toFixed(1)})`);
+    
+    // Check all vertices to find which one was clicked
+    let closestDist = Infinity;
+    let closestVertex = null;
+    
+    for(let x = -n; x <= n; x++) {
+        for(let y = -n; y <= n; y++) {
+            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+                const {x: px, y: py} = hexToPixel(x, y, centerX, centerY);
+                const dist = Math.sqrt((clickX - px) ** 2 + (clickY - py) ** 2);
+                
+                if(dist < closestDist) {
+                    closestDist = dist;
+                    closestVertex = [x, y];
+                }
+            }
+        }
+    }
+    
+    console.log(`Closest vertex: (${closestVertex[0]}, ${closestVertex[1]}) at distance ${closestDist.toFixed(1)} pixels`);
+    
+    // Use 0.3 * spacing as the click radius (about 12 pixels)
+    const clickRadius = 0.3 * spacing;
+    
+    if(closestDist <= clickRadius && closestVertex) {
+        console.log(`CLICKED WITHIN 0.3 OF VERTEX: (${closestVertex[0]}, ${closestVertex[1]})`);
+        rotateAtVertex(closestVertex[0], closestVertex[1]);
+    } else {
+        console.log(`Click too far from any vertex (distance: ${closestDist.toFixed(1)}, threshold: ${clickRadius})`);
+    }
+});
+
+console.log('All event listeners attached');
+
+// Initialize
+draw();
+</script>
+</body>
+</html>
