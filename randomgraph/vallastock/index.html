@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valla Stock Exchange</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:wght@400;600&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 40px;
+            background-color: #f4f1e8;
+            background-image: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(133, 117, 88, 0.03) 10px,
+                    rgba(133, 117, 88, 0.03) 20px
+                ),
+                radial-gradient(
+                    circle at 20% 50%,
+                    rgba(133, 117, 88, 0.05) 0%,
+                    transparent 50%
+                );
+            color: #3a3028;
+            font-family: 'Crimson Text', serif;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fdfcf8;
+            box-shadow: 
+                0 0 50px rgba(0, 0, 0, 0.1),
+                inset 0 0 30px rgba(133, 117, 88, 0.05);
+            border: 1px solid #d4c4b0;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .container::before,
+        .container::after {
+            content: '❦';
+            position: absolute;
+            font-size: 24px;
+            color: #8b7355;
+        }
+        
+        .container::before {
+            top: 20px;
+            left: 20px;
+        }
+        
+        .container::after {
+            bottom: 20px;
+            right: 20px;
+            transform: rotate(180deg);
+        }
+        
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 48px;
+            text-align: center;
+            color: #2a251f;
+            margin: 0 0 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 2px;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0 40px 0;
+            font-size: 24px;
+            color: #8b7355;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #8b7355, transparent);
+        }
+        
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 32px;
+            text-align: center;
+            color: #3a3028;
+            margin: 0 0 30px 0;
+            font-style: italic;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+        
+        .box-container {
+            background-color: #f9f7f3;
+            border: 2px solid #c4b5a0;
+            padding: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        
+        .box-container::before {
+            content: 'Box A.';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background-color: #f9f7f3;
+            padding: 0 10px;
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 14px;
+            color: #6b5d54;
+        }
+        
+        .box-a {
+            height: 300px;
+        }
+        
+        #marketGraph {
+            width: 100%;
+            height: 100%;
+            background-color: #f5f2ea;
+            border: 1px solid #a8957e;
+        }
+        
+        .sum-display {
+            background-color: #f9f7f3;
+            border: 2px solid #c4b5a0;
+            padding: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .sum-display h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: #3a3028;
+            margin: 0 0 10px 0;
+        }
+        
+        .sum-value {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 36px;
+            color: #2a251f;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .prime-table-container {
+            background-color: #f9f7f3;
+            border: 2px solid #c4b5a0;
+            padding: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+            margin-top: 40px;
+        }
+        
+        .prime-table-container h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 24px;
+            text-align: center;
+            color: #3a3028;
+            margin: 0 0 20px 0;
+            text-decoration: underline;
+            text-decoration-color: #8b7355;
+            text-underline-offset: 5px;
+        }
+        
+        .prime-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 4px;
+            font-family: 'Crimson Text', serif;
+            font-size: 12px;
+        }
+        
+        .prime-number {
+            text-align: center;
+            padding: 4px 2px;
+            background-color: #fdfcf8;
+            border: 1px solid #e0d5c7;
+            color: #4a3f36;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+        }
+        
+        .prime-number .prime-value {
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+            line-height: 1;
+        }
+        
+        .prime-number .price {
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+        }
+        
+        .prime-number:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ornament {
+            text-align: center;
+            font-size: 32px;
+            color: #8b7355;
+            margin: 40px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>VALLA STOCK EXCHANGE</h1>
+        <div class="divider">◆ ◆ ◆</div>
+        <h2>Prime Markets</h2>
+        
+        <div class="content-grid">
+            <div class="box-container box-a">
+                <canvas id="marketGraph"></canvas>
+            </div>
+        </div>
+        
+        <div class="sum-display">
+            <h3>Total Market Value</h3>
+            <div class="sum-value" id="sumDisplay">£4300</div>
+        </div>
+        
+        <div class="prime-table-container">
+            <h3>Table of Prime Numbers (1 - 3000)</h3>
+            <div class="prime-table" id="primeTable"></div>
+        </div>
+        
+        <div class="ornament">⁂</div>
+    </div>
+    
+    <script>
+        // Generate prime numbers using Sieve of Eratosthenes
+        function generatePrimes(max) {
+            const sieve = new Array(max + 1).fill(true);
+            sieve[0] = sieve[1] = false;
+            
+            for (let i = 2; i * i <= max; i++) {
+                if (sieve[i]) {
+                    for (let j = i * i; j <= max; j += i) {
+                        sieve[j] = false;
+                    }
+                }
+            }
+            
+            const primes = [];
+            for (let i = 2; i <= max; i++) {
+                if (sieve[i]) {
+                    primes.push(i);
+                }
+            }
+            return primes;
+        }
+        
+        // Populate prime table
+        const primes = generatePrimes(3000);
+        const primeTable = document.getElementById('primeTable');
+        const primeValues = new Map(); // Store X(p) values
+        const primeElements = new Map(); // Store DOM elements
+        
+        // Track the sum of all X(p) values
+        let totalSum = 0;
+        const sumDisplay = document.getElementById('sumDisplay');
+        
+        // Function to update the sum display
+        function updateSumDisplay() {
+            sumDisplay.textContent = `£${totalSum}`;
+        }
+        
+        // Initialize all primes with value 10
+        primes.forEach(prime => {
+            primeValues.set(prime, 10);
+            totalSum += 10; // Start with sum = 10 * number of primes
+            
+            const primeDiv = document.createElement('div');
+            primeDiv.className = 'prime-number';
+            
+            const primeSpan = document.createElement('span');
+            primeSpan.className = 'prime-value';
+            primeSpan.textContent = prime;
+            
+            const priceSpan = document.createElement('span');
+            priceSpan.className = 'price';
+            priceSpan.textContent = '£10';
+            
+            primeDiv.appendChild(primeSpan);
+            primeDiv.appendChild(priceSpan);
+            
+            // Add click handler to set value to zero and affect other primes
+            primeDiv.addEventListener('click', () => {
+                const oldValue = primeValues.get(prime);
+                primeValues.set(prime, 0);
+                totalSum -= oldValue; // Update sum
+                updateSumDisplay(); // Update display
+                updatePrimeColor(prime);
+                
+                // Affect other primes based on distance
+                primes.forEach(q => {
+                    if (q !== prime) {
+                        const distance = Math.abs(prime - q);
+                        const probability = Math.pow((3000 - distance) / 3000, 2);
+                        
+                        if (Math.random() < probability) {
+                            const currentValue = primeValues.get(q);
+                            if (currentValue > 0) {
+                                const newValue = currentValue - 1;
+                                primeValues.set(q, newValue);
+                                totalSum -= 1; // Update sum
+                                updatePrimeColor(q);
+                            }
+                        }
+                    }
+                });
+                updateSumDisplay(); // Update display after all changes
+            });
+            
+            primeTable.appendChild(primeDiv);
+            primeElements.set(prime, {div: primeDiv, priceSpan: priceSpan});
+            
+            updatePrimeColor(prime);
+        });
+        
+        // Function to update color based on value
+        function updatePrimeColor(prime) {
+            const value = primeValues.get(prime);
+            const element = primeElements.get(prime);
+            if (!element) return;
+            
+            let color;
+            if (value === 0) {
+                color = '#ff0000'; // Red
+            } else if (value >= 16) {
+                color = '#00ff00'; // Green
+            } else {
+                // Interpolate between red and green
+                const ratio = value / 16;
+                const r = Math.floor((1 - ratio) * 255);
+                const g = Math.floor(ratio * 255);
+                color = `rgb(${r}, ${g}, 0)`;
+            }
+            
+            element.div.style.backgroundColor = color;
+            element.div.style.color = value < 8 ? '#ffffff' : '#000000';
+            element.priceSpan.textContent = `£${value}`;
+        }
+        
+        // Update random prime value every 0.1 seconds
+        setInterval(() => {
+            const randomPrime = primes[Math.floor(Math.random() * primes.length)];
+            const currentValue = primeValues.get(randomPrime);
+            const change = Math.random() < 0.5 ? -1 : 1;
+            const newValue = Math.max(0, currentValue + change); // Can't go below 0
+            
+            // Update sum based on the change
+            totalSum += (newValue - currentValue);
+            
+            primeValues.set(randomPrime, newValue);
+            updatePrimeColor(randomPrime);
+            updateSumDisplay(); // Update display
+        }, 10);
+        
+        // Market value graph
+        const canvas = document.getElementById('marketGraph');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Graph parameters
+        const viewWidth = 20;  // coordinate units visible
+        const viewHeight = 150; // coordinate units visible (increased to show more range)
+        let currentTime = 0;
+        const timeStep = 0.1;
+        
+        // Store market history
+        const marketHistory = [{time: 0, value: totalSum}];
+        
+        // Style settings
+        ctx.strokeStyle = '#8b7355';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        // Draw the market graph centered on current time and value
+        function drawMarketGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (marketHistory.length < 2) return;
+            
+            // Get current value for centering
+            const currentValue = totalSum;
+            const centerTime = currentTime;
+            
+            // Calculate visible range
+            const minTime = centerTime - viewWidth / 2;
+            const maxTime = centerTime + viewWidth / 2;
+            const minValue = currentValue - viewHeight / 2;
+            const maxValue = currentValue + viewHeight / 2;
+            
+            // Draw grid lines for reference
+            ctx.strokeStyle = '#d4c4b0';
+            ctx.lineWidth = 0.5;
+            
+            // Vertical grid lines (time)
+            for (let t = Math.floor(minTime); t <= Math.ceil(maxTime); t++) {
+                const x = ((t - minTime) / viewWidth) * canvas.width;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines (value)
+            for (let v = Math.floor(minValue / 10) * 10; v <= Math.ceil(maxValue / 10) * 10; v += 10) {
+                const y = canvas.height - ((v - minValue) / viewHeight) * canvas.height;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw the market value line
+            ctx.strokeStyle = '#8b7355';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let started = false;
+            for (let i = 0; i < marketHistory.length; i++) {
+                const point = marketHistory[i];
+                
+                // Only draw if point is in visible range
+                if (point.time >= minTime - 1 && point.time <= maxTime + 1) {
+                    const x = ((point.time - minTime) / viewWidth) * canvas.width;
+                    const y = canvas.height - ((point.value - minValue) / viewHeight) * canvas.height;
+                    
+                    if (!started) {
+                        ctx.moveTo(x, y);
+                        started = true;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Draw current point as a dot
+            const currentX = ((currentTime - minTime) / viewWidth) * canvas.width;
+            const currentY = canvas.height - ((currentValue - minValue) / viewHeight) * canvas.height;
+            ctx.fillStyle = '#8b7355';
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 4, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        // Update market history and redraw
+        function updateMarketGraph() {
+            currentTime += timeStep;
+            marketHistory.push({time: currentTime, value: totalSum});
+            
+            // Keep only recent history to save memory (keep last 1000 points)
+            if (marketHistory.length > 1000) {
+                marketHistory.shift();
+            }
+            
+            drawMarketGraph();
+        }
+        
+        // Update graph every 100ms
+        setInterval(updateMarketGraph, 100);
+    </script>
+</body>
+</html>
