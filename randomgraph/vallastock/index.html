@@ -326,7 +326,7 @@
                 primes.forEach(q => {
                     if (q !== prime) {
                         const distance = Math.abs(prime - q);
-                        const probability = Math.pow((3000 - distance) / 3000, 2);
+                        const probability = Math.pow((3000 - distance) / 4000, 4);
                         
                         if (Math.random() < probability) {
                             const currentValue = primeValues.get(q);
