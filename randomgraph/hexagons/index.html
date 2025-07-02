@@ -41,7 +41,7 @@ input[type="range"] {
 <div class="controls">
     <label>
         n: <span id="nval">5</span><br>
-        <input type="range" id="slider" min="1" max="15" value="5">
+        <input type="range" id="slider" min="1" max="25" value="5">
     </label>
     <label style="margin-top: 15px; display: block;">
         Speed: <span id="speedval">0.25</span>s<br>
@@ -102,25 +102,25 @@ function draw() {
     ctx.strokeStyle = '#c084fc';
     ctx.lineWidth = 2;
     
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                // Draw edges to adjacent points
-                drawEdges(x, y, n, centerX, centerY);
-            }
-        }
-    }
+    // for(let x = -n; x <= n; x++) {
+    //     for(let y = -n; y <= n; y++) {
+    //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+    //             // Draw edges to adjacent points
+    //             drawEdges(x, y, n, centerX, centerY);
+    //         }
+    //     }
+    // }
     
-    // Then draw all dots on top
-    ctx.fillStyle = '#9333ea';
+    // // Then draw all dots on top
+    // ctx.fillStyle = '#9333ea';
     
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                drawDot(x, y, centerX, centerY);
-            }
-        }
-    }
+    // for(let x = -n; x <= n; x++) {
+    //     for(let y = -n; y <= n; y++) {
+    //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+    //             drawDot(x, y, centerX, centerY);
+    //         }
+    //     }
+    // }
     
     // // Finally draw coordinate labels
     // ctx.fillStyle = '#553c9a';
