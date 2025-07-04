@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  4 JUL 2025 08:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  4 JUL 2025 08:39
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1477,15 +1477,273 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 
 [2]
-Package mdframed Info: mdframed works in twoside mode on input line 223.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 223.
-
 
 [3]
+Package mdframed Info: mdframed works in twoside mode on input line 337.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 337.
+
 
 [4]
+
+[5]
 Kapitel 1.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 449--451
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 449--451
+
+ []
+
+Package mdframed Info: mdframed works in twoside mode on input line 452.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 452.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.481     C
+           ounting domino tilings.
+Package mdframed Info: mdframed works in twoside mode on input line 494.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 494.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.533 C
+       onsider the map of Sweden's Län
+<LanSverige.png, id=73, 218.2554pt x 492.33937pt>
+File: LanSverige.png Graphic file (type png)
+<use LanSverige.png>
+Package pdftex.def Info: LanSverige.png  used on input line 535.
+(pdftex.def)             Requested size: 189.20459pt x 426.79134pt.
+
+
+[6]
+pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.546     E
+           xamples coming from 3d geometry.
+
+[7 <./LanSverige.png>]
+
+[8]
+Kapitel 2.
+
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 728--729
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 728--729
+
+ []
+
+Package mdframed Info: mdframed works in twoside mode on input line 734.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 734.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.742     R
+           andom domino tilings of  $2\times n$ rectangle.
+pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.765    T
+          ake a domino tiling, and consider the sequence of boxes, labelled ...
+
+[9]
+Package mdframed Info: mdframed works in twoside mode on input line 855.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 855.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10.95> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 860.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <8> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 860.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <6> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 860.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.864   R
+         andom walks. Consider a random walk on $\mathbf{Z}$ of length $t$, ...
+
+[10]
+pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.902   S
+         how that the set of tilings of the $1\times B\times C$ hexagon by l...
+
+[11]
+Kapitel 3.
+
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1028--1029
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1028--1029
+
+ []
+
+Package mdframed Info: mdframed works in twoside mode on input line 1037.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1037.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1052 C
+        onsider one white and one black 6-sided dice, both with faces number...
+
+[12]
+pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1099   C
+          orrelators.
+
+[13]
+Kapitel 4.
+
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1179--1180
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1179--1180
+
+ []
+
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1260 \begin{problem} H
+                        exagonal paths.
+pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1368   F
+          lux.
+
+[14]
+
+[15]
+Kapitel 5.
+
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1450--1451
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1450--1451
+
+ []
+
+Package mdframed Info: mdframed works in twoside mode on input line 1453.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1453.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1458   E
+          xericse on expected value, etc.
+Package mdframed Info: mdframed works in twoside mode on input line 1462.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1462.
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `cmtt' (encoding: T1).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1470    I
+           n the graph
+
+[16]
+Kapitel 6.
+
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1496--1497
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1496--1497
+
+ []
+
+
+
+[17]
+Kapitel 7.
+
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1501--1502
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1501--1502
+
+ []
+
+
+
+[18]
+Kapitel 8.
+
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1506--1507
+  []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1506--1507
+
+ []
+
+
+
+[19] (mattekollo.aux)
+ ***********
+LaTeX2e <2024-11-01>
+L3 programming layer <2024-11-02>
+ ***********
+Package logreq Info: Writing requests to 'mattekollo.run.xml'.
+\openout1 = `mattekollo.run.xml'.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 40648 strings out of 473682
+ 768294 string characters out of 5719215
+ 1743355 words of memory out of 5000000
+ 62832 multiletter control sequences out of 15000+600000
+ 637780 words of font info for 221 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 89i,12n,96p,1068b,1242s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\alyos\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1200.pk><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagd8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagk8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on mattekollo.pdf (19 pages, 701649 bytes).
+PDF statistics:
+ 325 PDF objects out of 1000 (max. 8388607)
+ 103 named destinations out of 1000 (max. 500000)
+ 66138 words of extra memory for PDF output out of 74296 (max. 10000000)
+

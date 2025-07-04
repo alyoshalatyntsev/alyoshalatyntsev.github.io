@@ -189,6 +189,120 @@ Count the number of tilings of the $3\times n$ rectangle in terms of the number 
 \end{problem}
 
 
+\begin{problem}
+  Show that any tiling of the hexagonal $A\times B\times C$ graph by lozenges can be obtained from any other by a sequence of \textit{flips}
+\begin{center}
+\begin{tikzpicture}
+ 
+        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+        \foreach \angle in {0,120,240} {
+            \begin{scope}[rotate around={\angle:(0,0)}]
+                % Draw a 3x3 square grid with 3pt circles at each grid point
+                % \foreach \x in {0,1,2} {
+                %     \foreach \y in {0,1,2} {
+                %         \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                %     }
+                % }
+                % Optionally, draw the grid lines
+                \foreach \x in {0,1,2} {
+                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
+                }
+                \foreach \y in {0,1,2} {
+                    \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
+                }
+                % Draw diagonal edges
+                \draw (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
+                \draw (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
+                \draw (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2) 
+            \end{scope}
+        }
+        % Draw orange lozenges at specified positions
+        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+        }
+     \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={60:(0,0)}]
+            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+     \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={120:(0,0)}]
+            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+
+
+        \begin{scope} 
+         [xshift= 5cm, yshift = -1cm]
+         
+        % Draw green, blue, and orange lozenges at (0,0)
+        \begin{scope}
+            % Green lozenge (no rotation)
+            \begin{scope} 
+             [rotate around={120:(0,0)}] 
+             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+             \end{scope}
+            % Blue lozenge (rotated 60 degrees)
+            \begin{scope}[rotate around={60:(0,0)}]
+                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+            % Orange lozenge (rotated 120 degrees)
+            \begin{scope}[shift={(-0.866,1.5)}]
+                \begin{scope}[rotate around={0:(0,0)}]
+                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+             \end{scope}
+
+             \node at (2,1) {$\stackrel{\textup{flip}}{\longleftrightarrow}$};
+
+            \begin{scope} 
+             [xshift = 4cm,rotate around={120:(0,1)}]
+             
+            % Green lozenge (no rotation)
+            \begin{scope} 
+             [rotate around={120:(0,0)}] 
+             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+             \end{scope}
+            % Blue lozenge (rotated 60 degrees)
+            \begin{scope}[rotate around={60:(0,0)}]
+                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+            % Orange lozenge (rotated 120 degrees)
+            \begin{scope}[shift={(-0.866,1.5)}]
+                \begin{scope}[rotate around={0:(0,0)}]
+                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+             \end{scope} 
+
+
+
+        \end{scope}
+
+ \end{tikzpicture}
+ \end{center} 
+ \begin{enumerate}[label = \alph*.]
+  \item What does the hexagonal flip $T \leftrightarrow T'$ do to the height function? i.e. how is $h_{T'}$ related to $h_T$?
+  \item  What about the $m\times n$ rectangle? What about any square graph (subgraph of $\mathbf{Z}^2$)? Define a height function for the $m\times n$ rectangle which has an analogous property to a. 
+  \item Can you define analogous paths in the $m\times n$ rectangle attached to a tiling $T$?
+ \end{enumerate}
+\end{problem}
+
+
+
 
 
 
@@ -286,10 +400,36 @@ Can you find a matrix $\tilde{K}$ that works for any planar bipartite graph?
 
 \begin{problem}
   Temperley bijection. 
+  \begin{enumerate}[label=\alph*.]
+   \item Colour the $n\times m$ rectangle alternatingly black and white. 
+   
+          \begin{center}
+        \begin{tikzpicture}[scale=0.6]
+            % Draw grid for 3x12 rectangle
+            \foreach \x in {1,...,11} {
+                \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+            }
+            \foreach \y in {1,...,4} {
+                \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
+            }
+            % Draw blue squares with opacity 0.5 on every other square in the 3xn grid
+            \foreach \x in {1,...,10} {
+                \foreach \y in {1,2,3} {
+                    \ifodd\numexpr\x+\y\relax
+                        \fill[blue, opacity=0.3] (\x,\y) rectangle ++(1,1);
+                    \fi
+                }
+            }
+
+            % Fill blue region: 3 x n rectangle from (1,1) to (11,4)
+            \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (11,1) -- (11,4) -- (1,4) -- cycle;
+        \end{tikzpicture}
+        \end{center}
+  \end{enumerate}
 \end{problem}
 
 
-
+meow 
 
 
 
@@ -866,53 +1006,6 @@ One can similarly define a \textit{random walk starting at a fixed vertex $v$}, 
 
 
 
-%  3xn rectangle
-        %   \begin{center}
-        % \begin{tikzpicture}
-        %     % Draw grid for 3x12 rectangle
-        %     \foreach \x in {1,...,11} {
-        %         \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
-        %     }
-        %     \foreach \y in {1,...,4} {
-        %         \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
-        %     }
-        %     % Example domino tiling for 3x12 rectangle
-        %     % First column: vertical domino
-        %     \filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (2,3);
-        %     \filldraw[fill=green, fill opacity=0.3] (1,3) rectangle (3,4);
-        %     % Next two columns: three horizontal dominoes (should be 2x1)
-        %     \filldraw[fill=green, fill opacity=0.3] (2,1) rectangle (4,2);
-        %     \filldraw[fill=green, fill opacity=0.3] (2,2) rectangle (4,3);
-        %     \filldraw[fill=green, fill opacity=0.3] (3,3) rectangle (5,4);
-
-        %     % Draw horizontal dominoes with bottom left at (4,1), (4,2), (5,3)
-        %     \filldraw[fill=green, fill opacity=0.3] (4,1) rectangle (6,2);
-        %     \filldraw[fill=green, fill opacity=0.3] (4,2) rectangle (6,3);
-        %     \filldraw[fill=green, fill opacity=0.3] (5,3) rectangle (7,4);
-
-        %     % Draw vertical domino with bottom left at (6,1)
-        %     \filldraw[fill=green, fill opacity=0.3] (6,1) rectangle (7,3);
-
-        %     % Draw three horizontal dominoes with bottom left at (7,1), (7,2), (7,3)
-        %     \filldraw[fill=green, fill opacity=0.3] (7,1) rectangle (9,2);
-        %     \filldraw[fill=green, fill opacity=0.3] (7,2) rectangle (9,3);
-        %     \filldraw[fill=green, fill opacity=0.3] (7,3) rectangle (9,4);
-
-        %     % Draw one horizontal domino at the bottom with x=9 (from (9,1) to (11,2))
-        %     \filldraw[fill=green, fill opacity=0.3] (9,1) rectangle (11,2);
-
-        %     % Draw two vertical dominoes over it at (9,2)-(10,4) and (10,2)-(11,4)
-        %     \filldraw[fill=green, fill opacity=0.3] (9,2) rectangle (10,4);
-        %     \filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (11,4);
-
-        %     % Mark some vertical line at x=3 for k
-        %     \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
-        %     \node at (3.5,4.5) {$k$};
-        %     \node at (1.5,4.5) {$1$};
-        %     \node at (10.5,4.5) {$n$};
-        % \end{tikzpicture}
-        % \end{center}
-
 
 
 
@@ -1000,8 +1093,6 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
 
 
 
-
-
 \textbf{Back to random domino tilings.}
 
 \begin{problem}
@@ -1043,7 +1134,7 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
         \fill[red] (\cx,\cy) circle (3pt);
     }
     \node[right, red] at ({0.866*1},{1 - 0.5*1 + 0.3}) {$y$};
-    \node[right, red] at ({0.866*0},{0 - 0.5*0 + 0.3}) {$x$};
+    \node[right, red] at ({0.866*0},{0 + 0.5*1 + 0.3}) {$x$};
 
     \begin{scope} 
      [xshift=-0.2cm] 
@@ -1089,6 +1180,82 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
 
 
 \setcounter{problem}{0}
+
+\textit{We'll begin with a proof that lozenge tilings of the $A\times B \times C$ hexagonal graph biject with 3d cube stackings of the $A\times B\times C$ 3d box. Be careful - it's not true if for certain subgraphs of the hexagonal graph!}
+
+\begin{center}
+\begin{tikzpicture}
+ 
+        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+        \foreach \angle/\ca/\cb/\cc in {0/blue!30/green!30/orange!30,240/green!30/orange!30/blue!30,120/orange!30/blue!30/green!30} {
+            \begin{scope}[rotate around={\angle:(0,0)}]
+
+            % Draw blue rhombi at (1,0), (1,-1), (1,-2) in hexagon coordinates
+            \foreach \x/\y in {1/1, 1/0, 1/-1, 1/-2} {
+                \pgfmathsetmacro{\cx}{0.866*\x}
+                \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+                \begin{scope}[shift={(\cx,\cy)}]
+                    \begin{scope}[rotate around={60:(0,0)}]
+                        \draw[thick, fill=\ca] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                    \end{scope}
+                \end{scope}
+            }
+
+            % Draw green rhombi at (2,1), (2,0), (2,-1), (2,-2) in hexagon coordinates
+            \foreach \x/\y in {3/2,3/1, 3/0, 3/-1} {
+                \pgfmathsetmacro{\cx}{0.866*\x}
+                \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+                \begin{scope}[shift={(\cx,\cy)}]
+                    \begin{scope}[rotate around={120:(0,0)}]
+                        \draw[thick, fill=\cb] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                    \end{scope}
+                \end{scope}
+            }
+
+                % Draw orange rhombi at (1,-2) and (-1,-2) in hexagon coordinates
+                \foreach \x/\y in {1/-2, 0/-3} {
+                    \pgfmathsetmacro{\cx}{0.866*\x}
+                    \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+                    \begin{scope}[shift={(\cx,\cy)}]
+                        \draw[thick, fill=\cc] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                    \end{scope}
+                }
+
+
+            \end{scope}
+        }
+    %     % Draw orange lozenges at specified positions
+    %     \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
+    %         \pgfmathsetmacro{\cx}{0.866*\x}
+    %         \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+    %         \begin{scope}[shift={(\cx,\cy)}]
+    %         \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+    %         \end{scope}
+    %     }
+    %  \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
+    %         \pgfmathsetmacro{\cx}{0.866*\x}
+    %         \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+    %         \begin{scope}[shift={(\cx,\cy)}]
+    %             \begin{scope}[rotate around={60:(0,0)}]
+    %         \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+    %             \end{scope}
+    %         \end{scope}
+    %     }
+    %  \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
+    %         \pgfmathsetmacro{\cx}{0.866*\x}
+    %         \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+    %         \begin{scope}[shift={(\cx,\cy)}]
+    %             \begin{scope}[rotate around={120:(0,0)}]
+    %         \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+    %             \end{scope}
+    %         \end{scope}
+    %     }
+
+\end{tikzpicture}
+ \end{center}
+
+
+
 
 \begin{problem} Hexagonal paths.
     \begin{enumerate}[label =\alph*.]
@@ -1177,12 +1344,16 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
     \node[right, red] at (4,2.5) {$\cdots$};
     \node[right, red] at (4,2) {$\gamma_A$};
 
+    \node[below] at (2,0) {$p$};
+
+
 \end{scope}
 
 \end{tikzpicture}
  \end{center}
  \item  What are the graphs corresponding to the lozenge tilings with the maximum and minimum number of 3d boxes?
  \item  How can you see the number of 3d boxes from the paths?
+ \item  What is the expected value of $\gamma_1(p), \ldots, \gamma_A(p)$ for the $2\times 2\times 2$ hexagon?
     \end{enumerate}
 In the next problem we will find an analogous set of paths for the domino tilings of the $m\times n$ rectangle.
 \end{problem}
@@ -1191,118 +1362,6 @@ In the next problem we will find an analogous set of paths for the domino tiling
 
 
 
-
-\begin{problem}
-  Show that any tiling of the hexagonal $A\times B\times C$ graph by lozenges can be obtained from any other by a sequence of \textit{flips}
-\begin{center}
-\begin{tikzpicture}
- 
-        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
-        \foreach \angle in {0,120,240} {
-            \begin{scope}[rotate around={\angle:(0,0)}]
-                % Draw a 3x3 square grid with 3pt circles at each grid point
-                % \foreach \x in {0,1,2} {
-                %     \foreach \y in {0,1,2} {
-                %         \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
-                %     }
-                % }
-                % Optionally, draw the grid lines
-                \foreach \x in {0,1,2} {
-                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
-                }
-                \foreach \y in {0,1,2} {
-                    \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
-                }
-                % Draw diagonal edges
-                \draw (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
-                \draw (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
-                \draw (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2) 
-            \end{scope}
-        }
-        % Draw orange lozenges at specified positions
-        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
-            \pgfmathsetmacro{\cx}{0.866*\x}
-            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
-            \begin{scope}[shift={(\cx,\cy)}]
-            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-            \end{scope}
-        }
-     \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
-            \pgfmathsetmacro{\cx}{0.866*\x}
-            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
-            \begin{scope}[shift={(\cx,\cy)}]
-                \begin{scope}[rotate around={60:(0,0)}]
-            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-        }
-     \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
-            \pgfmathsetmacro{\cx}{0.866*\x}
-            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
-            \begin{scope}[shift={(\cx,\cy)}]
-                \begin{scope}[rotate around={120:(0,0)}]
-            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-        }
-
-
-        \begin{scope} 
-         [xshift= 5cm, yshift = -1cm]
-         
-        % Draw green, blue, and orange lozenges at (0,0)
-        \begin{scope}
-            % Green lozenge (no rotation)
-            \begin{scope} 
-             [rotate around={120:(0,0)}] 
-             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-             \end{scope}
-            % Blue lozenge (rotated 60 degrees)
-            \begin{scope}[rotate around={60:(0,0)}]
-                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-            \end{scope}
-            % Orange lozenge (rotated 120 degrees)
-            \begin{scope}[shift={(-0.866,1.5)}]
-                \begin{scope}[rotate around={0:(0,0)}]
-                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-             \end{scope}
-
-             \node at (2,1) {$\stackrel{\textup{flip}}{\longleftrightarrow}$};
-
-            \begin{scope} 
-             [xshift = 4cm,rotate around={120:(0,1)}]
-             
-            % Green lozenge (no rotation)
-            \begin{scope} 
-             [rotate around={120:(0,0)}] 
-             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-             \end{scope}
-            % Blue lozenge (rotated 60 degrees)
-            \begin{scope}[rotate around={60:(0,0)}]
-                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-            \end{scope}
-            % Orange lozenge (rotated 120 degrees)
-            \begin{scope}[shift={(-0.866,1.5)}]
-                \begin{scope}[rotate around={0:(0,0)}]
-                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-             \end{scope} 
-
-
-
-        \end{scope}
-
- \end{tikzpicture}
- \end{center} 
- \begin{enumerate}[label = \alph*.]
-  \item What does the hexagonal flip $T \leftrightarrow T'$ do to the height function? i.e. how is $h_{T'}$ related to $h_T$?
-  \item  What about the $m\times n$ rectangle? What about any square graph (subgraph of $\mathbf{Z}^2$)? Define a height function for the $m\times n$ rectangle which has an analogous property to a. 
-  \item Can you define analogous paths in the $m\times n$ rectangle attached to a tiling $T$?
- \end{enumerate}
-\end{problem}
 
 
 \begin{problem}
