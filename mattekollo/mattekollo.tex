@@ -1,0 +1,1459 @@
+
+\documentclass[11pt,fleqn]{book} % Default font size and left-justified equations
+
+\input{structure.tex} % Insert the commands.tex file which contains the majority of the structure behind the template
+
+\usepackage{etoolbox}
+\usetikzlibrary{patterns}
+\makeatletter
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
+\makeatother
+\pagestyle{empty}
+\setcounter{chapter}{0}
+
+\DeclareMathOperator{\Id}{Id}
+
+\begin{document}
+  \renewcommand*\rmdefault{ppl}\normalfont\upshape
+
+
+\setcounter{problem}{0}
+
+
+
+
+
+
+\newpage
+\chapter*{Random graphs : long problems}
+\kapiteldatum{All of Mattekollo}
+
+
+
+
+
+
+
+
+
+\newpage
+\chapter*{Domino tilings: long problems}
+\kapiteldatum{All of Mattekollo}
+
+\begin{itemize}
+ \item \textit{Attempt problems in any order.}
+ \item \textit{Sometimes problems will use definitions intruduced in later classes. Feel free to use one problem you've solved to solve another, but if it trivialises the problem, see if you can find another proof as well!}
+ \item \textit{More long problems, or if necessary, hints, will be added a bit each lesson.}
+\end{itemize}
+
+
+
+\textbf{Formulas.}
+
+
+\begin{problem}
+Height three rectangles.
+
+\begin{enumerate}[label = \alph*.]
+ \item Find a recurrence relation relating the numbers $A_n,B_n,C_n$ of domino tilings of
+\begin{center}
+\begin{tikzpicture}[scale=0.3]
+% Draw grid for 3x7 rectangle
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
+
+\begin{scope} 
+ [xshift=15cm] 
+ % Draw grid for 3x7 rectangle
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,3) -- (2,3) -- (2,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
+ \end{scope}
+
+\begin{scope} 
+ [xshift=30cm] 
+ % Draw grid for 3x7 rectangle
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (2,4) -- (2,2) -- (1,2) -- cycle;
+ \end{scope}
+
+ \end{tikzpicture}
+ \end{center}
+where the base has length $n$. 
+ \item Use it to find a formula for $A_n$ in terms of $A_{n-1},A_{n-2}, \ldots ,A_1$.
+ \item Show that $A_n,B_n,C_n=0$ if $n$ is odd.
+ \item Compute $A_n$ for $n=1,2, \ldots , 10$. Can you find a formula for the number of domino tilings of the $3\times n$ rectangle?
+\end{enumerate}
+\end{problem}
+
+
+
+
+\begin{problem}
+   There are three possibilities for what a domino tiling looks of the $3\times n$ rectangle at the left (or right) boundary, e.g. one left and one right boundary is
+
+   \begin{center}
+   \begin{tikzpicture}[scale=0.5]
+    
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
+ 
+% Draw a vertical domino over a horizontal domino on the far left
+% Vertical domino (green)
+\filldraw[fill=green, fill opacity=0.3] (1,2) rectangle (2,4);
+\draw[thick] (1,2) rectangle (2,4);
+
+% Horizontal domino (blue), just below the vertical one
+\filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (3,2);
+\draw[thick] (1,1) rectangle (3,2);
+
+% Draw three horizontal dominoes on the far right
+\filldraw[fill=green, fill opacity=0.3] (10,1) rectangle (12,2);
+\draw[thick] (10,1) rectangle (12,2);
+
+\filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (12,3);
+\draw[thick] (10,2) rectangle (12,3);
+
+\filldraw[fill=green, fill opacity=0.3] (10,3) rectangle (12,4);
+\draw[thick] (10,3) rectangle (12,4);
+    \end{tikzpicture}
+    \end{center}
+Let $B_L,B_R$ be boundary states on the left and right. For each choice of $B_L,B_R$, what is the probability 
+$$\mathbf{P}(B_L \to B_R)$$
+that a random domino tiling with state $B_L$ on the left has state $B_R$ on the right? 
+
+\textit{Make sure you do the $2\times n$ case first!}
+\end{problem}
+
+\begin{problem}
+    Prove that the number of tilings of the $n\times n$ Aztec diamond is $2^{n(n-1)/2}$.
+
+    \textit{One method (no guarantee it works!): can you solve this by finding a set $S$ of size $\binom{n}{2}= n(n-1)/2$ and a bijection 
+    $$\{\textup{domino tilings of the Aztec diamond}\} \ \simeq \ \{\textup{finite subsets of $S$}\}?$$} 
+\end{problem}
+
+
+\begin{problem}
+Prove that the number of domino tilings of a dual $A \times B \times C$ hexagonal graph is 
+$$\prod_{a=1}^A \prod_{b=1}^B \prod_{c=1}^C \frac{a+b+c-1}{a+b+c-2}.$$
+\end{problem}
+
+
+\begin{problem}
+What is the expected number of 3d boxes in (the 3d interpretation of) a domino tiling of the dual $A\times B \times C$ hexagonal graph?
+\end{problem}
+
+
+
+\begin{problem}
+What is the number of domino tilings of the $m\times n$ rectangle?
+\end{problem}
+
+
+
+\textbf{Lattice paths.}
+
+
+
+
+
+
+\begin{problem}
+Count the number of tilings of the $3\times n$ rectangle in terms of the number of paths on a certain graph. 
+\begin{enumerate}[label=\alph*.]
+\item \textit{Attempt if you know matrices.} Define a matrix $M_3$ such that the top left entry of $M_3^n$ is the number of domino tilings of the $3\times n$ rectangle.
+\end{enumerate}
+\end{problem}
+
+
+
+
+
+\textbf{Determinants.}
+
+
+\begin{problem}
+   Colour the faces of the hexagonal graph in alternating white and black colours. Write $N$ for the number of white or black squares (which we assume are equal, otherwise there are no domino tilings). Let $K$ be the $N\times N$ matrix of numbers
+$$K_{i,j} \ = \ \begin{cases}
+    1 & \textup{if the }i \textup{th white vertex is adjacent to the }j \textup{th black} \\
+    0 & \textup{otherwise.}
+\end{cases}.$$
+Show that $|\det K|$ is the number of domino tilings of the hexagonal graph by lozenges.
+
+Can you find a matrix $\tilde{K}$ that works for any planar bipartite graph?
+\end{problem}
+
+
+
+
+
+
+
+
+
+
+\textbf{Random walks through the graph of all tilings. }
+
+
+\noindent
+  How do you in practice find a random lozenge tiling (there are \textit{so many!})? \textit{Just start with any lozenge tiling, and randomly flip!}
+    \begin{theorem}
+      Let $n$ be an integer and $T_0$ any lozenge tiling. Pick 
+      \begin{itemize}
+       \item $t\in \{0,1,\ldots ,n\}$ randomly (uniformly),
+       \item a random sequence of $t$ many flips $T_0\to T_1\to \cdots \to T_t$, at each step choosing all allowed flips equally likely. 
+      \end{itemize}
+      Then if 
+      $$P(T) \ : \ \{\textup{lozenge tilings}\} \ \to \ [0,1]$$
+      is the probability that $T_t=T$, we have 
+      $$P(T) \ \to \ \frac{1}{|\{\textup{lozenge tilings}\}|}$$
+      as $n \to \infty$.
+    \end{theorem}
+
+
+
+\begin{problem} \textit{Good to practice linear algebra skills.} Let's prove Theorem 1. 
+  
+  \begin{enumerate}[label=\alph*.]
+   \item  Let $G$ be an undirected graph, with set of vertices denoted by $V(G)$. Let
+   \begin{equation}
+     \label{eqn:RandomWalk0} 
+     \hspace{35mm}  p_t(x) \ : \ V(G)\times \mathbf{N} \ \to \ [0,1]
+   \end{equation}
+   be the probability that, at time $t=0,1,2,\ldots$, a random walk starting at vertex $i$ is at a given vertex $x$.  Show that $p_t$ satisfies
+   \begin{equation}
+     \label{eqn:RandomWalk} 
+     \hspace{35mm} p_{t+1}(x)\ = \ \sum_{y\sim x}\frac{1}{\deg(y)}p_t(y)
+   \end{equation}
+    and denote by $A:\mathbf{C}^{V(G)}\to \mathbf{C}^{V(G)}$ the associated linear map. 
+    
+   \item Compute (and graph) for low values of $t$ what $p_t$ is for the graph 
+   \begin{center}
+   \begin{tikzpicture}
+    % Draw 5 vertices in a line
+    \foreach \i in {1,...,3} {
+        \node[fill=black, circle, inner sep=0pt, minimum size=6pt] (v\i) at (\i,0) {};
+    }
+    % Draw edges between consecutive vertices
+    \foreach \i in {1,...,2} {
+        \draw (v\i) -- (v\the\numexpr\i+1\relax);
+    }
+    \end{tikzpicture}
+    \end{center}
+    if we start at the middle, or edge. Conjecture what happens as $t\to \infty$.
+
+    \item Show that the function $\lambda^t\cdot p_0$, where $p_0:V(G)\to \mathbf{C}$ is a function independent of $t$ and $\lambda\in \mathbf{C}$, satisfies \eqref{eqn:RandomWalk} if and only if $\lambda=0$, or    
+    $$\lambda \cdot p_0(x) \ = \ A\cdot p_0(x).$$
+    \item Show that $p_t(x)$ is a sum of solutions of this form. \textcolor{red}{(give more hints)}
+    \item Assume from now on that $G$ is connected. Pick $N$ such that there is a path of length at most $N$ between any two vertices, and let
+    $$B \ = \ \frac{1}{N}( I + A + \cdots + A^{N-1}).$$
+    Show that if $Av = \lambda v$, that 
+    $$B\cdot v \ = \ \frac{1}{N}(1 + \lambda +\cdots +\lambda^{N-1})v .$$
+    \item Show that if $Bv=\mu v$ for some nonzero $v$, $|\mu|<1$ unless for $\mu=1$, in which there is a unique solution 
+    $$ v \ = \ \frac{1}{|V(G)|}.$$
+    \item Show that this implies Theorem 1.
+  \end{enumerate}
+   
+\end{problem}
+
+
+
+
+\textbf{Spanning trees.}
+
+\begin{problem}
+  Temperley bijection. 
+\end{problem}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%---------------------------------------------------------------------------
+\newpage
+\chapter{Domino tilings}
+\kapiteldatum{1 July}
+\setcounter{problem}{0}
+
+\begin{definition}
+    A \emph{domino tiling} of a region is a way of covering it completely using $1\times 2$ or $2\times 1$ dominoes, without overlaps or gaps.
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \foreach \x in {1,...,7} {
+        \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+    }
+    \foreach \y in {1,...,4} {
+        \draw[dashed, opacity=0.3] (0,\y) -- (8,\y);
+    }
+    \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (1,3) -- (2,3) -- (2,4) -- (4,4) -- (4,2) -- (6,2) -- (6,1) -- cycle;
+
+ \begin{scope} 
+  [yshift = 2cm, xshift = 10cm]
+  
+% Draw two boxes
+\draw[fill=green, fill opacity=0.3, thick] (0,0) rectangle (1,2);
+\draw[fill=green, fill opacity=0.3, thick] (2,0.5) rectangle (4,1.5);
+\draw[thick] (0,1) -- (1,1);
+\draw[thick] (3,0.5) -- (3,1.5);
+
+% Label underneath
+\node at (2,-0.5) {\textit{dominoes}};
+  \end{scope}
+ \end{tikzpicture}
+ \end{center}
+\end{definition}
+
+\begin{problem}
+    Counting domino tilings.
+    \begin{enumerate}[label=\alph*.]
+        \item How many domino tilings are there of the rectangles: $2\times2$, $2\times3$, $2\times4$, $2\times5$?
+        \item Show that the number of domino tilings of a $2\times n$ rectangle is the $n$th Fibonacci number $F_n$. Conclude that 
+        $$F_{n+m} \ = \ F_n F_m + F_{n-1}F_{m-1}.$$
+        \item How many domino tilings are there of a $3\times n$ rectangle ($n= 2 ,4, 7, 10$)? \textit{Try to do the bigger numbers in a non-bashy way}.
+        \item How many tilings are there of the Aztec diamond with only one row of maximal length?
+        \item How many tilings are there of the Aztec diamond with base length $2, 4, 6$?
+    \end{enumerate}
+\end{problem}
+
+
+
+\begin{definition}
+    A \emph{domino tiling} of a \emph{graph} is a way of covering the vertices completely using dominoes, without overlaps or gaps.
+\begin{center}
+\begin{tikzpicture}
+% Draw 8 vertices at arbitrary positions
+\foreach \i/\x/\y in {1/0/0, 2/2/0.5, 3/1/2, 4/3/2, 5/4/0.5, 6/5/1.5, 7/3.5/3, 8/1.5/3.5} {
+    \node[fill=black, circle, inner sep=0pt, minimum size=5pt] (v\i) at (\x,\y) {};
+}
+
+% Draw some edges between them
+\draw (v1) -- (v2);
+\draw (v2) -- (v3);
+\draw (v3) -- (v4);
+\draw (v4) -- (v5);
+\draw (v5) -- (v6);
+\draw (v3) -- (v7);
+\draw (v7) -- (v8);
+\draw (v8) -- (v3);
+\draw (v2) -- (v5);
+
+
+ \begin{scope} 
+  [yshift = 2cm, xshift = 8cm]
+  
+% Draw two green vertices and a green edge between them
+\node[fill=green!60!black, circle, inner sep=0pt, minimum size=7pt] (a) at (0,0) {};
+\node[fill=green!60!black, circle, inner sep=0pt, minimum size=7pt] (b) at (1.5,0) {};
+\draw[thick, green!60!black] (a) -- (b);
+% Label underneath
+\node at (0.75,-1) {\textit{domino}};
+  \end{scope}
+
+ \end{tikzpicture}
+ \end{center}
+\end{definition}
+
+ \textit{Show that when the graph is a square grid graph, this is the same as the first definition of domino tiling.}
+
+ \begin{problem}
+Consider the map of Sweden's Län
+\begin{center}
+\includegraphics[height=15cm]{LanSverige.png}
+\end{center}
+\begin{enumerate}[label=\alph*.]
+ \item Draw its \textit{dual graph}, which has one vertex for each region, and an edge whenever two regions share a 1d border (not just touch at a point).
+%  \item How many domino tilings are there of this dual graph?
+\end{enumerate}
+ \end{problem}
+
+
+
+\begin{problem}
+    Examples coming from 3d geometry.
+    \begin{enumerate}[label=\alph*.]
+         \item Consider the hexagon graph and its dual 
+          \begin{center}
+    \begin{tikzpicture}
+        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+        \foreach \angle in {0,120,240} {
+            \begin{scope}[rotate around={\angle:(0,0)}]
+                % Draw a 3x3 square grid with 3pt circles at each grid point
+                \foreach \x in {0,1,2} {
+                    \foreach \y in {0,1,2} {
+                        \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                    }
+                }
+                % Optionally, draw the grid lines
+                \foreach \x in {0,1,2} {
+                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
+                }
+                \foreach \y in {0,1,2} {
+                    \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
+                }
+                % Draw diagonal edges
+                \draw (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
+                \draw (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
+                \draw (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2) \end{scope}
+            \end{scope}
+        }
+
+        \begin{scope} 
+         [xshift = 6cm ]
+          \foreach \angle in {0,120,240} {
+                \begin{scope}[rotate around={\angle:(0,0)}]
+                % Draw a 3x3 square grid with 3pt circles at each grid point
+                \foreach \x in {0,1,2} {
+                    \foreach \y in {0,1,2} {
+                    \draw[fill=black!30, draw=black!30] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                    }
+                }
+                % Optionally, draw the grid lines
+                \foreach \x in {0,1,2} {
+                    \draw[draw=black!30] (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
+                }
+                \foreach \y in {0,1,2} {
+                    \draw[draw=black!30] (0,\y) -- (0.866*2,{\y- 0.5*2});
+                }
+                % Draw diagonal edges
+                \draw[draw=black!30] (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
+                \draw[draw=black!30] (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
+                \draw[draw=black!30] (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2)
+                \end{scope}
+            }
+
+            \foreach \angle in {0,120,240} {
+                \begin{scope}[rotate around={\angle:(0,0)}]
+             \foreach \x in {0,1} {
+                    \foreach \y in {0.5,1.5} {
+                    \fill (0.288+0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                    \draw (-0.288+0.866*\x,{\y - 0.5*\x}) -- (0.288+0.866*\x,{\y - 0.5*\x});
+                    }
+                }
+                
+             \foreach \x in {0,1} {
+                    \foreach \y in {0,1} {
+                    \fill (0.866-0.288+0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                    \draw (0.866-0.288+0.866*\x,{\y - 0.5*\x}) -- (0.288+0.866*\x,{\y + 0.5 - 0.5*\x});
+                    \draw (0.866-0.288+0.866*\x,{\y - 0.5*\x}) -- (0.288+0.866*\x,{\y - 0.5 - 0.5*\x});
+                    }
+                }
+            
+            \end{scope}
+            } 
+         \end{scope}
+    \end{tikzpicture}
+    \end{center}
+       Draw three possible domino tilings of the dual graph, and show that they correspond to colouring in the regions of the hexagonal graph in by \textit{lozenges}
+        \begin{center}
+        \begin{tikzpicture}
+        % Draw a single lozenge (rhombus) with 60 and 120 degree angles
+        \draw[thick, fill=orange!30] (0,0) -- (1,0.577) -- (2,0) -- (1,-0.577) -- cycle;
+        \node at (4,0) {\textit{lozenge}};
+         \end{tikzpicture}
+         \end{center}
+
+        \item How many domino tilings are there of the duals to the $2\times2\times2$ and $3\times3\times3$ hexagonal graphs?
+        \item Give a 3D geometric description of such a tiling.
+        \item If we remove the following region, how many domino tilings are there of the dual graph?
+          \begin{center}
+    \begin{tikzpicture}
+        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+            \foreach \angle in {0,120,240} {
+                \begin{scope}[rotate around={\angle:(0,0)}]
+                % Draw a 3x3 square grid with 3pt circles at each grid point
+                \foreach \x in {0,1,2,3} {
+                    \foreach \y in {0,1,2,3} {
+                    \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                    }
+                }
+                % Optionally, draw the grid lines
+                \foreach \x in {0,1,2,3} {
+                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{3- 0.5*\x});
+                }
+                \foreach \y in {0,1,2,3} {
+                    \draw (0,\y) -- (0.866*3,{\y- 0.5*3});
+                }
+                % Draw diagonal edges
+                \draw (0,0) -- (0.866*3,3-0.5*3); % (0,0) to (3,3)
+                \draw (0.866*1,-0.5) -- (0.866*3,2-0.5*3); % (1,0) to (3,2)
+                \draw (0,1) -- (0.866*2,3-0.5*2); % (0,1) to (2,3)
+                % Add edges from (0,2) to (1,3) and from (2,0) to (3,1)
+                \draw (0.866*0,2-0.5*0) -- (0.866*1,3-0.5*1);
+                \draw (0.866*2,0-0.5*2) -- (0.866*3,1-0.5*3);
+                \end{scope}
+            }
+
+            \fill[pattern=north east lines] 
+                (0.866*1,1-0.5*1) -- 
+                (0.866*3,1-0.5*3) -- 
+                (0.866*3,3-0.5*3) -- 
+                (0.866*1,3-0.5*1) -- 
+                cycle;
+
+            \fill[pattern=north west lines] 
+                (0.866*0, -3-0.5*0) -- 
+                (0.866*1, -2-0.5*1) -- 
+                (0.866*-2, -2-0.5*-2) -- 
+                (0.866*-2, 1-0.5*-2) -- 
+                (0.866*-3, 0-0.5*-3) -- 
+                (0.866*-3, -3-0.5*-3) -- 
+                cycle;
+    \end{tikzpicture}
+    \end{center}
+    \end{enumerate}
+\end{problem}
+
+
+
+
+
+
+
+
+
+
+    % \begin{center}
+    % \begin{tikzpicture}
+    %     % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+    %     \foreach \angle in {0,120,240} {
+    %         \begin{scope}[rotate around={\angle:(0,0)}]
+    %             % Draw a 3x3 square grid with 3pt circles at each grid point
+    %             \foreach \x in {0,1,2} {
+    %                 \foreach \y in {0,1,2} {
+    %                     \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+    %                 }
+    %             }
+    %             % Optionally, draw the grid lines
+    %             \foreach \x in {0,1,2} {
+    %                 \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
+    %             }
+    %             \foreach \y in {0,1,2} {
+    %                 \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
+    %             }
+    %         \end{scope}
+
+    %         % y (0,1)   x (0.5,0.866)
+    %     }
+
+    % \end{tikzpicture}
+    % \end{center}
+
+
+
+
+
+
+
+
+
+
+    
+
+\newpage
+    \chapter{Random domino tilings}
+\kapiteldatum{2 July}
+
+
+\setcounter{problem}{0}
+
+
+\begin{definition}
+    A \emph{random domino tiling} of a finite region is a probability distribution (on the set of all tilings) where each domino tiling $T$ is equally likely
+    $$\mathbf{P}(\textup{tiling }T) \ = \ \frac{1}{\#\{\textup{all tilings }T'\}}.$$
+\end{definition}
+
+
+
+\begin{problem}
+    Random domino tilings of  $2\times n$ rectangle.
+        \begin{center}
+        \begin{tikzpicture}
+        % Draw grid
+        \foreach \x in {1,...,12} {
+            \draw[dashed, opacity=0.3] (\x,0) -- (\x,4);
+        }
+        \foreach \y in {1,...,3} {
+            \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+        }
+        % Draw blue region: 2x6 rectangle from (1,1) to (7,3)
+        \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,3) -- (1,3) -- cycle;
+        \end{tikzpicture}
+        \end{center}
+   \begin{enumerate}[label=\alph*.]
+    \item Draw all domino tilings of the $2\times 5$ rectangle. Compute the probability that the leftmost domino is vertical.
+    \item What is the answer for the $2\times n$ rectangles?
+    \item If the leftmost domino of an $2\times n$ rectangle is vertical, what is the probability that the rightmost domino is vertical? 
+    \item What is the limit of b. and c. as $n\to\infty$?
+   \end{enumerate}
+\end{problem}
+
+\begin{problem}
+   Take a domino tiling, and consider the sequence of boxes, labelled by $k=1,\ldots ,n-1$.
+   
+        \begin{center}
+        \begin{tikzpicture}
+            % Draw grid
+            \foreach \x in {1,...,12} {
+                \draw[dashed, opacity=0.3] (\x,0) -- (\x,4);
+            }
+            \foreach \y in {1,...,3} {
+                \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+            }
+            % Draw green dominos (vertical and horizontal tiling by hand)
+            % First row: vertical, horizontal
+            \filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (2,3); % vertical at (1,1)-(2,3)
+            \filldraw[fill=green, fill opacity=0.3] (2,1) rectangle (4,2); % horizontal at (2,1)-(4,2)
+            % Second row: vertical, vertical, vertical
+            \filldraw[fill=green, fill opacity=0.3] (2,2) rectangle (4,3); % vertical at (2,2)-(3,4)
+            \filldraw[fill=green, fill opacity=0.3] (4,1) rectangle (5,3); % vertical at (4,1)-(5,3)
+            % Third row: horizontal, horizontal, vertical
+            \filldraw[fill=green, fill opacity=0.3] (5,1) rectangle (6,3); % horizontal at (5,1)-(7,2)
+            \filldraw[fill=green, fill opacity=0.3] (6,1) rectangle (7,3); % vertical at (6,1)-(7,3)
+            \filldraw[fill=green, fill opacity=0.3] (7,2) rectangle (9,3); % horizontal at (7,2)-(9,3)
+            \filldraw[fill=green, fill opacity=0.3] (7,1) rectangle (9,2); % horizontal at (7,1)-(9,2)
+            \filldraw[fill=green, fill opacity=0.3] (9,1) rectangle (10,3); % vertical at (9,1)-(10,3)
+            \filldraw[fill=green, fill opacity=0.3] (10,1) rectangle (11,3); % vertical at (10,1)-(11,3)
+            \filldraw[fill=green, fill opacity=0.3] (11,1) rectangle (12,3); % vertical at (11,1)-(12,3)
+
+            \draw[ultra thick, red] (3,1) rectangle (5,3); % vertical line at x=3
+            \draw[line width = 3pt, red] (3,0.75) rectangle (3,3.25); % vertical line at x=3
+            \node at (3.5,3.5) {$k$}; % Label for k
+            \node at (1.5,3.5) {$1$}; % Label for k
+            \node at (11.5,3.5) {$n$}; % Label for k
+        \end{tikzpicture}
+        \end{center}
+\begin{enumerate}[label=\alph*.]
+    \item Let $f:\{0,1, \ldots ,n\}\to \{0,2\}$ be the function counting the number of horizontal dominoes completely contained in the $k$th box. Show that $f$ uniquely determines the domino tiling.
+    \item Give a bijection between domino tilings of the $2\times n$ rectangle and maximal paths on the following graph:
+        \begin{center}
+        \begin{tikzpicture}
+            % Draw grid
+            \foreach \x in {0,...,13} {
+                \draw[dashed, opacity=0.3] (\x,0) -- (\x,4);
+            }
+            \node at (3.5,3.5) {$k$}; % Label for k
+            \node at (1.5,3.5) {$1$}; % Label for k
+            \node at (10.5,3.5) {$n-1$}; % Label for k
+
+            % For each column, draw two dots (no labels)
+            \foreach \k in {1,...,10} {
+                % Draw dots at (k+0.5,2) and (k+0.5,1)
+                \fill (\k+0.5,2) circle (2pt);
+                \fill (\k+0.5,1) circle (2pt);
+                % Node above top dot
+                \node[above] at (\k+0.5,2) {0};
+                % Node below bottom dot
+                \node[below] at (\k+0.5,1) {2};
+                % Draw edges if not the last column
+                \ifnum\k<10
+                        % Edge from (k+0.5,2) to (k+1.5,2)
+                        \draw[->, shorten >=4pt, shorten <=4pt]  (\k+0.5,2) -- (\k+1.5,2);
+                        % Edge from (k+0.5,2) to (k+1.5,1)
+                        \draw[->, shorten >=4pt, shorten <=4pt]  (\k+0.5,2) -- (\k+1.5,1);
+                        % Edge from (k+0.5,1) to (k+1.5,2)
+                        \draw[->, shorten >=4pt, shorten <=4pt]  (\k+0.5,1) -- (\k+1.5,2);
+                \fi
+            }
+        \end{tikzpicture}
+        \end{center}
+     \item Give another proof that this is the $n$th Fibonacci number.
+    \item \textit{Attempt if you know matrices.} Define the matrix 
+    $$M \ = \ \begin{pmatrix} 
+     1 &1 \\ 
+     1 &0 
+     \end{pmatrix}.$$
+     Show that the number of domino tilings of the $2\times n$ rectangle is equal to the top left entry $a_n$ of $M^n=M\times \cdots\times M$. 
+     \item \textit{Attempt if you know matrices.} Show that 
+     $$M^2 \ = \ M + 1$$
+     hence show that $a_{n+2} = a_{n+1} + a_n$.
+     \item \textit{Attempt if you know matrices.} Consider the top-left entry $b_n\in \mathbf{Z}[x,y]$ of $N^n$, for the matrix
+     $$N \ = \ \begin{pmatrix} 
+     x &y \\ 
+     y &0 
+     \end{pmatrix}.$$
+     Compute $b_1,b_2,b_3,b_4$. What is the interpretation of the $x^iy^j$-coefficient of $b_n$? Show that $b_{n+2} = x b_{n+1} + y^2 b_n$. Find a formula for $b_n$ of the form 
+     $$b_n \ = \ c_1 \cdot \varphi_1^n + c_2 \cdot \varphi_2^n.$$
+     \textit{Hint: find two solutions of the form $\varphi_i^n$, to the equation, then use $b_1,b_2$ to find $c_1,c_2$. }
+\end{enumerate}
+\end{problem}
+
+
+\begin{definition}
+    A \emph{walk} on a graph $G$ is a sequence of vertices $v_0,v_1, \ldots ,v_t$, where each vertex is adjacent to the next. A \emph{random walk} is a probability distribution on the set of all walks, where each walk is equally likely, 
+    $$\mathbf{P}(\textup{walk }v_0, \ldots ,v_t) \ = \ \frac{1}{\#\{\textup{all walks }\}}.$$
+\end{definition}
+
+One can similarly define a \textit{random walk starting at a fixed vertex $v$}, or a random walk with some other set of properties.
+
+
+\begin{problem}
+  Random walks. Consider a random walk on $\mathbf{Z}$ of length $t$, which we draw as a path in $\mathbf{Z}\times \{0,1, \ldots ,t\}$.
+  \begin{center}
+    \begin{tikzpicture}
+% Draw a 10x6 grid with dots at half-integer spacing
+\foreach \x in {0,...,20} {
+    \foreach \y in {0,...,10} {
+    % Colour: middle rows (y=1..9) black!40, outer rows (y=0,10) black!20
+        \ifnum\y=0
+            \fill[fill=black!15] (0.3*\x,0.3*\y+0.3) circle (2pt);
+        \else\ifnum\y=10
+            \fill[fill=black!15] (0.3*\x,0.3*\y+0.3) circle (2pt);
+        \else
+            \fill[fill=black!40] (0.3*\x,0.3*\y+0.3) circle (2pt);
+        \fi\fi
+    }
+} 
+
+% Draw a red path starting at (0,0), mapped to (0,6)
+% Generate a random walk: start at y=6, each step increases or decreases by 1 randomly
+\draw[very thick, red]
+    (0*0.3, 6*0.3)
+    \foreach \x/\y in {1/7, 2/6, 3/7, 4/8, 5/7, 6/6, 7/5, 8/6, 9/7, 10/6, 11/7, 12/8, 13/7, 14/8, 15/7, 16/6, 17/7, 18/6, 19/5, 20/4} {
+        -- (\x*0.3, \y*0.3)
+    };
+
+    \node at (21*0.3,6*0.3) {\textcolor{red}{$\gamma$}};
+        \end{tikzpicture}
+   \end{center}
+\begin{enumerate}[label=\alph*.]
+ \item How many walks of length $t$ are there? 
+ \item What is the probability that a random walk $\gamma$ has $\gamma(t) \ge 0$?
+ \item What is $\mathbf{E}(\gamma(t))$?
+ \item What is $\mathbf{E}(\gamma(t)^2)$? In plain English, approximately how far away from the origin should we expect $\gamma$ to be after $t$ steps?
+\end{enumerate}
+\end{problem}
+
+
+\begin{problem}
+  Show that the set of tilings of the $1\times B\times C$ hexagon by lozenges
+\begin{center}
+\begin{tikzpicture}
+
+        % Draw orange lozenges at specified positions
+        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+        }
+     \foreach \x/\y in { -2/-2, 0/-1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={60:(0,0)}]
+            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+     \foreach \x/\y in {0/-1, 2/0} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={120:(0,0)}]
+            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+
+
+    \node[left] at ({0.866*(-2)},{-1.5 - 0.5*(-2)}) {$1$};
+    \node[above] at ({0.866*(-1)},{0 - 0.5*(-1)}) {$B$};
+    \node[above] at ({0.866*1},{1 - 0.5*1}) {$C$};
+
+
+\end{tikzpicture}
+ \end{center} 
+ is equivalent to a certain set of walks in $\mathbf{Z}$ (which you should define precisely).
+
+ \begin{enumerate}[label =\alph*.]
+  \item Picking a random tiling (or equivalently, a random walk), what is the expected number of 3d cubes in a random $1\times B\times C$ lozenge tiling?
+  \item Given a tiling $T$ on the hexagonal graph $G$, we define the \textit{height function} 
+  $$h_T \ : \ V(G) \ \to \ \mathbf{N}$$
+  whose value is the number of 3d boxes under ($\downarrow$) that vertex. Describe the walk attached to $T$ in terms of $h_T$.
+  \item \textit{If you're interested in continuing, try the lattice paths long problem.}
+ \end{enumerate}
+\end{problem}
+
+
+% \begin{problem}
+%   Dominoes and paths.  
+%           \begin{center}
+%         \begin{tikzpicture}
+%             % Draw grid for 3x12 rectangle
+%             \foreach \x in {1,...,11} {
+%                 \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+%             }
+%             \foreach \y in {1,...,4} {
+%                 \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
+%             }
+%             % Example domino tiling for 3x12 rectangle
+%             % First column: vertical domino
+%             \filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (2,3);
+%             \filldraw[fill=green, fill opacity=0.3] (1,3) rectangle (3,4);
+%             % Next two columns: three horizontal dominoes (should be 2x1)
+%             \filldraw[fill=green, fill opacity=0.3] (2,1) rectangle (4,2);
+%             \filldraw[fill=green, fill opacity=0.3] (2,2) rectangle (4,3);
+%             \filldraw[fill=green, fill opacity=0.3] (3,3) rectangle (5,4);
+
+%             % Draw horizontal dominoes with bottom left at (4,1), (4,2), (5,3)
+%             \filldraw[fill=green, fill opacity=0.3] (4,1) rectangle (6,2);
+%             \filldraw[fill=green, fill opacity=0.3] (4,2) rectangle (6,3);
+%             \filldraw[fill=green, fill opacity=0.3] (5,3) rectangle (7,4);
+
+%             % Draw vertical domino with bottom left at (6,1)
+%             \filldraw[fill=green, fill opacity=0.3] (6,1) rectangle (7,3);
+
+%             % Draw three horizontal dominoes with bottom left at (7,1), (7,2), (7,3)
+%             \filldraw[fill=green, fill opacity=0.3] (7,1) rectangle (9,2);
+%             \filldraw[fill=green, fill opacity=0.3] (7,2) rectangle (9,3);
+%             \filldraw[fill=green, fill opacity=0.3] (7,3) rectangle (9,4);
+
+%             % Draw one horizontal domino at the bottom with x=9 (from (9,1) to (11,2))
+%             \filldraw[fill=green, fill opacity=0.3] (9,1) rectangle (11,2);
+
+%             % Draw two vertical dominoes over it at (9,2)-(10,4) and (10,2)-(11,4)
+%             \filldraw[fill=green, fill opacity=0.3] (9,2) rectangle (10,4);
+%             \filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (11,4);
+
+%             % Mark some vertical line at x=3 for k
+%             \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
+%             \node at (3.5,4.5) {$k$};
+%             \node at (1.5,4.5) {$1$};
+%             \node at (10.5,4.5) {$n$};
+%         \end{tikzpicture}
+%         \end{center}
+%     A \textit{state} at a vertical slice is the set of all dominoes touching the slice. 
+% \begin{enumerate}[label = \alph*.]
+%  \item Show that there are $12$ possible states, thus show that the map $f:\{1,2, \ldots ,n\} \to \{S_1, S_2, \ldots , S_{12}\}$ uniquely determines the domino tiling. Can you come up with a smaller set that also uniquely determines the domino tiling?
+% \end{enumerate}
+% \end{problem}
+
+
+
+
+%  3xn rectangle
+        %   \begin{center}
+        % \begin{tikzpicture}
+        %     % Draw grid for 3x12 rectangle
+        %     \foreach \x in {1,...,11} {
+        %         \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+        %     }
+        %     \foreach \y in {1,...,4} {
+        %         \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
+        %     }
+        %     % Example domino tiling for 3x12 rectangle
+        %     % First column: vertical domino
+        %     \filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (2,3);
+        %     \filldraw[fill=green, fill opacity=0.3] (1,3) rectangle (3,4);
+        %     % Next two columns: three horizontal dominoes (should be 2x1)
+        %     \filldraw[fill=green, fill opacity=0.3] (2,1) rectangle (4,2);
+        %     \filldraw[fill=green, fill opacity=0.3] (2,2) rectangle (4,3);
+        %     \filldraw[fill=green, fill opacity=0.3] (3,3) rectangle (5,4);
+
+        %     % Draw horizontal dominoes with bottom left at (4,1), (4,2), (5,3)
+        %     \filldraw[fill=green, fill opacity=0.3] (4,1) rectangle (6,2);
+        %     \filldraw[fill=green, fill opacity=0.3] (4,2) rectangle (6,3);
+        %     \filldraw[fill=green, fill opacity=0.3] (5,3) rectangle (7,4);
+
+        %     % Draw vertical domino with bottom left at (6,1)
+        %     \filldraw[fill=green, fill opacity=0.3] (6,1) rectangle (7,3);
+
+        %     % Draw three horizontal dominoes with bottom left at (7,1), (7,2), (7,3)
+        %     \filldraw[fill=green, fill opacity=0.3] (7,1) rectangle (9,2);
+        %     \filldraw[fill=green, fill opacity=0.3] (7,2) rectangle (9,3);
+        %     \filldraw[fill=green, fill opacity=0.3] (7,3) rectangle (9,4);
+
+        %     % Draw one horizontal domino at the bottom with x=9 (from (9,1) to (11,2))
+        %     \filldraw[fill=green, fill opacity=0.3] (9,1) rectangle (11,2);
+
+        %     % Draw two vertical dominoes over it at (9,2)-(10,4) and (10,2)-(11,4)
+        %     \filldraw[fill=green, fill opacity=0.3] (9,2) rectangle (10,4);
+        %     \filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (11,4);
+
+        %     % Mark some vertical line at x=3 for k
+        %     \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
+        %     \node at (3.5,4.5) {$k$};
+        %     \node at (1.5,4.5) {$1$};
+        %     \node at (10.5,4.5) {$n$};
+        % \end{tikzpicture}
+        % \end{center}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage 
+ \chapter{Random dominoes 3}
+\kapiteldatum{3 July}
+
+
+
+
+\setcounter{problem}{0}
+
+\textbf{Probability.}
+
+\begin{definition}
+  A \textit{probability space} is a countable (i.e. finite or has as many elements as $\textbf{N}$) set $\Omega$ together with a function 
+  $$\mathbf{P}\ : \ \{\textup{subsets of }\Omega\} \ \to \ [0,1]$$
+  such that 
+  \begin{enumerate}
+   \item $\mathbf{P}(\Omega)=0$, 
+   \item if $A_1, A_2 \ldots$ are disjoint subsets of $\Omega$, then $\mathbf{P}(A_1 \cup A_2 \cup \cdots \ ) = \mathbf{P}(A_1)+\mathbf{P}(A_2)+\cdots$ .
+  \end{enumerate}
+If $X:\Omega \to \mathbf{R}$ is a function, its \textit{expectation} is defined to be 
+$$\mathbf{E}(X) \ = \ \sum_{a\in \Omega} \mathbf{P}(\{a\})\cdot X(a).$$
+A function $X$ is called a \textit{random variable}, or a \textit{random real number}.
+\end{definition}
+
+
+\begin{problem}
+Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4,5,6$. 
+\begin{center}
+\begin{tikzpicture}
+% Draw a small square for the die
+\draw[thick, fill=white] (0,0) rectangle (0.5,0.5);
+% Draw five small dots: four in the corners, one in the center
+\foreach \x/\y in {0.1/0.1, 0.4/0.1, 0.1/0.4, 0.4/0.4} {
+    \fill ( \x, \y ) circle (0.05cm);
+}
+\fill (0.25,0.25) circle (0.05cm);
+
+% Draw a small square for the black die, shifted to the right
+\begin{scope}[xshift=1.2cm]
+\draw[thick, fill=black] (0,0) rectangle (0.5,0.5);
+% Draw four white dots in the corners
+\foreach \x/\y in {0.1/0.1, 0.4/0.1, 0.1/0.4, 0.4/0.4} {
+    \fill[white] ( \x, \y ) circle (0.05cm);
+}
+\end{scope}
+ \end{tikzpicture}
+ \end{center} 
+\begin{enumerate}[label =\alph*.]
+ \item Draw the set $\Omega$ of possible outcomes of rolling the two dice (in a $6 \times 6$ table).
+ \item Let $W,B:\Omega \to \mathbf{R}$ denote the values of the white and black dice, respectively. What are the expectations
+ $$\mathbf{E}(W), \ \mathbf{E}(B), \ \mathbf{E}(10 W + 2B)?$$
+ What are \textit{variances} 
+ $$\mathbf{E}((W-\mathbf{E}(W))^2), \ \mathbf{E}((B-\mathbf{E}(B))^2), \ \mathbf{E}((10 W + 2B - \mathbf{E}(10 W + 2B))^2)?$$
+ Write down on paper a plain English/Swedish description of what this means.
+ \item The \textit{correlator}
+ $$\mathbf{E}(WB - \mathbf{E}(W)\mathbf{E}(B))$$
+ measures how much information you get about the value $W(a)$ if you know the value $B(a)$, and vice versa. Draw the values of the function 
+ $$WB - \mathbf{E}(W)\mathbf{E}(B) \ : \ \Omega \ \to \ \mathbf{R}$$
+ on the $6\times 6$ table. What is the value of this correlator?
+ \item The dice are now enchanted, so that the rolls are never more than $4$ apart. Other than that all pairs of rolls are equally likely. What is the new answer to a., b. and c.?
+\end{enumerate}
+
+
+ 
+\end{problem}
+
+
+
+
+
+
+
+\textbf{Back to random domino tilings.}
+
+\begin{problem}
+  Correlators. 
+
+\begin{center}
+\begin{tikzpicture}
+        % Draw orange lozenges at specified positions
+        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+        }
+     \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={60:(0,0)}]
+            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+     \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={120:(0,0)}]
+            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+
+    \node at ({0},{2}) {$2$};
+    \node at ({0},{1}) {$1$};
+    \node at ({0},{0}) {$1$};
+    \node at ({0},{-1}) {$0$};
+    \node at ({0},{-2}) {$0$};
+
+    \node at ({0.866*-2},{2-1}) {$2$};
+    \node at ({0.866*-2},{1-1}) {$1$};
+    \node at ({0.866*-2},{0-1}) {$0$};
+
+    % Mark points (2,1) and (2,2) in hexagonal coordinates as red filled circles
+    \foreach \x/\y in {1/1, 2/1} {
+        \pgfmathsetmacro{\cx}{0.866*\x}
+        \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+        \fill[red] (\cx,\cy) circle (3pt);
+    }
+    \node[above, red] at ({0.866*1},{1 - 0.5*1 + 0.3}) {$x$};
+    \node[above, red] at ({0.866*2},{1 - 0.5*2 + 0.3}) {$y$};
+ \end{tikzpicture}
+ \end{center} 
+ \begin{enumerate}[label =\alph*.]
+  \item Show that there are 20 lozenge tilings of the $2\times 2 \times 2$ hexagon. 
+  \item Write down the \textit{height function} $h_T:V(G)\to \mathbf{N}$ of two tilings $T$. Here $V(G)$ is the vertex set of  the hexagonal graph, some heights are given above for the above tiling.
+  \item What are the expected values $\textbf{E}(h_T(x))$ and $\textbf{E}(h_T(y))$ for a random tiling $T$?
+  \item What is the value of the \textit{correlator} 
+   $$C(x,y) \ = \ \textbf{E}(h_T(x)h_T(y)) - \textbf{E}(h_T(x))\textbf{E}(h_T(y))$$
+   for the two points $x,y$?
+ \end{enumerate}
+\end{problem}
+
+
+
+
+
+
+
+\begin{problem}
+  Flux.  
+          \begin{center}
+        \begin{tikzpicture}[scale=0.6]
+            % Draw grid for 3x12 rectangle
+            \foreach \x in {1,...,11} {
+                \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+            }
+            \foreach \y in {1,...,4} {
+                \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
+            }
+            % Draw blue squares with opacity 0.5 on every other square in the 3xn grid
+            \foreach \x in {1,...,10} {
+                \foreach \y in {1,2,3} {
+                    \ifodd\numexpr\x+\y\relax
+                        \fill[blue, opacity=0.3] (\x,\y) rectangle ++(1,1);
+                    \fi
+                }
+            }
+
+            % Fill blue region: 3 x n rectangle from (1,1) to (11,4)
+            \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (11,1) -- (11,4) -- (1,4) -- cycle;
+            % Mark some vertical line at x=3 for k
+            \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
+            \node at (3.5,4.5) {$k$};
+            \node at (1.5,4.5) {$1$};
+            \node at (10.5,4.5) {$n$};
+        \end{tikzpicture}
+        \end{center}
+    Colour the squares of an $n\times m$ rectangle in a chessboard pattern. The \textit{flux $\Phi(k)$ through the $k$th slice} of a domino tiling is the sum of $\pm 1$ for each domino perpendicular to the slice
+    
+          \begin{center}
+        \begin{tikzpicture}[scale=0.6]
+
+            % Mark some vertical line at x=3 for k
+            \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
+            \node at (3.5,4.5) {$k$};
+            % Draw green vertical domino through k
+            \filldraw[fill=green, fill opacity=0.3, thick] (3,2) rectangle (4,4);
+
+            % Draw green horizontal domino through k
+            \filldraw[fill=green, fill opacity=0.3, thick] (3,1) rectangle (5,2);
+            \node at (3.5,1.5) {$+1$};
+        \end{tikzpicture}
+        \end{center}
+where it is $+1$ or $-1$ depending on the colour of the square. (\textit{The word ``flux"\text{ } means ``flow", like the  amount of water flowing through a pipe.})
+\begin{enumerate}[label = \alph*.]
+ \item Show that for every domino tiling, $\Phi(k)$ is a constant, i.e. independent of $k$.
+ \item For a random domino tiling of the $2\times n$ and $3\times n$ rectangle, what is the expected value of the flux $\Phi$?
+\end{enumerate}
+\end{problem}
+
+
+
+
+
+\begin{problem} Hexagonal paths.
+    \begin{enumerate}[label =\alph*.]
+     \item Give a bijection between tilings of the $A\times B \times C$ hexagon and certain a certain set of paths in $\mathbf{Z}^2$ (which you should precisely specify).
+   
+\begin{center}
+\begin{tikzpicture}
+ 
+        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+        \foreach \angle in {0,120,240} {
+            \begin{scope}[rotate around={\angle:(0,0)}]
+                % Draw a 3x3 square grid with 3pt circles at each grid point
+                % \foreach \x in {0,1,2} {
+                %     \foreach \y in {0,1,2} {
+                %         \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                %     }
+                % }
+                % Optionally, draw the grid lines
+                \foreach \x in {0,1,2} {
+                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
+                }
+                \foreach \y in {0,1,2} {
+                    \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
+                }
+                % Draw diagonal edges
+                \draw (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
+                \draw (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
+                \draw (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2) 
+            \end{scope}
+        }
+        % Draw orange lozenges at specified positions
+        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+        }
+     \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={60:(0,0)}]
+            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+     \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={120:(0,0)}]
+            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+
+    % Draw two red paths
+    \draw[very thick, red] 
+        ({0.866*(-2)},{-0.5 - 0.5*(-2)}) -- ({0.866*0},{1.5 - 0.5*0}) -- ({0.866*2},{1.5 - 0.5*2});
+
+    \draw[very thick, red] 
+        ({0.866*(-2)},{-1.5 - 0.5*(-2)}) -- ({0.866*(-1)},{-0.5 - 0.5*(-1)}) -- ({0.866*0},{-0.5 - 0.5*0}) -- ({0.866*1},{0.5 - 0.5*1}) -- ({0.866*2},{0.5 - 0.5*2});
+
+    \node[left] at ({0.866*(-2)},{-1 - 0.5*(-2)}) {$A$};
+    \node[above] at ({0.866*(-1)},{1 - 0.5*(-1)}) {$B$};
+    \node[above] at ({0.866*1},{2 - 0.5*1}) {$C$};
+
+    \begin{scope} 
+     [xshift= 5cm,yshift=-1.5cm,scale=0.7]
+        
+    % Draw a 5x5 dashed grid
+    \foreach \x in {0,...,4} {
+        \draw[dashed, opacity=0.3] (\x,0) -- (\x,4);
+    }
+    \foreach \y in {0,...,4} {
+        \draw[dashed, opacity=0.3] (0,\y) -- (4,\y);
+    } 
+    % Draw two red paths
+    \draw[very thick, red] (0,1) -- (1,2) -- (2,3) -- (4,3);
+    % Second path: (0,1) -- (4,4)
+    \draw[very thick, red] (0,0) -- (1,1) -- (2,1) -- (3,2) -- (4,2);
+\end{scope}
+
+\end{tikzpicture}
+ \end{center}
+ \item  What are the graphs corresponding to the lozenge tilings with the maximum and minimum number of 3d boxes?
+ \item  How can you see the number of 3d boxes from the paths?
+    \end{enumerate}
+In the next problem we will find an analogous set of paths for the domino tilings of the $m\times n$ rectangle.
+\end{problem}
+
+\begin{problem}
+  Show that any tiling of the hexagonal $A\times B\times C$ graph by lozenges can be obtained from any other by a sequence if \textit{flips}
+\begin{center}
+\begin{tikzpicture}
+ 
+        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+        \foreach \angle in {0,120,240} {
+            \begin{scope}[rotate around={\angle:(0,0)}]
+                % Draw a 3x3 square grid with 3pt circles at each grid point
+                % \foreach \x in {0,1,2} {
+                %     \foreach \y in {0,1,2} {
+                %         \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                %     }
+                % }
+                % Optionally, draw the grid lines
+                \foreach \x in {0,1,2} {
+                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
+                }
+                \foreach \y in {0,1,2} {
+                    \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
+                }
+                % Draw diagonal edges
+                \draw (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
+                \draw (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
+                \draw (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2) 
+            \end{scope}
+        }
+        % Draw orange lozenges at specified positions
+        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+        }
+     \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={60:(0,0)}]
+            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+     \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={120:(0,0)}]
+            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+
+
+        \begin{scope} 
+         [xshift= 5cm, yshift = -1cm]
+         
+        % Draw green, blue, and orange lozenges at (0,0)
+        \begin{scope}
+            % Green lozenge (no rotation)
+            \begin{scope} 
+             [rotate around={120:(0,0)}] 
+             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+             \end{scope}
+            % Blue lozenge (rotated 60 degrees)
+            \begin{scope}[rotate around={60:(0,0)}]
+                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+            % Orange lozenge (rotated 120 degrees)
+            \begin{scope}[shift={(-0.866,1.5)}]
+                \begin{scope}[rotate around={0:(0,0)}]
+                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+             \end{scope}
+
+             \node at (2,1) {$\stackrel{\textup{flip}}{\longleftrightarrow}$};
+
+            \begin{scope} 
+             [xshift = 4cm,rotate around={120:(0,1)}]
+             
+            % Green lozenge (no rotation)
+            \begin{scope} 
+             [rotate around={120:(0,0)}] 
+             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+             \end{scope}
+            % Blue lozenge (rotated 60 degrees)
+            \begin{scope}[rotate around={60:(0,0)}]
+                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+            % Orange lozenge (rotated 120 degrees)
+            \begin{scope}[shift={(-0.866,1.5)}]
+                \begin{scope}[rotate around={0:(0,0)}]
+                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+             \end{scope} 
+
+
+
+        \end{scope}
+
+ \end{tikzpicture}
+ \end{center} 
+ What about the $m\times n$ rectangle? What about any square graph (subgraph of $\mathbf{Z}^2$)?
+
+ \begin{enumerate}[label = \alph*.]
+  \item What does the hexagonal flip $T \leftrightarrow T'$ do to the height function? i.e. how is $h_{T'}$ related to $h_T$?
+  \item Define a height function for the $m\times n$ rectangle which has an analogous property to a. 
+  \item Can you define analogous paths in the $m\times n$ rectangle attached to a tiling $T$?
+ \end{enumerate}
+\end{problem}
+
+
+
+
+
+
+\newpage 
+ \chapter{Random dominoes 4}
+\kapiteldatum{}
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage 
+ \chapter{Random graphs : Electrical networks}
+\kapiteldatum{2 July}
+
+
+\begin{definition}
+Reminder on expected value, etc. 
+\end{definition}
+
+\begin{problem}
+  Exericse on expected value, etc. 
+\end{problem}
+
+
+\begin{definition}
+The \emph{resistance} between two points $i$ and $j$ in a graph is 
+$$R_{i,j} \ = \ \mathbf{E}[\#\textup{steps }\gamma \textup{ takes before first hitting }j]$$
+where we take expectation over the set of all paths $\gamma$ starting at $i$. 
+\url{https://math.dartmouth.edu/~pw/math100w13/qin.pdf}
+\end{definition}
+
+\begin{problem}
+   In the graph 
+   \begin{center}
+   \begin{tikzpicture}
+    % Draw 5 vertices in a line
+    \foreach \i in {1,...,5} {
+        \node[fill=black, circle, inner sep=0pt, minimum size=6pt] (v\i) at (\i,0) {};
+    }
+    % Draw edges between consecutive vertices
+    \foreach \i in {1,...,4} {
+        \draw (v\i) -- (v\the\numexpr\i+1\relax);
+    }
+    \end{tikzpicture}
+    \end{center}
+    what is the resistance between $1$ and $2$? Between any pair of vertices $i$ and $j$?
+\end{problem}
+
+
+
+
+
+
+
+
+
+\newpage 
+ \chapter{Random graphs 2}
+\kapiteldatum{}
+
+
+\newpage 
+    \chapter{Random graphs 3}
+\kapiteldatum{}
+
+
+\newpage 
+    \chapter{Random graphs 4}
+\kapiteldatum{}
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+%\chapter*{Bibliography}
+%\addcontentsline{toc}{chapter}{\textcolor{ocre}{Bibliography}} % Add a Bibliography heading to the table of contents
+
+%------------------------------------------------
+
+%\section*{Articles}
+%\addcontentsline{toc}{section}{Articles}
+%\printbibliography[heading=bibempty,type=article]
+
+%------------------------------------------------
+
+%\section*{Books}
+%\addcontentsline{toc}{section}{Books}
+%\printbibliography[heading=bibempty,type=book]
+
+%----------------------------------------------------------------------------------------
+%	INDEX
+%----------------------------------------------------------------------------------------
+
+\cleardoublepage % Make sure the index starts on an odd (right side) page
+\phantomsection
+\setlength{\columnsep}{0.75cm} % Space between the 2 columns of the index
+\addcontentsline{toc}{chapter}{\textcolor{ocre}{Index}} % Add an Index heading to the table of contents
+\printindex % Output the index
+
+%----------------------------------------------------------------------------------------
+

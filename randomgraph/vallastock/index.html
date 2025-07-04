@@ -326,14 +326,14 @@
                 primes.forEach(q => {
                     if (q !== prime) {
                         const distance = Math.abs(prime - q);
-                        const probability = Math.pow((3000 - distance) / 4000, 4);
+                        const probability = Math.pow((3000 - distance) / 3500, 6);
                         
                         if (Math.random() < probability) {
                             const currentValue = primeValues.get(q);
                             if (currentValue > 0) {
-                                const newValue = currentValue - 1;
+                                const newValue = currentValue - 2;
                                 primeValues.set(q, newValue);
-                                totalSum -= 1; // Update sum
+                                totalSum -= 2; // Update sum
                                 updatePrimeColor(q);
                             }
                         }
@@ -401,7 +401,7 @@
         
         // Graph parameters
         const viewWidth = 20;  // coordinate units visible
-        const viewHeight = 150; // coordinate units visible (increased to show more range)
+        const viewHeight = 300; // coordinate units visible (increased to show more range)
         let currentTime = 0;
         const timeStep = 0.1;
         
