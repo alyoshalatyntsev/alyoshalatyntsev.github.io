@@ -267,7 +267,7 @@ Can you find a matrix $\tilde{K}$ that works for any planar bipartite graph?
 
     \item Show that the function $\lambda^t\cdot p_0$, where $p_0:V(G)\to \mathbf{C}$ is a function independent of $t$ and $\lambda\in \mathbf{C}$, satisfies \eqref{eqn:RandomWalk} if and only if $\lambda=0$, or    
     $$\lambda \cdot p_0(x) \ = \ A\cdot p_0(x).$$
-    \item Show that $p_t(x)$ is a sum of solutions of this form. \textcolor{red}{(give more hints)}
+    \textit{In the following, you may assume that $p_t(x)$ is a sum of solutions of this form. }
     \item Assume from now on that $G$ is connected. Pick $N$ such that there is a path of length at most $N$ between any two vertices, and let
     $$B \ = \ \frac{1}{N}( I + A + \cdots + A^{N-1}).$$
     Show that if $Av = \lambda v$, that 
@@ -946,7 +946,7 @@ One can similarly define a \textit{random walk starting at a fixed vertex $v$}, 
   $$\mathbf{P}\ : \ \{\textup{subsets of }\Omega\} \ \to \ [0,1]$$
   such that 
   \begin{enumerate}
-   \item $\mathbf{P}(\Omega)=0$, 
+   \item $\mathbf{P}(\Omega)=1$, 
    \item if $A_1, A_2 \ldots$ are disjoint subsets of $\Omega$, then $\mathbf{P}(A_1 \cup A_2 \cup \cdots \ ) = \mathbf{P}(A_1)+\mathbf{P}(A_2)+\cdots$ .
   \end{enumerate}
 If $X:\Omega \to \mathbf{R}$ is a function, its \textit{expectation} is defined to be 
@@ -985,9 +985,9 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
  $$\mathbf{E}((W-\mathbf{E}(W))^2), \ \mathbf{E}((B-\mathbf{E}(B))^2), \ \mathbf{E}((10 W + 2B - \mathbf{E}(10 W + 2B))^2)?$$
  Write down on paper a plain English/Swedish description of what this means.
  \item The \textit{correlator}
- $$\mathbf{E}(WB - \mathbf{E}(W)\mathbf{E}(B))$$
+ $$\mathbf{E}\left( (W - \mathbf{E}(W))(B-\mathbf{E}(B))\right)$$
  measures how much information you get about the value $W(a)$ if you know the value $B(a)$, and vice versa. Draw the values of the function 
- $$WB - \mathbf{E}(W)\mathbf{E}(B) \ : \ \Omega \ \to \ \mathbf{R}$$
+ $$(W - \mathbf{E}(W))(B-\mathbf{E}(B)) \ : \ \Omega \ \to \ \mathbf{R}$$
  on the $6\times 6$ table. What is the value of this correlator?
  \item The dice are now enchanted, so that the rolls are never more than $4$ apart. Other than that all pairs of rolls are equally likely. What is the new answer to a., b. and c.?
 \end{enumerate}
@@ -1036,6 +1036,17 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
             \end{scope}
         }
 
+    % Mark points (2,1) and (2,2) in hexagonal coordinates as red filled circles
+    \foreach \x/\y in {1/1, 0/1} {
+        \pgfmathsetmacro{\cx}{0.866*\x}
+        \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+        \fill[red] (\cx,\cy) circle (3pt);
+    }
+    \node[right, red] at ({0.866*1},{1 - 0.5*1 + 0.3}) {$y$};
+    \node[right, red] at ({0.866*0},{0 - 0.5*0 + 0.3}) {$x$};
+
+    \begin{scope} 
+     [xshift=-0.2cm] 
     \node at ({0},{2}) {$2$};
     \node at ({0},{1}) {$1$};
     \node at ({0},{0}) {$1$};
@@ -1045,15 +1056,8 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
     \node at ({0.866*-2},{2-1}) {$2$};
     \node at ({0.866*-2},{1-1}) {$1$};
     \node at ({0.866*-2},{0-1}) {$0$};
+     \end{scope}
 
-    % Mark points (2,1) and (2,2) in hexagonal coordinates as red filled circles
-    \foreach \x/\y in {1/1, 2/1} {
-        \pgfmathsetmacro{\cx}{0.866*\x}
-        \pgfmathsetmacro{\cy}{\y - 0.5*\x}
-        \fill[red] (\cx,\cy) circle (3pt);
-    }
-    \node[above, red] at ({0.866*1},{1 - 0.5*1 + 0.3}) {$x$};
-    \node[above, red] at ({0.866*2},{1 - 0.5*2 + 0.3}) {$y$};
  \end{tikzpicture}
  \end{center} 
  \begin{enumerate}[label =\alph*.]
@@ -1072,61 +1076,19 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
 
 
 
-\begin{problem}
-  Flux.  
-          \begin{center}
-        \begin{tikzpicture}[scale=0.6]
-            % Draw grid for 3x12 rectangle
-            \foreach \x in {1,...,11} {
-                \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
-            }
-            \foreach \y in {1,...,4} {
-                \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
-            }
-            % Draw blue squares with opacity 0.5 on every other square in the 3xn grid
-            \foreach \x in {1,...,10} {
-                \foreach \y in {1,2,3} {
-                    \ifodd\numexpr\x+\y\relax
-                        \fill[blue, opacity=0.3] (\x,\y) rectangle ++(1,1);
-                    \fi
-                }
-            }
-
-            % Fill blue region: 3 x n rectangle from (1,1) to (11,4)
-            \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (11,1) -- (11,4) -- (1,4) -- cycle;
-            % Mark some vertical line at x=3 for k
-            \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
-            \node at (3.5,4.5) {$k$};
-            \node at (1.5,4.5) {$1$};
-            \node at (10.5,4.5) {$n$};
-        \end{tikzpicture}
-        \end{center}
-    Colour the squares of an $n\times m$ rectangle in a chessboard pattern. The \textit{flux $\Phi(k)$ through the $k$th slice} of a domino tiling is the sum of $\pm 1$ for each domino perpendicular to the slice
-    
-          \begin{center}
-        \begin{tikzpicture}[scale=0.6]
-
-            % Mark some vertical line at x=3 for k
-            \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
-            \node at (3.5,4.5) {$k$};
-            % Draw green vertical domino through k
-            \filldraw[fill=green, fill opacity=0.3, thick] (3,2) rectangle (4,4);
-
-            % Draw green horizontal domino through k
-            \filldraw[fill=green, fill opacity=0.3, thick] (3,1) rectangle (5,2);
-            \node at (3.5,1.5) {$+1$};
-        \end{tikzpicture}
-        \end{center}
-where it is $+1$ or $-1$ depending on the colour of the square. (\textit{The word ``flux"\text{ } means ``flow", like the  amount of water flowing through a pipe.})
-\begin{enumerate}[label = \alph*.]
- \item Show that for every domino tiling, $\Phi(k)$ is a constant, i.e. independent of $k$.
- \item For a random domino tiling of the $2\times n$ and $3\times n$ rectangle, what is the expected value of the flux $\Phi$?
-\end{enumerate}
-\end{problem}
 
 
 
 
+
+
+
+\newpage 
+ \chapter{Random dominoes 4}
+\kapiteldatum{4 July 2025}
+
+
+\setcounter{problem}{0}
 
 \begin{problem} Hexagonal paths.
     \begin{enumerate}[label =\alph*.]
@@ -1209,6 +1171,12 @@ where it is $+1$ or $-1$ depending on the colour of the square. (\textit{The wor
     \draw[very thick, red] (0,1) -- (1,2) -- (2,3) -- (4,3);
     % Second path: (0,1) -- (4,4)
     \draw[very thick, red] (0,0) -- (1,1) -- (2,1) -- (3,2) -- (4,2);
+
+    % Draw nodes for gamma_1 and gamma_2 to the right of the end of both paths
+    \node[right, red] at (4,3) {$\gamma_1$};
+    \node[right, red] at (4,2.5) {$\cdots$};
+    \node[right, red] at (4,2) {$\gamma_A$};
+
 \end{scope}
 
 \end{tikzpicture}
@@ -1219,8 +1187,13 @@ where it is $+1$ or $-1$ depending on the colour of the square. (\textit{The wor
 In the next problem we will find an analogous set of paths for the domino tilings of the $m\times n$ rectangle.
 \end{problem}
 
+
+
+
+
+
 \begin{problem}
-  Show that any tiling of the hexagonal $A\times B\times C$ graph by lozenges can be obtained from any other by a sequence if \textit{flips}
+  Show that any tiling of the hexagonal $A\times B\times C$ graph by lozenges can be obtained from any other by a sequence of \textit{flips}
 \begin{center}
 \begin{tikzpicture}
  
@@ -1324,13 +1297,65 @@ In the next problem we will find an analogous set of paths for the domino tiling
 
  \end{tikzpicture}
  \end{center} 
- What about the $m\times n$ rectangle? What about any square graph (subgraph of $\mathbf{Z}^2$)?
-
  \begin{enumerate}[label = \alph*.]
   \item What does the hexagonal flip $T \leftrightarrow T'$ do to the height function? i.e. how is $h_{T'}$ related to $h_T$?
-  \item Define a height function for the $m\times n$ rectangle which has an analogous property to a. 
+  \item  What about the $m\times n$ rectangle? What about any square graph (subgraph of $\mathbf{Z}^2$)? Define a height function for the $m\times n$ rectangle which has an analogous property to a. 
   \item Can you define analogous paths in the $m\times n$ rectangle attached to a tiling $T$?
  \end{enumerate}
+\end{problem}
+
+
+\begin{problem}
+  Flux.  
+          \begin{center}
+        \begin{tikzpicture}[scale=0.6]
+            % Draw grid for 3x12 rectangle
+            \foreach \x in {1,...,11} {
+                \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+            }
+            \foreach \y in {1,...,4} {
+                \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
+            }
+            % Draw blue squares with opacity 0.5 on every other square in the 3xn grid
+            \foreach \x in {1,...,10} {
+                \foreach \y in {1,2,3} {
+                    \ifodd\numexpr\x+\y\relax
+                        \fill[blue, opacity=0.3] (\x,\y) rectangle ++(1,1);
+                    \fi
+                }
+            }
+
+            % Fill blue region: 3 x n rectangle from (1,1) to (11,4)
+            \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (11,1) -- (11,4) -- (1,4) -- cycle;
+            % Mark some vertical line at x=3 for k
+            \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
+            \node at (3.5,4.5) {$k$};
+            \node at (1.5,4.5) {$1$};
+            \node at (10.5,4.5) {$n$};
+        \end{tikzpicture}
+        \end{center}
+    Colour the squares of an $n\times m$ rectangle in a chessboard pattern. The \textit{flux $\Phi(k)$ through the $k$th slice} of a domino tiling is the sum of $\pm 1$ for each domino perpendicular to the slice
+    
+          \begin{center}
+        \begin{tikzpicture}[scale=0.6]
+
+            % Mark some vertical line at x=3 for k
+            \draw[ultra thick, red] (3.5,0.75) -- (3.5,4.25);
+            \node at (3.5,4.5) {$k$};
+            % Draw green vertical domino through k
+            \filldraw[fill=green, fill opacity=0.3, thick] (3,2) rectangle (4,4);
+
+            % Draw green horizontal domino through k
+            \filldraw[fill=green, fill opacity=0.3, thick] (3,1) rectangle (5,2);
+            \node at (3.5,1.5) {$+1$};
+        \end{tikzpicture}
+        \end{center}
+where it is $+1$ or $-1$ depending on the colour of the square. (\textit{The word ``flux"\text{ } means ``flow", like the  amount of water flowing through a pipe.})
+\begin{enumerate}[label = \alph*.]
+ \item Pick an arbitrary domino tiling of a $3\times n$ and a $4\times n$ square, and draw $\Phi(k)$ for each.
+ \item What do you notice about the values of $\Phi(k)$? Form a conjecture, and prove it.
+ \item For a random domino tiling of the $2\times n$ and $3\times n$ rectangle, what is the expected value of the flux $\Phi$?
+\end{enumerate}
 \end{problem}
 
 
@@ -1338,9 +1363,17 @@ In the next problem we will find an analogous set of paths for the domino tiling
 
 
 
-\newpage 
- \chapter{Random dominoes 4}
-\kapiteldatum{}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
