@@ -1715,33 +1715,7 @@ where the ends of the graph are considered closed off.
 \begin{problem}
    We open up the tubes at $x$ and $y$, and add small wooden sheets to keep in the water. We will compute the resistance between $x$ and $y$. 
     \begin{enumerate}[label =\alph*.]
-     \item s
-     \item What is the resistance of the above graph between $x$ and $y$?
-    \end{enumerate}
-
-\end{problem}
-
-
-
-
-
-
-\begin{problem}
-  In this problem we will show that 
-  $$R(x,y) \ = \ \mathbf{E}[\# \textup{steps a random walk }\gamma \textup{ starting at } x\textup{ takes before first hitting }y].$$
-  \begin{enumerate}[label =\alph*.]
-   \item 
-\url{https://math.dartmouth.edu/~pw/math100w13/qin.pdf} 
-  \end{enumerate} 
-\end{problem}
-
-
-
-\begin{problem}
-  Assuming problem 2, give a new proof that 
-  \begin{enumerate}[label =\alph*.]
-   \item The axiom of addition of resistances.
-   \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex $G_1\cdot_y G_2$
+        \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
 \begin{center}
 \begin{tikzpicture}
 % Draw 8 vertices at arbitrary positions
@@ -1809,7 +1783,7 @@ where the ends of the graph are considered closed off.
  \end{center} 
  gives $R_{G_1\cdot G_2}(x,z)= R_{G_1}(x,y)+R_{G_2}(y,z)$.
    \item What happens if we join two graphs $G_1$ and $G_2$ together along multiple points $y_1, \ldots, y_k$? 
-   \item Show that adding two graphs in parallel $G_1+G_2$
+   \item Show that adding two graphs in parallel to form $G_1+G_2$
    \begin{center}
    \begin{tikzpicture}
     % Draw two blue dots
@@ -1824,6 +1798,34 @@ where the ends of the graph are considered closed off.
         \end{tikzpicture}
         \end{center}
    gives $\frac{1}{R_{G_1+G_2}(x,y)} = \frac{1}{R_{G_1}(x,y)} + \frac{1}{R_{G_2}(x,y)}$.
+     \item What is the resistance of the above graph between $x$ and $y$?
+    \end{enumerate}
+
+\end{problem}
+
+
+
+
+
+
+\begin{problem}
+  In this problem we will show that 
+  $$R(x,y) \ = \ \mathbf{E}[\# \textup{steps a random walk }\gamma \textup{ starting at } x\textup{ takes before first hitting }y].$$
+  \begin{enumerate}[label =\alph*.]
+   \item 
+\url{https://math.dartmouth.edu/~pw/math100w13/qin.pdf} 
+  \end{enumerate} 
+\end{problem}
+
+
+
+\begin{problem}
+  Assuming problem 2, give a new proof that 
+  \begin{enumerate}[label =\alph*.]
+   \item Parts a.-c. of Problem 1. 
+   \item The axiom of addition of resistances.
+   \item Removing an edge increases or leaves unchanged the resistance between any two points on the network.
+ 
   \end{enumerate}
 \end{problem}
 
@@ -1835,7 +1837,7 @@ where the ends of the graph are considered closed off.
   \begin{tikzpicture}
     % Draw 10 vertices in a circle
     \def\n{10}
-    \def\radius{2.5}
+    \def\radius{1.5}
     \foreach \i in {1,...,10} {
         \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\i) at ({\radius*cos(360/\n*(\i-1))},{\radius*sin(360/\n*(\i-1))}) {};
     };
@@ -1847,33 +1849,18 @@ where the ends of the graph are considered closed off.
     };
 
     % Mark x and y
-    \node[above left, font=\bfseries] at (v1) {$x$};
-    \node[below right, font=\bfseries] at (v6) {$y$};
+    \node[right] at (v1) {$y$};
+    \node[left] at (v5) {$x$};
    \end{tikzpicture}
    \end{center} 
+   What is the resistance between a pair of points $x$ and $y$?
 \end{problem}
 
 
-\begin{problem}
-   In the graph 
-   \begin{center}
-   \begin{tikzpicture}
-    % Draw 5 vertices in a line
-    \foreach \i in {1,...,5} {
-        \node[fill=black, circle, inner sep=0pt, minimum size=6pt] (v\i) at (\i,0) {};
-    }
-    % Draw edges between consecutive vertices
-    \foreach \i in {1,...,4} {
-        \draw (v\i) -- (v\the\numexpr\i+1\relax);
-    }
-    % Add labels 1,2,3,4,5 above the vertices
-    \foreach \i in {1,...,5} {
-        \node[above] at (v\i) {\i};
-    }
-    \end{tikzpicture}
-    \end{center}
-    what is the resistance between $1$ and $2$? Between any pair of vertices $i$ and $j$?
-\end{problem}
+
+
+
+
 
 
 
@@ -1893,7 +1880,21 @@ where the ends of the graph are considered closed off.
 
 \newpage 
  \chapter{Random graphs 2}
-\kapiteldatum{}
+\kapiteldatum{6 July}
+
+
+\begin{problem}
+  Resistance of trees. 
+\end{problem}
+
+
+
+
+
+
+
+
+
 
 
 \newpage 

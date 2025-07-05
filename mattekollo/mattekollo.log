@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  5 JUL 2025 19:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  5 JUL 2025 19:40
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1684,10 +1684,12 @@ pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) ha
                    \relax 
 l.1716    W
            e open up the tubes at $x$ and $y$, and add small wooden sheets t...
+
+[17]
 pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1730   I
+l.1812   I
           n this problem we will show that
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmtt' (encoding: T1).
@@ -1697,47 +1699,45 @@ Package microtype Info: Loading generic protrusion settings for font family
 pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1741   A
+l.1823   A
           ssuming problem 2, give a new proof that
-
-[17]
 pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1833   C
+l.1835   C
           onsider the circlar graph
 Missing character: There is no ; in font nullfont!
 Missing character: There is no ; in font nullfont!
 
-pdfTeX warning (ext4): destination with the same identifier (name{problem.5}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.1858    I
-           n the graph
 
 [18]
 Kapitel 6.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1896--1897
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1883--1884
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1896--1897
+Underfull \hbox (badness 10000) in paragraph at lines 1883--1884
 
  []
 
 
+pdfTeX warning (ext4): destination with the same identifier (name{problem.5}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1887   R
+          esistance of trees.
 
 [19]
 Kapitel 7.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1901--1902
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1902--1903
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1901--1902
+Underfull \hbox (badness 10000) in paragraph at lines 1902--1903
 
  []
 
@@ -1746,12 +1746,12 @@ Underfull \hbox (badness 10000) in paragraph at lines 1901--1902
 [20]
 Kapitel 8.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1906--1907
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1907--1908
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1906--1907
+Underfull \hbox (badness 10000) in paragraph at lines 1907--1908
 
  []
 
@@ -1767,17 +1767,17 @@ Package logreq Info: Writing requests to 'mattekollo.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 40861 strings out of 473682
- 771596 string characters out of 5719215
+ 40862 strings out of 473682
+ 771603 string characters out of 5719215
  1743428 words of memory out of 5000000
  63013 multiletter control sequences out of 15000+600000
  645802 words of font info for 236 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  89i,12n,96p,1068b,1242s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\alyos\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1200.pk><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagd8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagk8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on mattekollo.pdf (21 pages, 714824 bytes).
+Output written on mattekollo.pdf (21 pages, 713869 bytes).
 PDF statistics:
- 350 PDF objects out of 1000 (max. 8388607)
- 120 named destinations out of 1000 (max. 500000)
+ 352 PDF objects out of 1000 (max. 8388607)
+ 121 named destinations out of 1000 (max. 500000)
  66138 words of extra memory for PDF output out of 74296 (max. 10000000)
 
