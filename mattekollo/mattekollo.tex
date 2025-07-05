@@ -1625,7 +1625,7 @@ The \emph{resistance} of a tube $T$ is $R(T) = \frac{d(p_L-p_R)}{dI}$. We will m
  \end{definition}
 
 
-\begin{axiom}\textbf{(Addition of resistances)} Putting two tubes $T_1$ and $T_2$ after one another adds their resistances:
+For instance, from this we can physically argue the \textbf{addition of resistances}, that putting two tubes $T_1$ and $T_2$ after one another adds their resistances:
 \begin{center}
 \begin{tikzpicture}
 % Draw the first tube (left)
@@ -1658,10 +1658,14 @@ The \emph{resistance} of a tube $T$ is $R(T) = \frac{d(p_L-p_R)}{dI}$. We will m
 \node at (4.5,-1.5) {$R(T_1\cdot T_2) \ = \ R(T_1)+ R(T_2)$};
  \end{tikzpicture}
  \end{center}
-\end{axiom}
 
 
-We represent a collection of tubes joined together as a graph 
+
+
+
+We will consider a network of tubes fused together to form a 3d glass surface, which has no holes except at a finite number of points, which we mark as external edges. The internal edges correspond to length of glass tube, and vertices correspond to vertical slices through the tube. 
+
+
 \begin{center}
 \begin{tikzpicture}
 % Draw 8 vertices at arbitrary positions
@@ -1680,6 +1684,12 @@ We represent a collection of tubes joined together as a graph
 \draw[blue!60] (v8) -- (v3);
 \draw[blue!60] (v2) -- (v5);
 
+% Draw half-edges (stubs) pointing out of the graph from some vertices
+\draw[thick, blue!60,<-] (v1) -- ++(-0.8,-0.5);
+\draw[thick, blue!60,->] (v4) -- ++(0.9,0.3);
+\draw[thick, blue!60,<-] (v6) -- ++(1.2,0.2);
+\draw[thick, blue!60,<-] (v8) -- ++(-0.5,1.0);
+
 % Add shortened, thickened edges for each existing edge
 \draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v1) -- (v2);
 \draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v3);
@@ -1691,8 +1701,8 @@ We represent a collection of tubes joined together as a graph
 \draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v8) -- (v3);
 \draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v5);
 
-\node[above] at (v1) {$x$};
-\node[above] at (v6) {$y$};
+% \node[above] at (v1) {$x$};
+% \node[above] at (v6) {$y$};
 
  \begin{scope} 
   [yshift = 2cm, xshift = 8cm]
@@ -1709,21 +1719,57 @@ We represent a collection of tubes joined together as a graph
   \end{scope}
 
  \end{tikzpicture}
- \end{center} 
-where the ends of the graph are considered closed off.
+ \end{center}
 
-\textcolor{red}{(add some half-edges)}
 
+
+
+
+
+
+\begin{problem} 
+    Make arguments for the following axioms:
+   \begin{axiom}
+    A \textit{water network} is a graph $G$ with the additional data: 
+    \begin{itemize}
+     \item  numbers $p_x\in \mathbf{R}$ and $I_x\in \mathbf{R}$ attached to vertices $x$;
+     \item  numbers $R_{e}\in \mathbf{R}_{>0}$ and $I_{e}\in \mathbf{R}$ attached to edges $e:x\to y$;
+    \end{itemize}
+    such that the following axioms hold:
+    \begin{enumerate}[label =\alph*.]
+        \item At each vertex $x$, we have 
+        $$I_x + \sum_{y\sim x}I_{x,y} \ = \ 0.$$
+        \item $I_e R_e= p_y - p_x$ for each edge $e:x\to y$.
+    \end{enumerate}
+   \end{axiom}
+
+\end{problem}
+
+
+\textit{We call $(p_x,I_x,R_{e},I_{e})$ the \textit{pressure, external flow, resistance and internal flow}. We draw an exernal vertex above if $I_x \ne 0$. If $e:x\to y$ is an edge, we often write $R_{x,y}$ for $R_e$ and $I_{x,y}$ for $I_e$.}
 
 \begin{problem}
-   We open up the tubes at $x$ and $y$, and add small wooden sheets to keep in the water. Make arguments for the following axioms:
-   \begin{axiom}
-    We have a graph $G$ with edges labelled by positive real numbers $R_e$. 
+  Understanding the axioms.
+   \begin{enumerate}[label =\alph*.]
+    \item If $x_1 \to x_2 \to \cdots \to x_n \to x_1$ is a cycle in $G$ with all $R_e=1$, then 
+        $$I_{x_1,x_2}+ I_{x_2,x_3}+ \cdots + I_{x_n,x_1} \ = \ 0.$$
+    \item Show that the function $p:V(G) \to \mathbf{R}$ sending $t\mapsto p_t$ is \textit{harmonic} at $x$:
+    $$p_x \ = \ \frac{1}{\deg(y)}\sum_{y\sim x}\frac{1}{R_{x,y}}p_y$$
+    if and only if there is no external flow at $x$ (i.e. $I_x=0$).
+    \item Show that given $G, R_e,I_x$, there is a unique solution for $p_x$ and $I_e$.
+   \end{enumerate} 
+\end{problem}
 
 
-   
-    \begin{enumerate}[label =\alph*.]
-        \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
+
+
+   \begin{problem}
+    The \textit{(effective) resistance} between two points is
+      $$R(x,y) \ = \ $$
+
+
+   \begin{enumerate}[label =\alph*.]
+    \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
 \begin{center}
 \begin{tikzpicture}
 % Draw 8 vertices at arbitrary positions
@@ -1790,7 +1836,7 @@ where the ends of the graph are considered closed off.
  \end{tikzpicture}
  \end{center} 
  gives $R_{G_1\cdot G_2}(x,z)= R_{G_1}(x,y)+R_{G_2}(y,z)$.
-   \item What happens if we join two graphs $G_1$ and $G_2$ together along multiple points $y_1, \ldots, y_k$? 
+   \item What about if two graphs $G_1$ and $G_2$ are joined together along multiple vertices $y_1, \ldots, y_k$? 
    \item Show that adding two graphs in parallel to form $G_1+G_2$
    \begin{center}
    \begin{tikzpicture}
@@ -1806,19 +1852,9 @@ where the ends of the graph are considered closed off.
         \end{tikzpicture}
         \end{center}
    gives $\frac{1}{R_{G_1+G_2}(x,y)} = \frac{1}{R_{G_1}(x,y)} + \frac{1}{R_{G_2}(x,y)}$.
-     \item What is the resistance of the above graph between $x$ and $y$?
-    \end{enumerate}
-
-   \end{axiom}
-   
-\end{problem}
-
-
-
-
-\textcolor{red}{(add a list of axioms - also need to give an exercise showing linearity of addition wrt $I$)}
-
-
+     \item Compute the resistance between $x$ and $y$ in the above graph $G_1$.
+   \end{enumerate}
+   \end{problem}
 
 
 
@@ -1874,7 +1910,7 @@ where the ends of the graph are considered closed off.
 
 
 \begin{problem}
-Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs (don't forget to include simple ones!). Conjecture a relationship between $P(x,y)$ and $R(x,y)$, and prove it.
+Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs and pairs of vertices (don't forget to include simple cases!). Conjecture a relationship between $P(x,y)$ and $R(x,y)$, and prove it.
 \end{problem}
 
 

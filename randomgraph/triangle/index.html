@@ -1,4 +1,4 @@
-<!-- hexagons -->
+<!-- triangles -->
 
 <!DOCTYPE html>
 <html>
@@ -36,15 +36,38 @@ input[type="range"] {
     color: #6b46c1;
     font-size: 14px;
 }
+.param-group {
+    background: #ede4ff;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 6px;
+}
 </style>
 </head>
 <body>
-<h1 style="color:#6b46c1;text-align:center">Hexagonal Grid with Rotation</h1>
+<h1 style="color:#6b46c1;text-align:center">Hexagonal Grid with Triangles</h1>
 <div class="controls">
     <label>
-        n: <span id="nval">5</span><br>
-        <input type="range" id="slider" min="1" max="25" value="5">
+        n: <span id="nval">25</span><br>
+        <input type="range" id="slider" min="1" max="25" value="25">
     </label>
+    
+    <div class="param-group">
+        <h3 style="color:#7c3aed;margin-top:0">Configuration Parameters</h3>
+        <label>
+            p: <span id="pval">3</span><br>
+            <input type="range" id="pSlider" min="0" max="10" value="3">
+        </label>
+        <label style="margin-top: 10px; display: block;">
+            s: <span id="sval">4</span><br>
+            <input type="range" id="sSlider" min="0" max="10" value="4">
+        </label>
+        <label style="margin-top: 10px; display: block;">
+            t: <span id="tval">2</span><br>
+            <input type="range" id="tSlider" min="0" max="10" value="2">
+        </label>
+    </div>
+    
     <label style="margin-top: 15px; display: block;">
         Speed: <span id="speedval">0.25</span>s<br>
         <input type="range" id="speedSlider" min="0.01" max="1" step="0.01" value="0.25">
@@ -60,12 +83,20 @@ console.log('Script loaded!');
 
 const c = document.getElementById('canvas');
 const ctx = c.getContext('2d');
-const s = document.getElementById('slider');
+const nSlider = document.getElementById('slider');
 const nv = document.getElementById('nval');
 const tileBtn = document.getElementById('tileBtn');
 const randomWalkBtn = document.getElementById('randomWalkBtn');
 const speedSlider = document.getElementById('speedSlider');
 const speedval = document.getElementById('speedval');
+
+// Parameter sliders
+const pSlider = document.getElementById('pSlider');
+const pval = document.getElementById('pval');
+const sSlider = document.getElementById('sSlider');
+const sval = document.getElementById('sval');
+const tSlider = document.getElementById('tSlider');
+const tval = document.getElementById('tval');
 
 // Grid parameters
 const spacing = 40;
@@ -81,7 +112,7 @@ let L = [];
 let randomWalkInterval = null;
 
 function draw() {
-    const n = parseInt(s.value);
+    const n = parseInt(nSlider.value);
     nv.textContent = n;
     
     // Calculate canvas size
@@ -95,7 +126,7 @@ function draw() {
     const centerX = width / 2;
     const centerY = height / 2;
     
-    // Draw rhombi first if they exist
+    // Draw rhombi if they exist
     if(rhombi.length > 0) {
         drawRhombi(centerX, centerY);
     }
@@ -137,14 +168,61 @@ function draw() {
             }
         }
     }
+    
+    // Draw triangles at the very end
+    drawTriangles(centerX, centerY);
 }
 
 function hexToPixel(hx, hy, centerX, centerY) {
     // Convert hexagonal coordinates to pixel coordinates
-    // Rotated by 60 degrees: swap x contribution to y and y contribution to x
     const px = centerX + hx * spacing * Math.sqrt(3) / 2;
     const py = centerY + (hy + hx * 0.5) * spacing;
     return {x: px, y: py};
+}
+
+function drawTriangles(centerX, centerY) {
+    const p = parseInt(pSlider.value);
+    const s = parseInt(sSlider.value);
+    const t = parseInt(tSlider.value);
+    const n = parseInt(nSlider.value);
+    
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 6;
+    ctx.globalAlpha = 1.0;
+    
+    // Function to draw a triangle given an offset
+    function drawTriangle(offset) {
+        const k = offset;
+        
+        // Check if all vertices are within bounds
+        const v1 = [k, k];
+        const v2 = [k, -2*k];
+        const v3 = [-2*k, k];
+        
+        // Only draw if at least one vertex is valid (for partial triangles at boundary)
+        if(k > 0 && (
+            Math.max(Math.abs(v1[0]), Math.abs(v1[1]), Math.abs(v1[0] + v1[1])) <= n ||
+            Math.max(Math.abs(v2[0]), Math.abs(v2[1]), Math.abs(v2[0] + v2[1])) <= n ||
+            Math.max(Math.abs(v3[0]), Math.abs(v3[1]), Math.abs(v3[0] + v3[1])) <= n
+        )) {
+            const p1 = hexToPixel(v1[0], v1[1], centerX, centerY);
+            const p2 = hexToPixel(v2[0], v2[1], centerX, centerY);
+            const p3 = hexToPixel(v3[0], v3[1], centerX, centerY);
+            
+            // Draw edges only
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p3.x, p3.y);
+            ctx.closePath();
+            ctx.stroke();
+        }
+    }
+    
+    // Draw triangles for p, p+s, and p+s+t
+    if(p > 0) drawTriangle(p);
+    if(p + s > 0) drawTriangle(p + s);
+    if(p + s + t > 0) drawTriangle(p + s + t);
 }
 
 function drawDot(hx, hy, centerX, centerY) {
@@ -280,46 +358,122 @@ function drawRhombi(centerX, centerY) {
 }
 
 function makeTiling() {
-    const n = parseInt(s.value);
+    const n = parseInt(nSlider.value);
+    const p = parseInt(pSlider.value);
+    const s = parseInt(sSlider.value);
+    
     rhombi = [];
     
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                let p1 = [x, y];
-                
-                // Create orange rhombus if conditions met
-                if(y >= 0 && x + y >= 0) {
-                    let p2 = [x, y + 1];
-                    if(p2 && Math.max(Math.abs(p2[0]), Math.abs(p2[1]), Math.abs(p2[0] + p2[1])) <= n) {
-                        const color = getRhombusColor(p1, p2);
-                        rhombi.push({p1, p2, color});
-                    }
-                }
-                
-                // Create green rhombus if conditions met
-                if(y < 0 && x > 0) {
-                    let p2 = [x - 1, y + 1];
-                    if(p2 && Math.max(Math.abs(p2[0]), Math.abs(p2[1]), Math.abs(p2[0] + p2[1])) <= n) {
-                        const color = getRhombusColor(p1, p2);
-                        rhombi.push({p1, p2, color});
-                    }
-                }
-                
-                // Create blue rhombus if conditions met
-                if(x <= 0 && x + y <= 0) {
-                    let p2 = [x - 1, y];
-                    if(p2 && Math.max(Math.abs(p2[0]), Math.abs(p2[1]), Math.abs(p2[0] + p2[1])) <= n) {
-                        const color = getRhombusColor(p1, p2);
-                        rhombi.push({p1, p2, color});
-                    }
-                }
+    // Blue rhombi based on s
+    // For i = 0, ..., s-1:
+    // Pattern: (p+i+1, p+s-1-i), (p+i+1, (p+s-1-i)-1), ..., (p+i+1, -2p-i)
+    for(let i = 0; i < s; i++) {
+        const x = p + i + 1;
+        const yStart = p + s - 1 - i;
+        const yEnd = -2 * p - i;
+        
+        for(let y = yStart; y >= yEnd; y--) {
+            // Check if both points are within bounds
+            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n &&
+               Math.max(Math.abs(x-1), Math.abs(y), Math.abs((x-1) + y)) <= n) {
+                const p1 = [x, y];
+                const p2 = [x - 1, y]; // Horizontal edge for blue
+                rhombi.push({p1, p2, color: '#007aff'});
             }
         }
     }
     
-    // Initialize L with (0,0)
-    L = [[0, 0]];
+    // Additional blue rhombi along bottom edge
+    // For i = 0, ..., t-1:
+    // Pattern: (p, -2p-s-i), (p-1, -2p-s-i+1), ... (-2p-s-i, p+i)
+    const t = parseInt(tSlider.value);
+    
+    for(let i = 0; i < t; i++) {
+        // Diagonal part for each i
+        for(let k = 0; k <= 3*p + s + i; k++) {
+            const x = p - k;
+            const y = -2*p - s - i + k;
+            
+            // Stop when we reach the endpoint (-2p-s-i, p+i)
+            if(x < -2*p - s - i) break;
+            
+            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n &&
+               Math.max(Math.abs(x-1), Math.abs(y), Math.abs((x-1) + y)) <= n) {
+                const p1 = [x, y];
+                const p2 = [x - 1, y]; // Horizontal edge for blue
+                rhombi.push({p1, p2, color: '#007aff'});
+            }
+        }
+    }
+    
+    // For j = 0, ..., t-1:
+    // Pattern: (-2p-s-j, p+1), ... (-2p-s-j, p+s+j)
+    for(let j = 0; j < t; j++) {
+        const x = -2*p - s - j;
+        
+        for(let y = p + 1; y <= p + s + j; y++) {
+            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n &&
+               Math.max(Math.abs(x-1), Math.abs(y), Math.abs((x-1) + y)) <= n) {
+                const p1 = [x, y];
+                const p2 = [x - 1, y]; // Horizontal edge for blue
+                rhombi.push({p1, p2, color: '#007aff'});
+            }
+        }
+    }
+    
+    // Collect all blue rhombi coordinates in set S
+    const S = [];
+    for(const rhombus of rhombi) {
+        if(rhombus.color === '#007aff') {
+            // Add the x-coordinate of the rhombus (since they're horizontal, we use p1[0])
+            S.push([rhombus.p1[0], rhombus.p1[1]]);
+        }
+    }
+    
+    // Apply transformation (x,y) |-> (y,-y-x) to get set T and draw orange rhombi
+    for(const [x, y] of S) {
+        const newX = y;
+        const newY = -y - x;
+        
+        // Check if the transformed point and its vertical neighbor are within bounds
+        if(Math.max(Math.abs(newX), Math.abs(newY), Math.abs(newX + newY)) <= n &&
+           Math.max(Math.abs(newX), Math.abs(newY + 1), Math.abs(newX + (newY + 1))) <= n) {
+            const p1 = [newX, newY];
+            const p2 = [newX, newY + 1]; // Vertical edge for orange
+            rhombi.push({p1, p2, color: '#ff9500'});
+        }
+    }
+    
+    // Collect all orange rhombi coordinates in set T
+    const T = [];
+    for(const rhombus of rhombi) {
+        if(rhombus.color === '#ff9500') {
+            // Add the coordinate of the orange rhombus
+            T.push([rhombus.p1[0], rhombus.p1[1]]);
+        }
+    }
+    
+    // Apply transformation (x,y) |-> (y,-y-x) again to get set U and draw green rhombi
+    for(const [x, y] of T) {
+        const newX = y;
+        const newY = -y - x;
+        
+        // Check if the transformed point and its diagonal neighbor are within bounds
+        if(Math.max(Math.abs(newX), Math.abs(newY), Math.abs(newX + newY)) <= n &&
+           Math.max(Math.abs(newX + 1), Math.abs(newY - 1), Math.abs((newX + 1) + (newY - 1))) <= n) {
+            const p1 = [newX, newY];
+            const p2 = [newX + 1, newY - 1]; // Diagonal edge for green
+            rhombi.push({p1, p2, color: '#34c759'});
+        }
+    }
+    
+    // Initialize L with three specific vertices
+    L = [
+        [p + s, p],
+        [p, -2*p - s],
+        [-2*p - s, p + s]
+    ];
+    
     console.log('L initialized to:', L);
     
     draw();
@@ -408,7 +562,7 @@ function rotateRhombusAroundVertex(rhombus, vx, vy) {
     };
 }
 
-// Main rotation function
+// Rotate rhombi around a vertex
 function rotateAtVertex(vx, vy) {
     console.log(`Attempting to rotate at vertex (${vx}, ${vy})`);
     
@@ -421,7 +575,7 @@ function rotateAtVertex(vx, vy) {
         console.log('Need exactly 3 rhombi at vertex for rotation');
         return;
     }
-        
+    
     const colors = rhombiAtVertex.map(r => r.color);
     const uniqueColors = [...new Set(colors)];
     
@@ -450,8 +604,9 @@ function rotateAtVertex(vx, vy) {
     draw();
 }
 
-s.addEventListener('input', () => {
-    console.log('Slider changed to:', s.value);
+// Event listeners
+nSlider.addEventListener('input', () => {
+    console.log('Slider changed to:', nSlider.value);
     rhombi = []; // Clear rhombi when n changes
     L = []; // Clear L when n changes
     
@@ -464,6 +619,21 @@ s.addEventListener('input', () => {
     }
     
     draw();
+});
+
+pSlider.addEventListener('input', () => {
+    pval.textContent = pSlider.value;
+    draw(); // Redraw triangles when p changes
+});
+
+sSlider.addEventListener('input', () => {
+    sval.textContent = sSlider.value;
+    draw(); // Redraw triangles when s changes
+});
+
+tSlider.addEventListener('input', () => {
+    tval.textContent = tSlider.value;
+    draw(); // Redraw triangles when t changes
 });
 
 tileBtn.addEventListener('click', () => {
@@ -550,7 +720,7 @@ c.addEventListener('click', (event) => {
     
     const centerX = c.width / 2;
     const centerY = c.height / 2;
-    const n = parseInt(s.value);
+    const n = parseInt(nSlider.value);
     
     console.log(`Click at pixel coordinates: (${clickX.toFixed(1)}, ${clickY.toFixed(1)})`);
     
