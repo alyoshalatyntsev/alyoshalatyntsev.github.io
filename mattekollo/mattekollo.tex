@@ -1725,6 +1725,57 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
 
 
 
+ 
+\begin{center}
+\begin{tikzpicture}
+% Draw 8 vertices at arbitrary positions
+\foreach \i/\x/\y in {1/0/0, 2/2/0.5, 3/1/2, 4/3/2, 5/4/0.5, 6/5/1.5, 7/3.5/3, 8/1.5/3.5} {
+    \node[circle, inner sep=0pt, minimum size=0pt] (v\i) at (\x,\y) {};
+}
+
+
+% Declare variables for line widths
+\def\s{10}
+\def\t{3.5}
+
+% Draw some edges between them
+\draw[blue!10, line width=\s pt, line cap=round] (v1) -- (v2);
+\draw[blue!10, line width=5 pt, line cap=round] (v2) -- (v3);
+\draw[blue!10, line width=\s pt, line cap=round] (v3) -- (v4);
+\draw[blue!10, line width=\s pt, line cap=round] (v4) -- (v5);
+\draw[blue!10, line width=16 pt, line cap=round] (v5) -- (v6);
+\draw[blue!10, line width=\s pt, line cap=round] (v3) -- (v7);
+\draw[blue!10, line width=\s pt, line cap=round] (v7) -- (v8);
+\draw[blue!10, line width=13 pt, line cap=round] (v8) -- (v3);
+\draw[blue!10, line width=\s pt, line cap=round] (v2) -- (v5);
+
+\draw[blue!20,thick,line width=\t pt, line cap=round] (v1) -- (v2);
+\draw[blue!20,thick,line width=2 pt, line cap=round] (v2) -- (v3);
+\draw[blue!20,thick,line width=\t pt, line cap=round] (v3) -- (v4);
+\draw[blue!20,thick,line width=\t pt, line cap=round] (v4) -- (v5);
+\draw[blue!20,thick,line width=5 pt, line cap=round] (v5) -- (v6);
+\draw[blue!20,thick,line width=\t pt, line cap=round] (v3) -- (v7);
+\draw[blue!20,thick,line width=\t pt, line cap=round] (v7) -- (v8);
+\draw[blue!20,thick,line width=5 pt, line cap=round] (v8) -- (v3);
+\draw[blue!20,thick,line width=\t pt, line cap=round] (v2) -- (v5);
+
+% Draw half-edges (stubs) pointing out of the graph from some vertices
+\draw[thick, blue!60, dashed] (v1) -- ++(-0.8,-0.5);
+\draw[thick, blue!60, dashed] (v4) -- ++(0.9,0.3);
+\draw[thick, blue!60, dashed] (v6) -- ++(1.2,0.2);
+\draw[thick, blue!60, dashed] (v8) -- ++(-0.5,1.0);
+
+
+% Draw 8 vertices at arbitrary positions
+\foreach \i/\x/\y in {1/0/0, 2/2/0.5, 3/1/2, 4/3/2, 5/4/0.5, 6/5/1.5, 7/3.5/3, 8/1.5/3.5} {
+    \node[circle, inner sep=0pt, minimum size=0pt] (v\i) at (\x,\y) {};
+}
+
+ \end{tikzpicture}
+ \end{center}
+
+
+
 
 
 \begin{problem} 

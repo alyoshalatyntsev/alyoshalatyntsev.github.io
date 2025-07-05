@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  6 JUL 2025 00:42
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  6 JUL 2025 00:55
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1676,148 +1676,33 @@ Package mdframed Info: mdframed detected package amsthm
 pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1731     M
+l.1782     M
             ake arguments for the following axioms:
-Package mdframed Info: mdframed works in twoside mode on input line 1732.
+Package mdframed Info: mdframed works in twoside mode on input line 1783.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1732.
+(mdframed)              on input line 1783.
 
+
+[17]
 pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1752   U
+l.1803   U
           nderstanding the axioms.
-
-[17]
-Overfull \hbox (8.50037pt too wide) in paragraph at lines 1758--1759
+Overfull \hbox (8.50037pt too wide) in paragraph at lines 1809--1810
 []\T1/ppl/m/n/12 Show that gi-ven a wa-ter network with $\OML/ztmcm/m/it/12 p[] \OT1/ztmcm/m/n/12 = \OML/ztmcm/m/it/12 p[]$\T1/ppl/m/n/12 , we get anot-her wa-ter network
  []
 
-Package mdframed Info: mdframed works in twoside mode on input line 1768.
+Package mdframed Info: mdframed works in twoside mode on input line 1819.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1768.
+(mdframed)              on input line 1819.
 
 pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1780     L
+l.1831     L
             et $\Gamma$ be a graph (with no extra data). The \textit{(effect...
 
-[18]
-Package mdframed Info: mdframed works in twoside mode on input line 1874.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1874.
-Package mdframed Info: mdframed works in twoside mode on input line 1879.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1879.
-Package mdframed Info: mdframed works in twoside mode on input line 1885.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1885.
-
-pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.1894   R
-          esistances from random walks.
-
-[19]
-pdfTeX warning (ext4): destination with the same identifier (name{problem.5}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.1915   U
-          sing problem 2, give a new proof of
-Overfull \hbox (1.84755pt too wide) in paragraph at lines 1919--1920
-[]\T1/ppl/m/n/12 That re-mo-ving an ed-ge incre-a-ses or le-a-ves un-chang-ed the re-sistan-ce between
- []
-
-
-pdfTeX warning (ext4): destination with the same identifier (name{problem.6}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.1925   C
-          onsider the circlar graph
-Missing character: There is no ; in font nullfont!
-Missing character: There is no ; in font nullfont!
-
-pdfTeX warning (ext4): destination with the same identifier (name{problem.7}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.1950 M
-        ake a table computing $P(x,y)$ and $R(x,y)$ for a few of your favour...
-
-[20]
-Kapitel 6.
-
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1979--1980
-  []
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1979--1980
-
- []
-
-
-pdfTeX warning (ext4): destination with the same identifier (name{problem.8}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.1983   R
-          esistance of trees.
-
-[21]
-Kapitel 7.
-
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1998--1999
-  []
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1998--1999
-
- []
-
-
-
-[22]
-Kapitel 8.
-
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 2003--2004
-  []
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2003--2004
-
- []
-
-
-
-[23] (mattekollo.aux)
- ***********
-LaTeX2e <2024-11-01>
-L3 programming layer <2024-11-02>
- ***********
-Package logreq Info: Writing requests to 'mattekollo.run.xml'.
-\openout1 = `mattekollo.run.xml'.
-
- ) 
-Here is how much of TeX's memory you used:
- 40881 strings out of 473682
- 771823 string characters out of 5719215
- 1743510 words of memory out of 5000000
- 63019 multiletter control sequences out of 15000+600000
- 645489 words of font info for 235 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 89i,12n,96p,1068b,1242s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagd8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagk8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on mattekollo.pdf (23 pages, 720335 bytes).
-PDF statistics:
- 346 PDF objects out of 1000 (max. 8388607)
- 135 named destinations out of 1000 (max. 500000)
- 65626 words of extra memory for PDF output out of 74296 (max. 10000000)
-
+[18
