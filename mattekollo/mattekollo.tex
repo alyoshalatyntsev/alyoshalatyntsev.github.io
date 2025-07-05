@@ -1712,10 +1712,16 @@ We represent a collection of tubes joined together as a graph
  \end{center} 
 where the ends of the graph are considered closed off.
 
+\textcolor{red}{(add some half-edges)}
+
+
 \begin{problem}
-   We open up the tubes at $x$ and $y$, and add small wooden sheets to keep in the water. 
+   We open up the tubes at $x$ and $y$, and add small wooden sheets to keep in the water. Make arguments for the following axioms:
+   \begin{axiom}
+    We have a graph $G$ with edges labelled by positive real numbers $R_e$. 
+
+
    
-   In the following problem, where you may make reasonable assumptions about flow of water, etc., we will compute the resistance between $x$ and $y$. 
     \begin{enumerate}[label =\alph*.]
         \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
 \begin{center}
@@ -1803,7 +1809,14 @@ where the ends of the graph are considered closed off.
      \item What is the resistance of the above graph between $x$ and $y$?
     \end{enumerate}
 
+   \end{axiom}
+   
 \end{problem}
+
+
+
+
+\textcolor{red}{(add a list of axioms - also need to give an exercise showing linearity of addition wrt $I$)}
 
 
 
@@ -1811,34 +1824,38 @@ where the ends of the graph are considered closed off.
 
 
 \begin{definition}
-    A \emph{random walk} on a graph $G$ starts at a given vertex $x$ and at each step moves to a neighbouring vertex chosen uniformly at random. 
+    A \emph{random walk} on a graph $G$ starts at a given vertex $x$ and at each step moves to a neighbouring vertex, with each one chosen equally likely.
 \end{definition}
 
 
-\begin{problem}
-  Escape probability. 
-  \begin{enumerate}
-   \item Show that 
-  \end{enumerate} 
-\end{problem}
+\begin{definition}
+    The \textit{expected hitting time} $H(x,y)$ between $x,y\in G$ is the expected number of steps a random walk starting at $x$ takes before first hitting $y$.
+\end{definition}
+
+
+
+\begin{definition}
+   The \emph{escape probability} $P(x,y)$ is the probability that a random walk starting at $x$ will hit $y$ before returning to $x$.
+\end{definition}
+
+
+\textit{The edges of $G$ have resistance $1$ unless otherwise specified.}
 
 
 \begin{problem}
-  Resistances from random walks
+  Resistances from random walks.
   \begin{enumerate}[label =\alph*.]
-   \item The \textit{expected hitting time} $H(x,y)$ between two vertices $x$ and $y$ is the expected number of steps a random walk starting at $x$ takes before first hitting $y$. Show that the \textit{commute time} $\kappa(x,y)=H(x,y)+H(y,x)$ is the expected number of steps a random walk starting at $x$ takes to hit $y$, and then return to $x$.
-   \item Show that 
-       $$H(x,y) \ = \ 1 \ + \ \frac{1}{\deg(x)}\sum_{z\sim x} H(z,y)$$
-       and conclude $H(x,y)= p_y-p_x$.
+   \item  Show that the \textit{commute time} $\kappa(x,y)=H(x,y)+H(y,x)$ is the expected number of steps a random walk starting at $x$ takes to hit $y$, and then return to $x$. \textit{Hint:} expectation is linear. 
+   \item  Show that 
+       $$H(x,y) \ = \ 1 \ + \ \frac{1}{\deg(x)}\sum_{z\sim x} H(z,y).$$
+       \item  Now externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. Show that 
+       $$H(x,y) \ = \  p_y-p_x.$$
+    \textit{Hint}. Show that $p_y-p_x$ satisfies the same relation as $H(x,y)$, then try to conclude using this.
    \item Show that 
     $$R(x,y) \ = \ \frac{1}{2|E(G)|} \kappa(x,y) $$
     where $|E(G)|$ is the number of edges in the graph $G$.
     
     
-    \textit{Hint}. Externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. Show that 
-       $$p_x-p_y \ = \ 1 \ + \ \frac{1}{\deg(x)}\sum_{z\sim x} (p_z-p_y).$$
-    Then externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. 
-
     % \url{https://stanford.edu/~rezab/discrete/Notes/6.pdf} p4
     \item   A \textit{random walk} on a \textit{weighted} graph $G$ is a random walk where the probability of moving to a neighbouring vertex $y$ is proportional to the weight of the edge $(x,y)$. Is the above formula still true for a weighted graph? Prove it or give a counterexample.
   \end{enumerate}
@@ -1855,6 +1872,10 @@ where the ends of the graph are considered closed off.
   \end{enumerate}
 \end{problem}
 
+
+\begin{problem}
+Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs (don't forget to include simple ones!). Conjecture a relationship between $P(x,y)$ and $R(x,y)$, and prove it.
+\end{problem}
 
 
 \begin{problem}

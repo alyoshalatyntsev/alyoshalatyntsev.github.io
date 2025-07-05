@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  5 JUL 2025 20:09
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  5 JUL 2025 20:31
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1682,41 +1682,54 @@ Package mdframed Info: Not enough space on this page on input line 1661.
 pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1716    W
+l.1719    W
            e open up the tubes at $x$ and $y$, and add small wooden sheets t...
-
-[17]
-Package mdframed Info: mdframed works in twoside mode on input line 1813.
+Package mdframed Info: mdframed works in twoside mode on input line 1720.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1813.
+(mdframed)              on input line 1720.
+
+
+[17]
+Package mdframed Info: mdframed works in twoside mode on input line 1826.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1826.
+Package mdframed Info: mdframed works in twoside mode on input line 1831.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1831.
+Package mdframed Info: mdframed works in twoside mode on input line 1837.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1837.
 
 pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1819   E
-          scape probability.
+l.1846   R
+          esistances from random walks.
+
+[18]
 pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1827   R
-          esistances from random walks
-pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.1850   U
+l.1867   U
           sing problem 2, give a new proof of
-Overfull \hbox (1.84755pt too wide) in paragraph at lines 1854--1855
+Overfull \hbox (1.84755pt too wide) in paragraph at lines 1871--1872
 []\T1/ppl/m/n/12 That re-mo-ving an ed-ge incre-a-ses or le-a-ves un-chang-ed the re-sistan-ce between
  []
 
 
-
-[18]
+pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1877 M
+        ake a table computing $P(x,y)$ and $R(x,y)$ for a few of your favour...
 pdfTeX warning (ext4): destination with the same identifier (name{problem.5}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1861   C
+l.1882   C
           onsider the circlar graph
 Missing character: There is no ; in font nullfont!
 Missing character: There is no ; in font nullfont!
@@ -1725,12 +1738,12 @@ Missing character: There is no ; in font nullfont!
 [19]
 Kapitel 6.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1909--1910
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1930--1931
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1909--1910
+Underfull \hbox (badness 10000) in paragraph at lines 1930--1931
 
  []
 
@@ -1738,18 +1751,18 @@ Underfull \hbox (badness 10000) in paragraph at lines 1909--1910
 pdfTeX warning (ext4): destination with the same identifier (name{problem.6}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1913   R
+l.1934   R
           esistance of trees.
 
 [20]
 Kapitel 7.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1928--1929
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1949--1950
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1928--1929
+Underfull \hbox (badness 10000) in paragraph at lines 1949--1950
 
  []
 
@@ -1758,12 +1771,12 @@ Underfull \hbox (badness 10000) in paragraph at lines 1928--1929
 [21]
 Kapitel 8.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1933--1934
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1954--1955
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1933--1934
+Underfull \hbox (badness 10000) in paragraph at lines 1954--1955
 
  []
 
@@ -1779,15 +1792,15 @@ Package logreq Info: Writing requests to 'mattekollo.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 40862 strings out of 473682
- 771563 string characters out of 5719215
- 1743449 words of memory out of 5000000
- 63009 multiletter control sequences out of 15000+600000
+ 40866 strings out of 473682
+ 771643 string characters out of 5719215
+ 1743533 words of memory out of 5000000
+ 63013 multiletter control sequences out of 15000+600000
  645489 words of font info for 235 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 89i,12n,96p,1068b,1242s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 89i,12n,96p,1068b,1399s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagd8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagk8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on mattekollo.pdf (22 pages, 709201 bytes).
+Output written on mattekollo.pdf (22 pages, 710635 bytes).
 PDF statistics:
  332 PDF objects out of 1000 (max. 8388607)
  126 named destinations out of 1000 (max. 500000)
