@@ -1506,25 +1506,353 @@ where it is $+1$ or $-1$ depending on the colour of the square. (\textit{The wor
 
 
 \newpage 
- \chapter{Random graphs : Electrical networks}
-\kapiteldatum{2 July}
+ \chapter{Random graphs : networks}
+\kapiteldatum{6 July}
+
+\setcounter{problem}{0}
+\noindent
+Imagine a water flowing through a glass tube
+\begin{center}
+\begin{tikzpicture}
+% Draw the outer shape of the tube (ellipse at each end, narrowing in the middle and thinner at the right end)
+\draw[thick, fill=blue!10] 
+    (0,1) .. controls (2,1.5) and (4,0.3) .. (6,0.3)
+    -- (6,-0.3) .. controls (4,-0.3) and (2,-1.5) .. (0,-1)
+    -- cycle;
+
+% Draw inner wall for thickness
+
+\draw[thick, fill=blue!20] 
+    (0,0.7) .. controls (2,1.1) and (4,0.1) .. (6,0.1)
+    -- (6,-0.1) .. controls (4,-0.1) and (2,-1.1) .. (0,-0.7)
+    -- cycle;
 
 
-\begin{definition}
-Reminder on expected value, etc. 
-\end{definition}
+% Optional: indicate water flow with arrows
+\draw[->, thick, blue!60!black] (1,0) -- (1.4,0);
+\draw[->, thick, blue!60!black] (2.8,0) -- (3.3,0);
+\draw[->, thick, blue!60!black] (4.6,0) -- (5.5,0);
+
+% Optional: label
+\node at (3,1.7) {glass water tube $T$};
+ \end{tikzpicture}
+ \end{center}
+In the above, the speed of individual water molecules is marked.
+
+
+\begin{axiom}\textbf{(Water is incompressible)}
+ The volume per second $I$ of water flowing through each vertical slice in the tube is the same. 
+\end{axiom}
+ Now place two frictionless wooden sheets at each end, and push different amounts on each end
+\begin{center}
+\begin{tikzpicture}
+% Draw the outer shape of the tube (ellipse at each end, narrowing in the middle and thinner at the right end)
+\draw[thick, fill=blue!10] 
+    (0,1) .. controls (2,1.5) and (4,0.3) .. (6,0.3)
+    -- (6,-0.3) .. controls (4,-0.3) and (2,-1.5) .. (0,-1)
+    -- cycle;
+
+% Draw inner wall for thickness
+\begin{scope} 
+\clip (0.3,-1) rectangle (5.7,1);
+\fill[thick, fill=blue!20] 
+    (0,0.7) .. controls (2,1.1) and (4,0.1) .. (6,0.1)
+    -- (6,-0.1) .. controls (4,-0.1) and (2,-1.1) .. (0,-0.7)
+    -- cycle;
+\end{scope}
+
+\draw[thick] 
+    (0,0.7) .. controls (2,1.1) and (4,0.1) .. (6,0.1)
+    -- (6,-0.1) .. controls (4,-0.1) and (2,-1.1) .. (0,-0.7)
+    -- cycle;
+
+
+% Optional: indicate water flow with arrows
+\draw[<-, thick, blue!60!black] (0.7,0) -- (1.6,0);
+\draw[<-, thick, blue!60!black] (2.5,0) -- (3.6,0);
+\draw[<-, thick, blue!60!black] (4.3,0) -- (5.6,0);
+
+
+\draw[brown!60, line width = 3pt] (0.3,-0.7) -- (0.3,0.7);
+\draw[brown!60, line width = 3pt] (5.7,-0.1) -- (5.7,0.1);
+
+\draw[thick,->] (-0.3,0) -- (0.2,0);
+\draw[very thick,<-] (5.8,0) -- (6.7,0);
+
+\node[left] at (-0.3,0) {$p_L$};
+\node[right] at (6.7,0) {$p_R$};
+
+% Optional: label
+\node at (3,1.7) {glass water tube $T$};
+ \end{tikzpicture}
+ \end{center}
+The flow of water $I$ through the tube in response to the difference $p=p_L-p_R$ in pressure forms some graph, e.g.
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+% Draw axes
+\draw[->] (0,0) -- (4.5,0) node[right] {$p$};
+\draw[->] (0,0) -- (0,3.5) node[above] {$I$};
+
+% Draw a curvy increasing graph starting from (0,0)
+\draw[thick, blue] plot [smooth] coordinates {
+    (0,0)
+    (0.5,0.7)
+    (1,1.2)
+    (1.5,1.2)
+    (2,1.6)
+    (2.5,2.3)
+    (3,1.9)
+    (3.5,2.1)
+    (4,2.7)
+};
+
+\begin{scope}[xshift=7cm]
+% Draw axes
+\draw[->] (0,0) -- (4.5,0) node[right] {$p$};
+\draw[->] (0,0) -- (0,3.5) node[above] {$I$};
+
+% Draw a constant graph: horizontal line at I=2
+\draw[thick, blue] (0,0) -- (4,3);
+
+\end{scope}
+ \end{tikzpicture}
+ \end{center} 
+The \emph{resistance} of a tube $T$ is $R(T) = \frac{d(p_L-p_R)}{dI}$. We will make the simplifying \textbf{assumption} that all above graphs are linear (which is approximately true for small $p,I$), so
+
+ \begin{definition}
+   The \emph{resistance} of a tube $T$ is the ratio
+   $$R(T) \ = \ \frac{p}{I}.$$
+ \end{definition}
+
+
+\begin{axiom}\textbf{(Addition of resistances)} Putting two tubes $T_1$ and $T_2$ after one another adds their resistances:
+\begin{center}
+\begin{tikzpicture}
+% Draw the first tube (left)
+\draw[thick, fill=blue!10] 
+    (0,1) .. controls (2,1.5) and (4,0.3) .. (6,0.3)
+    -- (6,-0.3) .. controls (4,-0.3) and (2,-1.5) .. (0,-1)
+    -- cycle;
+
+% Draw inner wall for thickness (left tube)
+\draw[thick, fill=blue!20] 
+    (0,0.7) .. controls (2,1.1) and (4,0.1) .. (6,0.1)
+    -- (6,-0.1) .. controls (4,-0.1) and (2,-1.1) .. (0,-0.7)
+    -- cycle;
+
+% Draw the second tube (right), shifted to the right
+\begin{scope}[xshift=6cm]
+\draw[thick, fill=blue!10] 
+    (0,0.3) .. controls (1,0.7) and (2,0.7) .. (3,0.3)
+    -- (3,-0.3) .. controls (2,-0.7) and (1,-0.7) .. (0,-0.3)
+    -- cycle;
+
+\draw[thick, fill=blue!20] 
+    (0,0.1) .. controls (1,0.4) and (2,0.4) .. (3,0.1)
+    -- (3,-0.1) .. controls (2,-0.4) and (1,-0.4) .. (0,-0.1)
+    -- cycle;
+\end{scope}
+
+\node at (3,1.6) {tube $T_1$};
+\node at (7.5,1.2) {tube $T_2$};
+\node at (4.5,-1.5) {$R(T_1\cdot T_2) \ = \ R(T_1)+ R(T_2)$};
+ \end{tikzpicture}
+ \end{center}
+\end{axiom}
+
+
+We represent a collection of tubes joined together as a graph 
+\begin{center}
+\begin{tikzpicture}
+% Draw 8 vertices at arbitrary positions
+\foreach \i/\x/\y in {1/0/0, 2/2/0.5, 3/1/2, 4/3/2, 5/4/0.5, 6/5/1.5, 7/3.5/3, 8/1.5/3.5} {
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=5pt] (v\i) at (\x,\y) {};
+}
+
+% Draw some edges between them
+\draw[blue!60] (v1) -- (v2);
+\draw[blue!60] (v2) -- (v3);
+\draw[blue!60] (v3) -- (v4);
+\draw[blue!60] (v4) -- (v5);
+\draw[blue!60] (v5) -- (v6);
+\draw[blue!60] (v3) -- (v7);
+\draw[blue!60] (v7) -- (v8);
+\draw[blue!60] (v8) -- (v3);
+\draw[blue!60] (v2) -- (v5);
+
+% Add shortened, thickened edges for each existing edge
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v1) -- (v2);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v3);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v3) -- (v4);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v4) -- (v5);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v5) -- (v6);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v3) -- (v7);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v7) -- (v8);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v8) -- (v3);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v5);
+
+\node[above] at (v1) {$x$};
+\node[above] at (v6) {$y$};
+
+ \begin{scope} 
+  [yshift = 2cm, xshift = 8cm]
+  
+% Draw two green vertices and a green edge between them
+\node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (a) at (0,0) {};
+\node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (b) at (1.5,0) {};
+\draw[thick, blue!60] (a) -- (b);
+% Draw a small rectangle (resistor) along the edge
+\draw[blue!60, line width=4pt, shorten <=10pt, shorten >=10pt] (0,0) -- (1.5,0);
+% Label underneath
+\node at (0.75,-1) {\textit{resistor/water tube}};
+\node[above] at (0.75,0.2) {$R$};
+  \end{scope}
+
+ \end{tikzpicture}
+ \end{center} 
+where the ends of the graph are considered closed off.
 
 \begin{problem}
-  Exericse on expected value, etc. 
+   We open up the tubes at $x$ and $y$, and add small wooden sheets to keep in the water. We will compute the resistance between $x$ and $y$. 
+    \begin{enumerate}[label =\alph*.]
+     \item s
+     \item What is the resistance of the above graph between $x$ and $y$?
+    \end{enumerate}
+
 \end{problem}
 
 
-\begin{definition}
-The \emph{resistance} between two points $i$ and $j$ in a graph is 
-$$R_{i,j} \ = \ \mathbf{E}[\#\textup{steps }\gamma \textup{ takes before first hitting }j]$$
-where we take expectation over the set of all paths $\gamma$ starting at $i$. 
-\url{https://math.dartmouth.edu/~pw/math100w13/qin.pdf}
-\end{definition}
+
+
+
+
+\begin{problem}
+  In this problem we will show that 
+  $$R(x,y) \ = \ \mathbf{E}[\# \textup{steps a random walk }\gamma \textup{ starting at } x\textup{ takes before first hitting }y].$$
+  \begin{enumerate}[label =\alph*.]
+   \item 
+\url{https://math.dartmouth.edu/~pw/math100w13/qin.pdf} 
+  \end{enumerate} 
+\end{problem}
+
+
+
+\begin{problem}
+  Assuming problem 2, give a new proof that 
+  \begin{enumerate}[label =\alph*.]
+   \item The axiom of addition of resistances.
+   \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex $G_1\cdot_y G_2$
+\begin{center}
+\begin{tikzpicture}
+% Draw 8 vertices at arbitrary positions
+\foreach \i/\x/\y in {1/0/0, 2/2/0.5, 3/1/2, 4/3/2, 5/4/0.5, 6/5/1.5, 7/3.5/3, 8/1.5/3.5} {
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=5pt] (v\i) at (\x,\y) {};
+}
+
+% Draw some edges between them
+\draw[blue!60] (v1) -- (v2);
+\draw[blue!60] (v2) -- (v3);
+\draw[blue!60] (v3) -- (v4);
+\draw[blue!60] (v4) -- (v5);
+\draw[blue!60] (v5) -- (v6);
+\draw[blue!60] (v3) -- (v7);
+\draw[blue!60] (v7) -- (v8);
+\draw[blue!60] (v8) -- (v3);
+\draw[blue!60] (v2) -- (v5);
+
+% Add shortened, thickened edges for each existing edge
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v1) -- (v2);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v3);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v3) -- (v4);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v4) -- (v5);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v5) -- (v6);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v3) -- (v7);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v7) -- (v8);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v8) -- (v3);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v5);
+
+\node[above] at (v1) {$x$};
+\node[above] at (v6) {$y$};
+
+
+% Add new vertices v9 to v15
+\foreach \i/\x/\y in {9/6.5/2.9, 10/6/1.5, 11/8/2.5, 12/7.5/0.5, 13/9/1.5, 14/8.5/3, 15/10/2} {
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=5pt] (v\i) at (\x,\y) {};
+}
+
+% Connect v10 to v6
+\draw[blue!60] (v6) -- (v10);
+\draw[line width=4pt, shorten <=5pt, shorten >=5pt, blue!60] (v6) -- (v10);
+\draw[blue!60] (v9) -- (v10);
+\draw[blue!60] (v11) -- (v10);
+\draw[blue!60] (v9) -- (v11);
+\draw[blue!60] (v10) -- (v12);
+\draw[blue!60] (v11) -- (v13);
+\draw[blue!60] (v12) -- (v14);
+\draw[blue!60] (v13) -- (v14);
+\draw[blue!60] (v14) -- (v15);
+
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v9) -- (v10);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v9) -- (v11);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v11) -- (v10);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v10) -- (v12);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v11) -- (v13);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v12) -- (v14);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v13) -- (v14);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v14) -- (v15);
+
+
+\node[above] at (v15) {$z$};
+
+
+ \end{tikzpicture}
+ \end{center} 
+ gives $R_{G_1\cdot G_2}(x,z)= R_{G_1}(x,y)+R_{G_2}(y,z)$.
+   \item What happens if we join two graphs $G_1$ and $G_2$ together along multiple points $y_1, \ldots, y_k$? 
+   \item Show that adding two graphs in parallel $G_1+G_2$
+   \begin{center}
+   \begin{tikzpicture}
+    % Draw two blue dots
+        \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt, label=left:$x$] (x) at (0,0) {};
+        \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt, label=right:$y$] (y) at (4,0) {};
+
+        % Draw first curved line (above) for G_1
+        \draw[thick, blue!60, bend left=40] (x) to node[above] {$G_1$} (y);
+
+        % Draw second curved line (below) for G_2
+        \draw[thick, blue!60, bend right=40] (x) to node[below] {$G_2$} (y);
+        \end{tikzpicture}
+        \end{center}
+   gives $\frac{1}{R_{G_1+G_2}(x,y)} = \frac{1}{R_{G_1}(x,y)} + \frac{1}{R_{G_2}(x,y)}$.
+  \end{enumerate}
+\end{problem}
+
+
+
+\begin{problem}
+  Consider the circlar graph 
+  \begin{center}
+  \begin{tikzpicture}
+    % Draw 10 vertices in a circle
+    \def\n{10}
+    \def\radius{2.5}
+    \foreach \i in {1,...,10} {
+        \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\i) at ({\radius*cos(360/\n*(\i-1))},{\radius*sin(360/\n*(\i-1))}) {};
+    };
+
+    % Draw straight edges with resistor thick bits
+    \foreach \i [evaluate={\j=int(mod(\i,\n)+1);}] in {1,...,10} {
+        \draw[blue!60] (v\i) -- (v\j);
+        \draw[line width=4pt, blue!60, shorten <=7pt, shorten >=7pt] (v\i) -- (v\j);
+    };
+
+    % Mark x and y
+    \node[above left, font=\bfseries] at (v1) {$x$};
+    \node[below right, font=\bfseries] at (v6) {$y$};
+   \end{tikzpicture}
+   \end{center} 
+\end{problem}
+
 
 \begin{problem}
    In the graph 
@@ -1538,10 +1866,22 @@ where we take expectation over the set of all paths $\gamma$ starting at $i$.
     \foreach \i in {1,...,4} {
         \draw (v\i) -- (v\the\numexpr\i+1\relax);
     }
+    % Add labels 1,2,3,4,5 above the vertices
+    \foreach \i in {1,...,5} {
+        \node[above] at (v\i) {\i};
+    }
     \end{tikzpicture}
     \end{center}
     what is the resistance between $1$ and $2$? Between any pair of vertices $i$ and $j$?
 \end{problem}
+
+
+
+
+
+
+
+
 
 
 

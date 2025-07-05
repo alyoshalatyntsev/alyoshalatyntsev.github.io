@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  4 JUL 2025 10:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  5 JUL 2025 19:33
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1054,23 +1054,23 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 28
 )
 
 Package hyperref Warning: Option `backref' has already been used,
-(hyperref)                setting the option has no effect on input line 595.
+(hyperref)                setting the option has no effect on input line 597.
 
 
 Package hyperref Warning: Option `pagebackref' has already been used,
-(hyperref)                setting the option has no effect on input line 595.
+(hyperref)                setting the option has no effect on input line 597.
 
 
 Package hyperref Warning: Option `hyperindex' has already been used,
-(hyperref)                setting the option has no effect on input line 595.
+(hyperref)                setting the option has no effect on input line 597.
 
-Package hyperref Info: Option `colorlinks' set `false' on input line 595.
-Package hyperref Info: Option `breaklinks' set `true' on input line 595.
+Package hyperref Info: Option `colorlinks' set `false' on input line 597.
+Package hyperref Info: Option `breaklinks' set `true' on input line 597.
 
 Package hyperref Warning: Option `bookmarks' has already been used,
-(hyperref)                setting the option has no effect on input line 595.
+(hyperref)                setting the option has no effect on input line 597.
 
-Package hyperref Info: Option `bookmarksopen' set `false' on input line 595.
+Package hyperref Info: Option `bookmarksopen' set `false' on input line 597.
 (C:\Users\alyos\AppData\Local\Programs\MiKTeX\tex/latex/bookmark\bookmark.sty
 Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
  (C:\Users\alyos\AppData\Local\Programs\MiKTeX\tex/latex/bookmark\bkm-pdftex.def
@@ -1662,74 +1662,102 @@ Underfull \hbox (badness 10000) in paragraph at lines 1510--1511
 
  []
 
-Package mdframed Info: mdframed works in twoside mode on input line 1513.
+Package mdframed Info: mdframed works in twoside mode on input line 1543.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1513.
+(mdframed)              on input line 1543.
+Package mdframed Info: mdframed works in twoside mode on input line 1622.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1622.
+Package mdframed Info: mdframed works in twoside mode on input line 1628.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1628.
 
-pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
+
+[16]
+Package mdframed Info: Not enough space on this page on input line 1661.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1518   E
-          xericse on expected value, etc.
-Package mdframed Info: mdframed works in twoside mode on input line 1522.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1522.
+l.1716    W
+           e open up the tubes at $x$ and $y$, and add small wooden sheets t...
+pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1730   I
+          n this problem we will show that
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmtt' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
+pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1741   A
+          ssuming problem 2, give a new proof that
+
+[17]
 pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.1530    I
+l.1833   C
+          onsider the circlar graph
+Missing character: There is no ; in font nullfont!
+Missing character: There is no ; in font nullfont!
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.5}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.1858    I
            n the graph
 
-[16]
+[18]
 Kapitel 6.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1556--1557
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1896--1897
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1556--1557
+Underfull \hbox (badness 10000) in paragraph at lines 1896--1897
 
  []
 
 
 
-[17]
+[19]
 Kapitel 7.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1561--1562
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1901--1902
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1561--1562
+Underfull \hbox (badness 10000) in paragraph at lines 1901--1902
 
  []
 
 
 
-[18]
+[20]
 Kapitel 8.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 1566--1567
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 1906--1907
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1566--1567
+Underfull \hbox (badness 10000) in paragraph at lines 1906--1907
 
  []
 
 
 
-[19] (mattekollo.aux)
+[21] (mattekollo.aux)
  ***********
 LaTeX2e <2024-11-01>
 L3 programming layer <2024-11-02>
@@ -1739,17 +1767,17 @@ Package logreq Info: Writing requests to 'mattekollo.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 40656 strings out of 473682
- 768356 string characters out of 5719215
- 1743355 words of memory out of 5000000
- 62832 multiletter control sequences out of 15000+600000
- 637780 words of font info for 221 fonts, out of 8000000 for 9000
+ 40861 strings out of 473682
+ 771596 string characters out of 5719215
+ 1743428 words of memory out of 5000000
+ 63013 multiletter control sequences out of 15000+600000
+ 645802 words of font info for 236 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  89i,12n,96p,1068b,1242s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\alyos\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1200.pk><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagd8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagk8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on mattekollo.pdf (19 pages, 705817 bytes).
+Output written on mattekollo.pdf (21 pages, 714824 bytes).
 PDF statistics:
- 335 PDF objects out of 1000 (max. 8388607)
- 111 named destinations out of 1000 (max. 500000)
+ 350 PDF objects out of 1000 (max. 8388607)
+ 120 named destinations out of 1000 (max. 500000)
  66138 words of extra memory for PDF output out of 74296 (max. 10000000)
 
