@@ -1713,7 +1713,9 @@ We represent a collection of tubes joined together as a graph
 where the ends of the graph are considered closed off.
 
 \begin{problem}
-   We open up the tubes at $x$ and $y$, and add small wooden sheets to keep in the water. We will compute the resistance between $x$ and $y$. 
+   We open up the tubes at $x$ and $y$, and add small wooden sheets to keep in the water. 
+   
+   In the following problem, where you may make reasonable assumptions about flow of water, etc., we will compute the resistance between $x$ and $y$. 
     \begin{enumerate}[label =\alph*.]
         \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
 \begin{center}
@@ -1808,24 +1810,48 @@ where the ends of the graph are considered closed off.
 
 
 
+\begin{definition}
+    A \emph{random walk} on a graph $G$ starts at a given vertex $x$ and at each step moves to a neighbouring vertex chosen uniformly at random. 
+\end{definition}
+
+
 \begin{problem}
-  In this problem we will show that 
-  $$R(x,y) \ = \ \mathbf{E}[\# \textup{steps a random walk }\gamma \textup{ starting at } x\textup{ takes before first hitting }y].$$
-  \begin{enumerate}[label =\alph*.]
-   \item 
-\url{https://math.dartmouth.edu/~pw/math100w13/qin.pdf} 
+  Escape probability. 
+  \begin{enumerate}
+   \item Show that 
   \end{enumerate} 
+\end{problem}
+
+
+\begin{problem}
+  Resistances from random walks
+  \begin{enumerate}[label =\alph*.]
+   \item The \textit{expected hitting time} $H(x,y)$ between two vertices $x$ and $y$ is the expected number of steps a random walk starting at $x$ takes before first hitting $y$. Show that the \textit{commute time} $\kappa(x,y)=H(x,y)+H(y,x)$ is the expected number of steps a random walk starting at $x$ takes to hit $y$, and then return to $x$.
+   \item Show that 
+       $$H(x,y) \ = \ 1 \ + \ \frac{1}{\deg(x)}\sum_{z\sim x} H(z,y)$$
+       and conclude $H(x,y)= p_y-p_x$.
+   \item Show that 
+    $$R(x,y) \ = \ \frac{1}{2|E(G)|} \kappa(x,y) $$
+    where $|E(G)|$ is the number of edges in the graph $G$.
+    
+    
+    \textit{Hint}. Externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. Show that 
+       $$p_x-p_y \ = \ 1 \ + \ \frac{1}{\deg(x)}\sum_{z\sim x} (p_z-p_y).$$
+    Then externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. 
+
+    % \url{https://stanford.edu/~rezab/discrete/Notes/6.pdf} p4
+    \item   A \textit{random walk} on a \textit{weighted} graph $G$ is a random walk where the probability of moving to a neighbouring vertex $y$ is proportional to the weight of the edge $(x,y)$. Is the above formula still true for a weighted graph? Prove it or give a counterexample.
+  \end{enumerate}
 \end{problem}
 
 
 
 \begin{problem}
-  Assuming problem 2, give a new proof that 
+  Using problem 2, give a new proof of 
   \begin{enumerate}[label =\alph*.]
    \item Parts a.-c. of Problem 1. 
    \item The axiom of addition of resistances.
-   \item Removing an edge increases or leaves unchanged the resistance between any two points on the network.
- 
+   \item That removing an edge increases or leaves unchanged the resistance between any two points on the network.
   \end{enumerate}
 \end{problem}
 

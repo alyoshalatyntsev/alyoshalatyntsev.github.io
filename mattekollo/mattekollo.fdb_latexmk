@@ -1,20 +1,19 @@
 # Fdb version 4
-["biber mattekollo"] 0 "mattekollo.bcf" "mattekollo.bbl" "mattekollo" 1751737208.4939 0
+["biber mattekollo"] 0 "mattekollo.bcf" "mattekollo.bbl" "mattekollo" 1751738945.02693 0
   "bibliography.bib" 0 -1 0 ""
   "mattekollo.bcf" 0 -1 0 "pdflatex"
   (generated)
   "mattekollo.bbl"
   "mattekollo.blg"
   (rewritten before read)
-["makeindex mattekollo.idx"] 1751736792.98327 "mattekollo.idx" "mattekollo.ind" "mattekollo" 1751737208.49345 0
-  "mattekollo.idx" 1751737205 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+["makeindex mattekollo.idx"] 1751738867.72684 "mattekollo.idx" "mattekollo.ind" "mattekollo" 1751738945.02653 0
+  "mattekollo.idx" 1751738941 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
   (generated)
   "mattekollo.ilg"
   "mattekollo.ind"
   (rewritten before read)
-["pdflatex"] 1751737204.78299 "c:/Users/alyos/Dropbox/alyoshalatyntsev.github.io/mattekollo/mattekollo.tex" "mattekollo.pdf" "mattekollo" 1751737208.49457 0
+["pdflatex"] 1751738940.98828 "c:/Users/alyos/Dropbox/alyoshalatyntsev.github.io/mattekollo/mattekollo.tex" "mattekollo.pdf" "mattekollo" 1751738945.02789 0
   "C:/Users/alyos/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1750596369 208669 c5c63bb1995b0979670889952160d614 ""
-  "C:/Users/alyos/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ectt1200.pk" 1729459614 24152 a2a2799c126060624feb41347c24795b ""
   "C:/Users/alyos/AppData/Local/MiKTeX/fonts/tfm/public/rsfs/rsfs10.tfm" 1729459591 688 37338d6ab346c2f1466b29e195316aa4 ""
   "C:/Users/alyos/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1731618917 11986914 7d1aacd1495fa2a7cf316ea503fa499b ""
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc" 1458473887 4993 80dc9bab7f31fb78a000ccfed0e27cab ""
@@ -42,7 +41,6 @@
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/tfm/adobe/times/zptmcm7v.tfm" 1136768654 1032 20febbd0f0c9a48eb78616f897008286 ""
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/tfm/adobe/times/zptmcm7y.tfm" 1136768654 1520 ad7b3c1a480a03b3e41b5fbb13d938f2 ""
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/ecrm1095.tfm" 993062124 3172 eb6efaa83c6c52473a1c403f376eab0f ""
-  "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/ectt1200.tfm" 993062344 1348 c48a0620e07683860afba1730adf9e53 ""
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1233951854 916 f87d7c45f9c908e672703b83b72241a3 ""
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/tfm/public/amsfonts/symbols/msbm10.tfm" 1233951854 908 2921f8a10601f252058503cc6570e581 ""
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmex10.tfm" 1136765053 992 662f679a0b3d2d53c1b94050fdaa3f50 ""
@@ -291,12 +289,12 @@
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/tex/latex/zref/zref-abspage.sty" 1750428951 2269 2de6c7a5fd634dfef00a960544463a38 ""
   "C:/Users/alyos/AppData/Local/Programs/MiKTeX/tex/latex/zref/zref-base.sty" 1750428951 20785 198a9cb2e04238d92c320d0d9edbd76a ""
   "LanSverige.png" 1751271277 551130 bdc17a1df6dfc47c3170e59ee5f8cd69 ""
-  "c:/Users/alyos/Dropbox/alyoshalatyntsev.github.io/mattekollo/mattekollo.tex" 1751737204 71419 de69adf8ee1f61a1106737704f2fdbac ""
-  "mattekollo.aux" 1751737208 5683 c31f8ae327a902acd6c9860211ea558b "pdflatex"
+  "c:/Users/alyos/Dropbox/alyoshalatyntsev.github.io/mattekollo/mattekollo.tex" 1751738936 72984 cdfe24514307c4dc271c8636a5cf2ac1 ""
+  "mattekollo.aux" 1751738944 5768 2a13a1282a146b5f26b64110715af89c "pdflatex"
   "mattekollo.bbl" 0 -1 0 "biber mattekollo"
-  "mattekollo.ind" 1751736793 0 d41d8cd98f00b204e9800998ecf8427e "makeindex mattekollo.idx"
-  "mattekollo.run.xml" 1751737208 2380 afa3912f051aa69e63c64d04551cc3e4 "pdflatex"
-  "mattekollo.tex" 1751737204 71419 de69adf8ee1f61a1106737704f2fdbac ""
+  "mattekollo.ind" 1751738867 0 d41d8cd98f00b204e9800998ecf8427e "makeindex mattekollo.idx"
+  "mattekollo.run.xml" 1751738944 2380 afa3912f051aa69e63c64d04551cc3e4 "pdflatex"
+  "mattekollo.tex" 1751738936 72984 cdfe24514307c4dc271c8636a5cf2ac1 ""
   "structure.tex" 1751734563 26761 30e9d73e1c67e24ae32b9bca59b78f53 ""
   (generated)
   "mattekollo.aux"

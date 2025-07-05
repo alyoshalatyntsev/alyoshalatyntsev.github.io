@@ -636,7 +636,6 @@ INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmsy10.tf
 INPUT C:\Users\alyos\AppData\Local\MiKTeX\fonts\tfm\public\rsfs\rsfs10.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\zptmcm7t.vf
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmr10.tfm
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\jknappen\ec\ectt1200.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\zptmcm7m.vf
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\psyro.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmmi10.tfm
@@ -644,8 +643,6 @@ INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmri8r
 INPUT mattekollo.aux
 INPUT mattekollo.run.xml
 OUTPUT mattekollo.run.xml
-INPUT C:\Users\alyos\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ectt1200.pk
-INPUT C:\Users\alyos\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ectt1200.pk
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmex10.pfb
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmex10.pfb
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmmi10.pfb
