@@ -131,46 +131,46 @@ function draw() {
         drawRhombi(centerX, centerY);
     }
     
-    // First draw all edges
-    ctx.strokeStyle = '#c084fc';
-    ctx.lineWidth = 2;
+    // // First draw all edges
+    // ctx.strokeStyle = '#c084fc';
+    // ctx.lineWidth = 2;
     
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                // Draw edges to adjacent points
-                drawEdges(x, y, n, centerX, centerY);
-            }
-        }
-    }
+    // for(let x = -n; x <= n; x++) {
+    //     for(let y = -n; y <= n; y++) {
+    //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+    //             // Draw edges to adjacent points
+    //             drawEdges(x, y, n, centerX, centerY);
+    //         }
+    //     }
+    // }
     
-    // Then draw all dots on top
-    ctx.fillStyle = '#9333ea';
+    // // Then draw all dots on top
+    // ctx.fillStyle = '#9333ea';
     
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                drawDot(x, y, centerX, centerY);
-            }
-        }
-    }
+    // for(let x = -n; x <= n; x++) {
+    //     for(let y = -n; y <= n; y++) {
+    //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+    //             drawDot(x, y, centerX, centerY);
+    //         }
+    //     }
+    // }
     
-    // Finally draw coordinate labels
-    ctx.fillStyle = '#553c9a';
-    ctx.font = '11px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    // // Finally draw coordinate labels
+    // ctx.fillStyle = '#553c9a';
+    // ctx.font = '11px Arial';
+    // ctx.textAlign = 'center';
+    // ctx.textBaseline = 'middle';
     
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                drawLabel(x, y, centerX, centerY);
-            }
-        }
-    }
+    // for(let x = -n; x <= n; x++) {
+    //     for(let y = -n; y <= n; y++) {
+    //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+    //             drawLabel(x, y, centerX, centerY);
+    //         }
+    //     }
+    // }
     
-    // Draw triangles at the very end
-    drawTriangles(centerX, centerY);
+    // // Draw triangles at the very end
+    // drawTriangles(centerX, centerY);
 }
 
 function hexToPixel(hx, hy, centerX, centerY) {
@@ -621,20 +621,20 @@ nSlider.addEventListener('input', () => {
     draw();
 });
 
-pSlider.addEventListener('input', () => {
-    pval.textContent = pSlider.value;
-    draw(); // Redraw triangles when p changes
-});
+// pSlider.addEventListener('input', () => {
+//     pval.textContent = pSlider.value;
+//     draw(); // Redraw triangles when p changes
+// });
 
-sSlider.addEventListener('input', () => {
-    sval.textContent = sSlider.value;
-    draw(); // Redraw triangles when s changes
-});
+// sSlider.addEventListener('input', () => {
+//     sval.textContent = sSlider.value;
+//     draw(); // Redraw triangles when s changes
+// });
 
-tSlider.addEventListener('input', () => {
-    tval.textContent = tSlider.value;
-    draw(); // Redraw triangles when t changes
-});
+// tSlider.addEventListener('input', () => {
+//     tval.textContent = tSlider.value;
+//     draw(); // Redraw triangles when t changes
+// });
 
 tileBtn.addEventListener('click', () => {
     console.log('Make New Tiling button clicked');
