@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Graph Generator</title>
+    <title>Random Graph Generator with Random Walk</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -78,6 +78,7 @@
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -91,6 +92,7 @@
             transition: background-color 0.3s;
             font-weight: 600;
             flex: 1;
+            min-width: 150px;
         }
 
         button:hover {
@@ -122,7 +124,7 @@
             fill: #c084fc;
             stroke: #9333ea;
             stroke-width: 2;
-            cursor: move;
+            cursor: pointer;
         }
 
         .edge {
@@ -134,10 +136,28 @@
         .grid-background {
             fill: #fdf4ff;
         }
+
+        .marker {
+            fill: #fca5a5;
+            stroke: #ef4444;
+            stroke-width: 2;
+            rx: 3;
+            ry: 3;
+            cursor: pointer;
+            pointer-events: all;
+        }
+
+        .value-label {
+            fill: #ef4444;
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
-    <h1>Random Graph Generator</h1>
+    <h1>Random Graph Generator with Random Walk</h1>
     
     <div class="controls">
         <div class="slider-container">
@@ -153,6 +173,9 @@
         <div class="button-container">
             <button onclick="generateEdges()">Generate Edges</button>
             <button onclick="rearrangeVertices()" id="rearrange-btn">Rearrange Vertices</button>
+            <button onclick="startRandomWalk()" id="random-walk-btn">Random Walk</button>
+            <button onclick="toggleMode()" id="mode-btn">Mode: Single Path</button>
+            <button onclick="toggleNumbers()" id="numbers-btn" disabled>Show Numbers</button>
         </div>
     </div>
     
@@ -168,6 +191,11 @@
         let nodes = [];
         let edges = [];
         let animationId = null;
+        let selectedNode = null;
+        let walkInterval = null;
+        let mode = 'single'; // 'single' or 'all'
+        let nodeValues = {}; // Store n_v values for all paths mode
+        let showNumbers = true; // Whether to show numbers in all paths mode
         const svg = document.getElementById('graph-svg');
         const svgWidth = 600;
         const svgHeight = 400;
@@ -180,12 +208,39 @@
             document.getElementById('n-value').textContent = n;
             initializeNodes();
             drawGraph();
+            removeMarkers();
+            stopRandomWalk();
+            nodeValues = {};
         });
 
         document.getElementById('p-slider').addEventListener('input', function(e) {
             p = parseFloat(e.target.value);
             document.getElementById('p-value').textContent = p;
         });
+
+        function toggleMode() {
+            mode = mode === 'single' ? 'all' : 'single';
+            document.getElementById('mode-btn').textContent = mode === 'single' ? 'Mode: Single Path' : 'Mode: All Paths';
+            
+            // Update numbers button state
+            const numbersBtn = document.getElementById('numbers-btn');
+            if (mode === 'single') {
+                numbersBtn.disabled = true;
+            } else {
+                numbersBtn.disabled = false;
+            }
+            
+            removeMarkers();
+            stopRandomWalk();
+            nodeValues = {};
+            drawMarkers();
+        }
+
+        function toggleNumbers() {
+            showNumbers = !showNumbers;
+            document.getElementById('numbers-btn').textContent = showNumbers ? 'Hide Numbers' : 'Show Numbers';
+            drawMarkers();
+        }
 
         function initializeNodes() {
             nodes = [];
@@ -213,6 +268,196 @@
             }
             drawGraph();
             document.getElementById('rearrange-btn').disabled = false;
+            document.getElementById('random-walk-btn').disabled = false;
+        }
+
+        function getNeighbors(nodeId) {
+            const neighbors = [];
+            for (const edge of edges) {
+                if (edge.source === nodeId) {
+                    neighbors.push(edge.target);
+                } else if (edge.target === nodeId) {
+                    neighbors.push(edge.source);
+                }
+            }
+            return neighbors;
+        }
+
+        function getDegree(nodeId) {
+            return getNeighbors(nodeId).length;
+        }
+
+        function removeMarkers() {
+            const existingMarkers = svg.querySelectorAll('.marker');
+            existingMarkers.forEach(marker => marker.remove());
+            const existingLabels = svg.querySelectorAll('.value-label');
+            existingLabels.forEach(label => label.remove());
+            selectedNode = null;
+        }
+
+        function drawMarkers() {
+            removeMarkers();
+            
+            if (mode === 'single') {
+                if (selectedNode !== null) {
+                    placeMarker(selectedNode);
+                }
+            } else {
+                // Draw markers for all nodes with n_v > 0
+                for (let i = 0; i < n; i++) {
+                    const value = nodeValues[i] || 0;
+                    if (value > 0) {
+                        const node = nodes[i];
+                        const size = Math.sqrt(value) * 40; // Scale by 40 to match single marker size
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', node.x - size/2);
+                        rect.setAttribute('y', node.y - size/2);
+                        rect.setAttribute('width', size);
+                        rect.setAttribute('height', size);
+                        rect.setAttribute('class', 'marker');
+                        rect.setAttribute('data-node-id', i);
+                        
+                        // Add click handler
+                        rect.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            nodeValues = {};
+                            drawMarkers();
+                            stopRandomWalk();
+                        });
+                        
+                        svg.appendChild(rect);
+                        
+                        // Add text label showing the value if enabled
+                        if (showNumbers) {
+                            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                            text.setAttribute('x', node.x);
+                            text.setAttribute('y', node.y - 25);
+                            text.setAttribute('class', 'value-label');
+                            text.textContent = value.toFixed(4);
+                            svg.appendChild(text);
+                        }
+                    }
+                }
+            }
+        }
+
+        function placeMarker(nodeId) {
+            if (mode === 'single') {
+                removeMarkers();
+                selectedNode = nodeId;
+                
+                const node = nodes[nodeId];
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', node.x - 20);
+                rect.setAttribute('y', node.y - 20);
+                rect.setAttribute('width', 40);
+                rect.setAttribute('height', 40);
+                rect.setAttribute('class', 'marker');
+                
+                // Add click handler to remove marker
+                rect.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    removeMarkers();
+                    stopRandomWalk();
+                });
+                
+                svg.appendChild(rect);
+            } else {
+                // All paths mode
+                nodeValues = {};
+                nodeValues[nodeId] = 1;
+                drawMarkers();
+            }
+        }
+
+        function stopRandomWalk() {
+            if (walkInterval) {
+                clearInterval(walkInterval);
+                walkInterval = null;
+                document.getElementById('random-walk-btn').textContent = 'Random Walk';
+            }
+        }
+
+        function startRandomWalk() {
+            if (edges.length === 0) {
+                alert('Please generate edges first!');
+                return;
+            }
+
+            if (mode === 'single') {
+                // Single path mode
+                if (selectedNode === null) {
+                    const randomNode = Math.floor(Math.random() * n);
+                    placeMarker(randomNode);
+                }
+
+                if (walkInterval) {
+                    stopRandomWalk();
+                    return;
+                }
+
+                document.getElementById('random-walk-btn').textContent = 'Stop Walk';
+
+                walkInterval = setInterval(() => {
+                    if (selectedNode === null) {
+                        stopRandomWalk();
+                        return;
+                    }
+
+                    const neighbors = getNeighbors(selectedNode);
+                    
+                    if (neighbors.length > 0) {
+                        const nextNode = neighbors[Math.floor(Math.random() * neighbors.length)];
+                        placeMarker(nextNode);
+                    }
+                }, 250);
+            } else {
+                // All paths mode - spread probability mass
+                if (Object.keys(nodeValues).length === 0) {
+                    // No starting point, pick random
+                    const randomNode = Math.floor(Math.random() * n);
+                    nodeValues[randomNode] = 1;
+                    drawMarkers();
+                }
+
+                if (walkInterval) {
+                    stopRandomWalk();
+                    return;
+                }
+
+                document.getElementById('random-walk-btn').textContent = 'Stop Walk';
+
+                walkInterval = setInterval(() => {
+                    const newValues = {};
+                    
+                    // For each vertex v, compute sum of n_w/deg(w) for all neighbors w
+                    for (let i = 0; i < n; i++) {
+                        const neighbors = getNeighbors(i);
+                        let sum = 0;
+                        
+                        for (const neighborId of neighbors) {
+                            const neighborValue = nodeValues[neighborId] || 0;
+                            const neighborDegree = getDegree(neighborId);
+                            if (neighborDegree > 0) {
+                                sum += neighborValue / neighborDegree;
+                            }
+                        }
+                        
+                        if (sum > 0) {
+                            newValues[i] = sum;
+                        }
+                    }
+                    
+                    nodeValues = newValues;
+                    drawMarkers();
+                    
+                    // Stop if all values are very small
+                    const totalMass = Object.values(nodeValues).reduce((a, b) => a + b, 0);
+                    if (totalMass < 0.001) {
+                        stopRandomWalk();
+                    }
+                }, 250);
+            }
         }
 
         function drawGraph() {
@@ -245,8 +490,32 @@
                 circle.setAttribute('r', nodeRadius);
                 circle.setAttribute('class', 'node');
                 circle.setAttribute('id', `node-${index}`);
+                
+                // Add click handler
+                circle.addEventListener('click', function() {
+                    if (mode === 'single') {
+                        placeMarker(index);
+                        stopRandomWalk();
+                    } else {
+                        // In all paths mode
+                        if (nodeValues[index] && nodeValues[index] > 0) {
+                            // Nonempty vertex - clear all
+                            nodeValues = {};
+                            drawMarkers();
+                            stopRandomWalk();
+                        } else {
+                            // Empty vertex - place single marker
+                            placeMarker(index);
+                            stopRandomWalk();
+                        }
+                    }
+                });
+                
                 svg.appendChild(circle);
             });
+
+            // Redraw markers if they exist
+            drawMarkers();
         }
 
         function rearrangeVertices() {
@@ -359,6 +628,9 @@
                     }
                 });
 
+                // Update marker positions
+                drawMarkers();
+
                 iterations++;
                 
                 // Continue animation if not converged
@@ -374,6 +646,7 @@
         initializeNodes();
         drawGraph();
         document.getElementById('rearrange-btn').disabled = true;
+        document.getElementById('random-walk-btn').disabled = true;
     </script>
 </body>
 </html>

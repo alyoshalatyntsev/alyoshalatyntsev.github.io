@@ -445,14 +445,6 @@ INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagd
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagk8t.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagd8t.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagd8t.tfm
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\avantgar\pagd8t.vf
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagd8r.tfm
-INPUT C:\Users\alyos\AppData\Local\MiKTeX\fonts\map\pdftex\pdftex.map
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\enc\dvips\base\8r.enc
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\avantgar\pagd8t.vf
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagd8r.tfm
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\avantgar\pagk8t.vf
-INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagk8r.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\ts1ppl.fd
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\ts1ppl.fd
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\ts1ppl.fd
@@ -521,6 +513,12 @@ INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmb7t.
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmri7t.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\avantgar\pagd8t.vf
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagd8r.tfm
+INPUT C:\Users\alyos\AppData\Local\MiKTeX\fonts\map\pdftex\pdftex.map
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\enc\dvips\base\8r.enc
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\avantgar\pagd8t.vf
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagd8r.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\palatino\pplr8c.vf
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\palatino\pplr8r.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\mathpazo\fplmr.tfm
@@ -558,6 +556,8 @@ INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\ptmb7t.v
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmb8r.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\palatino\pplri8t.vf
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\palatino\pplri8r.tfm
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\avantgar\pagk8t.vf
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\avantgar\pagk8r.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\zptmcm7v.vf
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmex10.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmex10.tfm
@@ -640,6 +640,10 @@ INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\zptmcm7m
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\psyro.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmmi10.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmri8r.tfm
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\zptmcm7v.vf
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmex10.tfm
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmex10.tfm
+INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\symbol\psyr.tfm
 INPUT mattekollo.aux
 INPUT mattekollo.run.xml
 OUTPUT mattekollo.run.xml

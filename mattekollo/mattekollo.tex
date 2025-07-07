@@ -24,17 +24,6 @@
 
 
 
-\newpage
-\chapter*{Random graphs : long problems}
-\kapiteldatum{All of Mattekollo}
-
-
-
-
-
-
-
-
 
 \newpage
 \chapter*{Domino tilings: long problems}
@@ -1805,12 +1794,16 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
     \item If $x_1 \to x_2 \to \cdots \to x_n \to x_1$ is a cycle in $G$ with all $R_e=1$, then 
         $$I_{x_1,x_2}+ I_{x_2,x_3}+ \cdots + I_{x_n,x_1} \ = \ 0.$$
     \item Show that if all $I_x=0$, then all $I_{x,y}=0$ and $p_x$ is constant on each connected component of $G$. \textit{If there are no holes - no water moves!} \textit{Hint:} show it for cyclic graphs and for trees first.
-
-    \item Show that given a water network with $p_{x_1}=p_{x_2}$, we get another water network by merging $x_1$ and $x_2$ to form a single vertex.
-    \item Show that the function $p:V(G) \to \mathbf{R}$ sending $t\mapsto p_t$ satisfies:
-    $$p_x \ = \ \frac{1}{\deg(x)}\sum_{y\sim x}\frac{1}{R_{x,y}}p_y$$
-    if and only if there is no external flow at $x$ (i.e. $I_x=0$). We call this property being \textit{harmonic at $x$}.
-    \item Use the following to show that if $G$ is connected, $p$ is unique up to multiplication by a constant.
+    \item Show that given a water network with $p_{x_1}=p_{x_2}$, we get another water network by merging $x_1$ and $x_2$ to form a single vertex. 
+    \item Consider the function $p:V(G) \to \mathbf{R}$ sending $t\mapsto p_t$. Show that $I_x=0$ if and only if:
+    $$p_x \ = \ \sum_{y\sim x}w_{x,y}p_y$$
+    where $w_{x,y}= \frac{1/R_{x,y}}{\sum_{x\sim z}1/R_{x,z}}$. We call this property being \textit{harmonic at $x$}.
+    \item Given fixed graph and resistance values $(G,R_e)$, show that the operation 
+    $$(p_x,I_e,I_x)+(p'_x,I_e',I_x') \ = \ (p_x+p_x',I_e+I_e',I_x+I_x')$$ 
+    gives a binary operation on the set of water networks for $(G,R_e)$. What is the unit and inverse to this operation?
+    \item Show that for arbitrary $(G,R_e,I_x)$, there is a unique solution for $I_e$, and that $p_e$ is unique up to addition of a constant on each connected component of $G$.
+    
+    \textit{Hint:} given two solutions, consider their difference and apply 2b. 
    \end{enumerate} 
 \end{problem}
 
@@ -1822,16 +1815,24 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
    for some constant $c\in \mathbf{C}$.
 \end{theorem}
 
-\textit{Try to prove this Theorem if and only if it looks more fun to you than the following questions.}
-
 % \url{https://www.cs.yale.edu/homes/spielman/462/2010/lect12-10.pdf} p3
 
 
+
+
+
+
+
+\newpage 
+ \chapter{Random graphs 2 : networks}
+\kapiteldatum{7 July}
+\setcounter{problem}{0}
    \begin{problem}
     Let $\Gamma$ be a graph (with no extra data). The \textit{(effective) resistance} between two vertices is
       $$R_{\Gamma}(x,y) \ = \ \frac{p_x-p_y}{2}$$
    for the (unique) water network which has $I_x=1,I_y=-1$, and $I_z=0$ for all other vertices $z$.
    \begin{enumerate}[label =\alph*.]
+    \item Justify in words what this has to do with the previous definition of resistance.
     \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
 \begin{center}
 \begin{tikzpicture}
@@ -1899,7 +1900,6 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
  \end{tikzpicture}
  \end{center} 
  gives $R_{G_1\cdot G_2}(x,z)= R_{G_1}(x,y)+R_{G_2}(y,z)$.
-   \item \textit{Extra problem}. What about if two graphs $G_1$ and $G_2$ are joined together along multiple vertices $y_1, \ldots, y_k$? 
    \item Show that adding two graphs in parallel to form $G_1+G_2$
    \begin{center}
    \begin{tikzpicture}
@@ -1915,11 +1915,36 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
         \end{tikzpicture}
         \end{center}
    gives $\frac{1}{R_{G_1+G_2}(x,y)} = \frac{1}{R_{G_1}(x,y)} + \frac{1}{R_{G_2}(x,y)}$.
+   \item \textit{Extra problem}. What about if two graphs $G_1$ and $G_2$ with points $x$ and $z$ are joined together along multiple vertices $y_1, \ldots, y_k$? 
      \item Compute the resistance between $x$ and $y$ in the above graph $G_1$.
    \end{enumerate}
    \end{problem}
 
 
+\begin{problem}
+  Consider the circlar graph 
+  \begin{center}
+  \begin{tikzpicture}
+    % Draw 10 vertices in a circle
+    \def\n{10}
+    \def\radius{1.5}
+    \foreach \i in {1,...,10} {
+        \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\i) at ({\radius*cos(360/\n*(\i-1))},{\radius*sin(360/\n*(\i-1))}) {};
+    };
+
+    % Draw straight edges with resistor thick bits
+    \foreach \i [evaluate={\j=int(mod(\i,\n)+1);}] in {1,...,10} {
+        \draw[blue!60] (v\i) -- (v\j);
+        \draw[line width=4pt, blue!60, shorten <=7pt, shorten >=7pt] (v\i) -- (v\j);
+    };
+
+    % Mark x and y
+    \node[right] at (v1) {$y$};
+    \node[left] at (v5) {$x$};
+   \end{tikzpicture}
+   \end{center} 
+   What is the resistance between a pair of points $x$ and $y$?
+\end{problem}
 
 
 \begin{definition}
@@ -1963,39 +1988,15 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
 
 
 \begin{problem}
-  Using problem 2, give a new proof of 
+  Using problem 2 of last sheet, give a new proof of 
   \begin{enumerate}[label =\alph*.]
-   \item Parts a.-c. of Problem 1. 
-   \item The axiom of addition of resistances.
+   \item Parts a.-d. of Problem 1.
+   \item In the graph of 3b., $R_{G}(x,y)$ does not change if we remove everything to the right of $y$.  
    \item That removing an edge increases or leaves unchanged the resistance between any two points on the network.
   \end{enumerate}
 \end{problem}
 
 
-\begin{problem}
-  Consider the circlar graph 
-  \begin{center}
-  \begin{tikzpicture}
-    % Draw 10 vertices in a circle
-    \def\n{10}
-    \def\radius{1.5}
-    \foreach \i in {1,...,10} {
-        \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\i) at ({\radius*cos(360/\n*(\i-1))},{\radius*sin(360/\n*(\i-1))}) {};
-    };
-
-    % Draw straight edges with resistor thick bits
-    \foreach \i [evaluate={\j=int(mod(\i,\n)+1);}] in {1,...,10} {
-        \draw[blue!60] (v\i) -- (v\j);
-        \draw[line width=4pt, blue!60, shorten <=7pt, shorten >=7pt] (v\i) -- (v\j);
-    };
-
-    % Mark x and y
-    \node[right] at (v1) {$y$};
-    \node[left] at (v5) {$x$};
-   \end{tikzpicture}
-   \end{center} 
-   What is the resistance between a pair of points $x$ and $y$?
-\end{problem}
 
 \begin{problem}
 Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs and pairs of vertices (don't forget to include simple cases!). Conjecture a relationship between $P(x,y)$ and $R(x,y)$, and prove it.
@@ -2047,12 +2048,6 @@ Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs 
 \newpage 
     \chapter{Random graphs 3}
 \kapiteldatum{}
-
-
-\newpage 
-    \chapter{Random graphs 4}
-\kapiteldatum{}
-
 
 
 
