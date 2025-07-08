@@ -1823,16 +1823,52 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
 
 
 
+
+
+
+
+
+
+
 \newpage 
- \chapter{Random graphs 2 : networks}
-\kapiteldatum{7 July}
+ \chapter{Random graphs 2 \& 3:  walks and trees}
+\kapiteldatum{7 July \& 8 July}
 \setcounter{problem}{0}
+
+
+\begin{definition}
+Let $G$ be a connected graph and $x,y$ be two vertices of $G$. The \textit{effective resistance} between $x$ and $y$ is the positive real number 
+$$R_G(x,y)$$
+defined as follows. \textit{Pick any} water network $W=(G,R_e,p_x,I_e,I_x)$ on the graph $G$ such that all $R_e=1$, and $I_x=1$, $I_y=-1$, and $I_z=0$ for all other vertices $z$. Then we define $R_G(x,y)=p_x-p_y$.
+\end{definition}
+
+For this definition to make sense, 
+\begin{itemize}
+ \item We need \textit{at least one} water network $W$ with the above properties, and
+ \item The value $R_G(x,y)$ should not depend on the choice of $W$.
+\end{itemize}
+Both parts are true by problem 2f of the 6 July problem set - convince yourself that 2f indeed implies these.
+
+
+
    \begin{problem}
-    Let $\Gamma$ be a graph (with no extra data). The \textit{(effective) resistance} between two vertices is
-      $$R_{\Gamma}(x,y) \ = \ \frac{p_x-p_y}{2}$$
-   for the (unique) water network which has $I_x=1,I_y=-1$, and $I_z=0$ for all other vertices $z$.
+    Understanding effective resistance.
    \begin{enumerate}[label =\alph*.]
-    \item Justify in words what this has to do with the previous definition of resistance.
+    \item Show that for a graph 
+    \begin{center}
+    \begin{tikzpicture}
+    % Draw two circles
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (x) at (0,0) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (y) at (3,0) {};
+    % Draw two nodes for labels
+    \node[above] at (0,0) {$x$};
+    \node[above] at (3,0) {$y$};
+    % Draw a single edge between them
+    \draw[blue!60] (0,0) -- (3,0);
+    \draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (0,0) -- (3,0);
+     \end{tikzpicture}
+     \end{center}
+     the effective resistance is $R_G(x,y)=1$. Note that this agrees with the previous definition of resistance.
     \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
 \begin{center}
 \begin{tikzpicture}
@@ -1915,14 +1951,14 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
         \end{tikzpicture}
         \end{center}
    gives $\frac{1}{R_{G_1+G_2}(x,y)} = \frac{1}{R_{G_1}(x,y)} + \frac{1}{R_{G_2}(x,y)}$.
-   \item \textit{Extra problem}. What about if two graphs $G_1$ and $G_2$ with points $x$ and $z$ are joined together along multiple vertices $y_1, \ldots, y_k$? 
+%    \item \textit{Extra problem}. What about if two graphs $G_1$ and $G_2$ with points $x$ and $z$ are joined together along multiple vertices $y_1, \ldots, y_k$?
      \item Compute the resistance between $x$ and $y$ in the above graph $G_1$.
    \end{enumerate}
    \end{problem}
 
 
 \begin{problem}
-  Consider the circlar graph 
+  Consider the circular graph 
   \begin{center}
   \begin{tikzpicture}
     % Draw 10 vertices in a circle
@@ -1945,6 +1981,46 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
    \end{center} 
    What is the resistance between a pair of points $x$ and $y$?
 \end{problem}
+
+
+\begin{problem}
+  Consider the graph
+  \begin{center}
+  \begin{tikzpicture}
+    % Draw vertices
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (a) at (0,0) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (b) at (1,1) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (c) at (1,-1) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (d) at (2,1) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (e) at (2,-1) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (f) at (3,0) {};
+
+    % Draw edges
+    \draw[blue!60] (a) -- (b);
+    \draw[blue!60] (b) -- (c);
+    \draw[blue!60] (a) -- (c);
+    \draw[blue!60] (b) -- (d);
+    \draw[blue!60] (c) -- (e);
+    \draw[blue!60] (d) -- (f);
+    \draw[blue!60] (e) -- (f);
+
+    % Thicken edges for resistor style
+    \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (a) -- (b);
+    \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (b) -- (c);
+    \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (a) -- (c);
+    \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (b) -- (d);
+    \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (c) -- (e);
+    \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (d) -- (f);
+    \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (e) -- (f);
+
+    % Optional: label x and y
+    \node[above] at (a) {$x$};
+    \node[above] at (f) {$y$};
+   \end{tikzpicture}
+   \end{center} 
+   What is the resistance between a pair of points $x$ and $y$?
+\end{problem}
+
 
 
 \begin{definition}
@@ -1981,24 +2057,86 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
     
     
     % \url{https://stanford.edu/~rezab/discrete/Notes/6.pdf} p4
-    \item   A \textit{random walk} on a \textit{weighted} graph $G$ is a random walk where the probability of moving to a neighbouring vertex $y$ is proportional to the weight of the edge $(x,y)$. Is the above formula still true for a weighted graph? Prove it or give a counterexample.
+    \item \textbf{Extra problem.}  A \textit{random walk} on a \textit{weighted} graph $G$ is a random walk where the probability of moving to a neighbouring vertex $y$ is proportional to the weight of the edge $(x,y)$. Is the above formula still true for a weighted graph? Prove it or give a counterexample.
   \end{enumerate}
+\end{problem}
+
+\begin{problem}
+ Consider the $n\times n$ diamond grid 
+ \begin{center}
+ \begin{tikzpicture}
+
+    \begin{scope} 
+     \clip  (3+3,0+3) -- (0+3,3+3) --  (-3+3,0+3) -- (0+3,-3+3) -- cycle;
+ 
+% Draw a 7x7 square grid (no node labels)
+\foreach \x in {0,...,6} {
+    \foreach \y in {0,...,6} {
+        \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\x\y) at (\x,\y) {};
+    }
+}
+
+% Draw horizontal edges
+\foreach \x in {0,...,5} {
+    \foreach \y in {0,...,6} {
+        \draw[blue!60] (v\x\y) -- (v\the\numexpr\x+1\relax\y);
+        \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (v\x\y) -- (v\the\numexpr\x+1\relax\y);
+    }
+}
+% Draw vertical edges
+\foreach \x in {0,...,6} {
+    \foreach \y in {0,...,5} {
+        \draw[blue!60] (v\x\y) -- (v\x\the\numexpr\y+1\relax);
+        \draw[line width=4pt, shorten <=7pt, shorten >=7pt, blue!60] (v\x\y) -- (v\x\the\numexpr\y+1\relax);
+    }
+}
+     \end{scope}
+
+% Draw a 7x7 square grid (no node labels)
+\foreach \x in {0,...,6} {
+    \foreach \y in {0,...,6} {
+        \pgfmathtruncatemacro{\dx}{abs(\x-3)}
+        \pgfmathtruncatemacro{\dy}{abs(\y-3)}
+        \pgfmathtruncatemacro{\d}{\dx+\dy}
+        \ifnum\d<4
+            \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\x\y) at (\x,\y) {};
+        \fi
+    }
+}
+
+
+        \node[fill=blue!80!black, circle, inner sep=0pt, minimum size=7pt] at (3,3) {};
+        \begin{scope} 
+         [xshift = 3cm, yshift = 3cm] 
+        \draw[red] (3,0) -- (0,3) -- (-3,0) -- (0,-3) -- cycle;
+         \end{scope}
+  \end{tikzpicture}
+  \end{center}
+  \begin{enumerate}[label =\alph*.]
+   \item Compute the number of edges between the boundaries of the $i\times i$ and $(i+1)\times (i+1)$ diamonds. 
+    \item What is the expected time a random walk starting at the origin takes to hit the edge, then return to the origin? \textit{Hint:} use question 4d, and reduce this to a problem about a simpler graph, which you should compute the resistance of.
+    \item Conjecture what the value of $\kappa(0,\textup{edge})$ would approximately look like for diamonds in dimension other than two.
+ \end{enumerate}
 \end{problem}
 
 
 
-\begin{problem}
-  Using problem 2 of last sheet, give a new proof of 
+\begin{problem} \textbf{Extra problem.}
+  Give a new proof of 
   \begin{enumerate}[label =\alph*.]
    \item Parts a.-d. of Problem 1.
-   \item In the graph of 3b., $R_{G}(x,y)$ does not change if we remove everything to the right of $y$.  
-   \item That removing an edge increases or leaves unchanged the resistance between any two points on the network.
+   \item That in the graph of 1b., $R_{G}(x,y)$ does not change if we remove everything to the right of $y$.  
+   \item That if $\tilde{G}$ is the graph formed from $G$ by removing an edge, $R_{\tilde{G}}(x,y)\ge R_G(x,y)$
   \end{enumerate}
 \end{problem}
 
 
 
-\begin{problem}
+
+
+
+
+\begin{problem}\textbf{Extra problem.}
 Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs and pairs of vertices (don't forget to include simple cases!). Conjecture a relationship between $P(x,y)$ and $R(x,y)$, and prove it.
 \end{problem}
 
@@ -2007,32 +2145,120 @@ Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs 
 
 
 
+\begin{problem} \textit{Gambler's ruin.} Let $G$ be a graph and $A,B \subseteq G$ subsets. 
+\begin{enumerate}[label =\alph*.]
+ \item Let $P_x=\mathbf{P}_x(\tau_A < \tau_B)$ be the probability that a random walk starting at $x$ hits $A$ before hitting $B$. Show that 
+ $$P_x \ = \ \begin{cases}
+    0 & \text{if } x\in B,\\
+    1 & \text{if } x\in A.\\
+ \end{cases}$$
+ \item Show that 
+  $$P_x \ = \ \frac{1}{\deg (x)}\sum_{z\sim x} P_z.$$ 
+ \item Set $I_{x,y}=P_x-P_y$. Show that if $x \not \in A \cup B$ it satisfies 
+ $$\sum_{y\sim x}I_{x,y} \ = \  0.$$
+ \item Conclude that there is a water network $W=(G,1,P_x,I_{x,y},I_x)$, for a function $I_x: V(G) \to \mathbf{R}$ that you should compute, which satisfies $I_z=0$ if $z\not\in A\cup B$.
+ \item Show that this is the \textit{unique} water network of the form
+  $$W \ = \ (G,1,?,?,I_x)$$
+  for the function $I_x$ you defined. \textit{Hint:} use 2f of the 6 July problem set.
+\end{enumerate}
+Thus - we have an interpretation of $\mathbf{P}_x(\tau_A < \tau_B)$ as the pressure at $x$ in a water network. How do you interpret the flows $I_e,I_x$? Write down what you expect the result to be if we remove the condition that all $R_e=1$.
+\end{problem}
 
 
 
+\begin{problem}A drunk man is walking randomly left and right, starting at $k\in \mathbf{Z}$. What is the probability he gets to $n$ before returning to $0$? 
+    \begin{center}
+    \begin{tikzpicture}
+        % Draw vertices for Z from -4 to 4
+        \foreach \i in {-4,...,4} {
+            \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\i) at (\i,0) {};
+        }
+            \draw[blue!60] (-4.5,0) -- (4.5,0);
+        % Optional: label a few vertices
+        \node[] at (-5,0) {$\cdots$};
+        \node[] at (5,0) {$\cdots$};
+        \node[above] at (-3,0) {$0$};
+        \node[above] at (1,0) {$k$};
+        \node[above] at (3,0) {$n$};
+    \end{tikzpicture}
+    \end{center}
+\end{problem}
 
 
 
+\begin{problem} 
+   Now take a drunk man walking on
+    \begin{center}
+\begin{tikzpicture}
+% Draw 8 vertices at arbitrary positions
+\foreach \i/\x/\y in {1/0/0, 2/2/0.5, 3/1/2, 4/3/2, 5/4/0.5, 6/5/1.5, 7/3.5/3, 8/1.5/3.5} {
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=5pt] (v\i) at (\x,\y) {};
+}
+
+% Draw some edges between them
+\draw[blue!60] (v1) -- (v2);
+\draw[blue!60] (v2) -- (v3);
+\draw[blue!60] (v3) -- (v4);
+\draw[blue!60] (v4) -- (v5);
+\draw[blue!60] (v5) -- (v6);
+\draw[blue!60] (v3) -- (v7);
+\draw[blue!60] (v7) -- (v8);
+\draw[blue!60] (v8) -- (v3);
+\draw[blue!60] (v2) -- (v5);
+
+% Add shortened, thickened edges for each existing edge
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v1) -- (v2);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v3);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v3) -- (v4);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v4) -- (v5);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v5) -- (v6);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v3) -- (v7);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v7) -- (v8);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v8) -- (v3);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v2) -- (v5);
+
+\node[above] at (v1) {$a$};
+\node[above] at (v6) {$b$};
 
 
+% Add new vertices v9 to v15
+\foreach \i/\x/\y in {9/6.5/2.9, 10/6/1.5, 11/8/2.5, 12/7.5/0.5, 13/9/1.5, 14/8.5/3, 15/10/2} {
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=5pt] (v\i) at (\x,\y) {};
+}
 
+% Connect v10 to v6
+\draw[blue!60] (v6) -- (v10);
+\draw[line width=4pt, shorten <=5pt, shorten >=5pt, blue!60] (v6) -- (v10);
+\draw[blue!60] (v9) -- (v10);
+\draw[blue!60] (v11) -- (v10);
+\draw[blue!60] (v9) -- (v11);
+\draw[blue!60] (v10) -- (v12);
+\draw[blue!60] (v11) -- (v13);
+\draw[blue!60] (v12) -- (v14);
+\draw[blue!60] (v13) -- (v14);
+\draw[blue!60] (v14) -- (v15);
 
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v9) -- (v10);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v9) -- (v11);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v11) -- (v10);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v10) -- (v12);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v11) -- (v13);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v12) -- (v14);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v13) -- (v14);
+\draw[line width=4pt, shorten <=10pt, shorten >=10pt, blue!60] (v14) -- (v15);
 
-
-
-
-
-
-
-
-
-\newpage 
- \chapter{Random graphs 2}
-\kapiteldatum{6 July}
+ \end{tikzpicture}
+ \end{center} 
+ Above each vertex $x$ in the graph, write the value of $\mathbf{P}_x(\tau_a < \tau_b)$, the probability that a random walk starting at $x$ hits $a$ before hitting $b$.
+\end{problem}
 
 
 \begin{problem}
-  Resistance of trees. 
+    A drunken tourist starts at her hotel and walks at random through the streets of the idealised Paris.
+    \begin{center}
+    \includegraphics[height = 6cm]{paris.png}
+    \end{center}
+    Find the probability that she reaches the Arc de Triomphe before she reaches the outskirts of town
 \end{problem}
 
 
@@ -2045,8 +2271,23 @@ Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \newpage 
-    \chapter{Random graphs 3}
+    \chapter{Random graphs 4}
 \kapiteldatum{}
 
 

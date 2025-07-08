@@ -644,6 +644,13 @@ INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\zptmcm7v
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmex10.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmex10.tfm
 INPUT C:\Users\alyos\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\symbol\psyr.tfm
+INPUT .\paris.png
+INPUT .\paris.png
+INPUT .\paris.png
+INPUT .\paris.png
+INPUT .\paris.png
+INPUT .\paris.png
+INPUT .\paris.png
 INPUT mattekollo.aux
 INPUT mattekollo.run.xml
 OUTPUT mattekollo.run.xml
