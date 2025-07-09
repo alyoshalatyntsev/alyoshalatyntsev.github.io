@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  8 JUL 2025 06:00
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.11.14)  9 JUL 2025 09:16
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1728,6 +1728,11 @@ pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) ha
                    \relax 
 l.1855     U
             nderstanding effective resistance.
+Overfull \hbox (2.49304pt too wide) in paragraph at lines 1938--1939
+\T1/ppl/m/n/12 Given wa-ter networks $\OML/ztmcm/m/it/12 W[]$ \T1/ppl/m/n/12 on $\OML/ztmcm/m/it/12 G[]$ \T1/ppl/m/n/12 and $\OML/ztmcm/m/it/12 W[]$ \T1/ppl/m/n/12 on $\OML/ztmcm/m/it/12 G[]$\T1/ppl/m/n/12 , con-struct a new wa-ter network
+ []
+
+
 
 [19]
 pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
@@ -1766,64 +1771,80 @@ l.2046   R
 pdfTeX warning (ext4): destination with the same identifier (name{problem.5}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.2065  C
-         onsider the $n\times n$ diamond grid
-pdfTeX warning (ext4): destination with the same identifier (name{problem.6}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.2124 \begin{problem} \textbf{Extra problem.}
+l.2070 \begin{problem} \textbf{Extra problem.}
                                               
 
 [21]
-pdfTeX warning (ext4): destination with the same identifier (name{problem.7}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.2139 \begin{problem}\textbf{Extra problem.}
-                                             
-pdfTeX warning (ext4): destination with the same identifier (name{problem.8}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.2148 \begin{problem} \textit{Gambler's ruin.}
-                                                Let $G$ be a graph and $A,B ...
-pdfTeX warning (ext4): destination with the same identifier (name{problem.9}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.2169 \begin{problem}A
-                        drunk man is walking randomly left and right, starti...
-pdfTeX warning (ext4): destination with the same identifier (name{problem.10}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.2190    N
-           ow take a drunk man walking on
-
-[22]
-pdfTeX warning (ext4): destination with the same identifier (name{problem.11}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.2257     A
-             drunken tourist starts at her hotel and walks at random through...
-<paris.png, id=235, 271.61475pt x 271.0125pt>
-File: paris.png Graphic file (type png)
-<use paris.png>
-Package pdftex.def Info: paris.png  used on input line 2259.
-(pdftex.def)             Requested size: 171.10161pt x 170.71652pt.
-
-
-[23 <./paris.png>]
 Kapitel 7.
 
-Overfull \hbox (3.77377pt too wide) in paragraph at lines 2291--2292
+Overfull \hbox (3.77377pt too wide) in paragraph at lines 2103--2104
   []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2291--2292
+Underfull \hbox (badness 10000) in paragraph at lines 2103--2104
 
  []
 
+Package mdframed Info: mdframed works in twoside mode on input line 2113.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 2113.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.1}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.2120 C
+        onsider the infinite square grid
+
+[22]
+Package mdframed Info: mdframed works in twoside mode on input line 2223.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 2223.
+
+pdfTeX warning (ext4): destination with the same identifier (name{problem.2}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.2233   W
+          e now compute the resistance between $0$ and $B_n$ in the diamond ...
+pdfTeX warning (ext4): destination with the same identifier (name{problem.3}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.2280   \textbf{Extra problem}
+                               . Generalise the above to the $d$-dimensional...
+
+[23]
+pdfTeX warning (ext4): destination with the same identifier (name{problem.4}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.2307 \begin{problem} \textbf{Proving Theorem 3}
+                                                 : \textit{gambler's ruin.} ...
+pdfTeX warning (ext4): destination with the same identifier (name{problem.5}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.2331 \begin{problem}A
+                        drunk man is walking randomly left and right, starti...
+pdfTeX warning (ext4): destination with the same identifier (name{problem.6}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.2352    N
+           ow take a drunk man walking on
+pdfTeX warning (ext4): destination with the same identifier (name{problem.7}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.2419     A
+             drunken tourist starts at her hotel and walks at random through...
+
+[24]
+<paris.png, id=250, 271.61475pt x 271.0125pt>
+File: paris.png Graphic file (type png)
+<use paris.png>
+Package pdftex.def Info: paris.png  used on input line 2421.
+(pdftex.def)             Requested size: 171.10161pt x 170.71652pt.
 
 
-[24] (mattekollo.aux)
+[25 <./paris.png>] (mattekollo.aux)
  ***********
 LaTeX2e <2024-11-01>
 L3 programming layer <2024-11-02>
@@ -1833,17 +1854,17 @@ Package logreq Info: Writing requests to 'mattekollo.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 41280 strings out of 473682
- 777262 string characters out of 5719215
- 1763477 words of memory out of 5000000
- 63407 multiletter control sequences out of 15000+600000
+ 41314 strings out of 473682
+ 777811 string characters out of 5719215
+ 1786520 words of memory out of 5000000
+ 63434 multiletter control sequences out of 15000+600000
  646267 words of font info for 238 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  89i,12n,96p,1068b,1242s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagd8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/avantgar/uagk8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/alyos/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on mattekollo.pdf (24 pages, 777774 bytes).
+Output written on mattekollo.pdf (25 pages, 790935 bytes).
 PDF statistics:
- 357 PDF objects out of 1000 (max. 8388607)
- 143 named destinations out of 1000 (max. 500000)
+ 370 PDF objects out of 1000 (max. 8388607)
+ 150 named destinations out of 1000 (max. 500000)
  65623 words of extra memory for PDF output out of 74296 (max. 10000000)
 

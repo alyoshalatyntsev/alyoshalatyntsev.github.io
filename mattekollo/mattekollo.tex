@@ -1845,7 +1845,7 @@ defined as follows. \textit{Pick any} water network $W=(G,R_e,p_x,I_e,I_x)$ on t
 For this definition to make sense, 
 \begin{itemize}
  \item We need \textit{at least one} water network $W$ with the above properties, and
- \item The value $R_G(x,y)$ should not depend on the choice of $W$.
+ \item The value  of $R_G(x,y)$ should not depend on the choice of $W$: if $W^{(1)},W^{(2)}$ are two such water networks, we should have $p_x^{(1)}-p_y^{(1)}=p_x^{(2)}-p_y^{(2)}$.
 \end{itemize}
 Both parts are true by problem 2f of the 6 July problem set - convince yourself that 2f indeed implies these.
 
@@ -1869,7 +1869,7 @@ Both parts are true by problem 2f of the 6 July problem set - convince yourself 
      \end{tikzpicture}
      \end{center}
      the effective resistance is $R_G(x,y)=1$. Note that this agrees with the previous definition of resistance.
-    \item Show that joining two graphs $G_1$ and $G_2$ together along a single vertex to form $G_1\cdot_y G_2$
+    \item Write $G_1\cdot_yG_2$ for the \textit{join} of two graphs $G_1$ and $G_2$ along vertices $y_1\in G_1$ and $y_2\in G_2$, which is the graph formed by merging $y_1,y_2$ to a single vertex $y$:
 \begin{center}
 \begin{tikzpicture}
 % Draw 8 vertices at arbitrary positions
@@ -1935,7 +1935,7 @@ Both parts are true by problem 2f of the 6 July problem set - convince yourself 
 
  \end{tikzpicture}
  \end{center} 
- gives $R_{G_1\cdot G_2}(x,z)= R_{G_1}(x,y)+R_{G_2}(y,z)$.
+Given water networks $W_1$ on $G_1$ and $W_2$ on $G_2$, construct a new water network $W_1\cdot_y W_2$ on $G_1\cdot_y G_2$. Show that $R_{G_1\cdot G_2}(x,z)= R_{G_1}(x,y)+R_{G_2}(y,z)$.
    \item Show that adding two graphs in parallel to form $G_1+G_2$
    \begin{center}
    \begin{tikzpicture}
@@ -1979,7 +1979,7 @@ Both parts are true by problem 2f of the 6 July problem set - convince yourself 
     \node[left] at (v5) {$x$};
    \end{tikzpicture}
    \end{center} 
-   What is the resistance between a pair of points $x$ and $y$?
+   What is the effective resistance between a pair of points $x$ and $y$?
 \end{problem}
 
 
@@ -2018,7 +2018,7 @@ Both parts are true by problem 2f of the 6 July problem set - convince yourself 
     \node[above] at (f) {$y$};
    \end{tikzpicture}
    \end{center} 
-   What is the resistance between a pair of points $x$ and $y$?
+   What is the effective resistance between a pair of points $x$ and $y$?
 \end{problem}
 
 
@@ -2048,7 +2048,7 @@ Both parts are true by problem 2f of the 6 July problem set - convince yourself 
    \item  Show that the \textit{commute time} $\kappa(x,y)=H(x,y)+H(y,x)$ is the expected number of steps a random walk starting at $x$ takes to hit $y$, and then return to $x$. \textit{Hint:} expectation is linear. 
    \item  Show that 
        $$H(x,y) \ = \ 1 \ + \ \frac{1}{\deg(x)}\sum_{z\sim x} H(z,y).$$
-       \item  Now externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. Show that 
+       \item  Now externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. Show that in the resulting water network $W$, we have 
        $$H(x,y) \ = \  p_y-p_x.$$
     \textit{Hint}. Show that $p_y-p_x$ satisfies the same relation as $H(x,y)$, then try to conclude using this.
    \item Show that 
@@ -2061,7 +2061,106 @@ Both parts are true by problem 2f of the 6 July problem set - convince yourself 
   \end{enumerate}
 \end{problem}
 
+
+
+
+
+
+
+\begin{problem} \textbf{Extra problem.}
+  Give a new proof of 
+  \begin{enumerate}[label =\alph*.]
+   \item Parts a.-d. of Problem 1.
+   \item That in the graph of 1b., $R_{G}(x,y)$ does not change if we remove everything to the right of $y$.  
+   \item That if $\tilde{G}$ is the graph formed from $G$ by removing an edge, $R_{\tilde{G}}(x,y)\ge R_G(x,y)$
+  \end{enumerate}
+\end{problem}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage 
+    \chapter{Random graphs : drunkenness}
+\kapiteldatum{9 July}
+
+\setcounter{problem}{0}
+
+
+
+
+
+
+
+\begin{definition}
+  Let $A,B$ be subsets of a graph $G$. The \emph{escape probability} $P(A,B)$ is the probability that a random walk starting at $A$ will hit $B$ before returning to $A$. 
+\end{definition}
+
+
+
 \begin{problem}
+Consider the infinite square grid
+ \begin{center}
+ \begin{tikzpicture}[scale=0.7]
+
+ 
+% Draw a 7x7 square grid (no node labels)
+\foreach \x in {0,...,6} {
+    \foreach \y in {0,...,6} {
+        \node[fill=blue!60, circle, inner sep=0pt, minimum size=7pt] (v\x\y) at (\x,\y) {};
+    }
+}
+
+% Draw horizontal edges
+\foreach \x in {0,...,5} {
+    \foreach \y in {0,...,6} {
+        \draw[blue!60] (v\x\y) -- (v\the\numexpr\x+1\relax\y);
+            \draw[line width=4pt, shorten <=5pt, shorten >=5pt, blue!60] (v\x\y) -- (v\the\numexpr\x+1\relax\y);
+            }
+        }
+        % Draw vertical edges
+        \foreach \x in {0,...,6} {
+            \foreach \y in {0,...,5} {
+            \draw[blue!60] (v\x\y) -- (v\x\the\numexpr\y+1\relax);
+            \draw[line width=4pt, shorten <=5pt, shorten >=5pt, blue!60] (v\x\y) -- (v\x\the\numexpr\y+1\relax);
+    }
+}
+
+
+\node[fill=blue!80!black, circle, inner sep=0pt, minimum size=7pt] at (3,3) {};
+
+% Add blue $\cdots$ nodes to each side, rotated to match the grid axes
+\node[blue, rotate=0] at (-1,3) {$\cdots$};    % left, horizontal
+\node[blue, rotate=0] at (7,3) {$\cdots$};     % right, horizontal
+\node[blue, rotate=90] at (3,-1) {$\cdots$};   % bottom, vertical
+\node[blue, rotate=90] at (3,7) {$\cdots$};    % top, vertical
+
+  \end{tikzpicture}
+  \end{center}
+What is the probability $P$ that a drunken person starting at the origin will ever return to the origin? Well, they might just walk left then right, or up then down etc., so it is it at least 
+$$P \ \ge \ \left( \frac{1}{4}\right)^2 + \left( \frac{1}{4}\right)^2 + \left( \frac{1}{4}\right)^2 + \left( \frac{1}{4}\right)^2  \ = \ \frac{1}{4}.$$
+But is $P=1$?
+
+\begin{enumerate}[label =\alph*.]
+ \item 
  Consider the $n\times n$ diamond grid 
  \begin{center}
  \begin{tikzpicture}
@@ -2109,50 +2208,110 @@ Both parts are true by problem 2f of the 6 July problem set - convince yourself 
         \begin{scope} 
          [xshift = 3cm, yshift = 3cm] 
         \draw[red] (3,0) -- (0,3) -- (-3,0) -- (0,-3) -- cycle;
+        \node[red] at (3.5,0.5) {$B_n$};
          \end{scope}
   \end{tikzpicture}
   \end{center}
-  \begin{enumerate}[label =\alph*.]
-   \item Compute the number of edges between the boundaries of the $i\times i$ and $(i+1)\times (i+1)$ diamonds. 
-    \item What is the expected time a random walk starting at the origin takes to hit the edge, then return to the origin? \textit{Hint:} use question 4d, and reduce this to a problem about a simpler graph, which you should compute the resistance of.
-    \item Conjecture what the value of $\kappa(0,\textup{edge})$ would approximately look like for diamonds in dimension other than two.
- \end{enumerate}
+Show that $1- P(0,B_n)\ge P$.
+\item Argue that the drunk man doesn't return to the origin if and only if, for any $n$, they hit $B_n$ before returning to the origin. Thus
+ $$P \ = \ 1-\lim_{n \to \infty }P(0,B_n).$$ 
+\end{enumerate}
+
 \end{problem}
 
 
+\begin{theorem}
+    Let $G$ be a connected graph and $x,y\in V(G)$ be two vertices. Then
+    $$P(x,y) \ = \ \frac{1}{R_G(x,y)}$$
+    where $R_G(x,y)$ is the effective resistance between $x$ and $y$ in the graph $G$. Likewise, for $A,B \subseteq V(G)$, we have
+    $$P(A,B) \ = \ \frac{1}{R_{G/A\cup B}(\bullet_A,\bullet_B)}$$
+    is the effective resistance between $\bullet_A$ and $\bullet_B$ in the graph formed by crushing $A$ and $B$ into single points $\bullet_A$ and $\bullet_B$.
+\end{theorem}
 
-\begin{problem} \textbf{Extra problem.}
-  Give a new proof of 
+
+\begin{problem}
+  We now compute the resistance between $0$ and $B_n$ in the diamond graph, and use this to discover what $P$ is.
+
   \begin{enumerate}[label =\alph*.]
-   \item Parts a.-d. of Problem 1.
-   \item That in the graph of 1b., $R_{G}(x,y)$ does not change if we remove everything to the right of $y$.  
-   \item That if $\tilde{G}$ is the graph formed from $G$ by removing an edge, $R_{\tilde{G}}(x,y)\ge R_G(x,y)$
+   \item Show that $R(0,B_n)$ is the same as the effective resistance $R_n$ between $0$ and $n$ in the graph 
+   \begin{center}
+   \begin{tikzpicture}
+    % Draw four dots in a line
+    \node[fill=blue!80!black, circle, inner sep=0pt, minimum size=8pt] (v0) at (0,0) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=8pt] (v1) at (2,0) {};
+    \node[fill=blue!60, circle, inner sep=0pt, minimum size=8pt] (v2) at (4,0) {};
+    \node[fill=red, circle, inner sep=0pt, minimum size=8pt] (v3) at (6,0) {};
+
+    \begin{scope} 
+     [yshift = -1.5cm] 
+    \node[below] at (v0) {$0$};
+    \node[below] at (v1) {$1$};
+    \node[below] at (v2) {$\cdots$};
+    \node[below] at (v3) {$n$};
+     \end{scope}
+
+    % Draw 4 curved edges between v0 and v1
+    \foreach \i in {1,...,4} {
+        \draw[bend left={-50+20*\i}, thick, blue!60] (v0) to (v1);
+    }
+
+    % Draw 12 curved edges between v1 and v2
+    \foreach \i in {1,...,12} {
+        \draw[bend left={-60+10*\i}, thick, blue!60] (v1) to (v2);
+    }
+
+    % Draw 20 curved edges between v2 and v3
+    \foreach \i in {1,...,20} {
+        \draw[bend left={-100+10*\i}, thick, blue!60] (v2) to (v3);
+    }\end{tikzpicture}
+    \end{center}
+    \item Show that there are $(2i+1)$ edges between the boundaries of the $i\times i$ and $(i+1)\times (i+1)$ diamonds. 
+    \item Thus, compute what $R_n$ is. \textit{Hint:} use the rules for computing effective resistance in the graphs $G_1\cdot G_2$ and $G_1+G_2$ from last time.
+    \item Conclude that 
+    $$\lim_{n \to \infty}R_n \ = \ \frac{1}{4} + \frac{1}{12} + \frac{1}{20}+ \cdots \ \ = \ \sum_{i \ge 0} \frac{1}{4\cdot (2i+1)} \ = \ \infty.$$
+    \item \textbf{The random walker comes back!} Conclude that 
+    $$1-P \ = \ \lim_{n \to \infty}P(0,B_n) \ = \ \lim_{n \to \infty} \frac{1}{R(0,B_n)} \ = \ \lim_{n \to \infty} \frac{1}{R_n} \ = \ 0$$
+    so that the random walker starting at the origin will return to the origin with probability $1$.
   \end{enumerate}
 \end{problem}
 
 
-
-
-
-
-
-\begin{problem}\textbf{Extra problem.}
-Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs and pairs of vertices (don't forget to include simple cases!). Conjecture a relationship between $P(x,y)$ and $R(x,y)$, and prove it.
+\begin{problem}
+  \textbf{Extra problem}. Generalise the above to the $d$-dimensional grid graph $\mathbf{Z}^d$. Show that the random walker starting at the origin will return to the origin with probability $1$ if and only if $d \le 2$.
 \end{problem}
 
 
 
+% \begin{problem}
+%   \textbf{Extra problem}. The \textit{fractal dimension} of a graph $G$ at a vertex $x$ is a real number $D$ such that 
+%   $$c_1 n^D \ \le \ \# E(B_n\to B_{n+1}) \ \le \ c_2 n^D$$
+%   where $B_n \subseteq G$ are the vertices of distance at most $n$ from $x$, and $c_1,c_2$ are constants that do not depend on $n$. 
+  
+%   \begin{enumerate}[label = \alph*.]
+%    \item Give an example of a tree with fractal dimension $1/2$. 
+%   \end{enumerate}
+  
+%   Generalise the above to the $d$-dimensional grid graph $\mathbf{Z}^d$. Show that the random walker starting at the origin will return to the origin with probability $1$ if and only if $d \le 2$.
+% \end{problem}
 
 
 
-\begin{problem} \textit{Gambler's ruin.} Let $G$ be a graph and $A,B \subseteq G$ subsets. 
+
+
+
+
+
+
+
+
+\begin{problem} \textbf{Proving Theorem 3}: \textit{gambler's ruin.} Let $G$ be a graph and $A,B \subseteq G$ subsets. 
 \begin{enumerate}[label =\alph*.]
  \item Let $P_x=\mathbf{P}_x(\tau_A < \tau_B)$ be the probability that a random walk starting at $x$ hits $A$ before hitting $B$. Show that 
  $$P_x \ = \ \begin{cases}
     0 & \text{if } x\in B,\\
     1 & \text{if } x\in A.\\
  \end{cases}$$
- \item Show that 
+ \item Show that for $x \not \in A \cup B$,
   $$P_x \ = \ \frac{1}{\deg (x)}\sum_{z\sim x} P_z.$$ 
  \item Set $I_{x,y}=P_x-P_y$. Show that if $x \not \in A \cup B$ it satisfies 
  $$\sum_{y\sim x}I_{x,y} \ = \  0.$$
@@ -2160,8 +2319,11 @@ Make a table computing $P(x,y)$ and $R(x,y)$ for a few of your favourite graphs 
  \item Show that this is the \textit{unique} water network of the form
   $$W \ = \ (G,1,?,?,I_x)$$
   for the function $I_x$ you defined. \textit{Hint:} use 2f of the 6 July problem set.
+
+  Thus - we have an interpretation of $\mathbf{P}_x(\tau_A < \tau_B)$ as the pressure at $x$ in a water network.
+ \item Conclude that if $a,b\in G$, 
+  $$P(a,b) \ = \ \frac{1}{\deg(a)}\sum_{z\sim a}P_z \ = \ \frac{1}{R_G(a,b).}$$
 \end{enumerate}
-Thus - we have an interpretation of $\mathbf{P}_x(\tau_A < \tau_B)$ as the pressure at $x$ in a water network. How do you interpret the flows $I_e,I_x$? Write down what you expect the result to be if we remove the condition that all $R_e=1$.
 \end{problem}
 
 
@@ -2260,47 +2422,8 @@ Thus - we have an interpretation of $\mathbf{P}_x(\tau_A < \tau_B)$ as the press
     \end{center}
     Find the probability that she reaches the Arc de Triomphe before she reaches the outskirts of town
 \end{problem}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage 
-    \chapter{Random graphs 4}
-\kapiteldatum{}
-
-
-
-
-
-
-
-
-
-
-
 \end{document}
+
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
