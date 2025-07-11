@@ -100,43 +100,43 @@ function draw() {
         drawRhombi(centerX, centerY);
     }
     
-    // First draw all edges
-    ctx.strokeStyle = '#c084fc';
-    ctx.lineWidth = 2;
-    
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                // Draw edges to adjacent points
-                drawEdges(x, y, n, centerX, centerY);
-            }
-        }
-    }
-    
-    // Then draw all dots on top
-    ctx.fillStyle = '#9333ea';
-    
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                drawDot(x, y, centerX, centerY);
-            }
-        }
-    }
-    
-    // Finally draw coordinate labels
-    ctx.fillStyle = '#553c9a';
-    ctx.font = '11px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    for(let x = -n; x <= n; x++) {
-        for(let y = -n; y <= n; y++) {
-            if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
-                drawLabel(x, y, centerX, centerY);
-            }
-        }
-    }
+        // // First draw all edges
+        // ctx.strokeStyle = '#c084fc';
+        // ctx.lineWidth = 2;
+        
+        // for(let x = -n; x <= n; x++) {
+        //     for(let y = -n; y <= n; y++) {
+        //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+        //             // Draw edges to adjacent points
+        //             drawEdges(x, y, n, centerX, centerY);
+        //         }
+        //     }
+        // }
+        
+        // // Then draw all dots on top
+        // ctx.fillStyle = '#9333ea';
+        
+        // for(let x = -n; x <= n; x++) {
+        //     for(let y = -n; y <= n; y++) {
+        //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+        //             drawDot(x, y, centerX, centerY);
+        //         }
+        //     }
+        // }
+        
+        // // Finally draw coordinate labels
+        // ctx.fillStyle = '#553c9a';
+        // ctx.font = '11px Arial';
+        // ctx.textAlign = 'center';
+        // ctx.textBaseline = 'middle';
+        
+        // for(let x = -n; x <= n; x++) {
+        //     for(let y = -n; y <= n; y++) {
+        //         if(Math.max(Math.abs(x), Math.abs(y), Math.abs(x + y)) <= n) {
+        //             drawLabel(x, y, centerX, centerY);
+        //         }
+        //     }
+        // }
 }
 
 function hexToPixel(hx, hy, centerX, centerY) {

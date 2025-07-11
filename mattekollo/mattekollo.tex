@@ -1,4 +1,3 @@
-
 \documentclass[11pt,fleqn]{book} % Default font size and left-justified equations
 
 \input{structure.tex} % Insert the commands.tex file which contains the majority of the structure behind the template
@@ -13,475 +12,9 @@
 
 \DeclareMathOperator{\Id}{Id}
 
+% \renewcommand*\rmdefault{ppl}\normalfont\upshape
+
 \begin{document}
-  \renewcommand*\rmdefault{ppl}\normalfont\upshape
-
-
-\setcounter{problem}{0}
-
-
-
-
-
-
-
-\newpage
-\chapter*{Domino tilings: long problems}
-\kapiteldatum{All of Mattekollo}
-
-\begin{itemize}
- \item \textit{Attempt problems in any order.}
- \item \textit{Sometimes problems will use definitions intruduced in later classes. Feel free to use one problem you've solved to solve another, but if it trivialises the problem, see if you can find another proof as well!}
- \item \textit{More long problems, or if necessary, hints, will be added a bit each lesson.}
-\end{itemize}
-
-
-
-\textbf{Formulas.}
-
-
-\begin{problem}
-Height three rectangles.
-
-\begin{enumerate}[label = \alph*.]
- \item Find a recurrence relation relating the numbers $A_n,B_n,C_n$ of domino tilings of
-\begin{center}
-\begin{tikzpicture}[scale=0.3]
-% Draw grid for 3x7 rectangle
-\foreach \x in {1,...,12} {
-    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
-}
-\foreach \y in {1,...,4} {
-    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
-}
-% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
-\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
-
-\begin{scope} 
- [xshift=15cm] 
- % Draw grid for 3x7 rectangle
-\foreach \x in {1,...,12} {
-    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
-}
-\foreach \y in {1,...,4} {
-    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
-}
-% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
-\filldraw[fill=blue, opacity=0.1, ultra thick] (1,3) -- (2,3) -- (2,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
- \end{scope}
-
-\begin{scope} 
- [xshift=30cm] 
- % Draw grid for 3x7 rectangle
-\foreach \x in {1,...,12} {
-    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
-}
-\foreach \y in {1,...,4} {
-    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
-}
-% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
-\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (2,4) -- (2,2) -- (1,2) -- cycle;
- \end{scope}
-
- \end{tikzpicture}
- \end{center}
-where the base has length $n$. 
- \item Use it to find a formula for $A_n$ in terms of $A_{n-1},A_{n-2}, \ldots ,A_1$.
- \item Show that $A_n,B_n,C_n=0$ if $n$ is odd.
- \item Compute $A_n$ for $n=1,2, \ldots , 10$. Can you find a formula for the number of domino tilings of the $3\times n$ rectangle?
-\end{enumerate}
-\end{problem}
-
-
-
-
-\begin{problem}
-   There are three possibilities for what a domino tiling looks of the $3\times n$ rectangle at the left (or right) boundary, e.g. one left and one right boundary is
-
-   \begin{center}
-   \begin{tikzpicture}[scale=0.5]
-    
-\foreach \x in {1,...,12} {
-    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
-}
-\foreach \y in {1,...,4} {
-    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
-}
-% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
-\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
- 
-% Draw a vertical domino over a horizontal domino on the far left
-% Vertical domino (green)
-\filldraw[fill=green, fill opacity=0.3] (1,2) rectangle (2,4);
-\draw[thick] (1,2) rectangle (2,4);
-
-% Horizontal domino (blue), just below the vertical one
-\filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (3,2);
-\draw[thick] (1,1) rectangle (3,2);
-
-% Draw three horizontal dominoes on the far right
-\filldraw[fill=green, fill opacity=0.3] (10,1) rectangle (12,2);
-\draw[thick] (10,1) rectangle (12,2);
-
-\filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (12,3);
-\draw[thick] (10,2) rectangle (12,3);
-
-\filldraw[fill=green, fill opacity=0.3] (10,3) rectangle (12,4);
-\draw[thick] (10,3) rectangle (12,4);
-    \end{tikzpicture}
-    \end{center}
-Let $B_L,B_R$ be boundary states on the left and right. For each choice of $B_L,B_R$, what is the probability 
-$$\mathbf{P}(B_L \to B_R)$$
-that a random domino tiling with state $B_L$ on the left has state $B_R$ on the right? 
-
-\textit{Make sure you do the $2\times n$ case first!}
-\end{problem}
-
-\begin{problem}
-    Prove that the number of tilings of the $n\times n$ Aztec diamond is $2^{n(n-1)/2}$.
-
-    \textit{One method (no guarantee it works!): can you solve this by finding a set $S$ of size $\binom{n}{2}= n(n-1)/2$ and a bijection 
-    $$\{\textup{domino tilings of the Aztec diamond}\} \ \simeq \ \{\textup{finite subsets of $S$}\}?$$} 
-\end{problem}
-
-
-\begin{problem}
-Prove that the number of domino tilings of a dual $A \times B \times C$ hexagonal graph is 
-$$\prod_{a=1}^A \prod_{b=1}^B \prod_{c=1}^C \frac{a+b+c-1}{a+b+c-2}.$$
-\end{problem}
-
-
-\begin{problem}
-What is the expected number of 3d boxes in (the 3d interpretation of) a domino tiling of the dual $A\times B \times C$ hexagonal graph?
-\end{problem}
-
-
-
-\begin{problem}
-What is the number of domino tilings of the $m\times n$ rectangle?
-\end{problem}
-
-
-
-\textbf{Lattice paths.}
-
-
-
-
-
-
-\begin{problem}
-Count the number of tilings of the $3\times n$ rectangle in terms of the number of paths on a certain graph. 
-\begin{enumerate}[label=\alph*.]
-\item \textit{Attempt if you know matrices.} Define a matrix $M_3$ such that the top left entry of $M_3^n$ is the number of domino tilings of the $3\times n$ rectangle.
-\end{enumerate}
-\end{problem}
-
-
-\begin{problem}
-  Show that any tiling of the hexagonal $A\times B\times C$ graph by lozenges can be obtained from any other by a sequence of \textit{flips}
-\begin{center}
-\begin{tikzpicture}
- 
-        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
-        \foreach \angle in {0,120,240} {
-            \begin{scope}[rotate around={\angle:(0,0)}]
-                % Draw a 3x3 square grid with 3pt circles at each grid point
-                % \foreach \x in {0,1,2} {
-                %     \foreach \y in {0,1,2} {
-                %         \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
-                %     }
-                % }
-                % Optionally, draw the grid lines
-                \foreach \x in {0,1,2} {
-                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
-                }
-                \foreach \y in {0,1,2} {
-                    \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
-                }
-                % Draw diagonal edges
-                \draw (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
-                \draw (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
-                \draw (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2) 
-            \end{scope}
-        }
-        % Draw orange lozenges at specified positions
-        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
-            \pgfmathsetmacro{\cx}{0.866*\x}
-            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
-            \begin{scope}[shift={(\cx,\cy)}]
-            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-            \end{scope}
-        }
-     \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
-            \pgfmathsetmacro{\cx}{0.866*\x}
-            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
-            \begin{scope}[shift={(\cx,\cy)}]
-                \begin{scope}[rotate around={60:(0,0)}]
-            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-        }
-     \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
-            \pgfmathsetmacro{\cx}{0.866*\x}
-            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
-            \begin{scope}[shift={(\cx,\cy)}]
-                \begin{scope}[rotate around={120:(0,0)}]
-            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-        }
-
-
-        \begin{scope} 
-         [xshift= 5cm, yshift = -1cm]
-         
-        % Draw green, blue, and orange lozenges at (0,0)
-        \begin{scope}
-            % Green lozenge (no rotation)
-            \begin{scope} 
-             [rotate around={120:(0,0)}] 
-             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-             \end{scope}
-            % Blue lozenge (rotated 60 degrees)
-            \begin{scope}[rotate around={60:(0,0)}]
-                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-            \end{scope}
-            % Orange lozenge (rotated 120 degrees)
-            \begin{scope}[shift={(-0.866,1.5)}]
-                \begin{scope}[rotate around={0:(0,0)}]
-                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-             \end{scope}
-
-             \node at (2,1) {$\stackrel{\textup{flip}}{\longleftrightarrow}$};
-
-            \begin{scope} 
-             [xshift = 4cm,rotate around={120:(0,1)}]
-             
-            % Green lozenge (no rotation)
-            \begin{scope} 
-             [rotate around={120:(0,0)}] 
-             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-             \end{scope}
-            % Blue lozenge (rotated 60 degrees)
-            \begin{scope}[rotate around={60:(0,0)}]
-                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-            \end{scope}
-            % Orange lozenge (rotated 120 degrees)
-            \begin{scope}[shift={(-0.866,1.5)}]
-                \begin{scope}[rotate around={0:(0,0)}]
-                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
-                \end{scope}
-            \end{scope}
-             \end{scope} 
-
-
-
-        \end{scope}
-
- \end{tikzpicture}
- \end{center} 
- \begin{enumerate}[label = \alph*.]
-  \item What does the hexagonal flip $T \leftrightarrow T'$ do to the height function? i.e. how is $h_{T'}$ related to $h_T$?
-  \item  What about the $m\times n$ rectangle? What about any square graph (subgraph of $\mathbf{Z}^2$)? Define a height function for the $m\times n$ rectangle which has an analogous property to a. 
-  \item Can you define analogous paths in the $m\times n$ rectangle attached to a tiling $T$?
- \end{enumerate}
-\end{problem}
-
-
-
-
-
-
-\textbf{Determinants.}
-
-
-\begin{problem}
-   Colour the faces of the hexagonal graph in alternating white and black colours. Write $N$ for the number of white or black squares (which we assume are equal, otherwise there are no domino tilings). Let $K$ be the $N\times N$ matrix of numbers
-$$K_{i,j} \ = \ \begin{cases}
-    1 & \textup{if the }i \textup{th white vertex is adjacent to the }j \textup{th black} \\
-    0 & \textup{otherwise.}
-\end{cases}.$$
-Show that $|\det K|$ is the number of domino tilings of the hexagonal graph by lozenges.
-
-Can you find a matrix $\tilde{K}$ that works for any planar bipartite graph?
-\end{problem}
-
-
-
-
-
-
-
-
-
-
-\textbf{Random walks through the graph of all tilings. }
-
-
-\noindent
-  How do you in practice find a random lozenge tiling (there are \textit{so many!})? \textit{Just start with any lozenge tiling, and randomly flip!}
-    \begin{theorem}
-      Let $n$ be an integer and $T_0$ any lozenge tiling. Pick 
-      \begin{itemize}
-       \item $t\in \{0,1,\ldots ,n\}$ randomly (uniformly),
-       \item a random sequence of $t$ many flips $T_0\to T_1\to \cdots \to T_t$, at each step choosing all allowed flips equally likely. 
-      \end{itemize}
-      Then if 
-      $$P(T) \ : \ \{\textup{lozenge tilings}\} \ \to \ [0,1]$$
-      is the probability that $T_t=T$, we have 
-      $$P(T) \ \to \ \frac{1}{|\{\textup{lozenge tilings}\}|}$$
-      as $n \to \infty$.
-    \end{theorem}
-
-
-
-\begin{problem} \textit{Good to practice linear algebra skills.} Let's prove Theorem 1. 
-  
-  \begin{enumerate}[label=\alph*.]
-   \item  Let $G$ be an undirected graph, with set of vertices denoted by $V(G)$. Let
-   \begin{equation}
-     \label{eqn:RandomWalk0} 
-     \hspace{35mm}  p_t(x) \ : \ V(G)\times \mathbf{N} \ \to \ [0,1]
-   \end{equation}
-   be the probability that, at time $t=0,1,2,\ldots$, a random walk starting at vertex $i$ is at a given vertex $x$.  Show that $p_t$ satisfies
-   \begin{equation}
-     \label{eqn:RandomWalk} 
-     \hspace{35mm} p_{t+1}(x)\ = \ \sum_{y\sim x}\frac{1}{\deg(y)}p_t(y)
-   \end{equation}
-    and denote by $A:\mathbf{C}^{V(G)}\to \mathbf{C}^{V(G)}$ the associated linear map. 
-    
-   \item Compute (and graph) for low values of $t$ what $p_t$ is for the graph 
-   \begin{center}
-   \begin{tikzpicture}
-    % Draw 5 vertices in a line
-    \foreach \i in {1,...,3} {
-        \node[fill=black, circle, inner sep=0pt, minimum size=6pt] (v\i) at (\i,0) {};
-    }
-    % Draw edges between consecutive vertices
-    \foreach \i in {1,...,2} {
-        \draw (v\i) -- (v\the\numexpr\i+1\relax);
-    }
-    \end{tikzpicture}
-    \end{center}
-    if we start at the middle, or edge. Conjecture what happens as $t\to \infty$.
-
-    \item Show that the function $\lambda^t\cdot p_0$, where $p_0:V(G)\to \mathbf{C}$ is a function independent of $t$ and $\lambda\in \mathbf{C}$, satisfies \eqref{eqn:RandomWalk} if and only if $\lambda=0$, or    
-    $$\lambda \cdot p_0(x) \ = \ A\cdot p_0(x).$$
-    \textit{In the following, you may assume that $p_t(x)$ is a sum of solutions of this form. }
-    \item Assume from now on that $G$ is connected. Pick $N$ such that there is a path of length at most $N$ between any two vertices, and let
-    $$B \ = \ \frac{1}{N}( I + A + \cdots + A^{N-1}).$$
-    Show that if $Av = \lambda v$, that 
-    $$B\cdot v \ = \ \frac{1}{N}(1 + \lambda +\cdots +\lambda^{N-1})v .$$
-    \item Show that if $Bv=\mu v$ for some nonzero $v$, $|\mu|<1$ unless for $\mu=1$, in which there is a unique solution 
-    $$ v \ = \ \frac{1}{|V(G)|}.$$
-    \item Show that this implies Theorem 1.
-  \end{enumerate}
-   
-\end{problem}
-
-
-
-
-\textbf{Spanning trees.}
-
-\begin{problem}
-  Temperley bijection. 
-  \begin{enumerate}[label=\alph*.]
-   \item Consider a certain square graph $G$ within the $n\times m$ rectangle.
-          \begin{center}
-        \begin{tikzpicture}[scale=0.6]
-            % Draw grid for 3x12 rectangle
-            \foreach \x in {1,...,11} {
-                \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
-            }
-            \foreach \y in {1,...,4} {
-                \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
-            }
-            % Draw blue squares with opacity 0.5 on every other square in the 3xn grid
-            \foreach \x in {1,...,10} {
-                    \ifodd\x
-                \foreach \y in {1,...,3} {
-                    \ifodd\y
-                        \fill[blue, opacity=0.3] (\x,\y) rectangle ++(1,1);
-                    \fi
-                };
-                \fi
-            }
-
-            % Fill blue region: 3 x n rectangle from (1,1) to (11,4)
-            \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (11,1) -- (11,4) -- (1,4) -- cycle;
-
-  % First column: vertical domino
-            \filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (2,3);
-            \filldraw[fill=green, fill opacity=0.3] (1,3) rectangle (3,4);
-            % Next two columns: three horizontal dominoes (should be 2x1)
-            \filldraw[fill=green, fill opacity=0.3] (2,1) rectangle (4,2);
-            \filldraw[fill=green, fill opacity=0.3] (2,2) rectangle (4,3);
-            \filldraw[fill=green, fill opacity=0.3] (3,3) rectangle (5,4);
-
-            % Draw horizontal dominoes with bottom left at (4,1), (4,2), (5,3)
-            \filldraw[fill=green, fill opacity=0.3] (4,1) rectangle (6,2);
-            \filldraw[fill=green, fill opacity=0.3] (4,2) rectangle (6,3);
-            \filldraw[fill=green, fill opacity=0.3] (5,3) rectangle (7,4);
-
-            % Draw vertical domino with bottom left at (6,1)
-            \filldraw[fill=green, fill opacity=0.3] (6,1) rectangle (7,3);
-
-            % Draw three horizontal dominoes with bottom left at (7,1), (7,2), (7,3)
-            \filldraw[fill=green, fill opacity=0.3] (7,1) rectangle (9,2);
-            \filldraw[fill=green, fill opacity=0.3] (7,2) rectangle (9,3);
-            \filldraw[fill=green, fill opacity=0.3] (7,3) rectangle (9,4);
-
-            % Draw one horizontal domino at the bottom with x=9 (from (9,1) to (11,2))
-            \filldraw[fill=green, fill opacity=0.3] (9,1) rectangle (11,2);
-
-            % Draw two vertical dominoes over it at (9,2)-(10,4) and (10,2)-(11,4)
-            \filldraw[fill=green, fill opacity=0.3] (9,2) rectangle (10,4);
-            \filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (11,4);
-        \end{tikzpicture}
-        \end{center}
-    When $n=m$, give a bijection between domino tilings of the rectangle minus a corner and spanning trees of the graph $G$.
-    \item Can you find a similar result if you do not remove a corner?
-    \item What about if you remove an arbitrary subset of the boundary?
-    \item Can you get this to work for other $n,m$?
-  \end{enumerate}
-
-\end{problem}
-
-\begin{problem}
-
-Relation to entropy and Catalan's constant. 
-   
-\end{problem}
-
-% \url{https://perso.lpsm.paris/~boutillier/teaching/m2-dimeres/2020-05-temperley.pdf} p11
-
-
-
-
-
-
-
-\textbf{Dual graphs.}
-
-\begin{problem}
-  Let $G$ be a graph drawn on the sphere. 
-  \begin{enumerate}[label =\alph*.]
-   \item Show that the \textit{dual graph} $\widehat{G}$ is also a graph inside the sphere, and that $\widehat{\widehat{G}}=G$.
-   \item Show that $G$ has no cycles if and only if $\widehat{G}$ is connected, and that $G$ is connected if and only if $\widehat{G}$ has no cycles.
-   \item The \textit{Euler characteristic} of a graph $G$ with faces is defined as $\chi(G) = |V(G)| - |E(G)| + |F(G)|$, where $V(G)$ is the set of vertices, $E(G)$ is the set of edges, and $F(G)$ is the set of faces. Show that $\chi(G) = \chi(\widehat{G})$.
-  \end{enumerate}
-Now let $G$ be a graph on the donut with $g>0$ many holes. Is a. - c. still true? Prove it or find a counterexample.
-\end{problem}
-
-
-
-
-
-
 
 
 
@@ -1145,7 +678,7 @@ Consider one white and one black 6-sided dice, both with faces numbered $1,2,3,4
 \textbf{Back to random domino tilings.}
 
 \begin{problem}
-  Correlators. 
+  Correlators. In the following $\Omega$ will be the set of all lozenge tilings of a certain region, and the value of $\mathbf{P}$ is the same for each tiling.
 
 \begin{center}
 \begin{tikzpicture}
@@ -1494,6 +1027,507 @@ where it is $+1$ or $-1$ depending on the colour of the square. (\textit{The wor
 
 
 
+
+\newpage
+\chapter{Domino tilings: long problems}
+\kapiteldatum{All of Mattekollo}
+
+\begin{itemize}
+ \item \textit{Attempt problems in any order.}
+ \item \textit{Sometimes problems will use definitions intruduced in later classes. Feel free to use one problem you've solved to solve another, but if it trivialises the problem, see if you can find another proof as well!}
+ \item \textit{More long problems, or if necessary, hints, will be added a bit each lesson.}
+\end{itemize}
+
+
+
+\textbf{Formulas.}
+
+\setcounter{problem}{0}
+\begin{problem}
+Height three rectangles.
+
+\begin{enumerate}[label = \alph*.]
+ \item Find a recurrence relation relating the numbers $A_n,B_n,C_n$ of domino tilings of
+\begin{center}
+\begin{tikzpicture}[scale=0.3]
+% Draw grid for 3x7 rectangle
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
+
+\begin{scope} 
+ [xshift=15cm] 
+ % Draw grid for 3x7 rectangle
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,3) -- (2,3) -- (2,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
+ \end{scope}
+
+\begin{scope} 
+ [xshift=30cm] 
+ % Draw grid for 3x7 rectangle
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (2,4) -- (2,2) -- (1,2) -- cycle;
+ \end{scope}
+
+ \end{tikzpicture}
+ \end{center}
+where the base has length $n$. 
+ \item Use it to find a formula for $A_n$ in terms of $A_{n-1},A_{n-2}, \ldots ,A_1$.
+ \item Show that $A_n,B_n,C_n=0$ if $n$ is odd.
+ \item Compute $A_n$ for $n=1,2, \ldots , 10$. Can you find a formula for the number of domino tilings of the $3\times n$ rectangle?
+\end{enumerate}
+\end{problem}
+
+
+
+
+\begin{problem}
+   There are three possibilities for what a domino tiling looks of the $3\times n$ rectangle at the left (or right) boundary, e.g. one left and one right boundary is
+
+   \begin{center}
+   \begin{tikzpicture}[scale=0.5]
+    
+\foreach \x in {1,...,12} {
+    \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+}
+\foreach \y in {1,...,4} {
+    \draw[dashed, opacity=0.3] (0,\y) -- (13,\y);
+}
+% Fill blue region: 3x7 rectangle from (1,1) to (8,4)
+\filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (12,1) -- (12,4) -- (1,4) -- cycle;
+ 
+% Draw a vertical domino over a horizontal domino on the far left
+% Vertical domino (green)
+\filldraw[fill=green, fill opacity=0.3] (1,2) rectangle (2,4);
+\draw[thick] (1,2) rectangle (2,4);
+
+% Horizontal domino (blue), just below the vertical one
+\filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (3,2);
+\draw[thick] (1,1) rectangle (3,2);
+
+% Draw three horizontal dominoes on the far right
+\filldraw[fill=green, fill opacity=0.3] (10,1) rectangle (12,2);
+\draw[thick] (10,1) rectangle (12,2);
+
+\filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (12,3);
+\draw[thick] (10,2) rectangle (12,3);
+
+\filldraw[fill=green, fill opacity=0.3] (10,3) rectangle (12,4);
+\draw[thick] (10,3) rectangle (12,4);
+    \end{tikzpicture}
+    \end{center}
+Let $B_L,B_R$ be boundary states on the left and right. For each choice of $B_L,B_R$, what is the probability 
+$$\mathbf{P}(B_L \to B_R)$$
+that a random domino tiling with state $B_L$ on the left has state $B_R$ on the right? 
+
+\textit{Make sure you do the $2\times n$ case first!}
+\end{problem}
+
+\begin{problem}
+    Prove that the number of tilings of the $n\times n$ Aztec diamond is $2^{n(n-1)/2}$.
+
+    \textit{One method (no guarantee it works!): can you solve this by finding a set $S$ of size $\binom{n}{2}= n(n-1)/2$ and a bijection 
+    $$\{\textup{domino tilings of the Aztec diamond}\} \ \simeq \ \{\textup{finite subsets of $S$}\}?$$} 
+\end{problem}
+
+
+\begin{problem}
+Prove that the number of domino tilings of a dual $A \times B \times C$ hexagonal graph is 
+$$\prod_{a=1}^A \prod_{b=1}^B \prod_{c=1}^C \frac{a+b+c-1}{a+b+c-2}.$$
+\end{problem}
+
+
+\begin{problem}
+What is the expected number of 3d boxes in (the 3d interpretation of) a domino tiling of the dual $A\times B \times C$ hexagonal graph?
+\end{problem}
+
+
+
+\begin{problem}
+What is the number of domino tilings of the $m\times n$ rectangle?
+\end{problem}
+
+
+
+\textbf{Lattice paths.}
+
+
+
+
+
+
+\begin{problem}
+Count the number of tilings of the $3\times n$ rectangle in terms of the number of paths on a certain graph. 
+\begin{enumerate}[label=\alph*.]
+\item \textit{Attempt if you know matrices.} Define a matrix $M_3$ such that the top left entry of $M_3^n$ is the number of domino tilings of the $3\times n$ rectangle.
+\end{enumerate}
+\end{problem}
+
+
+\begin{problem}
+  Show that any tiling of the hexagonal $A\times B\times C$ graph by lozenges can be obtained from any other by a sequence of \textit{flips}
+\begin{center}
+\begin{tikzpicture}
+ 
+        % Draw the same grid rotated by 120 and 240 degrees around (0,0)
+        \foreach \angle in {0,120,240} {
+            \begin{scope}[rotate around={\angle:(0,0)}]
+                % Draw a 3x3 square grid with 3pt circles at each grid point
+                % \foreach \x in {0,1,2} {
+                %     \foreach \y in {0,1,2} {
+                %         \draw[fill=black] (0.866*\x,{\y - 0.5*\x}) circle (2pt);
+                %     }
+                % }
+                % Optionally, draw the grid lines
+                \foreach \x in {0,1,2} {
+                    \draw (0.866*\x,{0- 0.5*\x}) -- (0.866*\x,{2- 0.5*\x});
+                }
+                \foreach \y in {0,1,2} {
+                    \draw (0,\y) -- (0.866*2,{\y- 0.5*2});
+                }
+                % Draw diagonal edges
+                \draw (0,0) -- (0.866*2,2-0.5*2); % (0,0) to (2,2)
+                \draw (0.866*1,-0.5) -- (0.866*2,1-0.5*2); % (1,0) to (2,1)
+                \draw (0,1) -- (0.866*1,2-0.5*1); % (0,1) to (1,2) 
+            \end{scope}
+        }
+        % Draw orange lozenges at specified positions
+        \foreach \x/\y in {-2/-2, -1/-2, 0/-1, -1/0} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+            \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+        }
+     \foreach \x/\y in {-1/0, -2/-1, -2/-2, 0/-1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={60:(0,0)}]
+            \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+     \foreach \x/\y in {0/-1, 2/0, 2/1, 1/1} {
+            \pgfmathsetmacro{\cx}{0.866*\x}
+            \pgfmathsetmacro{\cy}{\y - 0.5*\x}
+            \begin{scope}[shift={(\cx,\cy)}]
+                \begin{scope}[rotate around={120:(0,0)}]
+            \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+        }
+
+
+        \begin{scope} 
+         [xshift= 5cm, yshift = -1cm]
+         
+        % Draw green, blue, and orange lozenges at (0,0)
+        \begin{scope}
+            % Green lozenge (no rotation)
+            \begin{scope} 
+             [rotate around={120:(0,0)}] 
+             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+             \end{scope}
+            % Blue lozenge (rotated 60 degrees)
+            \begin{scope}[rotate around={60:(0,0)}]
+                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+            % Orange lozenge (rotated 120 degrees)
+            \begin{scope}[shift={(-0.866,1.5)}]
+                \begin{scope}[rotate around={0:(0,0)}]
+                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+             \end{scope}
+
+             \node at (2,1) {$\stackrel{\textup{flip}}{\longleftrightarrow}$};
+
+            \begin{scope} 
+             [xshift = 4cm,rotate around={120:(0,1)}]
+             
+            % Green lozenge (no rotation)
+            \begin{scope} 
+             [rotate around={120:(0,0)}] 
+             \draw[thick, fill=green!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+             \end{scope}
+            % Blue lozenge (rotated 60 degrees)
+            \begin{scope}[rotate around={60:(0,0)}]
+                \draw[thick, fill=blue!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+            \end{scope}
+            % Orange lozenge (rotated 120 degrees)
+            \begin{scope}[shift={(-0.866,1.5)}]
+                \begin{scope}[rotate around={0:(0,0)}]
+                    \draw[thick, fill=orange!30] (0,0) -- (0.866,0.5) -- (1.732,0) -- (0.866,-0.5) -- cycle;
+                \end{scope}
+            \end{scope}
+             \end{scope} 
+
+
+
+        \end{scope}
+
+ \end{tikzpicture}
+ \end{center} 
+ \begin{enumerate}[label = \alph*.]
+  \item What does the hexagonal flip $T \leftrightarrow T'$ do to the height function? i.e. how is $h_{T'}$ related to $h_T$?
+  \item  What about the $m\times n$ rectangle? What about any square graph (subgraph of $\mathbf{Z}^2$)? Define a height function for the $m\times n$ rectangle which has an analogous property to a. 
+  \item Can you define analogous paths in the $m\times n$ rectangle attached to a tiling $T$?
+ \end{enumerate}
+\end{problem}
+
+
+
+
+
+
+\textbf{Determinants.}
+
+
+\begin{problem}
+   Colour the faces of the hexagonal graph in alternating white and black colours. Write $N$ for the number of white or black squares (which we assume are equal, otherwise there are no domino tilings). Let $K$ be the $N\times N$ matrix of numbers
+$$K_{i,j} \ = \ \begin{cases}
+    1 & \textup{if the }i \textup{th white vertex is adjacent to the }j \textup{th black} \\
+    0 & \textup{otherwise.}
+\end{cases}.$$
+Show that $|\det K|$ is the number of domino tilings of the hexagonal graph by lozenges.
+
+Can you find a matrix $\tilde{K}$ that works for any planar bipartite graph?
+\end{problem}
+
+
+
+
+
+
+
+
+
+
+\textbf{Random walks through the graph of all tilings. }
+
+
+\noindent
+  How do you in practice find a random lozenge tiling (there are \textit{so many!})? \textit{Just start with any lozenge tiling, and randomly flip!}
+    \begin{theorem}
+      Let $n$ be an integer and $T_0$ any lozenge tiling. Pick 
+      \begin{itemize}
+       \item $t\in \{0,1,\ldots ,n\}$ randomly (uniformly),
+       \item a random sequence of $t$ many flips $T_0\to T_1\to \cdots \to T_t$, at each step choosing all allowed flips equally likely. 
+      \end{itemize}
+      Then if 
+      $$P(T) \ : \ \{\textup{lozenge tilings}\} \ \to \ [0,1]$$
+      is the probability that $T_t=T$, we have 
+      $$P(T) \ \to \ \frac{1}{|\{\textup{lozenge tilings}\}|}$$
+      as $n \to \infty$.
+    \end{theorem}
+
+
+
+\begin{problem} \textit{Good to practice linear algebra skills.} Let's prove Theorem 1. 
+  
+  \begin{enumerate}[label=\alph*.]
+   \item  Let $G$ be an undirected graph, with set of vertices denoted by $V(G)$. Let
+   \begin{equation}
+     \label{eqn:RandomWalk0} 
+     \hspace{35mm}  p_t(x) \ : \ V(G)\times \mathbf{N} \ \to \ [0,1]
+   \end{equation}
+   be the probability that, at time $t=0,1,2,\ldots$, a random walk starting at vertex $i$ is at a given vertex $x$.  Show that $p_t$ satisfies
+   \begin{equation}
+     \label{eqn:RandomWalk} 
+     \hspace{35mm} p_{t+1}(x)\ = \ \sum_{y\sim x}\frac{1}{\deg(y)}p_t(y)
+   \end{equation}
+    and denote by $A:\mathbf{C}^{V(G)}\to \mathbf{C}^{V(G)}$ the associated linear map. 
+    
+   \item Compute (and graph) for low values of $t$ what $p_t$ is for the graph 
+   \begin{center}
+   \begin{tikzpicture}
+    % Draw 5 vertices in a line
+    \foreach \i in {1,...,3} {
+        \node[fill=black, circle, inner sep=0pt, minimum size=6pt] (v\i) at (\i,0) {};
+    }
+    % Draw edges between consecutive vertices
+    \foreach \i in {1,...,2} {
+        \draw (v\i) -- (v\the\numexpr\i+1\relax);
+    }
+    \end{tikzpicture}
+    \end{center}
+    if we start at the middle, or edge. Conjecture what happens as $t\to \infty$.
+
+    \item Show that the function $\lambda^t\cdot p_0$, where $p_0:V(G)\to \mathbf{C}$ is a function independent of $t$ and $\lambda\in \mathbf{C}$, satisfies \eqref{eqn:RandomWalk} if and only if $\lambda=0$, or    
+    $$\lambda \cdot p_0(x) \ = \ A\cdot p_0(x).$$
+    \textit{In the following, you may assume that $p_t(x)$ is a sum of solutions of this form. }
+    \item Assume from now on that $G$ is connected. Pick $N$ such that there is a path of length at most $N$ between any two vertices, and let
+    $$B \ = \ \frac{1}{N}( I + A + \cdots + A^{N-1}).$$
+    Show that if $Av = \lambda v$, that 
+    $$B\cdot v \ = \ \frac{1}{N}(1 + \lambda +\cdots +\lambda^{N-1})v .$$
+    \item Show that if $Bv=\mu v$ for some nonzero $v$, $|\mu|<1$ unless for $\mu=1$, in which there is a unique solution 
+    $$ v \ = \ \frac{1}{|V(G)|}.$$
+    \item Show that this implies Theorem 1.
+  \end{enumerate}
+   
+\end{problem}
+
+
+
+
+\textbf{Spanning trees.}
+
+\begin{problem}
+  Temperley bijection. 
+  \begin{enumerate}[label=\alph*.]
+   \item Consider a certain square graph $G$ within the $n\times m$ rectangle.
+          \begin{center}
+        \begin{tikzpicture}[scale=0.6]
+            % Draw grid for 3x12 rectangle
+            \foreach \x in {1,...,11} {
+                \draw[dashed, opacity=0.3] (\x,0) -- (\x,5);
+            }
+            \foreach \y in {1,...,4} {
+                \draw[dashed, opacity=0.3] (0,\y) -- (12,\y);
+            }
+            % Draw blue squares with opacity 0.5 on every other square in the 3xn grid
+            \foreach \x in {1,...,10} {
+                    \ifodd\x
+                \foreach \y in {1,...,3} {
+                    \ifodd\y
+                        \fill[blue, opacity=0.3] (\x,\y) rectangle ++(1,1);
+                    \fi
+                };
+                \fi
+            }
+
+            % Fill blue region: 3 x n rectangle from (1,1) to (11,4)
+            \filldraw[fill=blue, opacity=0.1, ultra thick] (1,1) -- (11,1) -- (11,4) -- (1,4) -- cycle;
+
+  % First column: vertical domino
+            \filldraw[fill=green, fill opacity=0.3] (1,1) rectangle (2,3);
+            \filldraw[fill=green, fill opacity=0.3] (1,3) rectangle (3,4);
+            % Next two columns: three horizontal dominoes (should be 2x1)
+            \filldraw[fill=green, fill opacity=0.3] (2,1) rectangle (4,2);
+            \filldraw[fill=green, fill opacity=0.3] (2,2) rectangle (4,3);
+            \filldraw[fill=green, fill opacity=0.3] (3,3) rectangle (5,4);
+
+            % Draw horizontal dominoes with bottom left at (4,1), (4,2), (5,3)
+            \filldraw[fill=green, fill opacity=0.3] (4,1) rectangle (6,2);
+            \filldraw[fill=green, fill opacity=0.3] (4,2) rectangle (6,3);
+            \filldraw[fill=green, fill opacity=0.3] (5,3) rectangle (7,4);
+
+            % Draw vertical domino with bottom left at (6,1)
+            \filldraw[fill=green, fill opacity=0.3] (6,1) rectangle (7,3);
+
+            % Draw three horizontal dominoes with bottom left at (7,1), (7,2), (7,3)
+            \filldraw[fill=green, fill opacity=0.3] (7,1) rectangle (9,2);
+            \filldraw[fill=green, fill opacity=0.3] (7,2) rectangle (9,3);
+            \filldraw[fill=green, fill opacity=0.3] (7,3) rectangle (9,4);
+
+            % Draw one horizontal domino at the bottom with x=9 (from (9,1) to (11,2))
+            \filldraw[fill=green, fill opacity=0.3] (9,1) rectangle (11,2);
+
+            % Draw two vertical dominoes over it at (9,2)-(10,4) and (10,2)-(11,4)
+            \filldraw[fill=green, fill opacity=0.3] (9,2) rectangle (10,4);
+            \filldraw[fill=green, fill opacity=0.3] (10,2) rectangle (11,4);
+        \end{tikzpicture}
+        \end{center}
+    When $n=m$, give a bijection between domino tilings of the rectangle minus a corner and spanning trees of the graph $G$.
+    \item Can you find a similar result if you do not remove a corner?
+    \item What about if you remove an arbitrary subset of the boundary?
+    \item Can you get this to work for other $n,m$?
+  \end{enumerate}
+
+\end{problem}
+
+% \begin{problem}
+
+% Relation to entropy and Catalan's constant. 
+   
+% \end{problem}
+
+% \url{https://perso.lpsm.paris/~boutillier/teaching/m2-dimeres/2020-05-temperley.pdf} p11
+
+
+
+
+
+
+
+\textbf{Dual graphs.}
+
+\begin{problem}
+  Let $G$ be a graph drawn on the sphere. 
+  \begin{enumerate}[label =\alph*.]
+   \item Show that the \textit{dual graph} $\widehat{G}$ is also a graph inside the sphere, and that $\widehat{\widehat{G}}=G$.
+   \item Show that $G$ has no cycles if and only if $\widehat{G}$ is connected, and that $G$ is connected if and only if $\widehat{G}$ has no cycles.
+   \item The \textit{Euler characteristic} of a graph $G$ with faces is defined as $\chi(G) = |V(G)| - |E(G)| + |F(G)|$, where $V(G)$ is the set of vertices, $E(G)$ is the set of edges, and $F(G)$ is the set of faces. Show that $\chi(G) = \chi(\widehat{G})$.
+  \end{enumerate}
+Now let $G$ be a graph on the donut with $g>0$ many holes. Is a. - c. still true? Prove it or find a counterexample.
+\end{problem}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \newpage 
  \chapter{Random graphs : networks}
 \kapiteldatum{6 July}
@@ -1770,7 +1804,7 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
 \begin{problem} 
     Make arguments for the following axioms:
    \begin{axiom}
-    A \textit{water network} is a graph $G$ with the additional data: 
+    A \textit{water network} $W$ is a graph $G$ with the additional data: 
     \begin{itemize}
      \item  numbers $p_x\in \mathbf{R}$ and $I_x\in \mathbf{R}$ attached to vertices $x$;
      \item  numbers $R_{e}\in \mathbf{R}_{>0}$ and $I_{e}\in \mathbf{R}$ attached to edges $e:x\to y$;
@@ -1789,7 +1823,7 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
 \textit{We call $(p_x,I_x,R_{e},I_{e})$ the \textit{pressure, external flow, resistance and internal flow}. We draw an exernal vertex above if $I_x \ne 0$. If $e:x\to y$ is an edge, we often write $R_{x,y}$ for $R_e$ and $I_{x,y}$ for $I_e$. We write $V(G),E(G)$ for the vertices and edges of $G$, and $F(G)$ for the faces of $G$, if it is planar.}
 
 \begin{problem}
-  Understanding the axioms.
+  \textit{Understanding the axioms.} Let $W$ be a water network.
    \begin{enumerate}[label =\alph*.]
     \item If $x_1 \to x_2 \to \cdots \to x_n \to x_1$ is a cycle in $G$ with all $R_e=1$, then 
         $$I_{x_1,x_2}+ I_{x_2,x_3}+ \cdots + I_{x_n,x_1} \ = \ 0.$$
@@ -1797,28 +1831,56 @@ We will consider a network of tubes fused together to form a 3d glass surface, w
     \item Show that given a water network with $p_{x_1}=p_{x_2}$, we get another water network by merging $x_1$ and $x_2$ to form a single vertex. 
     \item Consider the function $p:V(G) \to \mathbf{R}$ sending $t\mapsto p_t$. Show that $I_x=0$ if and only if:
     $$p_x \ = \ \sum_{y\sim x}w_{x,y}p_y$$
-    where $w_{x,y}= \frac{1/R_{x,y}}{\sum_{x\sim z}1/R_{x,z}}$. We call this property being \textit{harmonic at $x$}.
-    \item Given fixed graph and resistance values $(G,R_e)$, show that the operation 
-    $$(p_x,I_e,I_x)+(p'_x,I_e',I_x') \ = \ (p_x+p_x',I_e+I_e',I_x+I_x')$$ 
-    gives a binary operation on the set of water networks for $(G,R_e)$. What is the unit and inverse to this operation?
-    \item Show that for arbitrary $(G,R_e,I_x)$, there is a unique solution for $I_e$, and that $p_e$ is unique up to addition of a constant on each connected component of $G$.
-    
-    \textit{Hint:} given two solutions, consider their difference and apply 2b. 
+    where $w_{x,y}= \frac{1/R_{x,y}}{\sum_{x\sim z}1/R_{x,z}}$.
    \end{enumerate} 
 \end{problem}
 
 
 
+
+
+
+\begin{problem}
+  \textit{Group structure of water networks.} Fix a graph $G$ and resistance values $R_e>0$ for each edge $e\in E(G)$. We denote a water network on $(G,R_e)$ by $W=(p_x,I_e,I_x)$.
+    \begin{enumerate}[label =\alph*.]
+     \item Show that the operation 
+    $$(p_x,I_e,I_x)+(p'_x,I_e',I_x') \ = \ (p_x+p_x',I_e+I_e',I_x+I_x')$$ 
+    gives a binary operation on the set of water networks for $(G,R_e)$.
+    \item What is the unit and inverse to this operation?
+    \item Show that the set of water networks for $(G,R_e)$ is a group under this operation.
+    
+    \end{enumerate}
+\end{problem}
+
+
+ \textbf{Existence and uniqueness of water networks.}
+ Let $\Gamma$ be a connected graph and let $w_{x,y}>0$ be any collection of positive real numbers which is symmetric: $w_{x,y}=w_{y,x}$.
+
 \begin{theorem}
-   Let $\Gamma$ be a connected graph with edge weights $R_e>0$. Then if $f,g:V(\Gamma)\to \mathbf{C}$ are two nonzero functions which are harmonic everywhere, then  
-   $$f \ = \ c\cdot g$$
-   for some constant $c\in \mathbf{C}$.
+   The only functions $f:V(\Gamma)\to \mathbf{R}$ which satisfy the equation
+   $$f(x) \ = \ \sum_{y\sim x}w_{x,y}f(y), \hspace{15mm} \textup{for all }x \in V(\Gamma)$$
+    are the \textit{constant functions}  
+   $$f(x) \ = \ c,$$
+   where $c\in \mathbf{R}$ is a constant. 
 \end{theorem}
+
+Now let $\partial \Gamma \subseteq \Gamma$ be a subgraph of $\Gamma$, which we calle the \textit{boundary} of $\Gamma$.
+
+\begin{theorem}
+  For any function $g:V(\partial \Gamma)\to \mathbf{R}$, there exists a unique function $f:V(\Gamma)\to \mathbf{R}$ such that
+   $$f(x) \ = \ \sum_{y\sim x}w_{x,y}f(y), \hspace{15mm} \textup{for all }x \in V(\Gamma \smallsetminus \partial \Gamma)$$
+   and $f|_{\partial \Gamma}=g$.
+\end{theorem}
+
+\textit{This is a special case of the \textit{Dirichlet problem} for harmonic functions, read up more on that if you're interested.}
 
 % \url{https://www.cs.yale.edu/homes/spielman/462/2010/lect12-10.pdf} p3
 
-
-
+\begin{problem}
+    Use the above Theorems and problem 3 to show that, for a fixed connected graph $G$, resistance values $R_e>0$ and external flows $I_x$, that there is a water network $W=(G,R_e,p_x,I_e,I_x)$, and that it is unique up to addition of a constant 
+    $$p_x \ \mapsto \ p_x + c,$$
+    for some constant $c\in \mathbf{R}$.
+\end{problem}
 
 
 
@@ -2049,15 +2111,14 @@ Given water networks $W_1$ on $G_1$ and $W_2$ on $G_2$, construct a new water ne
    \item  Show that 
        $$H(x,y) \ = \ 1 \ + \ \frac{1}{\deg(x)}\sum_{z\sim x} H(z,y).$$
        \item  Now externally add $\deg(z)$ units of water per second to each vertex $z$, and remove $\sum \deg(x) = 2|E(G)|$ units of water per second from $y$. Show that in the resulting water network $W$, we have 
-       $$H(x,y) \ = \  p_y-p_x.$$
+       $$H(x,y) \ = \  p_y^W-p_x^W.$$
     \textit{Hint}. Show that $p_y-p_x$ satisfies the same relation as $H(x,y)$, then try to conclude using this.
    \item Show that 
     $$R(x,y) \ = \ \frac{1}{2|E(G)|} \kappa(x,y) $$
-    where $|E(G)|$ is the number of edges in the graph $G$.
-    
+    where $|E(G)|$ is the number of edges in the graph $G$. \textit{Hint:} Let $W,W'$ and $W''$ be the water networks in the defintions of $H(x,y),H(y,x)$ and $R(x,y)$ respectively. Can you find a linear relation between these three water networks?
     
     % \url{https://stanford.edu/~rezab/discrete/Notes/6.pdf} p4
-    \item \textbf{Extra problem.}  A \textit{random walk} on a \textit{weighted} graph $G$ is a random walk where the probability of moving to a neighbouring vertex $y$ is proportional to the weight of the edge $(x,y)$. Is the above formula still true for a weighted graph? Prove it or give a counterexample.
+    % \item \textbf{Extra problem.}  A \textit{random walk} on a \textit{weighted} graph $G$ is a random walk where the probability of moving to a neighbouring vertex $y$ is proportional to the weight of the edge $(x,y)$. Is the above formula still true for a weighted graph? Prove it or give a counterexample.
   \end{enumerate}
 \end{problem}
 
@@ -2212,7 +2273,7 @@ But is $P=1$?
          \end{scope}
   \end{tikzpicture}
   \end{center}
-Show that $1- P(0,B_n)\ge P$.
+Show that $1- P(0,B_n)\le P$.
 \item Argue that the drunk man doesn't return to the origin if and only if, for any $n$, they hit $B_n$ before returning to the origin. Thus
  $$P \ = \ 1-\lim_{n \to \infty }P(0,B_n).$$ 
 \end{enumerate}
@@ -2233,7 +2294,7 @@ Show that $1- P(0,B_n)\ge P$.
   We now compute the resistance between $0$ and $B_n$ in the diamond graph, and use this to discover what $P$ is.
 
   \begin{enumerate}[label =\alph*.]
-   \item Show that $R(0,B_n)$ is the same as the effective resistance $R_n$ between $0$ and $n$ in the graph 
+   \item Show that $R(0,B_n)$ is the same as the effective resistance $R_n$ between $0$ and $n$ in the graph \textcolor{red}{(edit this!!)} 
    \begin{center}
    \begin{tikzpicture}
     % Draw four dots in a line
@@ -2321,7 +2382,7 @@ Show that $1- P(0,B_n)\ge P$.
   for the function $I_x$ you defined. \textit{Hint:} use 2f of the 6 July problem set.
 
   Thus - we have an interpretation of $\mathbf{P}_x(\tau_A < \tau_B)$ as the pressure at $x$ in a water network.
- \item Conclude that if $a,b\in G$, 
+ \item Conclude that if $a,b\in G$, \textcolor{red}{(edit this!!)}
   $$P(a,b) \ = \ \frac{1}{\deg(a)}\sum_{z\sim a}P_z \ = \ \frac{1}{R_G(a,b).}$$
 \end{enumerate}
 \end{problem}
@@ -2415,14 +2476,26 @@ Show that $1- P(0,B_n)\ge P$.
 \end{problem}
 
 
-\begin{problem}
-    A drunken tourist starts at her hotel and walks at random through the streets of the idealised Paris.
-    \begin{center}
-    \includegraphics[height = 6cm]{paris.png}
-    \end{center}
-    Find the probability that she reaches the Arc de Triomphe before she reaches the outskirts of town
-\end{problem}
+
+
+
+
+
+
 \end{document}
+
+
+
+
+
+% \begin{problem}
+%     A drunken tourist starts at her hotel and walks at random through the streets of the idealised Paris.
+%     \begin{center}
+%     \includegraphics[height = 6cm]{paris.png}
+%     \end{center}
+%     Find the probability that she reaches the Arc de Triomphe before she reaches the outskirts of town
+% \end{problem}
+% \end{document}
 
 
 %----------------------------------------------------------------------------------------
