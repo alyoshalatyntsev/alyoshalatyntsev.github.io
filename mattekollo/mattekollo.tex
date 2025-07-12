@@ -1534,6 +1534,11 @@ Now let $G$ be a graph on the donut with $g>0$ many holes. Is a. - c. still true
 
 \setcounter{problem}{0}
 \noindent
+\textit{Added post-Mattekollo: If you enjoyed this course, try reading ``Random walks on electrical networks'' by Doyle and Snell \url{https://math.dartmouth.edu/~doyle/docs/walks/walks.pdf}, or (more advanced) ``Probability on trees and networks'' by Lyons and Peres \url{https://rdlyons.pages.iu.edu/prbtree/book_pb.pdf}, or just email me for more suggestions.}
+
+\vspace{5pt}
+
+\noindent
 Imagine a water flowing through a glass tube
 \begin{center}
 \begin{tikzpicture}
@@ -1909,7 +1914,7 @@ For this definition to make sense,
  \item We need \textit{at least one} water network $W$ with the above properties, and
  \item The value  of $R_G(x,y)$ should not depend on the choice of $W$: if $W^{(1)},W^{(2)}$ are two such water networks, we should have $p_x^{(1)}-p_y^{(1)}=p_x^{(2)}-p_y^{(2)}$.
 \end{itemize}
-Both parts are true by problem 2f of the 6 July problem set - convince yourself that 2f indeed implies these.
+Both parts are true by problem 4 of the 6 July problem set - convince yourself that 4 indeed implies these.
 
 
 
@@ -2281,8 +2286,9 @@ Show that $1- P(0,B_n)\le P$.
 \end{problem}
 
 
+
 \begin{theorem}
-    Let $G$ be a connected graph and $x,y\in V(G)$ be two vertices. Then
+    Let $G$ be a connected graph where there is exactly zero or one edge between each vertex, and $x,y\in V(G)$ be two vertices. Then
     $$P(x,y) \ = \ \frac{1}{R_G(x,y)}$$
     where $R_G(x,y)$ is the effective resistance between $x$ and $y$ in the graph $G$. Likewise, for $A,B \subseteq V(G)$, we have
     $$P(A,B) \ = \ \frac{1}{R_{G/A\cup B}(\bullet_A,\bullet_B)}$$
@@ -2290,11 +2296,15 @@ Show that $1- P(0,B_n)\le P$.
 \end{theorem}
 
 
+
+
+
 \begin{problem}
   We now compute the resistance between $0$ and $B_n$ in the diamond graph, and use this to discover what $P$ is.
 
   \begin{enumerate}[label =\alph*.]
-   \item Show that $R(0,B_n)$ is the same as the effective resistance $R_n$ between $0$ and $n$ in the graph \textcolor{red}{(edit this!!)} 
+    \item Show that the resistance of a graph decreases or stays the same when we add edges.
+   \item Show that $R(0,B_n)$ is at least the effective resistance $R_n$ between $0$ and $n$ in the graph 
    \begin{center}
    \begin{tikzpicture}
     % Draw four dots in a line
@@ -2326,12 +2336,12 @@ Show that $1- P(0,B_n)\le P$.
         \draw[bend left={-100+10*\i}, thick, blue!60] (v2) to (v3);
     }\end{tikzpicture}
     \end{center}
-    \item Show that there are $(2i+1)$ edges between the boundaries of the $i\times i$ and $(i+1)\times (i+1)$ diamonds. 
+    where there are $12i$ edges between vertex $i$ and $i+1$ for $i\ge 1$, and $4$ edges between $0$ and $1$.
     \item Thus, compute what $R_n$ is. \textit{Hint:} use the rules for computing effective resistance in the graphs $G_1\cdot G_2$ and $G_1+G_2$ from last time.
     \item Conclude that 
-    $$\lim_{n \to \infty}R_n \ = \ \frac{1}{4} + \frac{1}{12} + \frac{1}{20}+ \cdots \ \ = \ \sum_{i \ge 0} \frac{1}{4\cdot (2i+1)} \ = \ \infty.$$
+    $$\lim_{n \to \infty}R_n \ = \ \frac{1}{4} + \frac{1}{12} + \frac{1}{24}+ \cdots \ \ = \ \frac{1}{4}+\sum_{i \ge 1} \frac{1}{12i} \ = \ \infty.$$
     \item \textbf{The random walker comes back!} Conclude that 
-    $$1-P \ = \ \lim_{n \to \infty}P(0,B_n) \ = \ \lim_{n \to \infty} \frac{1}{R(0,B_n)} \ = \ \lim_{n \to \infty} \frac{1}{R_n} \ = \ 0$$
+    $$1-P \ = \ \lim_{n \to \infty}P(0,B_n) \ = \ \lim_{n \to \infty} \frac{1}{R(0,B_n)} \ \le \ \lim_{n \to \infty} \frac{1}{R_n} \ = \ 0$$
     so that the random walker starting at the origin will return to the origin with probability $1$.
   \end{enumerate}
 \end{problem}
@@ -2379,10 +2389,10 @@ Show that $1- P(0,B_n)\le P$.
  \item Conclude that there is a water network $W=(G,1,P_x,I_{x,y},I_x)$, for a function $I_x: V(G) \to \mathbf{R}$ that you should compute, which satisfies $I_z=0$ if $z\not\in A\cup B$.
  \item Show that this is the \textit{unique} water network of the form
   $$W \ = \ (G,1,?,?,I_x)$$
-  for the function $I_x$ you defined. \textit{Hint:} use 2f of the 6 July problem set.
+  for the function $I_x$ you defined. \textit{Hint:} use problem 4 of the 6 July problem set.
 
   Thus - we have an interpretation of $\mathbf{P}_x(\tau_A < \tau_B)$ as the pressure at $x$ in a water network.
- \item Conclude that if $a,b\in G$, \textcolor{red}{(edit this!!)}
+ \item \textbf{Extra problem}. Show that if $a,b\in V(G)$, 
   $$P(a,b) \ = \ \frac{1}{\deg(a)}\sum_{z\sim a}P_z \ = \ \frac{1}{R_G(a,b).}$$
 \end{enumerate}
 \end{problem}

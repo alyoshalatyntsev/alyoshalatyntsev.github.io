@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sphere Packing</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        #canvas {
+            border: 2px solid #74b9ff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            background: #ffefd5;
+            cursor: grab;
+        }
+
+        #canvas:active {
+            cursor: grabbing;
+        }
+
+        .controls {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        label {
+            color: #2d3436;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 200px;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #dfe6e9;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #74b9ff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #0984e3;
+        }
+
+        #count, #radiusDisplay, #speedDisplay {
+            background: #74b9ff;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        button {
+            background: #fd79a8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #e84393;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(232, 67, 147, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>Sphere Packing</h1>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <div class="controls">
+        <label for="circleSlider">Number of Circles:</label>
+        <input type="range" id="circleSlider" min="1" max="250" value="10">
+        <span id="count">10</span>
+        <label for="radiusSlider">Radius:</label>
+        <input type="range" id="radiusSlider" min="5" max="30" value="20">
+        <span id="radiusDisplay">0.30</span>
+        <label for="speedSlider">Speed:</label>
+        <input type="range" id="speedSlider" min="1" max="50" value="10">
+        <span id="speedDisplay">1.0</span>
+        <button id="resetBtn">Reset</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('circleSlider');
+        const countDisplay = document.getElementById('count');
+        const radiusSlider = document.getElementById('radiusSlider');
+        const radiusDisplay = document.getElementById('radiusDisplay');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Pastel colors for circles
+        const pastelColors = [
+            '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF',
+            '#C9BAFF', '#FFBAF3', '#FFD4E5', '#D4F1EE', '#E7E7FF',
+            '#F6E6FF', '#FFE6F7', '#E6F9FF', '#F0FFF0', '#FFF0F5'
+        ];
+
+        // Box boundaries
+        let box = {
+            left: 100,
+            right: 700,
+            top: 100,
+            bottom: 500
+        };
+
+        // Dragging state
+        let dragging = null;
+        let dragOffset = 0;
+
+        // Circles array
+        let circles = [];
+        let RADIUS = 30; // 0.3 in our coordinate system (scaled by 100)
+        let speedMultiplier = 1.0;
+
+        class Circle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.color = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+            }
+
+            update() {
+                // Update position with speed multiplier
+                this.x += this.vx * speedMultiplier;
+                this.y += this.vy * speedMultiplier;
+
+                // Bounce off walls
+                if (this.x - RADIUS < box.left) {
+                    this.x = box.left + RADIUS;
+                    this.vx = Math.abs(this.vx);
+                }
+                if (this.x + RADIUS > box.right) {
+                    this.x = box.right - RADIUS;
+                    this.vx = -Math.abs(this.vx);
+                }
+                if (this.y - RADIUS < box.top) {
+                    this.y = box.top + RADIUS;
+                    this.vy = Math.abs(this.vy);
+                }
+                if (this.y + RADIUS > box.bottom) {
+                    this.y = box.bottom - RADIUS;
+                    this.vy = -Math.abs(this.vy);
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function createCircles(n) {
+            circles = [];
+            for (let i = 0; i < n; i++) {
+                let x, y;
+                let attempts = 0;
+                do {
+                    x = Math.random() * (box.right - box.left - 2 * RADIUS) + box.left + RADIUS;
+                    y = Math.random() * (box.bottom - box.top - 2 * RADIUS) + box.top + RADIUS;
+                    attempts++;
+                } while (attempts < 100 && circles.some(c => 
+                    Math.sqrt((c.x - x) ** 2 + (c.y - y) ** 2) < 2 * RADIUS
+                ));
+                circles.push(new Circle(x, y));
+            }
+        }
+
+        function checkCollisions() {
+            for (let i = 0; i < circles.length; i++) {
+                for (let j = i + 1; j < circles.length; j++) {
+                    const c1 = circles[i];
+                    const c2 = circles[j];
+                    const dx = c2.x - c1.x;
+                    const dy = c2.y - c1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 2 * RADIUS) {
+                        // Collision detected
+                        const nx = dx / distance;
+                        const ny = dy / distance;
+                        
+                        // Separate circles
+                        const overlap = 2 * RADIUS - distance;
+                        c1.x -= nx * overlap / 2;
+                        c1.y -= ny * overlap / 2;
+                        c2.x += nx * overlap / 2;
+                        c2.y += ny * overlap / 2;
+                        
+                        // Calculate relative velocity
+                        const dvx = c2.vx - c1.vx;
+                        const dvy = c2.vy - c1.vy;
+                        const dvn = dvx * nx + dvy * ny;
+                        
+                        // Don't resolve if velocities are separating
+                        if (dvn > 0) continue;
+                        
+                        // Collision impulse
+                        const impulse = dvn;
+                        c1.vx += impulse * nx;
+                        c1.vy += impulse * ny;
+                        c2.vx -= impulse * nx;
+                        c2.vy -= impulse * ny;
+                    }
+                }
+            }
+        }
+
+        function drawBox() {
+            ctx.strokeStyle = '#74b9ff';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            
+            // Draw box lines
+            ctx.beginPath();
+            ctx.moveTo(box.left, 0);
+            ctx.lineTo(box.left, canvas.height);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(box.right, 0);
+            ctx.lineTo(box.right, canvas.height);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(0, box.top);
+            ctx.lineTo(canvas.width, box.top);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(0, box.bottom);
+            ctx.lineTo(canvas.width, box.bottom);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            
+            // Draw handles
+            const handleSize = 8;
+            ctx.fillStyle = '#74b9ff';
+            
+            // Left handle
+            ctx.fillRect(box.left - handleSize/2, canvas.height/2 - handleSize/2, handleSize, handleSize);
+            // Right handle
+            ctx.fillRect(box.right - handleSize/2, canvas.height/2 - handleSize/2, handleSize, handleSize);
+            // Top handle
+            ctx.fillRect(canvas.width/2 - handleSize/2, box.top - handleSize/2, handleSize, handleSize);
+            // Bottom handle
+            ctx.fillRect(canvas.width/2 - handleSize/2, box.bottom - handleSize/2, handleSize, handleSize);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawBox();
+            
+            circles.forEach(circle => {
+                circle.update();
+            });
+            
+            checkCollisions();
+            
+            circles.forEach(circle => {
+                circle.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const threshold = 20;
+            
+            if (Math.abs(x - box.left) < threshold) {
+                dragging = 'left';
+                dragOffset = x - box.left;
+            } else if (Math.abs(x - box.right) < threshold) {
+                dragging = 'right';
+                dragOffset = x - box.right;
+            } else if (Math.abs(y - box.top) < threshold) {
+                dragging = 'top';
+                dragOffset = y - box.top;
+            } else if (Math.abs(y - box.bottom) < threshold) {
+                dragging = 'bottom';
+                dragOffset = y - box.bottom;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (dragging) {
+                switch(dragging) {
+                    case 'left':
+                        box.left = Math.max(RADIUS, Math.min(x - dragOffset, box.right - 2 * RADIUS));
+                        break;
+                    case 'right':
+                        box.right = Math.max(box.left + 2 * RADIUS, Math.min(x - dragOffset, canvas.width - RADIUS));
+                        break;
+                    case 'top':
+                        box.top = Math.max(RADIUS, Math.min(y - dragOffset, box.bottom - 2 * RADIUS));
+                        break;
+                    case 'bottom':
+                        box.bottom = Math.max(box.top + 2 * RADIUS, Math.min(y - dragOffset, canvas.height - RADIUS));
+                        break;
+                }
+            } else {
+                // Change cursor when hovering over handles
+                const threshold = 20;
+                if (Math.abs(x - box.left) < threshold || Math.abs(x - box.right) < threshold) {
+                    canvas.style.cursor = 'ew-resize';
+                } else if (Math.abs(y - box.top) < threshold || Math.abs(y - box.bottom) < threshold) {
+                    canvas.style.cursor = 'ns-resize';
+                } else {
+                    canvas.style.cursor = 'grab';
+                }
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            dragging = null;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            dragging = null;
+        });
+
+        // Slider events
+        slider.addEventListener('input', (e) => {
+            const n = parseInt(e.target.value);
+            countDisplay.textContent = n;
+            createCircles(n);
+        });
+
+        radiusSlider.addEventListener('input', (e) => {
+            RADIUS = parseInt(e.target.value);
+            const displayValue = (RADIUS / 100).toFixed(2);
+            radiusDisplay.textContent = displayValue;
+            createCircles(parseInt(slider.value));
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            speedMultiplier = parseInt(e.target.value) / 10;
+            speedDisplay.textContent = speedMultiplier.toFixed(1);
+        });
+
+        resetBtn.addEventListener('click', () => {
+            createCircles(parseInt(slider.value));
+        });
+
+        // Initialize
+        createCircles(10);
+        animate();
+    </script>
+</body>
+</html>
