@@ -329,6 +329,16 @@
             font-size: 13px;
             margin-bottom: 8px;
         }
+
+        .fetch-status {
+            background: #f3e9ff;
+            color: #8b7f9e;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -474,6 +484,84 @@
             });
         }
 
+        // Fetch papers with progressive loading
+        async function fetchPapersProgressive(categoryQuery, targetDate, resultsDiv) {
+            const maxK = 25600;
+            let k = 200;
+            let allEntries = [];
+            
+            while (k <= maxK) {
+                // Update status
+                resultsDiv.innerHTML = `
+                    <div class="loading">Fetching papers from arXiv</div>
+                    <div class="fetch-status">Checking with k=${k} papers...</div>
+                `;
+                
+                const arxivUrl = `https://export.arxiv.org/api/query?search_query=${categoryQuery}&start=0&max_results=${k}&sortBy=submittedDate&sortOrder=descending`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(arxivUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Parse XML response
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+                
+                // Check for XML parsing errors
+                const parserError = xml.querySelector('parsererror');
+                if (parserError) {
+                    throw new Error('Failed to parse arXiv response');
+                }
+                
+                const entries = Array.from(xml.getElementsByTagName('entry'));
+                
+                if (entries.length === 0) {
+                    throw new Error('No entries found in arXiv response');
+                }
+                
+                // Check the date of the last entry
+                const lastEntry = entries[entries.length - 1];
+                const lastPublished = lastEntry.getElementsByTagName('published')[0]?.textContent;
+                
+                if (!lastPublished) {
+                    throw new Error('Could not find publication date in last entry');
+                }
+                
+                const lastDate = new Date(lastPublished);
+                
+                // If the last paper is older than targetDate, we have enough papers
+                if (lastDate < targetDate) {
+                    allEntries = entries;
+                    resultsDiv.innerHTML = `
+                        <div class="loading">Processing ${entries.length} papers...</div>
+                        <div class="fetch-status">Found sufficient papers with k=${k}</div>
+                    `;
+                    break;
+                }
+                
+                // Otherwise, double k and try again
+                k = k * 2;
+                
+                // If we've reached the max and still don't have enough old papers,
+                // use what we have
+                if (k > maxK) {
+                    allEntries = entries;
+                    resultsDiv.innerHTML = `
+                        <div class="loading">Processing ${entries.length} papers...</div>
+                        <div class="fetch-status">Using maximum k=${maxK/2} papers</div>
+                    `;
+                    break;
+                }
+            }
+            
+            return allEntries;
+        }
+
         // Search arXiv
         async function searchArxiv() {
             const params = getSearchParams();
@@ -495,33 +583,15 @@
                 const startDate = new Date();
                 startDate.setDate(startDate.getDate() - parseInt(params.days));
                 
+                // Target date is N+1 days ago
+                const targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() - (parseInt(params.days) + 1));
+                
                 // Build query
                 const categoryQuery = params.categories.map(cat => `cat:${cat}`).join('+OR+');
-                const maxResults = 200;
-                const arxivUrl = `https://export.arxiv.org/api/query?search_query=${categoryQuery}&start=0&max_results=${maxResults}&sortBy=submittedDate&sortOrder=descending`;
                 
-                // Use a CORS proxy
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(arxivUrl)}`;
-                
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch: ${response.status}`);
-                }
-                
-                const text = await response.text();
-                
-                // Parse XML response
-                const parser = new DOMParser();
-                const xml = parser.parseFromString(text, 'text/xml');
-                
-                // Check for XML parsing errors
-                const parserError = xml.querySelector('parsererror');
-                if (parserError) {
-                    throw new Error('Failed to parse arXiv response');
-                }
-                
-                const entries = xml.getElementsByTagName('entry');
+                // Fetch papers progressively
+                const entries = await fetchPapersProgressive(categoryQuery, targetDate, resultsDiv);
                 
                 // Filter papers by date and phrases
                 const matchingPapers = [];
