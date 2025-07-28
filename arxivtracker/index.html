@@ -159,6 +159,13 @@
             font-size: 14px;
             font-weight: 500;
             border: 1px solid #ffd6cc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            opacity: 0.8;
+            transform: scale(0.98);
         }
 
         .tag.category-tag {
@@ -365,11 +372,11 @@
                     <button class="add-btn" onclick="addPhrase()">Add</button>
                 </div>
                 <div class="tags" id="phrases">
-                    <div class="tag">
+                    <div class="tag" onclick="this.remove()">
                         cohomological hall algebra
                         <span class="remove-tag" onclick="removeTag(this, 'phrase')">&times;</span>
                     </div>
-                    <div class="tag">
+                    <div class="tag" onclick="this.remove()">
                         quantum group
                         <span class="remove-tag" onclick="removeTag(this, 'phrase')">&times;</span>
                     </div>
@@ -420,6 +427,7 @@
                 const phrasesContainer = document.getElementById('phrases');
                 const tag = document.createElement('div');
                 tag.className = 'tag';
+                tag.onclick = function() { this.remove(); };
                 tag.innerHTML = `
                     ${phrase}
                     <span class="remove-tag" onclick="removeTag(this, 'phrase')">&times;</span>
@@ -438,6 +446,7 @@
                 const categoriesContainer = document.getElementById('categories');
                 const tag = document.createElement('div');
                 tag.className = 'tag category-tag';
+                tag.onclick = function() { this.remove(); };
                 tag.innerHTML = `
                     ${category}
                     <span class="remove-tag" onclick="removeTag(this, 'category')">&times;</span>
@@ -449,6 +458,7 @@
 
         // Remove tag functionality
         function removeTag(element, type) {
+            event.stopPropagation(); // Prevent triggering the parent onclick
             element.parentElement.remove();
         }
 
