@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KZ Equations Working Group</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+            background-color: #ffffff;
+            color: #2c2c2c;
+            line-height: 1.6;
+            padding: 20px 20px;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3em;
+            font-variant: small-caps;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.3em;
+            font-weight: normal;
+            border-bottom: 1px solid #2c2c2c;
+            padding-bottom: 0.4em;
+        }
+
+        .subtitle {
+            font-size: 1.4em;
+            margin-bottom: 0.8em;
+            color: #555;
+            font-style: italic;
+        }
+
+        .logistics {
+            margin-bottom: 1.5em;
+            font-size: 1.05em;
+            padding: 0.8em 0;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .logistics p {
+            margin: 0.3em 0;
+        }
+
+        section {
+            margin: 1.8em 0;
+            text-align: left;
+        }
+
+        h2 {
+            font-variant: small-caps;
+            font-size: 1.8em;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.6em;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        .description {
+            font-size: 1.05em;
+            text-align: justify;
+            margin-bottom: 1em;
+            text-indent: 2em;
+        }
+
+        .description:first-letter {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 0.7em 0;
+            padding-left: 2em;
+            position: relative;
+            text-align: justify;
+        }
+
+        li:before {
+            content: "—";
+            position: absolute;
+            left: 0.5em;
+        }
+
+        .notes-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .notes-list li {
+            margin: 0.8em 0;
+            padding-left: 0;
+        }
+
+        .notes-list li:before {
+            content: none;
+        }
+
+        .notes-list a {
+            color: #2c2c2c;
+            text-decoration: none;
+            border-bottom: 1px solid #2c2c2c;
+            padding-bottom: 1px;
+            transition: opacity 0.2s;
+        }
+
+        .notes-list a:hover {
+            opacity: 0.6;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 1.5em auto;
+            width: 50%;
+        }
+
+        .contact {
+            font-size: 0.95em;
+            margin-top: 0.5em;
+        }
+
+        .contact a {
+            color: #2c2c2c;
+            text-decoration: none;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .contact a:hover {
+            border-bottom-color: #2c2c2c;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .subtitle {
+                font-size: 1.1em;
+            }
+
+            body {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Knizhnik–Zamolodchikov Equations</h1>
+        <div class="subtitle">BIMSA 2026</div>
+
+        <div class="logistics">
+            <p><strong>When:</strong> Mondays, 1:00 PM</p>
+            <p><strong>Where:</strong> Room TBA</p>
+            <p class="contact"><strong>Contact:</strong>
+                Alyosha Latyntsev (<a href="mailto:alyoshalatyntsev@gmail.com">alyoshalatyntsev@gmail.com</a>),
+                Xinxing Tang (<a href="mailto:tangxinxing@bimsa.cn">tangxinxing@bimsa.cn</a>)
+            </p>
+        </div>
+
+        <section id="about">
+            <h2>About</h2>
+            <p class="description">
+The Knizhnik–Zamolodchikov equations are differential operators arising naturally in conformal field theory and the representation theory of quantum groups. These notes explore the KZ equations, their many generalisations—including quantum, dynamical, and elliptic variants—and their deep connections to various areas of mathematics and physics, from topological field theory and factorisation algebras to cohomological Hall algebras and vertex operator algebras.
+            </p>
+        </section>
+
+        <hr>
+
+        <section id="questions">
+            <h2>Questions</h2>
+            <ul>
+                <li>Is the data of dynamical KZ equivalent to extending factorisation functors to Stokes exit paths, as defined by Porta–Teyssier?</li>
+
+                <li>What is the analogous factorisation structure for representations of the quantum affine algebra U<sub>q</sub>(ĝ)?</li>
+
+                <li>Does Rep U<sub>q</sub>(ĝ) carry a crystal structure when factorised over Ran(ℂ/ℤ)? Is the monodromy around the diagonal equal to R<sup>0</sup>(z)?</li>
+
+                <li>What is the precise relation between abelian qKZ and full qKZ? Does it relate to the Gauss decomposition R(z) = R<sup>−</sup>(z)R<sup>0</sup>(z)R<sup>+</sup>(z) of the R-matrix?</li>
+
+                <li>What is the vertex algebraic analogue of the extra Stokes structure and dynamical KZ equations for Rep U<sub>q</sub>(g)?</li>
+
+                <li>What are the KZ equations for boundaries coupling a quasitriangular Hopf algebra H with a vertex algebra V, following recent work of Brochier–Caviglia–Dimofte–Nikshych?</li>
+
+                <li>What is the correct replacement of the moduli stack and cohomology theory to produce dynamical (q)KZ equations? Kapranov–Schechtman suggest rapid decay cohomology.</li>
+
+                <li>Are there q-difference equations attached to coherent sheaves on algebraic surfaces Coh<sub>0</sub>(S), quivers with potential (Q,W), and more generally to any doubled cohomological Hall algebra D(A)?</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <section id="notes">
+            <h2>Notes</h2>
+            <ul class="notes-list" id="pdf-list">
+                <li><a href="plan.pdf" target="_blank">Plan (PDF)</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        // Dynamically load PDFs from the same directory
+        async function loadPDFs() {
+            // For GitHub Pages, you'll need to manually maintain this list
+            // or use a backend service to list files
+            const pdfs = [
+                'plan.pdf'
+                // Add more PDFs here as you create them
+            ];
+
+            const pdfList = document.getElementById('pdf-list');
+            pdfList.innerHTML = '';
+
+            pdfs.forEach(pdf => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = pdf;
+                a.target = '_blank';
+
+                // Format the filename nicely
+                const name = pdf.replace('.pdf', '').replace(/-|_/g, ' ');
+                const formatted = name.charAt(0).toUpperCase() + name.slice(1);
+
+                a.textContent = formatted + ' (PDF)';
+                li.appendChild(a);
+                pdfList.appendChild(li);
+            });
+        }
+
+        loadPDFs();
+    </script>
+</body>
+</html>
