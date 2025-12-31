@@ -15,8 +15,9 @@
             font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
             background-color: #ffffff;
             color: #2c2c2c;
-            line-height: 1.6;
+            line-height: 1.5;
             padding: 20px 20px;
+            font-size: 0.95em;
         }
 
         .container {
@@ -26,26 +27,19 @@
         }
 
         h1 {
-            font-size: 3em;
+            font-size: 2.2em;
             font-variant: small-caps;
             letter-spacing: 0.05em;
-            margin-bottom: 0.3em;
+            margin-bottom: 0.4em;
             font-weight: normal;
             border-bottom: 1px solid #2c2c2c;
-            padding-bottom: 0.4em;
-        }
-
-        .subtitle {
-            font-size: 1.4em;
-            margin-bottom: 0.8em;
-            color: #555;
-            font-style: italic;
+            padding-bottom: 0.3em;
         }
 
         .logistics {
-            margin-bottom: 1.5em;
-            font-size: 1.05em;
-            padding: 0.8em 0;
+            margin-bottom: 1.2em;
+            font-size: 1em;
+            padding: 0.6em 0;
             border-top: 1px solid #ddd;
             border-bottom: 1px solid #ddd;
         }
@@ -55,23 +49,24 @@
         }
 
         section {
-            margin: 1.8em 0;
+            margin: 1.2em 0;
             text-align: left;
         }
 
         h2 {
             font-variant: small-caps;
-            font-size: 1.8em;
+            font-size: 1.5em;
             letter-spacing: 0.08em;
-            margin-bottom: 0.6em;
+            margin-bottom: 0.4em;
+            margin-top: 0.2em;
             text-align: center;
             font-weight: normal;
         }
 
         .description {
-            font-size: 1.05em;
+            font-size: 1em;
             text-align: justify;
-            margin-bottom: 1em;
+            margin-bottom: 0.8em;
             text-indent: 2em;
         }
 
@@ -127,7 +122,7 @@
         hr {
             border: none;
             border-top: 1px solid #ddd;
-            margin: 1.5em auto;
+            margin: 1em auto;
             width: 50%;
         }
 
@@ -143,6 +138,33 @@
         }
 
         .contact a:hover {
+            border-bottom-color: #2c2c2c;
+        }
+
+        .references-list {
+            list-style-type: none;
+            padding: 0;
+            font-size: 0.9em;
+        }
+
+        .references-list li {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+            text-indent: -1.5em;
+            text-align: left;
+        }
+
+        .references-list li:before {
+            content: none;
+        }
+
+        .references-list a {
+            color: #2c2c2c;
+            text-decoration: none;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .references-list a:hover {
             border-bottom-color: #2c2c2c;
         }
 
@@ -164,11 +186,10 @@
 <body>
     <div class="container">
         <h1>Knizhnik–Zamolodchikov Equations</h1>
-        <div class="subtitle">BIMSA 2026</div>
 
         <div class="logistics">
-            <p><strong>When:</strong> Mondays, 1:00 PM</p>
-            <p><strong>Where:</strong> Room TBA</p>
+            <p><strong>When:</strong> Mondays, 1:00 PM, 2026</p>
+            <p><strong>Where:</strong> BIMSA, Room TBA</p>
             <p class="contact"><strong>Contact:</strong>
                 Alyosha Latyntsev (<a href="mailto:alyoshalatyntsev@gmail.com">alyoshalatyntsev@gmail.com</a>),
                 Xinxing Tang (<a href="mailto:tangxinxing@bimsa.cn">tangxinxing@bimsa.cn</a>)
@@ -211,6 +232,163 @@ The Knizhnik–Zamolodchikov equations are differential operators arising natura
             <h2>Notes</h2>
             <ul class="notes-list" id="pdf-list">
                 <li><a href="plan.pdf" target="_blank">Plan (PDF)</a></li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <section id="references">
+            <h2>References</h2>
+            <ul class="references-list">
+                <li>[AFO] Aganagic, M., Frenkel, E., Okounkov, A. <i>Quantum q-Langlands correspondence.</i> Trans. Moscow Math. Soc. (2018). <a href="https://arxiv.org/abs/1701.03146" target="_blank">arXiv:1701.03146</a></li>
+
+                <li>[AFSSZ] Ashwinkumar, M., Faizal, M., Shabir, A., Smith, D.J., Zhou, Y. <i>5d-4d Correspondence in Twisted M-theory on a Conifold.</i> (2024). <a href="https://arxiv.org/abs/2411.04849" target="_blank">arXiv:2411.04849</a></li>
+
+                <li>[Ag] Aganagic, M. <i>Homological knot invariants from mirror symmetry.</i> Proc. Int. Cong. Math (2022). <a href="https://arxiv.org/abs/2207.14104" target="_blank">arXiv:2207.14104</a></li>
+
+                <li>[AKMMMOZ] Awata, H., Kanno, H., Mironov, A., Morozov, A., Morozov, A., Ohkubo, Y., Zenkevich, Y. <i>Generalized Knizhnik-Zamolodchikov equation for Ding-Iohara-Miki algebra.</i> Phys. Rev. D (2017). <a href="https://arxiv.org/abs/1703.06084" target="_blank">arXiv:1703.06084</a></li>
+
+                <li>[AKMMSZ] Awata, H., Kanno, H., Mironov, A., Morozov, A., Suetake, K., Zenkevich, Y. <i>(q,t)-KZ equations for quantum toroidal algebra and Nekrasov partition functions on ALE spaces.</i> JHEP (2018). <a href="https://arxiv.org/abs/1712.08016" target="_blank">arXiv:1712.08016</a></li>
+
+                <li>[ALSW] Allen, R., Lentner, S., Schweigert, C., Wood, S. <i>Duality structures for module categories of vertex operator algebras and the Feigin Fuchs boson.</i> (2021). <a href="https://arxiv.org/abs/2107.05718" target="_blank">arXiv:2107.05718</a></li>
+
+                <li>[AM] Artin, M., Mazur, B. <i>Formal groups arising from algebraic varieties.</i> Ann. Sci. École Norm. Sup. (1977). <a href="http://www.numdam.org/item/10.24033/asens.1322.pdf" target="_blank">Link</a></li>
+
+                <li>[AMGR] Ayala, D., Mazel-Gee, A., Rozenblyum, N. <i>Stratified noncommutative geometry.</i> AMS (2024). <a href="https://arxiv.org/abs/1910.14602" target="_blank">arXiv:1910.14602</a></li>
+
+                <li>[AO] Aganagic, M., Okounkov, A. <i>Elliptic stable envelopes.</i> (2016). <a href="https://arxiv.org/abs/2304.04627" target="_blank">arXiv:2304.04627</a></li>
+
+                <li>[AO2] Aganagic, M., Okounkov, A. <i>Quasimap counts and Bethe eigenfunctions.</i> (2017). <a href="https://arxiv.org/abs/1704.08746" target="_blank">arXiv:1704.08746</a></li>
+
+                <li>[As] Ashwinkumar, M. <i>Integrable lattice models and holography.</i> JHEP (2021). <a href="https://arxiv.org/abs/2003.08931" target="_blank">arXiv:2003.08931</a></li>
+
+                <li>[BCDN] Ballin, A., Creutzig, T., Dimofte, T., Niu, W. <i>3d mirror symmetry of braided tensor categories.</i> (2023). <a href="https://arxiv.org/abs/2304.1100" target="_blank">arXiv:2304.1100</a></li>
+
+                <li>[Be] Berry, E.D. <i>Additivity of factorization algebras & the cohomology of real Grassmannians.</i> PhD thesis, Montana State (2021). <a href="https://math.montana.edu/dayala/documents/BerryThesis.pdf" target="_blank">Link</a></li>
+
+                <li>[BFN] Braverman, A., Finkelberg, M., Nakajima, H. <i>Coulomb branches of 3d N=4 quiver gauge theories and slices in the affine Grassmannian.</i> (2016). <a href="https://arxiv.org/abs/1604.03625" target="_blank">arXiv:1604.03625</a></li>
+
+                <li>[BFN2] Braverman, A., Finkelberg, M., Nakajima, H. <i>Towards a mathematical definition of Coulomb branches of 3-dimensional N=4 gauge theories, II.</i> (2016). <a href="https://arxiv.org/abs/1601.03586" target="_blank">arXiv:1601.03586</a></li>
+
+                <li>[BK] Bouaziz, E., Khan, A.A. <i>Elliptic loop spaces.</i> (2025). <a href="https://arxiv.org/abs/2502.13882" target="_blank">arXiv:2502.13882</a></li>
+
+                <li>[BZN] Ben-Zvi, D., Nadler, D. <i>Loop spaces and connections.</i> J. Topology (2012). <a href="https://arxiv.org/abs/1002.3636" target="_blank">arXiv:1002.3636</a></li>
+
+                <li>[CF] Chen, L., Fu, Y. <i>An extension of the Kazhdan-Lusztig equivalence.</i> (2021). <a href="https://arxiv.org/abs/2111.14606" target="_blank">arXiv:2111.14606</a></li>
+
+                <li>[Co] Costello, K. <i>M-theory in the Omega-background and 5-dimensional non-commutative gauge theory.</i> (2016). <a href="https://arxiv.org/abs/1610.04144" target="_blank">arXiv:1610.04144</a></li>
+
+                <li>[CWY] Costello, K., Witten, E., Yamazaki, M. <i>Gauge theory and integrability, I.</i> (2017). <a href="https://arxiv.org/abs/1709.09993" target="_blank">arXiv:1709.09993</a></li>
+
+                <li>[Da] Danilenko, I. <i>Quantum cohomology of slices of the affine Grassmannian.</i> Columbia University (2020).</li>
+
+                <li>[EFK] Etingof, P.I., Frenkel, I., Kirillov, A.A. <i>Lectures on representation theory and Knizhnik-Zamolodchikov equations.</i> AMS (1998).</li>
+
+                <li>[EG] Etingof, P., Geer, N. <i>Monodromy of trigonometric KZ equations.</i> IMRN (2007). <a href="https://arxiv.org/abs/math/0611003" target="_blank">arXiv:math/0611003</a></li>
+
+                <li>[EK] Etingof, P., Kazhdan, D. <i>Quantization of Lie bialgebras, I.</i> Selecta Math. (1996). <a href="https://arxiv.org/abs/q-alg/9506005" target="_blank">arXiv:q-alg/9506005</a></li>
+
+                <li>[EM] Etingof, P., Moura, A. <i>On the quantum Kazhdan-Lusztig functor.</i> (2002). <a href="https://arxiv.org/abs/math/0203003" target="_blank">arXiv:math/0203003</a></li>
+
+                <li>[ES] Etingof, P., Schiffmann, O. <i>Lectures on Quantum Groups.</i></li>
+
+                <li>[EV] Etingof, P., Varchenko, A. <i>Orthogonality and the qKZB-heat equation for traces of Uqg-intertwiners.</i> (2005). <a href="https://arxiv.org/abs/math/0302071" target="_blank">arXiv:math/0302071</a></li>
+
+                <li>[FBZ] Frenkel, E., Ben-Zvi, D. <i>Vertex algebras and algebraic curves.</i> AMS (2004).</li>
+
+                <li>[Fe] Felder, G. <i>Conformal field theory and integrable systems associated to elliptic curves.</i> Proc. ICM (1995). <a href="https://arxiv.org/abs/hep-th/9407154" target="_blank">arXiv:hep-th/9407154</a></li>
+
+                <li>[FGV] Felder, G., Varchenko, A. <i>Resonance relations for solutions of the elliptic QKZB equations.</i> Comm. Contemp. Math. (1999). <a href="https://arxiv.org/abs/math/9901111" target="_blank">arXiv:math/9901111</a></li>
+
+                <li>[FH] Frenkel, E., Hernandez, D. <i>Weyl group symmetry of q-characters.</i> (2022). <a href="https://arxiv.org/abs/2211.09779" target="_blank">arXiv:2211.09779</a></li>
+
+                <li>[FMTV] Felder, G., Markov, Ya., Tarasov, V., Varchenko, A. <i>Differential equations compatible with KZ equations.</i> Math. Phys. Anal. Geom. (2000). <a href="https://arxiv.org/abs/math/0001184" target="_blank">arXiv:math/0001184</a></li>
+
+                <li>[FMP] Finkelberg, M., Matviichuk, M., Polishchuk, A. <i>Elliptic zastava.</i> (2020). <a href="https://arxiv.org/abs/2011.11220" target="_blank">arXiv:2011.11220</a></li>
+
+                <li>[FR] Frenkel, I.B., Reshetikhin, N.Y. <i>Quantum affine algebras and holonomic difference equations.</i> Comm. Math. Phys. (1992).</li>
+
+                <li>[FTV] Felder, G., Varchenko, A., Tarasov, V. <i>Solutions of the elliptic qKZB equations and Bethe ansatz I.</i> (1996). <a href="https://arxiv.org/abs/q-alg/9606005" target="_blank">arXiv:q-alg/9606005</a></li>
+
+                <li>[FTV2] Felder, G., Tarasov, V., Varchenko, A. <i>Monodromy of solutions of the elliptic quantum Knizhnik–Zamolodchikov–Bernard difference equations.</i> Int. J. Math. (1999). <a href="https://arxiv.org/abs/q-alg/9705017" target="_blank">arXiv:q-alg/9705017</a></li>
+
+                <li>[FV] Felder, G., Varchenko, A. <i>q-deformed KZB heat equation.</i> Adv. Math. (2002). <a href="https://arxiv.org/abs/math/0110081" target="_blank">arXiv:math/0110081</a></li>
+
+                <li>[FZ] Frenkel, I.B., Zhu, Y. <i>Vertex operator algebras associated to representations of affine and Virasoro algebras.</i> Duke Math. J. (1992). <a href="https://projecteuclid.org/journals/duke-mathematical-journal/volume-66/issue-1/Vertex-operator-algebras-associated-to-representations-of-affine-and-Virasoro/10.1215/S0012-7094-92-06604-X.short" target="_blank">Link</a></li>
+
+                <li>[Ga] Gaitsgory, D. <i>On factorization algebras arising in the quantum geometric Langlands theory.</i> Adv. Math. (2021). <a href="https://arxiv.org/abs/1909.09775" target="_blank">arXiv:1909.09775</a></li>
+
+                <li>[GL] Gaitsgory, D., Lysenko, S. <i>Metaplectic Whittaker category and quantum groups: the "small" FLE.</i> (2019). <a href="https://arxiv.org/abs/1903.02279" target="_blank">arXiv:1903.02279</a></li>
+
+                <li>[GRZ] Gaiotto, D., Rapčák, M., Zhou, Y. <i>Deformed Double Current Algebras.</i> (2023). <a href="https://arxiv.org/abs/2309.16929" target="_blank">arXiv:2309.16929</a></li>
+
+                <li>[GT] Gautam, S., Toledano Laredo, V. <i>Yangians, quantum loop algebras, and abelian difference equations.</i> J. AMS (2016). <a href="https://arxiv.org/abs/1310.7318" target="_blank">arXiv:1310.7318</a></li>
+
+                <li>[GT2] Gautam, S., Toledano Laredo, V. <i>Meromorphic tensor equivalence for Yangians and quantum loop algebras.</i> Publ. Math. IHÉS (2017). <a href="https://arxiv.org/abs/1403.5251" target="_blank">arXiv:1403.5251</a></li>
+
+                <li>[GTW] Gautam, S., Toledano Laredo, V., Wendlandt, C. <i>The meromorphic R-matrix of the Yangian.</i> (2021). <a href="https://arxiv.org/abs/1403.5251" target="_blank">arXiv:1403.5251</a></li>
+
+                <li>[Ha] Hain, R. <i>Notes on the universal elliptic KZB equation.</i> (2013). <a href="https://arxiv.org/abs/1309.0580" target="_blank">arXiv:1309.0580</a></li>
+
+                <li>[HL] Huang, Y.Z., Lepowsky, J. <i>A theory of tensor products for module categories for a vertex operator algebra, III.</i> J. Pure Appl. Algebra (1995). <a href="https://arxiv.org/abs/q-alg/9505018" target="_blank">arXiv:q-alg/9505018</a></li>
+
+                <li>[Iv] Ivanov, D. <i>Knizhnik-Zamolodchikov-Bernard equations on Riemann surfaces.</i> Int. J. Mod. Phys. A (1995). <a href="https://arxiv.org/abs/hep-th/9410091" target="_blank">arXiv:hep-th/9410091</a></li>
+
+                <li>[Jo] Jordan, D. <i>Quantum D-modules, elliptic braid groups, and double affine Hecke algebras.</i> IMRN (2009). <a href="https://arxiv.org/abs/0805.2766" target="_blank">arXiv:0805.2766</a></li>
+
+                <li>[Ko] Kononov, I. <i>Elliptic stable envelopes and 3d mirror symmetry.</i> Columbia University (2021). <a href="https://arxiv.org/abs/2106.09888" target="_blank">arXiv:2106.09888</a></li>
+
+                <li>[KS] Kontsevich, M., Soibelman, Y. <i>Holomorphic Floer theory I.</i> (2024). <a href="https://arxiv.org/abs/2402.07343" target="_blank">arXiv:2402.07343</a></li>
+
+                <li>[Lu1] Lurie, J. <i>A survey of elliptic cohomology.</i> Abel Symposium (2009). <a href="https://people.math.harvard.edu/~lurie/papers/survey.pdf" target="_blank">Link</a></li>
+
+                <li>[Lu2] Lurie, J. <i>Higher algebra.</i> (2017). <a href="https://people.math.harvard.edu/~lurie/papers/HA.pdf" target="_blank">Link</a></li>
+
+                <li>[MMSV] Mellit, A., Minets, A., Schiffmann, O., Vasserot, E. <i>Coherent sheaves on surfaces, COHAs and deformed W-algebras.</i> (2023). <a href="https://arxiv.org/abs/2311.13415" target="_blank">arXiv:2311.13415</a></li>
+
+                <li>[MO] Maulik, D., Okounkov, A. <i>Quantum groups and quantum cohomology.</i> (2012). <a href="https://arxiv.org/abs/1211.1287" target="_blank">arXiv:1211.1287</a></li>
+
+                <li>[Na] Namikawa, Y. <i>Symplectic varieties and Poisson deformations.</i> RIMS Kôkyûroku (2011). <a href="https://www.kurims.kyoto-u.ac.jp/~kyodo/kokyuroku/contents/pdf/1745-12.pdf" target="_blank">Link</a></li>
+
+                <li>[NPT] Nakayashiki, A., Pakuliak, S., Tarasov, V. <i>On solutions of the KZ and qKZ equations at level zero.</i> Ann. IHP Phys. Théor. (1999). <a href="https://arxiv.org/abs/q-alg/9712002" target="_blank">arXiv:q-alg/9712002</a></li>
+
+                <li>[Ok] Okounkov, A. <i>Lectures on K-theoretic computations in enumerative geometry.</i> (2015). <a href="https://arxiv.org/abs/1512.07363" target="_blank">arXiv:1512.07363</a></li>
+
+                <li>[Ok2] Okounkov, A. <i>33 lectures on quasimaps and elliptic stable envelopes.</i> (2022). <a href="https://www.math.columbia.edu/~okounkov/33lectures.pdf" target="_blank">Link</a></li>
+
+                <li>[OS] Okounkov, A., Smirnov, A. <i>Quantum Difference Equation for Nakajima Varieties.</i> (2016). <a href="https://arxiv.org/abs/1602.09007" target="_blank">arXiv:1602.09007</a></li>
+
+                <li>[PT] Porta, M., Teyssier, J.-B. <i>Homotopy theory of Stokes structures and derived moduli.</i> (2024). <a href="https://arxiv.org/abs/2401.12335" target="_blank">arXiv:2401.12335</a></li>
+
+                <li>[PT2] Porta, M., Teyssier, J.-B. <i>The derived moduli of Stokes data.</i> (2025). <a href="https://arxiv.org/abs/2504.05360" target="_blank">arXiv:2504.05360</a></li>
+
+                <li>[RSZ] Ramis, J.P., Sauloy, J., Zhang, C. <i>Local analytic classification of q-difference equations.</i> (2009). <a href="https://arxiv.org/abs/0903.0853" target="_blank">arXiv:0903.0853</a></li>
+
+                <li>[Sc] Scholze, P. <i>Geometrization of the real local Langlands correspondence.</i> <a href="https://people.mpim-bonn.mpg.de/scholze/RealLocalLanglands.pdf" target="_blank">Link</a></li>
+
+                <li>[SP] The Stacks project authors. <i>The Stacks project.</i> (2025). <a href="https://stacks.math.columbia.edu/" target="_blank">Link</a></li>
+
+                <li>[ST] Stolz, S., Teichner, P. <i>Supersymmetric field theories and generalized cohomology.</i> (2011). <a href="https://arxiv.org/abs/1108.0189" target="_blank">arXiv:1108.0189</a></li>
+
+                <li>[SV1] Schechtman, V.V., Varchenko, A.N. <i>Arrangements of hyperplanes and Lie algebra homology.</i> Invent. Math. (1991).</li>
+
+                <li>[SV2] Schechtman, V., Varchenko, A. <i>Derived KZ equations.</i> (2020). <a href="https://arxiv.org/abs/2012.02585" target="_blank">arXiv:2012.02585</a></li>
+
+                <li>[Sz] Szymik, M. <i>K3 spectra.</i> Bull. London Math. Soc. (2010). <a href="https://arxiv.org/abs/2002.04879" target="_blank">arXiv:2002.04879</a></li>
+
+                <li>[TLX] Toledano Laredo, V., Xu, X. <i>Stokes phenomena, Poisson–Lie groups and quantum groups.</i> Adv. Math. (2023). <a href="https://arxiv.org/abs/2202.10298" target="_blank">arXiv:2202.10298</a></li>
+
+                <li>[TV1] Tarasov, V., Varchenko, A. <i>Geometry of q-hypergeometric functions as a bridge between Yangians and quantum affine algebras.</i> (1996). <a href="https://arxiv.org/abs/q-alg/9604011" target="_blank">arXiv:q-alg/9604011</a></li>
+
+                <li>[TV2] Tarasov, V., Varchenko, A. <i>Difference equations compatible with trigonometric KZ differential equations.</i> IMRN (2000). <a href="https://arxiv.org/abs/math/0002132" target="_blank">arXiv:math/0002132</a></li>
+
+                <li>[TV3] Tarasov, V., Varchenko, A. <i>Duality for Knizhnik–Zamolodchikov and dynamical equations.</i> Acta Appl. Math. (2002). <a href="https://arxiv.org/abs/math/0112005" target="_blank">arXiv:math/0112005</a></li>
+
+                <li>[Wi] Witten, E. <i>Quantum field theory and the Jones polynomial.</i> Comm. Math. Phys. (1989). <a href="https://people.maths.ox.ac.uk/beem/papers/jones_polynomial_witten.pdf" target="_blank">Link</a></li>
+
+                <li>[Xu] Xu, X. <i>Stokes Phenomenon and Yang–Baxter Equations.</i> Comm. Math. Phys. (2020). <a href="https://arxiv.org/abs/1808.07654" target="_blank">arXiv:1808.07654</a></li>
+
+                <li>[Zh] Zhu, T. <i>Quantum difference equations and Maulik-Okounkov quantum affine algebras of affine type A.</i> (2024). <a href="https://arxiv.org/abs/2408.0615" target="_blank">arXiv:2408.0615</a></li>
             </ul>
         </section>
     </div>
