@@ -452,6 +452,24 @@
             background: rgba(139, 90, 90, 0.15);
             color: #8B5A5A;
         }
+
+        /* LaTeX warning */
+        .latex-warning {
+            font-style: italic;
+            font-size: 11px;
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease, color 3s ease;
+            color: #C44;
+        }
+
+        .latex-warning.visible {
+            opacity: 1;
+        }
+
+        .latex-warning.fading {
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -545,6 +563,7 @@
             </div>
             <div class="code-content">
                 <textarea id="tikz-output" readonly></textarea>
+                <div class="latex-warning" id="latex-warning">LaTeX equations won't render here, but don't worry — they will in the tikzpicture!</div>
             </div>
         </div>
     </div>
@@ -599,6 +618,33 @@
         const scaleLabel = document.getElementById('scale-label');
         const propertyBar = document.getElementById('property-bar');
         const tikzOutput = document.getElementById('tikz-output');
+        const latexWarning = document.getElementById('latex-warning');
+
+        // ============== LATEX WARNING ==============
+        let latexWarningTimeout = null;
+        let latexWarningFadeTimeout = null;
+
+        function showLatexWarning() {
+            // Clear any existing timeouts
+            if (latexWarningTimeout) clearTimeout(latexWarningTimeout);
+            if (latexWarningFadeTimeout) clearTimeout(latexWarningFadeTimeout);
+
+            // Reset to red and show
+            latexWarning.classList.remove('fading');
+            latexWarning.classList.add('visible');
+
+            // After 2 seconds, start fading to black
+            latexWarningFadeTimeout = setTimeout(() => {
+                latexWarning.classList.add('fading');
+            }, 2000);
+        }
+
+        function checkForLatex(text) {
+            // Check for $ or \ followed by common LaTeX commands
+            if (text.includes('$') || /\\[a-zA-Z]/.test(text)) {
+                showLatexWarning();
+            }
+        }
 
         // ============== HELPERS ==============
         function screenToWorld(screenX, screenY) {
