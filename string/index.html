@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikZ String Diagram Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #FAF8F5;
+            --panel-bg: #FFFFFF;
+            --border-color: #E8E4DF;
+            --text-primary: #2D2A26;
+            --text-secondary: #6B6660;
+            --accent: #7C9885;
+            --accent-hover: #6B8874;
+            --grid-color: #D4CFC8;
+            --selection-glow: rgba(124, 152, 133, 0.4);
+            --white-line: #FFFFFF;
+            --black-line: #2D2A26;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+            margin: 0 8px;
+        }
+
+        .btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--panel-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .btn.active:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-icon {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .grid-control input, .property-select {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 5px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            width: 58px;
+        }
+
+        .grid-control input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .property-select {
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .property-select.wide {
+            min-width: 70px;
+        }
+
+        .shape-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .shape-btn {
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .shape-btn:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .shape-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .shape-btn svg {
+            stroke: var(--text-primary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .shape-btn.active svg {
+            stroke: white;
+        }
+
+        /* Inline text editor overlay */
+        .inline-editor {
+            position: absolute;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            padding: 4px 8px;
+            border: 2px solid var(--accent);
+            border-radius: 4px;
+            background: white;
+            color: var(--text-primary);
+            text-align: center;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Main layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Canvas wrapper - contains canvas and property bar */
+        .canvas-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Canvas container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-color);
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Scale indicator */
+        .scale-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .scale-bar {
+            height: 2px;
+            background: var(--text-secondary);
+            border-radius: 1px;
+        }
+
+        /* Mode indicator */
+        .mode-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 6px 12px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .mode-indicator.add-mode {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Pending point indicator */
+        .pending-indicator {
+            position: absolute;
+            top: 20px;
+            left: 140px;
+            padding: 6px 12px;
+            background: #E8F0EA;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+            pointer-events: none;
+            display: none;
+        }
+
+        .pending-indicator.visible {
+            display: block;
+        }
+
+        /* Property bar at bottom */
+        .property-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 20px;
+            background: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+            min-height: 52px;
+            flex-wrap: wrap;
+        }
+
+        .property-bar.hidden {
+            display: none;
+        }
+
+        .property-bar-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding-right: 8px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .property-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .property-group-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .property-input {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 5px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            width: 55px;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .property-input.narrow {
+            width: 58px;
+        }
+
+        .property-input.text-input {
+            width: 120px;
+        }
+
+        .coord-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background: #F5E6E6;
+            border: 1px solid #E8D4D4;
+            color: #8B5A5A;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            margin-left: auto;
+        }
+
+        .delete-btn:hover {
+            background: #EED9D9;
+            border-color: #D4C0C0;
+        }
+
+        /* Code panel */
+        .code-panel {
+            width: 360px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.2s ease;
+        }
+
+        .code-panel.collapsed {
+            width: 40px;
+        }
+
+        .code-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-panel-header h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .code-panel.collapsed .code-panel-header h3,
+        .code-panel.collapsed .copy-btn {
+            display: none;
+        }
+
+        .code-panel.collapsed .code-panel-header {
+            justify-content: center;
+            padding: 12px 8px;
+        }
+
+        .code-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+
+        .code-panel.collapsed .code-content {
+            display: none;
+        }
+
+        #tikz-output {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            width: 100%;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .copy-btn {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        /* Keyboard hints */
+        .keyboard-hint {
+            font-size: 10px;
+            padding: 2px 5px;
+            background: var(--bg-color);
+            border-radius: 3px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .btn.active .keyboard-hint {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .delete-btn .keyboard-hint {
+            background: rgba(139, 90, 90, 0.15);
+            color: #8B5A5A;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <button id="select-mode-btn" class="btn active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+                </svg>
+                Select
+                <span class="keyboard-hint">S</span>
+            </button>
+            <button id="add-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Line
+                <span class="keyboard-hint">A</span>
+            </button>
+            <button id="text-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 7 4 4 20 4 20 7"/>
+                    <line x1="9" y1="20" x2="15" y2="20"/>
+                    <line x1="12" y1="4" x2="12" y2="20"/>
+                </svg>
+                Text
+                <span class="keyboard-hint">T</span>
+            </button>
+            <button id="node-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="8"/>
+                </svg>
+                Node
+                <span class="keyboard-hint">N</span>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-group">
+            <button id="undo-btn" class="btn btn-icon" title="Undo (Z)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 7v6h6"/>
+                    <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6.36 2.64L3 13"/>
+                </svg>
+            </button>
+            <button id="redo-btn" class="btn btn-icon" title="Redo (Y)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 7v6h-6"/>
+                    <path d="M3 17a9 9 0 019-9 9 9 0 016.36 2.64L21 13"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="grid-control">
+            <span>Grid:</span>
+            <input type="number" id="grid-size" value="0.5" step="0.125" min="0.0625">
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="canvas-wrapper">
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+                <div class="mode-indicator" id="mode-indicator">Select Mode</div>
+                <div class="pending-indicator" id="pending-indicator">Click to place end point</div>
+                <div class="scale-indicator">
+                    <div class="scale-bar" id="scale-bar"></div>
+                    <span id="scale-label">1 unit</span>
+                </div>
+            </div>
+
+            <!-- Property bar at bottom - content changes based on selection -->
+            <div class="property-bar hidden" id="property-bar"></div>
+        </div>
+
+        <div class="code-panel" id="code-panel">
+            <div class="code-panel-header">
+                <h3>TikZ Output</h3>
+                <button class="btn copy-btn" id="copy-btn" title="Copy (C)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                    </svg>
+                    Copy
+                    <span class="keyboard-hint">C</span>
+                </button>
+            </div>
+            <div class="code-content">
+                <textarea id="tikz-output" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============== STATE ==============
+        const state = {
+            lines: [],
+            textNodes: [],
+            shapeNodes: [],
+
+            // Selection - track type and id
+            selection: null, // { type: 'line'|'text'|'shape', id: number }
+
+            mode: 'select', // 'select', 'add', 'text', 'node'
+
+            // Canvas transform
+            panX: 0,
+            panY: 0,
+            zoom: 50,
+
+            // Grid
+            gridSize: 0.5,
+
+            // Interaction state
+            isDragging: false,
+            dragType: null,
+            dragItemId: null,
+            dragStartScreen: { x: 0, y: 0 },
+            dragStartWorld: { x: 0, y: 0 },
+            newLineStart: null,
+            pendingLineStart: null,
+            previewEnd: null,
+
+            // Undo/redo
+            undoStack: [],
+            redoStack: [],
+
+            // ID counters
+            nextLineId: 1,
+            nextTextId: 1,
+            nextShapeId: 1
+        };
+
+        // ============== DOM ELEMENTS ==============
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const canvasContainer = document.querySelector('.canvas-container');
+        const modeIndicator = document.getElementById('mode-indicator');
+        const pendingIndicator = document.getElementById('pending-indicator');
+        const scaleBar = document.getElementById('scale-bar');
+        const scaleLabel = document.getElementById('scale-label');
+        const propertyBar = document.getElementById('property-bar');
+        const tikzOutput = document.getElementById('tikz-output');
+
+        // ============== HELPERS ==============
+        function screenToWorld(screenX, screenY) {
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = screenX - rect.left;
+            const canvasY = screenY - rect.top;
+            const worldX = (canvasX - state.panX) / state.zoom;
+            const worldY = -(canvasY - state.panY) / state.zoom;
+            return { x: worldX, y: worldY };
+        }
+
+        function worldToScreen(worldX, worldY) {
+            const screenX = worldX * state.zoom + state.panX;
+            const screenY = -worldY * state.zoom + state.panY;
+            return { x: screenX, y: screenY };
+        }
+
+        function snapToGrid(value) {
+            return Math.round(value / state.gridSize) * state.gridSize;
+        }
+
+        function computeStraightLineAngles(startX, startY, endX, endY) {
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            return { outAngle: angle, inAngle: (angle + 180) % 360 };
+        }
+
+        function getMaxOrdering() {
+            if (state.lines.length === 0) return 0;
+            return Math.max(...state.lines.map(l => l.ordering));
+        }
+
+        function createLine(startX, startY, endX, endY) {
+            const angles = computeStraightLineAngles(startX, startY, endX, endY);
+            return {
+                id: state.nextLineId++,
+                startX: snapToGrid(startX),
+                startY: snapToGrid(startY),
+                endX: snapToGrid(endX),
+                endY: snapToGrid(endY),
+                outAngle: angles.outAngle,
+                inAngle: angles.inAngle,
+                lineWidth: 0.8,
+                whiteWidth: 0,
+                ordering: Math.floor(getMaxOrdering()) + 1
+            };
+        }
+
+        function createTextNode(x, y) {
+            return {
+                id: state.nextTextId++,
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                text: 'text',
+                position: 'none', // 'none', 'above', 'below', 'left', 'right'
+                fontSize: 12
+            };
+        }
+
+        function createShapeNode(x, y) {
+            return {
+                id: state.nextShapeId++,
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                text: 'node',
+                shape: 'circle', // 'circle', 'rectangle', 'ellipse'
+                outlineWidth: 0.8,
+                paddingX: 4,
+                paddingY: 3,
+                fontSize: 12
+            };
+        }
+
+        // ============== UNDO/REDO ==============
+        function saveState() {
+            state.undoStack.push(JSON.stringify({
+                lines: state.lines,
+                textNodes: state.textNodes,
+                shapeNodes: state.shapeNodes
+            }));
+            state.redoStack = [];
+            if (state.undoStack.length > 100) state.undoStack.shift();
+        }
+
+        function undo() {
+            if (state.undoStack.length === 0) return;
+            state.redoStack.push(JSON.stringify({
+                lines: state.lines,
+                textNodes: state.textNodes,
+                shapeNodes: state.shapeNodes
+            }));
+            const saved = JSON.parse(state.undoStack.pop());
+            state.lines = saved.lines;
+            state.textNodes = saved.textNodes;
+            state.shapeNodes = saved.shapeNodes;
+            state.selection = null;
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        function redo() {
+            if (state.redoStack.length === 0) return;
+            state.undoStack.push(JSON.stringify({
+                lines: state.lines,
+                textNodes: state.textNodes,
+                shapeNodes: state.shapeNodes
+            }));
+            const saved = JSON.parse(state.redoStack.pop());
+            state.lines = saved.lines;
+            state.textNodes = saved.textNodes;
+            state.shapeNodes = saved.shapeNodes;
+            state.selection = null;
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        // ============== RENDERING ==============
+        function resizeCanvas() {
+            const rect = canvasContainer.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            if (state.panX === 0 && state.panY === 0) {
+                state.panX = rect.width / 2;
+                state.panY = rect.height / 2;
+            }
+            render();
+        }
+
+        function drawGrid() {
+            const rect = canvasContainer.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            ctx.fillStyle = '#D4CFC8';
+            const topLeft = screenToWorld(0, 0);
+            const bottomRight = screenToWorld(width, height);
+            const startX = Math.floor(topLeft.x / state.gridSize) * state.gridSize;
+            const endX = Math.ceil(bottomRight.x / state.gridSize) * state.gridSize;
+            const startY = Math.floor(bottomRight.y / state.gridSize) * state.gridSize;
+            const endY = Math.ceil(topLeft.y / state.gridSize) * state.gridSize;
+            const dotSize = Math.max(1, state.zoom / 50);
+            for (let x = startX; x <= endX; x += state.gridSize) {
+                for (let y = startY; y <= endY; y += state.gridSize) {
+                    const screen = worldToScreen(x, y);
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, dotSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            // Origin marker
+            const origin = worldToScreen(0, 0);
+            ctx.strokeStyle = '#B0A99F';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x + 20, origin.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x, origin.y - 20);
+            ctx.stroke();
+            ctx.fillStyle = '#8B8580';
+            ctx.beginPath();
+            ctx.arc(origin.x, origin.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function computeBezierControlPoints(line) {
+            const startScreen = worldToScreen(line.startX, line.startY);
+            const endScreen = worldToScreen(line.endX, line.endY);
+            const dx = endScreen.x - startScreen.x;
+            const dy = endScreen.y - startScreen.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const looseness = dist / 3;
+            const outRad = line.outAngle * Math.PI / 180;
+            const cp1x = startScreen.x + Math.cos(outRad) * looseness;
+            const cp1y = startScreen.y - Math.sin(outRad) * looseness;
+            const inRad = line.inAngle * Math.PI / 180;
+            const cp2x = endScreen.x + Math.cos(inRad) * looseness;
+            const cp2y = endScreen.y - Math.sin(inRad) * looseness;
+            return {
+                start: startScreen,
+                end: endScreen,
+                cp1: { x: cp1x, y: cp1y },
+                cp2: { x: cp2x, y: cp2y }
+            };
+        }
+
+        function drawLine(line, isSelected) {
+            const points = computeBezierControlPoints(line);
+            if (line.whiteWidth > 0) {
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = line.whiteWidth * state.zoom / 50;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = '#2D2A26';
+            ctx.lineWidth = line.lineWidth * state.zoom / 50;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(points.start.x, points.start.y);
+            ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+            ctx.stroke();
+
+            if (isSelected) {
+                ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.lineWidth = (line.lineWidth + 4) * state.zoom / 50;
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+                ctx.stroke();
+                ctx.strokeStyle = '#2D2A26';
+                ctx.lineWidth = line.lineWidth * state.zoom / 50;
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+                ctx.stroke();
+
+                const handleRadius = 6;
+                ctx.fillStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.arc(points.start.x, points.start.y, handleRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(points.end.x, points.end.y, handleRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                const tangentLength = 75;
+                const outRad = line.outAngle * Math.PI / 180;
+                const outHandleX = points.start.x + Math.cos(outRad) * tangentLength;
+                const outHandleY = points.start.y - Math.sin(outRad) * tangentLength;
+                ctx.strokeStyle = '#7C9885';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.lineTo(outHandleX, outHandleY);
+                ctx.stroke();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(outHandleX, outHandleY, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                const inRad = line.inAngle * Math.PI / 180;
+                const inHandleX = points.end.x + Math.cos(inRad) * tangentLength;
+                const inHandleY = points.end.y - Math.sin(inRad) * tangentLength;
+                ctx.strokeStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.moveTo(points.end.x, points.end.y);
+                ctx.lineTo(inHandleX, inHandleY);
+                ctx.stroke();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(inHandleX, inHandleY, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function drawTextNode(node, isSelected) {
+            const screen = worldToScreen(node.x, node.y);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Calculate text position based on position property
+            let textX = screen.x;
+            let textY = screen.y;
+            const offset = 12 * state.zoom / 50;
+            if (node.position === 'above') textY -= offset;
+            else if (node.position === 'below') textY += offset;
+            else if (node.position === 'left') textX -= offset;
+            else if (node.position === 'right') textX += offset;
+
+            if (isSelected) {
+                const metrics = ctx.measureText(node.text);
+                const padding = 4;
+                ctx.fillStyle = 'rgba(124, 152, 133, 0.2)';
+                ctx.fillRect(
+                    textX - metrics.width / 2 - padding,
+                    textY - fontSize / 2 - padding,
+                    metrics.width + padding * 2,
+                    fontSize + padding * 2
+                );
+            }
+
+            ctx.fillStyle = '#2D2A26';
+            ctx.fillText(node.text, textX, textY);
+
+            // Draw position marker at actual coordinates
+            if (isSelected && node.position !== 'none') {
+                ctx.fillStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawShapeNode(node, isSelected) {
+            const screen = worldToScreen(node.x, node.y);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            const metrics = ctx.measureText(node.text);
+            const textWidth = metrics.width;
+            const textHeight = fontSize;
+
+            const paddingX = node.paddingX * state.zoom / 50;
+            const paddingY = node.paddingY * state.zoom / 50;
+
+            // Shape nodes are always centered at their coordinates
+            const textX = screen.x;
+            const textY = screen.y;
+
+            // Draw shape
+            ctx.fillStyle = '#FFFFFF';
+            ctx.strokeStyle = '#2D2A26';
+            ctx.lineWidth = node.outlineWidth * state.zoom / 50;
+
+            if (node.shape === 'circle') {
+                const radius = Math.max(textWidth / 2, textHeight / 2) + paddingX;
+                ctx.beginPath();
+                ctx.arc(textX, textY, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else if (node.shape === 'rectangle') {
+                const width = textWidth + paddingX * 2;
+                const height = textHeight + paddingY * 2;
+                ctx.beginPath();
+                ctx.rect(textX - width / 2, textY - height / 2, width, height);
+                ctx.fill();
+                ctx.stroke();
+            } else if (node.shape === 'ellipse') {
+                const rx = textWidth / 2 + paddingX;
+                const ry = textHeight / 2 + paddingY;
+                ctx.beginPath();
+                ctx.ellipse(textX, textY, rx, ry, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // Draw selection highlight
+            if (isSelected) {
+                ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.lineWidth = (node.outlineWidth + 3) * state.zoom / 50;
+                if (node.shape === 'circle') {
+                    const radius = Math.max(textWidth / 2, textHeight / 2) + paddingX;
+                    ctx.beginPath();
+                    ctx.arc(textX, textY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (node.shape === 'rectangle') {
+                    const width = textWidth + paddingX * 2;
+                    const height = textHeight + paddingY * 2;
+                    ctx.beginPath();
+                    ctx.rect(textX - width / 2, textY - height / 2, width, height);
+                    ctx.stroke();
+                } else if (node.shape === 'ellipse') {
+                    const rx = textWidth / 2 + paddingX;
+                    const ry = textHeight / 2 + paddingY;
+                    ctx.beginPath();
+                    ctx.ellipse(textX, textY, rx, ry, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw text
+            ctx.fillStyle = '#2D2A26';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.text, textX, textY);
+        }
+
+        function render() {
+            const rect = canvasContainer.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+            drawGrid();
+
+            // Draw lines sorted by ordering
+            const sortedLines = [...state.lines].sort((a, b) => a.ordering - b.ordering);
+            for (const line of sortedLines) {
+                const isSelected = state.selection?.type === 'line' && state.selection.id === line.id;
+                if (!isSelected) drawLine(line, false);
+            }
+            // Draw selected line on top
+            if (state.selection?.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (line) drawLine(line, true);
+            }
+
+            // Draw text nodes
+            for (const node of state.textNodes) {
+                const isSelected = state.selection?.type === 'text' && state.selection.id === node.id;
+                drawTextNode(node, isSelected);
+            }
+
+            // Draw shape nodes
+            for (const node of state.shapeNodes) {
+                const isSelected = state.selection?.type === 'shape' && state.selection.id === node.id;
+                drawShapeNode(node, isSelected);
+            }
+
+            // Draw pending line start
+            if (state.pendingLineStart) {
+                const screen = worldToScreen(state.pendingLineStart.x, state.pendingLineStart.y);
+                ctx.fillStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+                if (state.previewEnd) {
+                    const endScreen = worldToScreen(state.previewEnd.x, state.previewEnd.y);
+                    ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(screen.x, screen.y);
+                    ctx.lineTo(endScreen.x, endScreen.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            // Draw new line being dragged
+            if (state.dragType === 'new-line' && state.newLineStart) {
+                const tempLine = createLine(
+                    state.newLineStart.x, state.newLineStart.y,
+                    state.dragStartWorld.x, state.dragStartWorld.y
+                );
+                state.nextLineId--;
+                drawLine(tempLine, false);
+            }
+
+            updateScaleIndicator();
+        }
+
+        function updateScaleIndicator() {
+            scaleBar.style.width = state.zoom + 'px';
+            scaleLabel.textContent = '1 unit';
+        }
+
+        // ============== TIKZ OUTPUT ==============
+        function updateTikzOutput() {
+            let code = '\\begin{center}\n\\begin{tikzpicture}\n';
+
+            // Lines
+            const sortedLines = [...state.lines].sort((a, b) => a.ordering - b.ordering);
+            for (const line of sortedLines) {
+                const sx = line.startX.toFixed(2);
+                const sy = line.startY.toFixed(2);
+                const ex = line.endX.toFixed(2);
+                const ey = line.endY.toFixed(2);
+                const outA = Math.round(line.outAngle);
+                const inA = Math.round(line.inAngle);
+                if (line.whiteWidth > 0) {
+                    code += `\\draw[line width=${line.whiteWidth.toFixed(1)}pt, white] (${sx},${sy}) to[out=${outA}, in=${inA}] (${ex},${ey});\n`;
+                }
+                code += `\\draw[line width=${line.lineWidth.toFixed(1)}pt] (${sx},${sy}) to[out=${outA}, in=${inA}] (${ex},${ey});\n`;
+            }
+
+            // Text nodes
+            for (const node of state.textNodes) {
+                const x = node.x.toFixed(2);
+                const y = node.y.toFixed(2);
+                let options = [];
+                if (node.position !== 'none') options.push(node.position);
+                const fontSize = node.fontSize || 12;
+                if (fontSize !== 12) options.push(`font=\\fontsize{${fontSize}pt}{${fontSize}pt}\\selectfont`);
+                const optStr = options.length > 0 ? `[${options.join(', ')}]` : '';
+                code += `\\node${optStr} at (${x},${y}) {${node.text}};\n`;
+            }
+
+            // Shape nodes
+            for (const node of state.shapeNodes) {
+                const x = node.x.toFixed(2);
+                const y = node.y.toFixed(2);
+                let options = [`draw`, `fill=white`, `line width=${node.outlineWidth.toFixed(1)}pt`];
+                options.push(node.shape);
+                if (node.shape === 'circle') {
+                    options.push(`inner sep=${node.paddingX.toFixed(1)}pt`);
+                } else {
+                    options.push(`inner xsep=${node.paddingX.toFixed(1)}pt`);
+                    options.push(`inner ysep=${node.paddingY.toFixed(1)}pt`);
+                }
+                const fontSize = node.fontSize || 12;
+                if (fontSize !== 12) options.push(`font=\\fontsize{${fontSize}pt}{${fontSize}pt}\\selectfont`);
+                code += `\\node[${options.join(', ')}] at (${x},${y}) {${node.text}};\n`;
+            }
+
+            code += '\\end{tikzpicture}\n\\end{center}';
+            tikzOutput.value = code;
+        }
+
+        function copyTikzToClipboard() {
+            navigator.clipboard.writeText(tikzOutput.value).then(() => {
+                const btn = document.getElementById('copy-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+                setTimeout(() => btn.innerHTML = originalHTML, 1500);
+            });
+        }
+
+        // ============== HIT TESTING ==============
+        function hitTestLine(line, worldX, worldY) {
+            const points = computeBezierControlPoints(line);
+            const testScreen = worldToScreen(worldX, worldY);
+            const samples = 50;
+            const hitThreshold = 10;
+            for (let i = 0; i <= samples; i++) {
+                const t = i / samples;
+                const x = Math.pow(1-t, 3) * points.start.x + 3 * Math.pow(1-t, 2) * t * points.cp1.x +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.x + Math.pow(t, 3) * points.end.x;
+                const y = Math.pow(1-t, 3) * points.start.y + 3 * Math.pow(1-t, 2) * t * points.cp1.y +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.y + Math.pow(t, 3) * points.end.y;
+                const dist = Math.sqrt(Math.pow(x - testScreen.x, 2) + Math.pow(y - testScreen.y, 2));
+                if (dist < hitThreshold) return true;
+            }
+            return false;
+        }
+
+        function hitTestEndpoint(line, worldX, worldY) {
+            const testScreen = worldToScreen(worldX, worldY);
+            const startScreen = worldToScreen(line.startX, line.startY);
+            const endScreen = worldToScreen(line.endX, line.endY);
+            const threshold = 12;
+            if (Math.sqrt(Math.pow(testScreen.x - startScreen.x, 2) + Math.pow(testScreen.y - startScreen.y, 2)) < threshold) return 'start';
+            if (Math.sqrt(Math.pow(testScreen.x - endScreen.x, 2) + Math.pow(testScreen.y - endScreen.y, 2)) < threshold) return 'end';
+            return null;
+        }
+
+        function hitTestHandle(line, worldX, worldY) {
+            const testScreen = worldToScreen(worldX, worldY);
+            const startScreen = worldToScreen(line.startX, line.startY);
+            const endScreen = worldToScreen(line.endX, line.endY);
+            const tangentLength = 75;
+            const threshold = 12;
+            const outRad = line.outAngle * Math.PI / 180;
+            const outHandleX = startScreen.x + Math.cos(outRad) * tangentLength;
+            const outHandleY = startScreen.y - Math.sin(outRad) * tangentLength;
+            if (Math.sqrt(Math.pow(testScreen.x - outHandleX, 2) + Math.pow(testScreen.y - outHandleY, 2)) < threshold) return 'out';
+            const inRad = line.inAngle * Math.PI / 180;
+            const inHandleX = endScreen.x + Math.cos(inRad) * tangentLength;
+            const inHandleY = endScreen.y - Math.sin(inRad) * tangentLength;
+            if (Math.sqrt(Math.pow(testScreen.x - inHandleX, 2) + Math.pow(testScreen.y - inHandleY, 2)) < threshold) return 'in';
+            return null;
+        }
+
+        function hitTestTextNode(node, worldX, worldY) {
+            const screen = worldToScreen(node.x, node.y);
+            const testScreen = worldToScreen(worldX, worldY);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            const metrics = ctx.measureText(node.text);
+            const width = metrics.width + 32;
+            const height = fontSize + 14;
+            let textX = screen.x;
+            let textY = screen.y;
+            const offset = 12 * state.zoom / 50;
+            if (node.position === 'above') textY -= offset;
+            else if (node.position === 'below') textY += offset;
+            else if (node.position === 'left') textX -= offset;
+            else if (node.position === 'right') textX += offset;
+            return Math.abs(testScreen.x - textX) < width / 2 && Math.abs(testScreen.y - textY) < height / 2;
+        }
+
+        function hitTestShapeNode(node, worldX, worldY) {
+            const screen = worldToScreen(node.x, node.y);
+            const testScreen = worldToScreen(worldX, worldY);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            const metrics = ctx.measureText(node.text);
+            const paddingX = node.paddingX * state.zoom / 50;
+            const paddingY = node.paddingY * state.zoom / 50;
+            const textX = screen.x;
+            const textY = screen.y;
+
+            if (node.shape === 'circle') {
+                const radius = Math.max(metrics.width / 2, fontSize / 2) + paddingX;
+                return Math.sqrt(Math.pow(testScreen.x - textX, 2) + Math.pow(testScreen.y - textY, 2)) < radius;
+            } else {
+                const width = metrics.width + paddingX * 2;
+                const height = fontSize + paddingY * 2;
+                return Math.abs(testScreen.x - textX) < width / 2 && Math.abs(testScreen.y - textY) < height / 2;
+            }
+        }
+
+        function findItemAtPoint(worldX, worldY) {
+            // Check shape nodes first (on top)
+            for (let i = state.shapeNodes.length - 1; i >= 0; i--) {
+                if (hitTestShapeNode(state.shapeNodes[i], worldX, worldY)) {
+                    return { type: 'shape', id: state.shapeNodes[i].id };
+                }
+            }
+            // Check text nodes
+            for (let i = state.textNodes.length - 1; i >= 0; i--) {
+                if (hitTestTextNode(state.textNodes[i], worldX, worldY)) {
+                    return { type: 'text', id: state.textNodes[i].id };
+                }
+            }
+            // Check lines
+            const sortedLines = [...state.lines].sort((a, b) => b.ordering - a.ordering);
+            for (const line of sortedLines) {
+                if (hitTestLine(line, worldX, worldY)) {
+                    return { type: 'line', id: line.id };
+                }
+            }
+            return null;
+        }
+
+        // ============== PROPERTY BAR ==============
+        function updatePropertyBar() {
+            if (!state.selection) {
+                propertyBar.classList.add('hidden');
+                propertyBar.innerHTML = '';
+                return;
+            }
+
+            propertyBar.classList.remove('hidden');
+
+            if (state.selection.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (!line) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Line #${line.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Start</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-start-x" value="${line.startX}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-start-y" value="${line.startY}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">End</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-end-x" value="${line.endX}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-end-y" value="${line.endY}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Out°</span>
+                        <input type="number" class="property-input narrow" id="prop-out-angle" value="${Math.round(line.outAngle)}" step="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">In°</span>
+                        <input type="number" class="property-input narrow" id="prop-in-angle" value="${Math.round(line.inAngle)}" step="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Width</span>
+                        <input type="number" class="property-input narrow" id="prop-line-width" value="${line.lineWidth}" step="0.1" min="0">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">White</span>
+                        <input type="number" class="property-input narrow" id="prop-white-width" value="${line.whiteWidth}" step="0.1" min="0">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Order</span>
+                        <input type="number" class="property-input narrow" id="prop-ordering" value="${line.ordering}" step="0.1">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            } else if (state.selection.type === 'text') {
+                const node = state.textNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Text #${node.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Pos</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-x" value="${node.x}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-y" value="${node.y}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Anchor</span>
+                        <select class="property-select wide" id="prop-position">
+                            <option value="none" ${node.position === 'none' ? 'selected' : ''}>none</option>
+                            <option value="above" ${node.position === 'above' ? 'selected' : ''}>above</option>
+                            <option value="below" ${node.position === 'below' ? 'selected' : ''}>below</option>
+                            <option value="left" ${node.position === 'left' ? 'selected' : ''}>left</option>
+                            <option value="right" ${node.position === 'right' ? 'selected' : ''}>right</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Size</span>
+                        <input type="number" class="property-input narrow" id="prop-font-size" value="${node.fontSize || 12}" step="1" min="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Text</span>
+                        <input type="text" class="property-input text-input" id="prop-text" value="${node.text}">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            } else if (state.selection.type === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Node #${node.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Pos</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-x" value="${node.x}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-y" value="${node.y}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Shape</span>
+                        <div class="shape-buttons">
+                            <button class="shape-btn ${node.shape === 'circle' ? 'active' : ''}" data-shape="circle" title="Circle">
+                                <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5"/></svg>
+                            </button>
+                            <button class="shape-btn ${node.shape === 'rectangle' ? 'active' : ''}" data-shape="rectangle" title="Rectangle">
+                                <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1.5" y="3" width="11" height="8" rx="0.5"/></svg>
+                            </button>
+                            <button class="shape-btn ${node.shape === 'ellipse' ? 'active' : ''}" data-shape="ellipse" title="Ellipse">
+                                <svg width="14" height="14" viewBox="0 0 14 14"><ellipse cx="7" cy="7" rx="6" ry="4"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Outline</span>
+                        <input type="number" class="property-input narrow" id="prop-outline" value="${node.outlineWidth}" step="0.1" min="0">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">${node.shape === 'circle' ? 'Pad' : 'Pad X'}</span>
+                        <input type="number" class="property-input narrow" id="prop-padding-x" value="${node.paddingX}" step="0.5" min="0">
+                    </div>
+                    ${node.shape !== 'circle' ? `<div class="property-group">
+                        <span class="property-group-label">Pad Y</span>
+                        <input type="number" class="property-input narrow" id="prop-padding-y" value="${node.paddingY}" step="0.5" min="0">
+                    </div>` : ''}
+                    <div class="property-group">
+                        <span class="property-group-label">Size</span>
+                        <input type="number" class="property-input narrow" id="prop-font-size" value="${node.fontSize || 12}" step="1" min="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Text</span>
+                        <input type="text" class="property-input text-input" id="prop-text" value="${node.text}">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            }
+
+            // Add event listeners
+            setupPropertyBarListeners();
+        }
+
+        function setupPropertyBarListeners() {
+            const inputs = propertyBar.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', updateFromPropertyBar);
+                if (input.type === 'number') {
+                    input.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        const inputId = input.id;
+                        let increment = 1;
+                        if (inputId.includes('x') || inputId.includes('y')) increment = state.gridSize;
+                        else if (inputId.includes('angle')) increment = 10;
+                        else if (inputId.includes('width') || inputId.includes('outline')) increment = 0.1;
+                        else if (inputId.includes('ordering')) increment = 0.3;
+                        else if (inputId.includes('padding')) increment = 0.5;
+                        const currentValue = parseFloat(input.value) || 0;
+                        const delta = e.deltaY > 0 ? -increment : increment;
+                        input.value = Math.round((currentValue + delta) * 1000) / 1000;
+                        updateFromPropertyBar();
+                    }, { passive: false });
+                }
+            });
+
+            // Shape button handlers
+            const shapeButtons = propertyBar.querySelectorAll('.shape-btn');
+            shapeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (!state.selection || state.selection.type !== 'shape') return;
+                    const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                    if (!node) return;
+                    saveState();
+                    node.shape = btn.dataset.shape;
+                    // Re-render property bar to show/hide Pad Y
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                });
+            });
+
+            const deleteBtn = document.getElementById('delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', deleteSelected);
+            }
+        }
+
+        function updateFromPropertyBar() {
+            if (!state.selection) return;
+            saveState();
+
+            if (state.selection.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (!line) return;
+                line.startX = parseFloat(document.getElementById('prop-start-x').value) || 0;
+                line.startY = parseFloat(document.getElementById('prop-start-y').value) || 0;
+                line.endX = parseFloat(document.getElementById('prop-end-x').value) || 0;
+                line.endY = parseFloat(document.getElementById('prop-end-y').value) || 0;
+                line.outAngle = parseFloat(document.getElementById('prop-out-angle').value) || 0;
+                line.inAngle = parseFloat(document.getElementById('prop-in-angle').value) || 0;
+                line.lineWidth = parseFloat(document.getElementById('prop-line-width').value) || 0.8;
+                line.whiteWidth = parseFloat(document.getElementById('prop-white-width').value) || 0;
+                line.ordering = parseFloat(document.getElementById('prop-ordering').value) || 1;
+            } else if (state.selection.type === 'text') {
+                const node = state.textNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                node.x = parseFloat(document.getElementById('prop-x').value) || 0;
+                node.y = parseFloat(document.getElementById('prop-y').value) || 0;
+                node.position = document.getElementById('prop-position').value;
+                node.fontSize = parseFloat(document.getElementById('prop-font-size').value) || 12;
+                node.text = document.getElementById('prop-text').value || 'text';
+            } else if (state.selection.type === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                node.x = parseFloat(document.getElementById('prop-x').value) || 0;
+                node.y = parseFloat(document.getElementById('prop-y').value) || 0;
+                // Shape is handled by button clicks, not here
+                node.outlineWidth = parseFloat(document.getElementById('prop-outline').value) || 0.8;
+                node.paddingX = parseFloat(document.getElementById('prop-padding-x').value) || 4;
+                const padYInput = document.getElementById('prop-padding-y');
+                if (padYInput) node.paddingY = parseFloat(padYInput.value) || 3;
+                node.fontSize = parseFloat(document.getElementById('prop-font-size').value) || 12;
+                node.text = document.getElementById('prop-text').value || 'node';
+            }
+
+            render();
+            updateTikzOutput();
+        }
+
+        function deleteSelected() {
+            if (!state.selection) return;
+            saveState();
+            if (state.selection.type === 'line') {
+                state.lines = state.lines.filter(l => l.id !== state.selection.id);
+            } else if (state.selection.type === 'text') {
+                state.textNodes = state.textNodes.filter(n => n.id !== state.selection.id);
+            } else if (state.selection.type === 'shape') {
+                state.shapeNodes = state.shapeNodes.filter(n => n.id !== state.selection.id);
+            }
+            state.selection = null;
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        // ============== EVENT HANDLERS ==============
+        function handleMouseDown(e) {
+            const screenX = e.clientX;
+            const screenY = e.clientY;
+            const world = screenToWorld(screenX, screenY);
+
+            if (e.button === 1) {
+                e.preventDefault();
+                state.isDragging = true;
+                state.dragType = 'pan';
+                state.dragStartScreen = { x: screenX, y: screenY };
+                return;
+            }
+
+            if (e.button !== 0) return;
+
+            // Add line mode
+            if (state.mode === 'add') {
+                if (state.pendingLineStart) {
+                    const endX = snapToGrid(world.x);
+                    const endY = snapToGrid(world.y);
+                    if (Math.abs(endX - state.pendingLineStart.x) > 0.01 || Math.abs(endY - state.pendingLineStart.y) > 0.01) {
+                        saveState();
+                        state.lines.push(createLine(state.pendingLineStart.x, state.pendingLineStart.y, endX, endY));
+                        updateTikzOutput();
+                    }
+                    state.pendingLineStart = null;
+                    state.previewEnd = null;
+                    pendingIndicator.classList.remove('visible');
+                    render();
+                    return;
+                }
+                state.isDragging = true;
+                state.dragType = 'new-line';
+                state.newLineStart = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                state.dragStartWorld = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                state.dragStartScreen = { x: screenX, y: screenY };
+                return;
+            }
+
+            // Text mode
+            if (state.mode === 'text') {
+                saveState();
+                const node = createTextNode(world.x, world.y);
+                state.textNodes.push(node);
+                state.selection = { type: 'text', id: node.id };
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            // Node mode
+            if (state.mode === 'node') {
+                saveState();
+                const node = createShapeNode(world.x, world.y);
+                state.shapeNodes.push(node);
+                state.selection = { type: 'shape', id: node.id };
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            // Select mode
+            if (state.selection?.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (line) {
+                    const handleHit = hitTestHandle(line, world.x, world.y);
+                    if (handleHit) {
+                        state.isDragging = true;
+                        state.dragType = 'handle-' + handleHit;
+                        state.dragItemId = line.id;
+                        saveState();
+                        return;
+                    }
+                    const endpointHit = hitTestEndpoint(line, world.x, world.y);
+                    if (endpointHit) {
+                        state.isDragging = true;
+                        state.dragType = 'endpoint-' + endpointHit;
+                        state.dragItemId = line.id;
+                        saveState();
+                        return;
+                    }
+                }
+            }
+
+            // Check for dragging text/shape nodes
+            if (state.selection?.type === 'text') {
+                const node = state.textNodes.find(n => n.id === state.selection.id);
+                if (node && hitTestTextNode(node, world.x, world.y)) {
+                    state.isDragging = true;
+                    state.dragType = 'move-node';
+                    state.dragItemId = node.id;
+                    state.dragStartWorld = { x: world.x - node.x, y: world.y - node.y };
+                    saveState();
+                    return;
+                }
+            }
+            if (state.selection?.type === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                if (node && hitTestShapeNode(node, world.x, world.y)) {
+                    state.isDragging = true;
+                    state.dragType = 'move-shape';
+                    state.dragItemId = node.id;
+                    state.dragStartWorld = { x: world.x - node.x, y: world.y - node.y };
+                    saveState();
+                    return;
+                }
+            }
+
+            const hit = findItemAtPoint(world.x, world.y);
+            if (hit) {
+                state.selection = hit;
+                updatePropertyBar();
+                render();
+                return;
+            }
+
+            state.selection = null;
+            updatePropertyBar();
+            render();
+        }
+
+        function handleMouseMove(e) {
+            const screenX = e.clientX;
+            const screenY = e.clientY;
+            const world = screenToWorld(screenX, screenY);
+
+            // Cursor updates
+            if (!state.isDragging) {
+                if (state.mode === 'add' || state.mode === 'text' || state.mode === 'node') {
+                    canvas.style.cursor = 'crosshair';
+                } else {
+                    canvas.style.cursor = 'default';
+                }
+            }
+
+            if (state.pendingLineStart && state.mode === 'add') {
+                state.previewEnd = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                render();
+            }
+
+            if (!state.isDragging) return;
+
+            canvas.style.cursor = 'grabbing';
+
+            if (state.dragType === 'pan') {
+                state.panX += screenX - state.dragStartScreen.x;
+                state.panY += screenY - state.dragStartScreen.y;
+                state.dragStartScreen = { x: screenX, y: screenY };
+                render();
+                return;
+            }
+
+            if (state.dragType === 'new-line') {
+                state.dragStartWorld = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                render();
+                return;
+            }
+
+            if (state.dragType === 'move-node') {
+                const node = state.textNodes.find(n => n.id === state.dragItemId);
+                if (node) {
+                    node.x = snapToGrid(world.x - state.dragStartWorld.x);
+                    node.y = snapToGrid(world.y - state.dragStartWorld.y);
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            if (state.dragType === 'move-shape') {
+                const node = state.shapeNodes.find(n => n.id === state.dragItemId);
+                if (node) {
+                    node.x = snapToGrid(world.x - state.dragStartWorld.x);
+                    node.y = snapToGrid(world.y - state.dragStartWorld.y);
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            const line = state.lines.find(l => l.id === state.dragItemId);
+            if (!line) return;
+
+            if (state.dragType === 'endpoint-start') {
+                line.startX = snapToGrid(world.x);
+                line.startY = snapToGrid(world.y);
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            if (state.dragType === 'endpoint-end') {
+                line.endX = snapToGrid(world.x);
+                line.endY = snapToGrid(world.y);
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            if (state.dragType === 'handle-out' || state.dragType === 'handle-in') {
+                const rect = canvas.getBoundingClientRect();
+                let canvasX = screenX - rect.left;
+                let canvasY = screenY - rect.top;
+
+                // Snap to nearby grid points
+                const snappedWorld = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                const snappedScreen = worldToScreen(snappedWorld.x, snappedWorld.y);
+                const distToGrid = Math.sqrt(Math.pow(canvasX - snappedScreen.x, 2) + Math.pow(canvasY - snappedScreen.y, 2));
+                if (distToGrid < 15) {
+                    canvasX = snappedScreen.x;
+                    canvasY = snappedScreen.y;
+                }
+
+                const endpoint = state.dragType === 'handle-out'
+                    ? worldToScreen(line.startX, line.startY)
+                    : worldToScreen(line.endX, line.endY);
+                const dx = canvasX - endpoint.x;
+                const dy = endpoint.y - canvasY;
+                let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                const snapAngles = [0, 90, 180, -180, -90, 270];
+                for (const snapAngle of snapAngles) {
+                    if (Math.abs(angle - snapAngle) < 5) {
+                        angle = snapAngle === -180 ? 180 : snapAngle;
+                        break;
+                    }
+                }
+                if (state.dragType === 'handle-out') line.outAngle = angle;
+                else line.inAngle = angle;
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+        }
+
+        function handleMouseUp(e) {
+            if (state.dragType === 'new-line' && state.newLineStart) {
+                const world = screenToWorld(e.clientX, e.clientY);
+                const endX = snapToGrid(world.x);
+                const endY = snapToGrid(world.y);
+                const startScreen = worldToScreen(state.newLineStart.x, state.newLineStart.y);
+                const endScreen = worldToScreen(endX, endY);
+                const dragDistance = Math.sqrt(Math.pow(endScreen.x - startScreen.x, 2) + Math.pow(endScreen.y - startScreen.y, 2));
+
+                if (dragDistance < 5) {
+                    state.pendingLineStart = { x: state.newLineStart.x, y: state.newLineStart.y };
+                    pendingIndicator.classList.add('visible');
+                } else if (Math.abs(endX - state.newLineStart.x) > 0.01 || Math.abs(endY - state.newLineStart.y) > 0.01) {
+                    saveState();
+                    state.lines.push(createLine(state.newLineStart.x, state.newLineStart.y, endX, endY));
+                    updateTikzOutput();
+                }
+            }
+
+            state.isDragging = false;
+            state.dragType = null;
+            state.dragItemId = null;
+            state.newLineStart = null;
+
+            if (state.mode === 'add' || state.mode === 'text' || state.mode === 'node') {
+                canvas.style.cursor = 'crosshair';
+            } else {
+                canvas.style.cursor = 'default';
+            }
+            render();
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            const worldBefore = screenToWorld(e.clientX, e.clientY);
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            state.zoom = Math.max(10, Math.min(500, state.zoom * zoomFactor));
+            const worldAfter = screenToWorld(e.clientX, e.clientY);
+            state.panX += (worldAfter.x - worldBefore.x) * state.zoom;
+            state.panY -= (worldAfter.y - worldBefore.y) * state.zoom;
+            render();
+        }
+
+        function handleKeyDown(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if ((e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+                if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); undo(); return; }
+                if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); return; }
+            }
+            if (e.key === 'y' || e.key === 'Y') {
+                if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); redo(); return; }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+                e.preventDefault(); redo(); return;
+            }
+            if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); copyTikzToClipboard(); return;
+            }
+            if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('select'); return;
+            }
+            if ((e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('add'); return;
+            }
+            if ((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('text'); return;
+            }
+            if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('node'); return;
+            }
+            if (e.key === 'Escape') {
+                if (state.pendingLineStart) {
+                    state.pendingLineStart = null;
+                    state.previewEnd = null;
+                    pendingIndicator.classList.remove('visible');
+                    render();
+                    return;
+                }
+                setMode('select');
+                state.selection = null;
+                updatePropertyBar();
+                render();
+                return;
+            }
+            if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'd' || e.key === 'D') {
+                if (state.selection) {
+                    e.preventDefault();
+                    deleteSelected();
+                }
+                return;
+            }
+        }
+
+        // ============== INLINE TEXT EDITING ==============
+        let activeInlineEditor = null;
+
+        function startInlineEdit(node, nodeType) {
+            if (activeInlineEditor) {
+                finishInlineEdit();
+            }
+
+            const screen = worldToScreen(node.x, node.y);
+            const rect = canvas.getBoundingClientRect();
+
+            // Calculate text position with offset (only for text nodes)
+            let textX = screen.x;
+            let textY = screen.y;
+            if (nodeType === 'text' && node.position) {
+                const offset = 12 * state.zoom / 50;
+                if (node.position === 'above') textY -= offset;
+                else if (node.position === 'below') textY += offset;
+                else if (node.position === 'left') textX -= offset;
+                else if (node.position === 'right') textX += offset;
+            }
+
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'inline-editor';
+            input.value = node.text;
+            input.style.left = (rect.left + textX) + 'px';
+            input.style.top = (rect.top + textY) + 'px';
+            input.style.fontSize = fontSize + 'px';
+
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+
+            activeInlineEditor = {
+                input: input,
+                nodeId: node.id,
+                nodeType: nodeType
+            };
+
+            input.addEventListener('blur', finishInlineEdit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    finishInlineEdit();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelInlineEdit();
+                }
+            });
+        }
+
+        function finishInlineEdit() {
+            if (!activeInlineEditor) return;
+
+            const { input, nodeId, nodeType } = activeInlineEditor;
+            const newText = input.value;
+
+            saveState();
+
+            if (nodeType === 'text') {
+                const node = state.textNodes.find(n => n.id === nodeId);
+                if (node) node.text = newText || 'text';
+            } else if (nodeType === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === nodeId);
+                if (node) node.text = newText || 'node';
+            }
+
+            input.removeEventListener('blur', finishInlineEdit);
+            input.remove();
+            activeInlineEditor = null;
+
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        function cancelInlineEdit() {
+            if (!activeInlineEditor) return;
+
+            const { input } = activeInlineEditor;
+            input.removeEventListener('blur', finishInlineEdit);
+            input.remove();
+            activeInlineEditor = null;
+        }
+
+        function handleDoubleClick(e) {
+            if (state.mode !== 'select') return;
+
+            const world = screenToWorld(e.clientX, e.clientY);
+
+            // Check shape nodes first
+            for (let i = state.shapeNodes.length - 1; i >= 0; i--) {
+                const node = state.shapeNodes[i];
+                if (hitTestShapeNode(node, world.x, world.y)) {
+                    state.selection = { type: 'shape', id: node.id };
+                    updatePropertyBar();
+                    render();
+                    startInlineEdit(node, 'shape');
+                    return;
+                }
+            }
+
+            // Check text nodes
+            for (let i = state.textNodes.length - 1; i >= 0; i--) {
+                const node = state.textNodes[i];
+                if (hitTestTextNode(node, world.x, world.y)) {
+                    state.selection = { type: 'text', id: node.id };
+                    updatePropertyBar();
+                    render();
+                    startInlineEdit(node, 'text');
+                    return;
+                }
+            }
+        }
+
+        // ============== MODE SWITCHING ==============
+        function setMode(mode) {
+            state.mode = mode;
+            state.pendingLineStart = null;
+            state.previewEnd = null;
+            pendingIndicator.classList.remove('visible');
+
+            document.getElementById('select-mode-btn').classList.toggle('active', mode === 'select');
+            document.getElementById('add-mode-btn').classList.toggle('active', mode === 'add');
+            document.getElementById('text-mode-btn').classList.toggle('active', mode === 'text');
+            document.getElementById('node-mode-btn').classList.toggle('active', mode === 'node');
+
+            const modeNames = { select: 'Select Mode', add: 'Add Line Mode', text: 'Add Text Mode', node: 'Add Node Mode' };
+            modeIndicator.textContent = modeNames[mode] || 'Select Mode';
+            modeIndicator.classList.toggle('add-mode', mode !== 'select');
+
+            if (mode !== 'select') {
+                state.selection = null;
+                updatePropertyBar();
+            }
+            canvas.style.cursor = mode === 'select' ? 'default' : 'crosshair';
+            render();
+        }
+
+        // ============== INITIALIZATION ==============
+        function init() {
+            resizeCanvas();
+
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('dblclick', handleDoubleClick);
+            canvas.addEventListener('wheel', handleWheel, { passive: false });
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('keydown', handleKeyDown);
+
+            document.getElementById('select-mode-btn').addEventListener('click', () => setMode('select'));
+            document.getElementById('add-mode-btn').addEventListener('click', () => setMode('add'));
+            document.getElementById('text-mode-btn').addEventListener('click', () => setMode('text'));
+            document.getElementById('node-mode-btn').addEventListener('click', () => setMode('node'));
+            document.getElementById('undo-btn').addEventListener('click', undo);
+            document.getElementById('redo-btn').addEventListener('click', redo);
+            const gridInput = document.getElementById('grid-size');
+            const gridValues = [0.125, 0.25, 0.5, 1, 2, 4];
+            gridInput.addEventListener('change', (e) => {
+                let val = parseFloat(e.target.value) || 0.5;
+                // Snap to nearest valid value
+                let closest = gridValues.reduce((a, b) => Math.abs(b - val) < Math.abs(a - val) ? b : a);
+                gridInput.value = closest;
+                state.gridSize = closest;
+                render();
+            });
+            gridInput.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const currentValue = parseFloat(gridInput.value) || 0.5;
+                let currentIndex = gridValues.indexOf(currentValue);
+                if (currentIndex === -1) currentIndex = 2; // default to 0.5
+                const newIndex = e.deltaY > 0
+                    ? Math.max(0, currentIndex - 1)
+                    : Math.min(gridValues.length - 1, currentIndex + 1);
+                gridInput.value = gridValues[newIndex];
+                state.gridSize = gridValues[newIndex];
+                render();
+            }, { passive: false });
+            document.getElementById('copy-btn').addEventListener('click', copyTikzToClipboard);
+
+            updateTikzOutput();
+            render();
+        }
+
+        init();
+    </script>
+</body>
+</html>
