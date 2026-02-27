@@ -175,6 +175,54 @@
             stroke: white;
         }
 
+        /* Toggle buttons for mode indicator */
+        .mode-toggles {
+            position: absolute;
+            top: 20px;
+            left: 140px;
+            display: none;
+            gap: 6px;
+            pointer-events: auto;
+        }
+
+        .mode-toggles.visible {
+            display: flex;
+        }
+
+        .toggle-btn {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--panel-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .toggle-btn:hover {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .toggle-btn.active {
+            background: #6B8874;
+            border-color: #6B8874;
+        }
+
+        .toggle-btn svg {
+            stroke: var(--text-primary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .toggle-btn.active svg {
+            stroke: white;
+        }
+
         /* Inline text editor overlay */
         .inline-editor {
             position: absolute;
@@ -538,6 +586,18 @@
             <div class="canvas-container">
                 <canvas id="canvas"></canvas>
                 <div class="mode-indicator" id="mode-indicator">Select Mode</div>
+                <div class="mode-toggles" id="mode-toggles">
+                    <button id="thickness-toggle" class="toggle-btn" title="Line thickness (0.8pt / 1.6pt)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <line x1="4" y1="12" x2="20" y2="12" stroke-width="2"/>
+                        </svg>
+                    </button>
+                    <button id="white-toggle" class="toggle-btn" title="White backing (0pt / 6pt)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <line x1="4" y1="12" x2="20" y2="12" stroke-width="1.5"/>
+                        </svg>
+                    </button>
+                </div>
                 <div class="pending-indicator" id="pending-indicator">Click to place end point</div>
                 <div class="scale-indicator">
                     <div class="scale-bar" id="scale-bar"></div>
@@ -588,6 +648,10 @@
             // Grid
             gridSize: 0.5,
 
+            // Default line settings
+            defaultLineWidth: 0.8, // 0.8 or 1.6
+            defaultWhiteWidth: 0, // 0 or 6
+
             // Interaction state
             isDragging: false,
             dragType: null,
@@ -613,6 +677,7 @@
         const ctx = canvas.getContext('2d');
         const canvasContainer = document.querySelector('.canvas-container');
         const modeIndicator = document.getElementById('mode-indicator');
+        const modeToggles = document.getElementById('mode-toggles');
         const pendingIndicator = document.getElementById('pending-indicator');
         const scaleBar = document.getElementById('scale-bar');
         const scaleLabel = document.getElementById('scale-label');
@@ -688,8 +753,8 @@
                 endY: snapToGrid(endY),
                 outAngle: angles.outAngle,
                 inAngle: angles.inAngle,
-                lineWidth: 0.8,
-                whiteWidth: 0,
+                lineWidth: state.defaultLineWidth,
+                whiteWidth: state.defaultWhiteWidth,
                 ordering: Math.floor(getMaxOrdering()) + 1
             };
         }
@@ -1972,12 +2037,43 @@
             modeIndicator.textContent = modeNames[mode] || 'Select Mode';
             modeIndicator.classList.toggle('add-mode', mode !== 'select');
 
+            // Show/hide toggle buttons based on mode
+            modeToggles.classList.toggle('visible', mode === 'add');
+
             if (mode !== 'select') {
                 state.selection = null;
                 updatePropertyBar();
             }
             canvas.style.cursor = mode === 'select' ? 'default' : 'crosshair';
             render();
+        }
+
+        // ============== TOGGLE BUTTONS ==============
+        function toggleLineThickness() {
+            state.defaultLineWidth = state.defaultLineWidth === 0.8 ? 1.6 : 0.8;
+            updateToggleButtons();
+        }
+
+        function toggleWhiteWidth() {
+            state.defaultWhiteWidth = state.defaultWhiteWidth === 0 ? 6 : 0;
+            updateToggleButtons();
+        }
+
+        function updateToggleButtons() {
+            const thicknessBtn = document.getElementById('thickness-toggle');
+            const whiteBtn = document.getElementById('white-toggle');
+
+            // Update thickness button
+            thicknessBtn.classList.toggle('active', state.defaultLineWidth === 1.6);
+            thicknessBtn.innerHTML = state.defaultLineWidth === 1.6
+                ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12" stroke-width="4"/></svg>'
+                : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12" stroke-width="2"/></svg>';
+
+            // Update white backing button
+            whiteBtn.classList.toggle('active', state.defaultWhiteWidth === 6);
+            whiteBtn.innerHTML = state.defaultWhiteWidth === 6
+                ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="4" y1="12" x2="20" y2="12" stroke="white" stroke-width="6"/><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5"/></svg>'
+                : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12" stroke-width="1.5"/></svg>';
         }
 
         // ============== INITIALIZATION ==============
@@ -2000,6 +2096,8 @@
             document.getElementById('node-mode-btn').addEventListener('click', () => setMode('node'));
             document.getElementById('undo-btn').addEventListener('click', undo);
             document.getElementById('redo-btn').addEventListener('click', redo);
+            document.getElementById('thickness-toggle').addEventListener('click', toggleLineThickness);
+            document.getElementById('white-toggle').addEventListener('click', toggleWhiteWidth);
             const gridInput = document.getElementById('grid-size');
             const gridValues = [0.125, 0.25, 0.5, 1, 2, 4];
             gridInput.addEventListener('change', (e) => {
