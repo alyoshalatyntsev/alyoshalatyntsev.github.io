@@ -13,17 +13,27 @@
 
         body {
             font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
-            background-color: #ffffff;
             color: #2c2c2c;
             line-height: 1.5;
             padding: 20px 20px;
             font-size: 0.85em;
+            min-height: 100vh;
+        }
+
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: -1;
         }
 
         .container {
             max-width: 680px;
             margin: 0 auto;
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
@@ -220,8 +230,10 @@
     </style>
 </head>
 <body>
+    <canvas id="bg-canvas"></canvas>
+
     <div class="container">
-        <h1><span class="subtitle">Working Group for<br>New Questions around</span>Knizhnik–Zamolodchikov Equations:<br><span class="subtitle"> Representation Theory, Geometry and<br>Applications</span></h1>
+        <h1><span class="subtitle">Working Group On</span>Knizhnik–Zamolodchikov:<br> Representation Theory, Geometry and<br>Applications</h1>
 
         <div class="logistics">
             <p><strong>When:</strong> Fridays, 1:00 PM - 2:30 PM, starting Spring semester (starting 13th March 2026)</p>
@@ -230,7 +242,6 @@
                 Alyosha Latyntsev (<a href="#" class="email-link" data-email="alyoshalatyntsev@gmail.com">alyoshalatyntsev@gmail.com</a>),
                 Xinxing Tang (<a href="#" class="email-link" data-email="tangxinxing@bimsa.cn">tangxinxing@bimsa.cn</a>), Nicolai Reshetikhin 
             </p>
-            <!-- <p class="contact" style="color: #660d1f;"><em>Send a message to <a href="#" class="email-link" data-email="alyoshalatyntsev@gmail.com">alyoshalatyntsev@gmail.com</a> to be added to the mailing list or appropriate wechat group.</em></p> -->
         </div>
 
         <section id="about">
@@ -471,59 +482,165 @@
     </div>
 
     <script>
-        // Dynamically load PDFs from the same directory
-        async function loadPDFs() {
-            // For GitHub Pages, you'll need to manually maintain this list
-            // or use a backend service to list files
-            const pdfs = [
-                'plan.pdf'
-                // Add more PDFs here as you create them
+        // === Pastel strip background generator ===
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = document.documentElement.scrollHeight + 100;
+            }
+
+            // Seeded random for reproducibility per page load
+            let seed = Math.floor(Math.random() * 100000);
+            function seededRandom() {
+                seed = (seed * 16807 + 0) % 2147483647;
+                return (seed - 1) / 2147483646;
+            }
+
+            // Curated pastel colours — opaque, interesting, varied
+            const pastels = [
+                '#F2DEDE', // dusty rose
+                '#F7E8E6', // blush
+                '#E8DDF2', // wisteria
+                '#DDE8F2', // powder blue
+                '#DDF2E8', // seafoam
+                '#F2F0DD', // buttermilk
+                '#F5E6D8', // apricot cream
+                '#DDF2F0', // pale teal
+                '#EEDDF2', // orchid mist
+                '#E6F2DD', // pistachio
+                '#DDDFF2', // periwinkle
+                '#F2E6DD', // warm sand
+                '#DDEEF2', // ice blue
+                '#F2DDEA', // pink lavender
+                '#E4EDDD', // sage
+                '#F2ECE8', // mauve
+                '#DEE6F2', // cornflower haze
+                '#EDE8DB', // oat
             ];
 
+            function randomPastel() {
+                return pastels[Math.floor(seededRandom() * pastels.length)];
+            }
+
+            function draw() {
+                resize();
+                const W = canvas.width;
+                const H = canvas.height;
+
+                // Base: extremely pale warm tone
+                ctx.fillStyle = '#F5F0EB';
+                ctx.fillRect(0, 0, W, H);
+
+                // Number of strips: not too many, ~8-14
+                const numStrips = 8 + Math.floor(seededRandom() * 7);
+
+                // We want vertical democracy: distribute strip centers evenly
+                // Split the page into numStrips vertical zones, place one strip center per zone
+                const zoneHeight = H / numStrips;
+
+                for (let i = 0; i < numStrips; i++) {
+                    // Center Y for this strip: within its zone, with some jitter
+                    const centerY = zoneHeight * i + zoneHeight * (0.2 + seededRandom() * 0.6);
+
+                    // Random angle for the strip direction (in radians)
+                    // General angle is random-ish
+                    const baseAngle = (seededRandom() - 0.5) * Math.PI * 0.8; // -72° to +72°
+
+                    // The two boundary lines: nearly parallel, small divergence
+                    const divergence = (seededRandom() - 0.5) * 0.06; // small angle between boundaries
+
+                    // Strip thickness: thick
+                    const thickness = 250 + seededRandom() * 500; // 250-750px
+
+                    // Colour — opaque
+                    const color = randomPastel();
+
+                    // Draw the strip as a polygon
+                    // Two lines through (centerX, centerY) ± thickness/2 perpendicular to baseAngle
+                    // Each line extends well beyond the canvas
+                    const cos = Math.cos(baseAngle);
+                    const sin = Math.sin(baseAngle);
+                    const perpCos = Math.cos(baseAngle + Math.PI/2);
+                    const perpSin = Math.sin(baseAngle + Math.PI/2);
+
+                    // For slight non-parallelism, rotate the second boundary by divergence
+                    const cos2 = Math.cos(baseAngle + divergence);
+                    const sin2 = Math.sin(baseAngle + divergence);
+
+                    const ext = Math.max(W, H) * 1.5; // extend lines well off-screen
+                    const centerX = W * (0.1 + seededRandom() * 0.8);
+
+                    // Top boundary line: offset by +thickness/2 perpendicular
+                    const tx = centerX + perpCos * thickness / 2;
+                    const ty = centerY + perpSin * thickness / 2;
+
+                    // Bottom boundary line: offset by -thickness/2 perpendicular
+                    const bx = centerX - perpCos * thickness / 2;
+                    const by = centerY - perpSin * thickness / 2;
+
+                    // 4 corners of the strip polygon
+                    const p1x = tx - cos * ext;
+                    const p1y = ty - sin * ext;
+                    const p2x = tx + cos * ext;
+                    const p2y = ty + sin * ext;
+
+                    const p3x = bx + cos2 * ext;
+                    const p3y = by + sin2 * ext;
+                    const p4x = bx - cos2 * ext;
+                    const p4y = by - sin2 * ext;
+
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(p1x, p1y);
+                    ctx.lineTo(p2x, p2y);
+                    ctx.lineTo(p3x, p3y);
+                    ctx.lineTo(p4x, p4y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            // Draw once after layout is complete
+            window.addEventListener('load', draw);
+        })();
+
+        // === Original scripts ===
+        async function loadPDFs() {
+            const pdfs = ['plan.pdf'];
             const pdfList = document.getElementById('pdf-list');
             pdfList.innerHTML = '';
-
             pdfs.forEach(pdf => {
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = pdf;
                 a.target = '_blank';
-
-                // Format the filename nicely
                 const name = pdf.replace('.pdf', '').replace(/-|_/g, ' ');
                 const formatted = name.charAt(0).toUpperCase() + name.slice(1);
-
                 a.textContent = formatted + ' (PDF)';
                 li.appendChild(a);
                 pdfList.appendChild(li);
             });
         }
 
-        // Email copy to clipboard functionality
         function setupEmailCopy() {
             const emailLinks = document.querySelectorAll('.email-link');
             const tooltip = document.createElement('div');
             tooltip.className = 'copy-tooltip';
             tooltip.textContent = 'Copied!';
             document.body.appendChild(tooltip);
-
             emailLinks.forEach(link => {
                 link.addEventListener('click', async (e) => {
                     e.preventDefault();
                     const email = link.getAttribute('data-email');
-
                     try {
                         await navigator.clipboard.writeText(email);
-
-                        // Position and show tooltip near the click
                         tooltip.style.left = e.pageX + 'px';
                         tooltip.style.top = (e.pageY - 40) + 'px';
                         tooltip.classList.add('show');
-
-                        // Hide tooltip after 1.5 seconds
-                        setTimeout(() => {
-                            tooltip.classList.remove('show');
-                        }, 1500);
+                        setTimeout(() => { tooltip.classList.remove('show'); }, 1500);
                     } catch (err) {
                         console.error('Failed to copy email:', err);
                     }
