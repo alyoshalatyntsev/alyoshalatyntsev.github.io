@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topics in Geometric Representation Theory and Enumerative Geometry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+            background-color: #ffffff;
+            color: #2c2c2c;
+            line-height: 1.5;
+            padding: 20px 20px;
+            font-size: 0.85em;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            font-variant: small-caps;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4em;
+            font-weight: normal;
+            border-bottom: 1px solid #2c2c2c;
+            padding-bottom: 0.3em;
+            line-height: 1.3;
+        }
+
+        h1 .subtitle {
+            font-size: 0.55em;
+            display: block;
+            letter-spacing: 0.08em;
+        }
+
+        .logistics {
+            margin-bottom: 1.2em;
+            font-size: 1em;
+            padding: 0.6em 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .logistics p {
+            margin: 0.3em 0;
+        }
+
+        section {
+            margin: 1.2em 0;
+            text-align: left;
+        }
+
+        h2 {
+            font-variant: small-caps;
+            font-size: 1.5em;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.4em;
+            margin-top: 0.2em;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        .description {
+            font-size: 1em;
+            text-align: justify;
+            margin-bottom: 0.8em;
+            text-indent: 2em;
+        }
+
+        .description:first-letter {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .plan-list {
+            text-align: left;
+        }
+
+        .plan-list p {
+            margin: 0.8em 0;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 0.7em 0;
+            padding-left: 2em;
+            position: relative;
+            text-align: justify;
+        }
+
+        li:before {
+            content: "—";
+            position: absolute;
+            left: 0.5em;
+        }
+
+        .notes-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .notes-list li {
+            margin: 0.8em 0;
+            padding-left: 0;
+        }
+
+        .notes-list li:before {
+            content: none;
+        }
+
+        .notes-list a {
+            color: #2c2c2c;
+            text-decoration: none;
+            border-bottom: 1px solid #2c2c2c;
+            padding-bottom: 1px;
+            transition: opacity 0.2s;
+        }
+
+        .notes-list a:hover {
+            opacity: 0.6;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 1em auto;
+            width: 50%;
+        }
+
+        .contact {
+            font-size: 0.95em;
+            margin-top: 0.5em;
+        }
+
+        .contact a {
+            color: #2c2c2c;
+            text-decoration: none;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .contact a:hover {
+            border-bottom-color: #2c2c2c;
+        }
+
+        .email-link {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .copy-tooltip {
+            position: fixed;
+            background-color: #2c2c2c;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+
+        .references-list {
+            list-style-type: none;
+            padding: 0;
+            font-size: 0.9em;
+        }
+
+        .references-list li {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+            text-indent: -1.5em;
+            text-align: left;
+        }
+
+        .references-list li:before {
+            content: none;
+        }
+
+        .references-list a {
+            color: #2c2c2c;
+            text-decoration: none;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .references-list a:hover {
+            border-bottom-color: #2c2c2c;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .subtitle {
+                font-size: 1.1em;
+            }
+
+            body {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Topics in Geometric Representation Theory<br><span class="subtitle">and</span><br>Enumerative Geometry</h1>
+
+        <div class="logistics">
+            <p><strong>When:</strong> Starting April 3, 2027, running through early June 2027</p>
+            <p><strong>Where:</strong> BIMSA/Tsinghua, Shuangqing, and online</p>
+            <p class="contact"><strong>Instructor:</strong>
+                Alyosha Latyntsev (<a href="#" class="email-link" data-email="alyoshalatyntsev@gmail.com">alyoshalatyntsev@gmail.com</a>)
+            </p>
+        </div>
+
+        <section id="about">
+            <p class="description">
+        This is a course overviewing one of mathematics' main attempts in the past two decades at translating results from quantum field theory and string theory into the language of algebraic geometry and representation theory, and what open problems remain.
+            </p>
+        </section>
+
+        <hr>
+
+        <section id="plan">
+            <h2>Course Overview</h2>
+
+            <div class="plan-list">
+                <h3 style="font-variant: small-caps; font-size: 1.2em; letter-spacing: 0.05em; margin-top: 1em; margin-bottom: 0.5em; font-weight: normal;">Part I: Quantum Groups and Stable Envelopes</h3>
+
+                <p>The first half will explain the beautiful story of what an (affine) quantum group is, and how to make them using differential equations or geometry.</p>
+
+                <p>We explain their construction using the Knizhnik–Zamolodchikov (q-)differential equations due to Drinfeld and Kohno, how you can build them from the (singular/K/elliptic) cohomology of certain schemes using the stable envelope construction of Maulik and Okounkov, and solve the KZ equations using quasimaps.</p>
+
+                <h3 style="font-variant: small-caps; font-size: 1.2em; letter-spacing: 0.05em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: normal;">Part II: Enumerative Invariants and Wall-Crossing</h3>
+
+                <p>The second half is about enumerative invariants and wall-crossing, where we explain Gromov–Witten invariants (counting curves) and Donaldson–Thomas invariants (counting stable objects in Calabi-Yau manifolds) and their algebraic structure.</p>
+            </div>
+        </section>
+
+        <hr>
+
+        <section id="schedule">
+            <h2>Schedule</h2>
+
+            <h3 style="font-variant: small-caps; font-size: 1.1em; letter-spacing: 0.05em; margin-top: 1em; margin-bottom: 0.8em; text-align: center; font-weight: normal;">Part I: Quantum Groups and Stable Envelopes</h3>
+
+            <div class="plan-list">
+                <p><strong>April 3, 2027</strong> — A1: The quantum group U<sub>q</sub>(g)</p>
+                <p><strong>April 10, 2027</strong> — B1: Nakajima quiver varieties</p>
+                <p><strong>April 17, 2027</strong> — A2: Knizhnik–Zamolodchikov equations and the Drinfeld–Kohno Theorem</p>
+                <p><strong>April 24, 2027</strong> — B2: Stable envelopes and Yangians</p>
+                <p><strong>May 1, 2027</strong> — A3: qKZ equations and elliptic KZ equations</p>
+                <p><strong>May 8, 2027</strong> — B3: K-theoretic and elliptic stable envelopes. Vertex functions and the construction of solutions to qKZ by quasimaps</p>
+            </div>
+
+            <h3 style="font-variant: small-caps; font-size: 1.1em; letter-spacing: 0.05em; margin-top: 1.5em; margin-bottom: 0.8em; text-align: center; font-weight: normal;">Part II: Enumerative Geometry and Wall-Crossing</h3>
+
+            <div class="plan-list">
+                <p><strong>May 15, 2027</strong> — C1: Virtual classes and torus localisation</p>
+                <p><strong>May 22, 2027</strong> — D1: (Cohomological) Hall algebras and Donaldson–Thomas invariants</p>
+                <p><strong>May 29, 2027</strong> — C2: The topological vertex</p>
+                <p><strong>June 5, 2027</strong> — D2: Kontsevich–Soibelman wall-crossing and Bridgeland scattering invariants</p>
+                <p><strong>June 12, 2027</strong> — C3: Statement of MNOP's GW = DT Theorem</p>
+                <p><strong>June 19, 2027</strong> — D3: Scattering diagrams and tropical geometry</p>
+            </div>
+        </section>
+
+        <hr>
+
+
+        <section id="notes">
+            <h2>Course Materials</h2>
+            <ul class="notes-list" id="pdf-list">
+                <li><a href="syllabus.pdf" target="_blank">Syllabus (PDF)</a></li>
+                <li><a href="notes.pdf" target="_blank">Lecture Notes (PDF)</a></li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <section id="references">
+            <h2>References</h2>
+            <ul class="references-list">
+                <li>[ES] Etingof, P., Schiffmann, O. <i>Lectures on Quantum Groups.</i> International Press (2002).</li>
+
+                <li><a href="https://arxiv.org/abs/1211.1287" target="_blank">[MO] Maulik, D., Okounkov, A. <i>Quantum groups and quantum cohomology.</i> Astérisque (2019).</a></li>
+
+                <li><a href="https://www.math.stonybrook.edu/~nakajima/intro/intro.pdf" target="_blank">[Na] Nakajima, H. <i>Lectures on Hilbert schemes of points on surfaces.</i> AMS (1999).</a></li>
+
+                <li><a href="https://arxiv.org/abs/1512.07363" target="_blank">[Ok] Okounkov, A. <i>Lectures on K-theoretic computations in enumerative geometry.</i> (2015).</a></li>
+
+                <li><a href="https://arxiv.org/abs/hep-th/9912093" target="_blank">[MNOP] Maulik, D., Nekrasov, N., Okounkov, A., Pandharipande, R. <i>Gromov–Witten theory and Donaldson–Thomas theory, I.</i> Compositio Math. (2006).</a></li>
+
+                <li><a href="https://arxiv.org/abs/2402.07343" target="_blank">[KS] Kontsevich, M., Soibelman, Y. <i>Holomorphic Floer theory I.</i> (2024).</a></li>
+
+                <li><a href="https://arxiv.org/abs/math/0212237" target="_blank">[KS2] Kontsevich, M., Soibelman, Y. <i>Stability structures, motivic Donaldson-Thomas invariants and cluster transformations.</i> (2008).</a></li>
+
+                <li><a href="https://arxiv.org/abs/math/0212091" target="_blank">[Br] Bridgeland, T. <i>Stability conditions on triangulated categories.</i> Ann. of Math. (2007).</a></li>
+
+                <li><a href="https://arxiv.org/abs/math/0610129" target="_blank">[HK] Hacking, P., Keel, S. <i>Mirror symmetry and cluster algebras.</i> (2006).</a></li>
+
+                <li><a href="https://arxiv.org/abs/hep-th/9909003" target="_blank">[AKMV] Aganagic, M., Klemm, A., Mariño, M., Vafa, C. <i>The topological vertex.</i> Comm. Math. Phys. (2005).</a></li>
+
+                <li><a href="https://arxiv.org/abs/math/0309208" target="_blank">[GPS] Gross, M., Pandharipande, R., Siebert, B. <i>The tropical vertex.</i> Duke Math. J. (2010).</a></li>
+
+                <li><a href="https://arxiv.org/abs/1111.4977" target="_blank">[BPSS] Bridgeland, T., Pandharipande, R., Stoppa, J., Smith, I. <i>Scattering diagrams and Hall algebras.</i> (2011).</a></li>
+
+                <li><a href="https://arxiv.org/abs/1002.3636" target="_blank">[BZN] Ben-Zvi, D., Nadler, D. <i>Loop spaces and connections.</i> J. Topology (2012).</a></li>
+
+                <li>[Ko] Kohno, T. <i>Conformal field theory and topology.</i> AMS (2002).</li>
+
+                <li><a href="https://arxiv.org/abs/hep-th/9407154" target="_blank">[Dr] Drinfeld, V.G. <i>On quasitriangular quasi-Hopf algebras and a group closely connected with Gal(Q̄/Q).</i> Leningrad Math. J. (1991).</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        // Dynamically load PDFs from the same directory
+        async function loadPDFs() {
+            // For GitHub Pages, you'll need to manually maintain this list
+            // or use a backend service to list files
+            const pdfs = [
+                'syllabus.pdf',
+                'notes.pdf'
+                // Add more PDFs here as you create them
+            ];
+
+            const pdfList = document.getElementById('pdf-list');
+            pdfList.innerHTML = '';
+
+            pdfs.forEach(pdf => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = pdf;
+                a.target = '_blank';
+
+                // Format the filename nicely
+                const name = pdf.replace('.pdf', '').replace(/-|_/g, ' ');
+                const formatted = name.charAt(0).toUpperCase() + name.slice(1);
+
+                a.textContent = formatted + ' (PDF)';
+                li.appendChild(a);
+                pdfList.appendChild(li);
+            });
+        }
+
+        // Email copy to clipboard functionality
+        function setupEmailCopy() {
+            const emailLinks = document.querySelectorAll('.email-link');
+            const tooltip = document.createElement('div');
+            tooltip.className = 'copy-tooltip';
+            tooltip.textContent = 'Copied!';
+            document.body.appendChild(tooltip);
+
+            emailLinks.forEach(link => {
+                link.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const email = link.getAttribute('data-email');
+
+                    try {
+                        await navigator.clipboard.writeText(email);
+
+                        // Position and show tooltip near the click
+                        tooltip.style.left = e.pageX + 'px';
+                        tooltip.style.top = (e.pageY - 40) + 'px';
+                        tooltip.classList.add('show');
+
+                        // Hide tooltip after 1.5 seconds
+                        setTimeout(() => {
+                            tooltip.classList.remove('show');
+                        }, 1500);
+                    } catch (err) {
+                        console.error('Failed to copy email:', err);
+                    }
+                });
+            });
+        }
+
+        loadPDFs();
+        setupEmailCopy();
+    </script>
+</body>
+</html>
