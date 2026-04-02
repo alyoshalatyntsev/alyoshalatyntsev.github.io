@@ -561,6 +561,13 @@
                 Region
                 <span class="keyboard-hint">R</span>
             </button>
+            <button id="circle-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                </svg>
+                Circle
+                <span class="keyboard-hint">O</span>
+            </button>
         </div>
 
         <div class="toolbar-divider"></div>
@@ -642,11 +649,12 @@
             textNodes: [],
             shapeNodes: [],
             regions: [],
+            circles: [],
 
             // Selection - track type and id
-            selection: null, // { type: 'line'|'text'|'shape'|'region', id: number }
+            selection: null, // { type: 'line'|'text'|'shape'|'region'|'circle', id: number }
 
-            mode: 'select', // 'select', 'add', 'text', 'node', 'region'
+            mode: 'select', // 'select', 'add', 'text', 'node', 'region', 'circle'
 
             // Canvas transform
             panX: 0,
@@ -662,7 +670,12 @@
 
             // Default region settings
             defaultRegionLineWidth: 0.8,
+            defaultRegionPattern: 'north west lines',
             defaultRegionPatternColor: 'black!30',
+
+            // Default circle settings
+            defaultCircleLineWidth: 2,
+            defaultCircleColor: 'black',
 
             // Interaction state
             isDragging: false,
@@ -686,7 +699,8 @@
             nextLineId: 1,
             nextTextId: 1,
             nextShapeId: 1,
-            nextRegionId: 1
+            nextRegionId: 1,
+            nextCircleId: 1
         };
 
         // ============== DOM ELEMENTS ==============
@@ -826,8 +840,19 @@
                 id: state.nextRegionId++,
                 points: regionPoints,
                 lineWidth: state.defaultRegionLineWidth,
+                pattern: state.defaultRegionPattern,
                 patternColor: state.defaultRegionPatternColor,
                 ordering: Math.floor(getMaxRegionOrdering()) + 1
+            };
+        }
+
+        function createCircle(x, y) {
+            return {
+                id: state.nextCircleId++,
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                lineWidth: state.defaultCircleLineWidth,
+                color: state.defaultCircleColor
             };
         }
 
@@ -837,7 +862,8 @@
                 lines: state.lines,
                 textNodes: state.textNodes,
                 shapeNodes: state.shapeNodes,
-                regions: state.regions
+                regions: state.regions,
+                circles: state.circles
             }));
             state.redoStack = [];
             if (state.undoStack.length > 100) state.undoStack.shift();
@@ -849,13 +875,15 @@
                 lines: state.lines,
                 textNodes: state.textNodes,
                 shapeNodes: state.shapeNodes,
-                regions: state.regions
+                regions: state.regions,
+                circles: state.circles
             }));
             const saved = JSON.parse(state.undoStack.pop());
             state.lines = saved.lines;
             state.textNodes = saved.textNodes;
             state.shapeNodes = saved.shapeNodes;
             state.regions = saved.regions || [];
+            state.circles = saved.circles || [];
             state.selection = null;
             updatePropertyBar();
             render();
@@ -868,13 +896,15 @@
                 lines: state.lines,
                 textNodes: state.textNodes,
                 shapeNodes: state.shapeNodes,
-                regions: state.regions
+                regions: state.regions,
+                circles: state.circles
             }));
             const saved = JSON.parse(state.redoStack.pop());
             state.lines = saved.lines;
             state.textNodes = saved.textNodes;
             state.shapeNodes = saved.shapeNodes;
             state.regions = saved.regions || [];
+            state.circles = saved.circles || [];
             state.selection = null;
             updatePropertyBar();
             render();
@@ -1142,23 +1172,96 @@
             ctx.fillText(node.text, textX, textY);
         }
 
-        function createDiagonalPattern() {
+        function drawCircle(circle, isSelected) {
+            const screen = worldToScreen(circle.x, circle.y);
+            const radius = 3 * state.zoom / 50; // Small fixed radius
+            const lineWidth = circle.lineWidth * state.zoom / 50;
+
+            // Parse color for display (convert TikZ color to CSS)
+            let displayColor = '#2D2A26'; // default black
+            if (circle.color === 'black') displayColor = '#2D2A26';
+            else if (circle.color === 'white') displayColor = '#FFFFFF';
+            else if (circle.color === 'red') displayColor = '#CC0000';
+            else if (circle.color === 'blue') displayColor = '#0000CC';
+            else if (circle.color === 'green') displayColor = '#00CC00';
+            else if (circle.color.includes('!')) {
+                // Handle color mixing like black!50
+                displayColor = 'rgba(45, 42, 38, 0.5)';
+            }
+
+            // Draw selection highlight first (behind)
+            if (isSelected) {
+                ctx.fillStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, radius + lineWidth / 2 + 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw filled circle
+            ctx.fillStyle = displayColor;
+            ctx.beginPath();
+            ctx.arc(screen.x, screen.y, radius + lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function createPattern(patternType) {
             const patternCanvas = document.createElement('canvas');
             const patternSize = 8;
             patternCanvas.width = patternSize;
             patternCanvas.height = patternSize;
             const pctx = patternCanvas.getContext('2d');
             pctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            pctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             pctx.lineWidth = 1;
-            pctx.beginPath();
-            // Draw diagonal lines (north west pattern)
-            pctx.moveTo(0, patternSize);
-            pctx.lineTo(patternSize, 0);
-            pctx.moveTo(-patternSize/2, patternSize/2);
-            pctx.lineTo(patternSize/2, -patternSize/2);
-            pctx.moveTo(patternSize/2, patternSize + patternSize/2);
-            pctx.lineTo(patternSize + patternSize/2, patternSize/2);
-            pctx.stroke();
+
+            if (patternType === 'north west lines') {
+                pctx.beginPath();
+                pctx.moveTo(0, patternSize);
+                pctx.lineTo(patternSize, 0);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, -patternSize/2);
+                pctx.moveTo(patternSize/2, patternSize + patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                pctx.stroke();
+            } else if (patternType === 'north east lines') {
+                pctx.beginPath();
+                pctx.moveTo(0, 0);
+                pctx.lineTo(patternSize, patternSize);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, patternSize + patternSize/2);
+                pctx.moveTo(patternSize/2, -patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                pctx.stroke();
+            } else if (patternType === 'crosshatch') {
+                pctx.beginPath();
+                // NW lines
+                pctx.moveTo(0, patternSize);
+                pctx.lineTo(patternSize, 0);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, -patternSize/2);
+                pctx.moveTo(patternSize/2, patternSize + patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                // NE lines
+                pctx.moveTo(0, 0);
+                pctx.lineTo(patternSize, patternSize);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, patternSize + patternSize/2);
+                pctx.moveTo(patternSize/2, -patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                pctx.stroke();
+            } else if (patternType === 'dots') {
+                const dotRadius = 1;
+                pctx.beginPath();
+                pctx.arc(patternSize/2, patternSize/2, dotRadius, 0, Math.PI * 2);
+                pctx.fill();
+            } else {
+                // Default to north west lines
+                pctx.beginPath();
+                pctx.moveTo(0, patternSize);
+                pctx.lineTo(patternSize, 0);
+                pctx.stroke();
+            }
+
             return ctx.createPattern(patternCanvas, 'repeat');
         }
 
@@ -1206,15 +1309,17 @@
             }
             ctx.closePath();
 
-            // Fill with diagonal pattern
-            const pattern = createDiagonalPattern();
+            // Fill with pattern based on region.pattern
+            const pattern = createPattern(region.pattern || 'north west lines');
             ctx.fillStyle = pattern;
             ctx.fill();
 
-            // Draw outline
-            ctx.strokeStyle = '#2D2A26';
-            ctx.lineWidth = region.lineWidth * state.zoom / 50;
-            ctx.stroke();
+            // Draw outline (only if lineWidth > 0)
+            if (region.lineWidth > 0) {
+                ctx.strokeStyle = '#2D2A26';
+                ctx.lineWidth = region.lineWidth * state.zoom / 50;
+                ctx.stroke();
+            }
 
             // Draw selection handles
             if (isSelected) {
@@ -1230,17 +1335,19 @@
                 ctx.closePath();
                 ctx.stroke();
 
-                // Redraw outline on top
-                ctx.strokeStyle = '#2D2A26';
-                ctx.lineWidth = region.lineWidth * state.zoom / 50;
-                ctx.beginPath();
-                ctx.moveTo(firstScreen.x, firstScreen.y);
-                for (let i = 0; i < region.points.length; i++) {
-                    const bezier = computeRegionBezierPoints(region, i);
-                    ctx.bezierCurveTo(bezier.cp1.x, bezier.cp1.y, bezier.cp2.x, bezier.cp2.y, bezier.end.x, bezier.end.y);
+                // Redraw outline on top (only if lineWidth > 0)
+                if (region.lineWidth > 0) {
+                    ctx.strokeStyle = '#2D2A26';
+                    ctx.lineWidth = region.lineWidth * state.zoom / 50;
+                    ctx.beginPath();
+                    ctx.moveTo(firstScreen.x, firstScreen.y);
+                    for (let i = 0; i < region.points.length; i++) {
+                        const bezier = computeRegionBezierPoints(region, i);
+                        ctx.bezierCurveTo(bezier.cp1.x, bezier.cp1.y, bezier.cp2.x, bezier.cp2.y, bezier.end.x, bezier.end.y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
                 }
-                ctx.closePath();
-                ctx.stroke();
 
                 // Draw point handles and angle handles for each vertex
                 const handleRadius = 6;
@@ -1385,6 +1492,12 @@
                 drawShapeNode(node, isSelected);
             }
 
+            // Draw circles
+            for (const circle of state.circles) {
+                const isSelected = state.selection?.type === 'circle' && state.selection.id === circle.id;
+                drawCircle(circle, isSelected);
+            }
+
             // Draw pending line start
             if (state.pendingLineStart) {
                 const screen = worldToScreen(state.pendingLineStart.x, state.pendingLineStart.y);
@@ -1435,7 +1548,7 @@
             for (const region of sortedRegions) {
                 if (region.points.length < 3) continue;
                 const options = [
-                    `pattern=north west lines`,
+                    `pattern=${region.pattern || 'north west lines'}`,
                     `pattern color=${region.patternColor}`,
                     `line width=${region.lineWidth.toFixed(1)}pt`
                 ];
@@ -1499,6 +1612,15 @@
                 const fontSize = node.fontSize || 12;
                 if (fontSize !== 12) options.push(`font=\\fontsize{${fontSize}pt}{${fontSize}pt}\\selectfont`);
                 code += `\\node[${options.join(', ')}] at (${x},${y}) {${node.text}};\n`;
+            }
+
+            // Circles
+            for (const circle of state.circles) {
+                const x = circle.x.toFixed(2);
+                const y = circle.y.toFixed(2);
+                const color = circle.color || 'black';
+                const lineWidth = circle.lineWidth || 2;
+                code += `\\fill[${color}] (${x},${y}) circle (${lineWidth.toFixed(1)}pt);\n`;
             }
 
             code += '\\end{tikzpicture}\n\\end{center}';
@@ -1598,6 +1720,15 @@
             }
         }
 
+        function hitTestCircle(circle, worldX, worldY) {
+            const screen = worldToScreen(circle.x, circle.y);
+            const testScreen = worldToScreen(worldX, worldY);
+            const radius = 3 * state.zoom / 50;
+            const lineWidth = circle.lineWidth * state.zoom / 50;
+            const hitRadius = radius + lineWidth / 2 + 5; // Extra margin for easier clicking
+            return Math.sqrt(Math.pow(testScreen.x - screen.x, 2) + Math.pow(testScreen.y - screen.y, 2)) < hitRadius;
+        }
+
         function hitTestRegion(region, worldX, worldY) {
             if (region.points.length < 3) return false;
             const testScreen = worldToScreen(worldX, worldY);
@@ -1674,7 +1805,13 @@
         }
 
         function findItemAtPoint(worldX, worldY) {
-            // Check shape nodes first (on top)
+            // Check circles first (small, on top)
+            for (let i = state.circles.length - 1; i >= 0; i--) {
+                if (hitTestCircle(state.circles[i], worldX, worldY)) {
+                    return { type: 'circle', id: state.circles[i].id };
+                }
+            }
+            // Check shape nodes
             for (let i = state.shapeNodes.length - 1; i >= 0; i--) {
                 if (hitTestShapeNode(state.shapeNodes[i], worldX, worldY)) {
                     return { type: 'shape', id: state.shapeNodes[i].id };
@@ -1853,11 +1990,43 @@
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Pattern</span>
+                        <select class="property-select" id="prop-pattern">
+                            <option value="north west lines" ${(region.pattern || 'north west lines') === 'north west lines' ? 'selected' : ''}>NW Lines</option>
+                            <option value="north east lines" ${region.pattern === 'north east lines' ? 'selected' : ''}>NE Lines</option>
+                            <option value="crosshatch" ${region.pattern === 'crosshatch' ? 'selected' : ''}>Crosshatch</option>
+                            <option value="dots" ${region.pattern === 'dots' ? 'selected' : ''}>Dots</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Color</span>
                         <input type="text" class="property-input" id="prop-pattern-color" value="${region.patternColor}" style="width: 80px;">
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Order</span>
                         <input type="number" class="property-input narrow" id="prop-ordering" value="${region.ordering}" step="0.1">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            } else if (state.selection.type === 'circle') {
+                const circle = state.circles.find(c => c.id === state.selection.id);
+                if (!circle) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Circle #${circle.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Position</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-x" value="${circle.x}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-y" value="${circle.y}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Width</span>
+                        <input type="number" class="property-input narrow" id="prop-line-width" value="${circle.lineWidth}" step="0.1" min="0.1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Color</span>
+                        <input type="text" class="property-input" id="prop-color" value="${circle.color}" style="width: 80px;">
                     </div>
                     <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
                 `;
@@ -1951,8 +2120,16 @@
                 const region = state.regions.find(r => r.id === state.selection.id);
                 if (!region) return;
                 region.lineWidth = parseFloat(document.getElementById('prop-line-width').value) || 0.8;
+                region.pattern = document.getElementById('prop-pattern').value || 'north west lines';
                 region.patternColor = document.getElementById('prop-pattern-color').value || 'black!30';
                 region.ordering = parseFloat(document.getElementById('prop-ordering').value) || 1;
+            } else if (state.selection.type === 'circle') {
+                const circle = state.circles.find(c => c.id === state.selection.id);
+                if (!circle) return;
+                circle.x = parseFloat(document.getElementById('prop-x').value) || 0;
+                circle.y = parseFloat(document.getElementById('prop-y').value) || 0;
+                circle.lineWidth = parseFloat(document.getElementById('prop-line-width').value) || 2;
+                circle.color = document.getElementById('prop-color').value || 'black';
             }
 
             render();
@@ -1970,6 +2147,8 @@
                 state.shapeNodes = state.shapeNodes.filter(n => n.id !== state.selection.id);
             } else if (state.selection.type === 'region') {
                 state.regions = state.regions.filter(r => r.id !== state.selection.id);
+            } else if (state.selection.type === 'circle') {
+                state.circles = state.circles.filter(c => c.id !== state.selection.id);
             }
             state.selection = null;
             updatePropertyBar();
@@ -2070,18 +2249,32 @@
                 return;
             }
 
+            // Circle mode
+            if (state.mode === 'circle') {
+                saveState();
+                const circle = createCircle(world.x, world.y);
+                state.circles.push(circle);
+                state.selection = { type: 'circle', id: circle.id };
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
             // Region mode
             if (state.mode === 'region') {
                 const newX = snapToGrid(world.x);
                 const newY = snapToGrid(world.y);
 
-                // Check if clicking on first point to close (if we have at least 3 points)
-                if (state.pendingRegionPoints.length >= 3) {
-                    const firstP = state.pendingRegionPoints[0];
-                    const dist = Math.sqrt(Math.pow(newX - firstP.x, 2) + Math.pow(newY - firstP.y, 2));
+                // Check if clicking on any existing point
+                for (const p of state.pendingRegionPoints) {
+                    const dist = Math.sqrt(Math.pow(newX - p.x, 2) + Math.pow(newY - p.y, 2));
                     if (dist < state.gridSize * 0.5) {
-                        // Close the region
-                        finishRegion();
+                        // If we have at least 3 points, close the region
+                        if (state.pendingRegionPoints.length >= 3) {
+                            finishRegion();
+                        }
+                        // Either way, don't add a duplicate point
                         return;
                     }
                 }
@@ -2141,6 +2334,17 @@
                     return;
                 }
             }
+            if (state.selection?.type === 'circle') {
+                const circle = state.circles.find(c => c.id === state.selection.id);
+                if (circle && hitTestCircle(circle, world.x, world.y)) {
+                    state.isDragging = true;
+                    state.dragType = 'move-circle';
+                    state.dragItemId = circle.id;
+                    state.dragStartWorld = { x: world.x - circle.x, y: world.y - circle.y };
+                    saveState();
+                    return;
+                }
+            }
 
             // Check for dragging region points or handles
             if (state.selection?.type === 'region') {
@@ -2190,11 +2394,7 @@
 
             // Cursor updates
             if (!state.isDragging) {
-                if (state.mode === 'add' || state.mode === 'text' || state.mode === 'node' || state.mode === 'region') {
-                    canvas.style.cursor = 'crosshair';
-                } else {
-                    canvas.style.cursor = 'default';
-                }
+                canvas.style.cursor = 'default';
             }
 
             if (state.pendingLineStart && state.mode === 'add') {
@@ -2243,6 +2443,18 @@
                 if (node) {
                     node.x = snapToGrid(world.x - state.dragStartWorld.x);
                     node.y = snapToGrid(world.y - state.dragStartWorld.y);
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            if (state.dragType === 'move-circle') {
+                const circle = state.circles.find(c => c.id === state.dragItemId);
+                if (circle) {
+                    circle.x = snapToGrid(world.x - state.dragStartWorld.x);
+                    circle.y = snapToGrid(world.y - state.dragStartWorld.y);
                     updatePropertyBar();
                     render();
                     updateTikzOutput();
@@ -2388,11 +2600,7 @@
             state.dragHandleType = null;
             state.newLineStart = null;
 
-            if (state.mode === 'add' || state.mode === 'text' || state.mode === 'node' || state.mode === 'region') {
-                canvas.style.cursor = 'crosshair';
-            } else {
-                canvas.style.cursor = 'default';
-            }
+            canvas.style.cursor = 'default';
             render();
         }
 
@@ -2437,6 +2645,9 @@
             }
             if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) {
                 e.preventDefault(); setMode('region'); return;
+            }
+            if ((e.key === 'o' || e.key === 'O') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('circle'); return;
             }
             if (e.key === 'Escape') {
                 // Handle pending region - if we have 3+ points, complete; otherwise cancel
@@ -2613,8 +2824,9 @@
             document.getElementById('text-mode-btn').classList.toggle('active', mode === 'text');
             document.getElementById('node-mode-btn').classList.toggle('active', mode === 'node');
             document.getElementById('region-mode-btn').classList.toggle('active', mode === 'region');
+            document.getElementById('circle-mode-btn').classList.toggle('active', mode === 'circle');
 
-            const modeNames = { select: 'Select Mode', add: 'Add Line Mode', text: 'Add Text Mode', node: 'Add Node Mode', region: 'Add Region Mode' };
+            const modeNames = { select: 'Select Mode', add: 'Add Line Mode', text: 'Add Text Mode', node: 'Add Node Mode', region: 'Add Region Mode', circle: 'Add Circle Mode' };
             modeIndicator.textContent = modeNames[mode] || 'Select Mode';
             modeIndicator.classList.toggle('add-mode', mode !== 'select');
 
@@ -2625,7 +2837,7 @@
                 state.selection = null;
                 updatePropertyBar();
             }
-            canvas.style.cursor = mode === 'select' ? 'default' : 'crosshair';
+            canvas.style.cursor = 'default';
             render();
         }
 
@@ -2676,6 +2888,7 @@
             document.getElementById('text-mode-btn').addEventListener('click', () => setMode('text'));
             document.getElementById('node-mode-btn').addEventListener('click', () => setMode('node'));
             document.getElementById('region-mode-btn').addEventListener('click', () => setMode('region'));
+            document.getElementById('circle-mode-btn').addEventListener('click', () => setMode('circle'));
             document.getElementById('undo-btn').addEventListener('click', undo);
             document.getElementById('redo-btn').addEventListener('click', redo);
             document.getElementById('thickness-toggle').addEventListener('click', toggleLineThickness);
