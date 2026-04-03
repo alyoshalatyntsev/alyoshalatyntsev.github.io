@@ -152,6 +152,7 @@ body {
 /* Main Content */
 .main-content {
     overflow: hidden;
+    min-height: 0; /* Important for grid to shrink properly */
 }
 
 /* Map Container */

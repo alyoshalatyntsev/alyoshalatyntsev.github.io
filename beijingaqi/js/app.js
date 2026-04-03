@@ -34,14 +34,21 @@ async function init() {
         timeDisplay: document.getElementById('time-display'),
         aqiDisplay: document.getElementById('aqi-display'),
         predictionList: document.getElementById('prediction-list'),
+        predictionsDropdown: document.getElementById('predictions-dropdown'),
+        predictionsToggle: document.getElementById('predictions-toggle'),
         refreshBtn: document.getElementById('refresh-btn')
     };
 
     // Initialize map
-    initMap('map');
+    const map = initMap('map');
 
     // Initialize chart (with annotation plugin if available)
     initChart('chart');
+
+    // Invalidate map size after a short delay to ensure proper rendering
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
 
     // Set up event listeners
     setupEventListeners();
@@ -76,6 +83,12 @@ function setupEventListeners() {
     // Refresh button
     elements.refreshBtn?.addEventListener('click', () => {
         refreshData();
+    });
+
+    // Predictions toggle button
+    elements.predictionsToggle?.addEventListener('click', () => {
+        elements.predictionsDropdown?.classList.toggle('open');
+        elements.predictionsToggle?.classList.toggle('active');
     });
 }
 

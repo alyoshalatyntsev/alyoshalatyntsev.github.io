@@ -25,12 +25,7 @@ export function initChart(canvasId) {
             },
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 15
-                    }
+                    display: false
                 },
                 tooltip: {
                     callbacks: {
@@ -75,8 +70,10 @@ export function initChart(canvasId) {
                         }
                     },
                     title: {
-                        display: true,
-                        text: 'Time'
+                        display: false
+                    },
+                    ticks: {
+                        display: false
                     },
                     grid: {
                         display: true,
@@ -85,14 +82,26 @@ export function initChart(canvasId) {
                 },
                 y: {
                     title: {
-                        display: true,
-                        text: 'AQI'
+                        display: false
                     },
                     beginAtZero: true,
                     grid: {
                         display: true,
                         color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        }
                     }
+                }
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 5,
+                    bottom: 0
                 }
             }
         }
@@ -155,9 +164,6 @@ export function updateChart(timeSeries, variable, nowTime) {
 
     chart.data.labels = times;
     chart.data.datasets = datasets;
-
-    // Update Y-axis label
-    chart.options.scales.y.title.text = `${VARIABLE_NAMES[variable] || variable} ${VARIABLE_UNITS[variable] ? `(${VARIABLE_UNITS[variable]})` : ''}`;
 
     // Update "now" line annotation
     if (chart.options.plugins.annotation) {
