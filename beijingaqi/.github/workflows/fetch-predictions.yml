@@ -1,0 +1,36 @@
+name: Fetch AQI Predictions
+
+on:
+  # Run every 3 hours
+  schedule:
+    - cron: '0 */3 * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch predictions from Open-Meteo
+        run: node scripts/fetch-predictions.js
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/predictions/
+          git diff --staged --quiet || git commit -m "Update predictions $(date -u +%Y-%m-%dT%H:%M)"
+          git push

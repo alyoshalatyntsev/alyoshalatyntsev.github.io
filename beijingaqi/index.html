@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beijing AQI Visualization</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Chart.js date adapter -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <h1 class="title">Beijing Air Quality</h1>
+
+            <div class="variable-switcher">
+                <button class="variable-btn active" data-variable="us_aqi">AQI</button>
+                <button class="variable-btn" data-variable="pm2_5">PM2.5</button>
+                <button class="variable-btn" data-variable="pm10">PM10</button>
+                <button class="variable-btn" data-variable="nitrogen_dioxide">NO₂</button>
+                <button class="variable-btn" data-variable="sulphur_dioxide">SO₂</button>
+                <button class="variable-btn" data-variable="ozone">O₃</button>
+                <button class="variable-btn" data-variable="relative_humidity_2m">Humidity</button>
+            </div>
+
+            <div class="top-bar-right">
+                <button class="refresh-btn" id="refresh-btn">↻ Refresh</button>
+                <button class="predictions-toggle" id="predictions-toggle">Past Predictions ▼</button>
+            </div>
+        </header>
+
+        <!-- Predictions Dropdown -->
+        <div class="predictions-dropdown" id="predictions-dropdown">
+            <div class="prediction-list" id="prediction-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Main Content - Map Only -->
+        <main class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+        </main>
+
+        <!-- Bottom Section: Chart + Slider -->
+        <footer class="bottom-section">
+            <!-- Chart aligned with slider -->
+            <div class="bottom-chart-wrapper">
+                <div class="chart-label">
+                    <span>Beijing AQI</span>
+                </div>
+                <div class="chart-area">
+                    <canvas id="chart"></canvas>
+                </div>
+                <div class="time-info">
+                    <span id="time-display">Loading...</span>
+                    <div class="aqi-badge">
+                        <label>AQI:</label>
+                        <span id="aqi-display">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Slider -->
+            <div class="bottom-slider-wrapper">
+                <div class="slider-label"></div>
+                <div class="slider-area">
+                    <div class="slider-track-container">
+                        <div class="slider-track" id="slider-track">
+                            <!-- AQI-colored segments will be added by JS -->
+                        </div>
+                        <div class="day-markers" id="day-markers">
+                            <!-- Day markers will be added by JS -->
+                        </div>
+                        <input type="range" id="time-slider" min="0" max="288" value="168">
+                    </div>
+                </div>
+                <div class="slider-info"></div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-text">Loading air quality data...</p>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
