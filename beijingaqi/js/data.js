@@ -52,6 +52,19 @@ function mergeLocationData(aqData, weatherData) {
     // Calculate AQI from PM2.5 using EPA formula (Open-Meteo's us_aqi is buggy)
     const calculatedAQI = aqData.hourly.pm2_5.map(pm25 => calculateAQI(pm25));
 
+    // Debug: log sample values for Beijing area
+    if (Math.abs(aqData.latitude - 40) < 0.5 && Math.abs(aqData.longitude - 116.5) < 0.5) {
+        const now = new Date();
+        const times = aqData.hourly.time;
+        const nowIdx = times.findIndex(t => new Date(t) > now) - 1;
+        if (nowIdx >= 0) {
+            console.log(`Beijing area (${aqData.latitude}, ${aqData.longitude}) current values:`);
+            console.log(`  PM2.5: ${aqData.hourly.pm2_5[nowIdx]} μg/m³`);
+            console.log(`  Calculated AQI: ${calculatedAQI[nowIdx]}`);
+            console.log(`  Open-Meteo us_aqi: ${aqData.hourly.us_aqi[nowIdx]}`);
+        }
+    }
+
     return {
         lat: aqData.latitude,
         lon: aqData.longitude,
