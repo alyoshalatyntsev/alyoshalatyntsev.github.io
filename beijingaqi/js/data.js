@@ -1,6 +1,72 @@
 // Beijing AQI Visualization - Data Fetching Layer
 
-import { GRID_POINTS, API_CONFIG, BEIJING_CENTER_GRID, calculateAQI } from './config.js';
+import { GRID_POINTS, API_CONFIG, BEIJING_CENTER_GRID, BEIJING_CENTER, calculateAQI } from './config.js';
+
+// Fetch Beijing AQI from WAQI (ground station data)
+export async function fetchWAQIBeijing() {
+    try {
+        const response = await fetch(
+            `${API_CONFIG.waqiBase}/feed/beijing/?token=${API_CONFIG.waqiToken}`
+        );
+        if (!response.ok) throw new Error(`WAQI API error: ${response.status}`);
+        const data = await response.json();
+
+        if (data.status !== 'ok') {
+            console.warn('WAQI API returned error:', data.data);
+            return null;
+        }
+
+        console.log('WAQI Beijing data:', data.data);
+        return data.data;
+    } catch (e) {
+        console.error('Failed to fetch WAQI data:', e);
+        return null;
+    }
+}
+
+// Convert WAQI data to our time series format
+export function convertWAQIToTimeSeries(waqiData) {
+    if (!waqiData) return null;
+
+    const now = new Date();
+    const times = [];
+    const aqiValues = [];
+    const pm25Values = [];
+
+    // Current reading
+    const currentAQI = waqiData.aqi;
+    const currentPM25 = waqiData.iaqi?.pm25?.v || null;
+
+    // Add current time
+    times.push(now.toISOString());
+    aqiValues.push(currentAQI);
+    pm25Values.push(currentPM25);
+
+    // Add forecast data if available
+    if (waqiData.forecast?.daily?.pm25) {
+        waqiData.forecast.daily.pm25.forEach(day => {
+            // Use avg value, create entry for noon of that day
+            const date = new Date(day.day + 'T12:00:00');
+            if (date > now) {
+                times.push(date.toISOString());
+                // Calculate AQI from PM2.5 avg
+                aqiValues.push(calculateAQI(day.avg));
+                pm25Values.push(day.avg);
+            }
+        });
+    }
+
+    console.log('WAQI time series:', { times: times.length, currentAQI, currentPM25 });
+
+    return {
+        time: times,
+        us_aqi: aqiValues,
+        pm2_5: pm25Values,
+        source: 'waqi',
+        station: waqiData.city?.name || 'Beijing',
+        lastUpdate: waqiData.time?.iso || now.toISOString()
+    };
+}
 
 // Chunk array into batches
 function chunkArray(array, size) {

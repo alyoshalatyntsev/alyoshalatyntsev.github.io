@@ -198,6 +198,10 @@ export const VARIABLE_UNITS = {
 export const API_CONFIG = {
     airQualityBase: 'https://air-quality-api.open-meteo.com/v1/air-quality',
     weatherBase: 'https://api.open-meteo.com/v1/forecast',
+    // WAQI API for accurate ground station readings
+    // Get free token at: https://aqicn.org/data-platform/token/
+    waqiBase: 'https://api.waqi.info',
+    waqiToken: 'demo', // Replace with your token for production
     pastDays: 7,
     forecastDays: 5,
     batchSize: 50 // Max coordinates per API request

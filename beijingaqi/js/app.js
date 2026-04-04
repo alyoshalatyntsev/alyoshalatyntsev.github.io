@@ -1,13 +1,14 @@
 // Beijing AQI Visualization - Main Application
 
 import { BEIJING_CENTER_GRID, VARIABLE_NAMES, getColorForValue, COLOR_SCALES } from './config.js';
-import { fetchAllData, loadPredictionIndex, loadPredictionFile, getDataAtTime, getBeijingTimeSeries, findTimeIndex, getTimeRange } from './data.js';
+import { fetchAllData, loadPredictionIndex, loadPredictionFile, getDataAtTime, getBeijingTimeSeries, findTimeIndex, getTimeRange, fetchWAQIBeijing, convertWAQIToTimeSeries } from './data.js';
 import { initMap, updateDataLayer, updateWindLayer, addLegend } from './map.js';
 import { initChart, updateChart, addPastPrediction, removePastPrediction, clearPastPredictions, highlightTime } from './chart.js';
 
 // Application state
 let state = {
     currentData: null,
+    waqiData: null, // Ground station data from WAQI
     currentVariable: 'us_aqi',
     currentTimeIndex: 0,
     timeRange: null,
@@ -178,14 +179,24 @@ async function togglePrediction(filename, btn) {
     }
 }
 
-// Refresh data from Open-Meteo API
+// Refresh data from APIs
 async function refreshData() {
     showLoading('Fetching air quality data...');
 
     try {
+        // Fetch WAQI ground station data for Beijing (accurate readings)
+        updateLoadingText('Fetching Beijing ground station data...');
+        const waqiRaw = await fetchWAQIBeijing();
+        state.waqiData = convertWAQIToTimeSeries(waqiRaw);
+
+        if (state.waqiData) {
+            console.log('WAQI Beijing AQI:', state.waqiData.us_aqi[0], 'from station:', state.waqiData.station);
+        }
+
+        // Fetch Open-Meteo data for spatial grid visualization
         state.currentData = await fetchAllData((completed, total) => {
             const percent = Math.round((completed / total) * 100);
-            updateLoadingText(`Fetching data: ${percent}% (${completed}/${total} points)`);
+            updateLoadingText(`Fetching grid data: ${percent}% (${completed}/${total} points)`);
         });
 
         // Update time range
@@ -203,9 +214,15 @@ async function refreshData() {
         // Update visualization
         updateVisualization();
 
-        // Update chart and slider track
-        const timeSeries = getBeijingTimeSeries(state.currentData);
-        console.log('Time series for chart:', timeSeries ? 'found' : 'NOT FOUND');
+        // Update chart with WAQI data (ground station) if available, else use Open-Meteo
+        let timeSeries = state.waqiData;
+        if (!timeSeries) {
+            timeSeries = getBeijingTimeSeries(state.currentData);
+            console.log('Using Open-Meteo for chart (WAQI unavailable)');
+        } else {
+            console.log('Using WAQI ground station data for chart');
+        }
+
         if (timeSeries) {
             console.log('Time series length:', timeSeries.time?.length, 'AQI sample:', timeSeries.us_aqi?.slice(0, 5));
             buildSliderTrack(timeSeries);
@@ -240,18 +257,36 @@ function updateVisualization() {
     const currentTime = new Date(times[state.currentTimeIndex]);
     elements.timeDisplay.textContent = currentTime.toLocaleString();
 
-    // Update AQI display (for Beijing center)
-    const beijingPoint = pointData.find(p =>
-        Math.abs(p.lat - BEIJING_CENTER_GRID.lat) < 0.01 &&
-        Math.abs(p.lon - BEIJING_CENTER_GRID.lon) < 0.01
-    );
+    // Update AQI display - use WAQI for current time if available
+    let aqi = null;
 
-    if (beijingPoint) {
-        const aqi = beijingPoint.us_aqi;
+    // Check if we're viewing current time (within 1 hour of now)
+    const now = new Date();
+    const isCurrentTime = Math.abs(currentTime.getTime() - now.getTime()) < 3600000;
+
+    if (isCurrentTime && state.waqiData && state.waqiData.us_aqi[0]) {
+        // Use WAQI ground station reading for current time
+        aqi = state.waqiData.us_aqi[0];
+        console.log('Using WAQI AQI:', aqi);
+    } else {
+        // Use Open-Meteo data for other times
+        const beijingPoint = pointData.find(p =>
+            Math.abs(p.lat - BEIJING_CENTER_GRID.lat) < 0.25 &&
+            Math.abs(p.lon - BEIJING_CENTER_GRID.lon) < 0.25
+        );
+        if (beijingPoint) {
+            aqi = beijingPoint.us_aqi;
+        }
+    }
+
+    if (aqi !== null) {
         const color = getColorForValue('us_aqi', aqi);
-        elements.aqiDisplay.textContent = aqi !== null ? Math.round(aqi) : '--';
+        elements.aqiDisplay.textContent = Math.round(aqi);
         elements.aqiDisplay.style.backgroundColor = color;
         elements.aqiDisplay.style.color = aqi > 150 ? '#fff' : '#000';
+    } else {
+        elements.aqiDisplay.textContent = '--';
+        elements.aqiDisplay.style.backgroundColor = '#ccc';
     }
 
     // Highlight time on chart
