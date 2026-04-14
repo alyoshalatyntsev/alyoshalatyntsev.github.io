@@ -23,7 +23,7 @@
     <div class="app-container">
         <!-- Top Bar -->
         <header class="top-bar">
-            <h1 class="title">Beijing Air Quality (test 3)</h1>
+            <h1 class="title">Beijing Air Quality (test 4)</h1>
 
             <div class="variable-switcher">
                 <button class="variable-btn active" data-variable="us_aqi">AQI</button>
@@ -57,36 +57,24 @@
 
         <!-- Bottom Section: Chart + Slider -->
         <footer class="bottom-section">
-            <!-- Chart aligned with slider -->
-            <div class="bottom-chart-wrapper">
-                <div class="chart-label">
-                    <span>Beijing AQI</span>
-                </div>
+            <!-- Chart with day labels -->
+            <div class="chart-row">
                 <div class="chart-area">
                     <canvas id="chart"></canvas>
                 </div>
                 <div class="time-info">
                     <span id="time-display">Loading...</span>
-                    <div class="aqi-badge">
-                        <label>AQI:</label>
-                        <span id="aqi-display">--</span>
-                    </div>
+                    <span id="aqi-display">--</span>
                 </div>
             </div>
 
-            <!-- Time Slider -->
-            <div class="bottom-slider-wrapper">
-                <div class="slider-label"></div>
-                <div class="slider-area">
-                    <div class="slider-track-container">
-                        <div class="slider-track" id="slider-track">
-                            <!-- AQI-colored segments will be added by JS -->
-                        </div>
-                        <div class="day-markers" id="day-markers">
-                            <!-- Day markers will be added by JS -->
-                        </div>
-                        <input type="range" id="time-slider" min="0" max="288" value="168">
+            <!-- AQI-colored slider -->
+            <div class="slider-row">
+                <div class="slider-track-container">
+                    <div class="slider-track" id="slider-track">
+                        <!-- AQI-colored segments added by JS -->
                     </div>
+                    <input type="range" id="time-slider" min="0" max="288" value="168">
                 </div>
                 <div class="slider-info"></div>
             </div>

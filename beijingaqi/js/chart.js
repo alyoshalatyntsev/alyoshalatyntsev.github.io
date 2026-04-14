@@ -65,19 +65,22 @@ export function initChart(canvasId) {
                     time: {
                         unit: 'day',
                         displayFormats: {
-                            hour: 'MMM d, HH:mm',
-                            day: 'MMM d'
+                            day: 'EEE'  // Mon, Tue, Wed...
                         }
                     },
                     title: {
                         display: false
                     },
                     ticks: {
-                        display: false
+                        display: true,
+                        font: { size: 10 },
+                        color: '#666',
+                        maxRotation: 0
                     },
                     grid: {
                         display: true,
-                        color: 'rgba(0, 0, 0, 0.1)'
+                        color: 'rgba(0, 0, 0, 0.15)',
+                        lineWidth: 1
                     }
                 },
                 y: {
@@ -86,8 +89,7 @@ export function initChart(canvasId) {
                     },
                     beginAtZero: true,
                     grid: {
-                        display: true,
-                        color: 'rgba(0, 0, 0, 0.1)'
+                        display: false
                     },
                     ticks: {
                         display: false
@@ -98,7 +100,7 @@ export function initChart(canvasId) {
                 padding: {
                     left: 0,
                     right: 0,
-                    top: 5,
+                    top: 0,
                     bottom: 0
                 }
             }

@@ -31,7 +31,6 @@ async function init() {
         variableButtons: document.querySelectorAll('.variable-btn'),
         timeSlider: document.getElementById('time-slider'),
         sliderTrack: document.getElementById('slider-track'),
-        dayMarkers: document.getElementById('day-markers'),
         timeDisplay: document.getElementById('time-display'),
         aqiDisplay: document.getElementById('aqi-display'),
         predictionList: document.getElementById('prediction-list'),
@@ -288,16 +287,15 @@ function updateVisualization() {
     highlightTime(currentTime);
 }
 
-// Build the slider track with AQI-colored segments and day markers
+// Build the slider track with AQI-colored segments
 function buildSliderTrack(timeSeries) {
-    if (!elements.sliderTrack || !elements.dayMarkers || !timeSeries) return;
+    if (!elements.sliderTrack || !timeSeries) return;
 
     const times = timeSeries.time;
     const aqiValues = timeSeries.us_aqi;
 
     // Clear existing content
     elements.sliderTrack.innerHTML = '';
-    elements.dayMarkers.innerHTML = '';
 
     // Build colored segments for each hour
     times.forEach((timeStr, i) => {
@@ -310,88 +308,6 @@ function buildSliderTrack(timeSeries) {
         segment.title = `${new Date(timeStr).toLocaleString()}: AQI ${aqi !== null ? Math.round(aqi) : 'N/A'}`;
         elements.sliderTrack.appendChild(segment);
     });
-
-    // Find day boundaries and collect day info for center labels
-    let currentDay = null;
-    const nowIndex = findTimeIndex(state.currentData, new Date());
-    const dayBlocks = []; // { startIndex, dayOfWeek }
-
-    times.forEach((timeStr, i) => {
-        const date = new Date(timeStr);
-        const day = date.toDateString();
-        const hour = date.getHours();
-
-        // Add day marker at midnight (hour 0) or first entry of new day
-        if (day !== currentDay && (hour === 0 || currentDay === null)) {
-            // Record the end of the previous day block
-            if (dayBlocks.length > 0) {
-                dayBlocks[dayBlocks.length - 1].endIndex = i - 1;
-            }
-
-            currentDay = day;
-            const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
-            dayBlocks.push({
-                startIndex: i,
-                dayOfWeek: dayNames[date.getDay()],
-                date: date
-            });
-
-            const percent = (i / (times.length - 1)) * 100;
-
-            const marker = document.createElement('div');
-            marker.className = 'day-marker';
-            marker.style.left = `${percent}%`;
-
-            const line = document.createElement('div');
-            line.className = 'day-marker-line';
-
-            const label = document.createElement('div');
-            label.className = 'day-marker-label';
-            label.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-            marker.appendChild(label);
-            marker.appendChild(line);
-            elements.dayMarkers.appendChild(marker);
-        }
-    });
-
-    // Set the end index for the last day block
-    if (dayBlocks.length > 0) {
-        dayBlocks[dayBlocks.length - 1].endIndex = times.length - 1;
-    }
-
-    // Add day-of-week labels in the center of each day block
-    dayBlocks.forEach(block => {
-        const centerIndex = (block.startIndex + block.endIndex) / 2;
-        const centerPercent = (centerIndex / (times.length - 1)) * 100;
-
-        const dowLabel = document.createElement('div');
-        dowLabel.className = 'day-of-week-label';
-        dowLabel.style.left = `${centerPercent}%`;
-        dowLabel.style.transform = 'translateX(-50%)';
-        dowLabel.textContent = block.dayOfWeek;
-        elements.dayMarkers.appendChild(dowLabel);
-    });
-
-    // Add "Now" marker
-    if (nowIndex >= 0 && nowIndex < times.length) {
-        const nowPercent = (nowIndex / (times.length - 1)) * 100;
-
-        const nowMarker = document.createElement('div');
-        nowMarker.className = 'now-marker';
-        nowMarker.style.left = `${nowPercent}%`;
-
-        const nowLine = document.createElement('div');
-        nowLine.className = 'now-marker-line';
-
-        const nowLabel = document.createElement('div');
-        nowLabel.className = 'now-marker-label';
-        nowLabel.textContent = 'NOW';
-
-        nowMarker.appendChild(nowLabel);
-        nowMarker.appendChild(nowLine);
-        elements.dayMarkers.appendChild(nowMarker);
-    }
 }
 
 // Show loading overlay
