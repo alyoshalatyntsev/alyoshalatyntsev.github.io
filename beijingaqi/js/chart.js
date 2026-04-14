@@ -90,9 +90,7 @@ export function initChart(canvasId) {
                         color: 'rgba(0, 0, 0, 0.1)'
                     },
                     ticks: {
-                        font: {
-                            size: 10
-                        }
+                        display: false
                     }
                 }
             },
