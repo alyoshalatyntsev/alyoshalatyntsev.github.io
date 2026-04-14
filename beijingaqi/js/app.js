@@ -214,14 +214,9 @@ async function refreshData() {
         // Update visualization
         updateVisualization();
 
-        // Update chart with WAQI data (ground station) if available, else use Open-Meteo
-        let timeSeries = state.waqiData;
-        if (!timeSeries) {
-            timeSeries = getBeijingTimeSeries(state.currentData);
-            console.log('Using Open-Meteo for chart (WAQI unavailable)');
-        } else {
-            console.log('Using WAQI ground station data for chart');
-        }
+        // Always use Open-Meteo for chart/slider (full hourly data)
+        // WAQI only used for current AQI badge (more accurate current reading)
+        const timeSeries = getBeijingTimeSeries(state.currentData);
 
         if (timeSeries) {
             console.log('Time series length:', timeSeries.time?.length, 'AQI sample:', timeSeries.us_aqi?.slice(0, 5));
