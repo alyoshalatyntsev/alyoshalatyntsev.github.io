@@ -190,6 +190,25 @@
             display: flex;
         }
 
+        .region-toggles {
+            position: absolute;
+            top: 20px;
+            left: 160px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .region-toggles.visible {
+            display: flex;
+        }
+
+        /* Boundary toggle - dashed when OFF */
+        .toggle-btn-wide .boundary-rect.off {
+            stroke-dasharray: 3 2;
+        }
+
         .select-actions {
             position: absolute;
             top: 20px;
@@ -431,7 +450,7 @@
         .pending-indicator {
             position: absolute;
             top: 20px;
-            left: 140px;
+            left: 450px;
             padding: 6px 12px;
             background: #E8F0EA;
             border: 1px solid var(--accent);
@@ -835,6 +854,23 @@
                         <span class="toggle-text" id="passover-text">Pass over OFF</span>
                     </button>
                 </div>
+                <div class="region-toggles" id="region-toggles">
+                    <span class="toggle-label">Toggle:</span>
+                    <button id="pattern-toggle" class="toggle-btn-wide" title="Cycle pattern">
+                        <svg width="24" height="16" viewBox="0 0 24 16" fill="none">
+                            <line x1="2" y1="14" x2="10" y2="2" stroke="#2D2A26" stroke-width="1"/>
+                            <line x1="8" y1="14" x2="16" y2="2" stroke="#2D2A26" stroke-width="1"/>
+                            <line x1="14" y1="14" x2="22" y2="2" stroke="#2D2A26" stroke-width="1"/>
+                        </svg>
+                        <span class="toggle-text" id="pattern-text">NW lines</span>
+                    </button>
+                    <button id="boundary-toggle" class="toggle-btn-wide" title="Region boundary (0pt / 0.8pt)">
+                        <svg width="28" height="16" viewBox="0 0 28 16" fill="none">
+                            <rect class="boundary-rect" x="2" y="2" width="24" height="12" stroke="#2D2A26" stroke-width="1.5" fill="none" rx="2"/>
+                        </svg>
+                        <span class="toggle-text" id="boundary-text">Boundary ON</span>
+                    </button>
+                </div>
                 <div class="pending-indicator" id="pending-indicator">Click to place end point</div>
                 <div class="scale-indicator">
                     <div class="scale-bar" id="scale-bar"></div>
@@ -959,6 +995,7 @@
         const canvasContainer = document.querySelector('.canvas-container');
         const modeIndicator = document.getElementById('mode-indicator');
         const modeToggles = document.getElementById('mode-toggles');
+        const regionToggles = document.getElementById('region-toggles');
         const selectActions = document.getElementById('select-actions');
         const copyActionBtn = document.getElementById('copy-action');
         const pasteActionBtn = document.getElementById('paste-action');
@@ -1595,7 +1632,7 @@
                 pctx.moveTo(patternSize/2, -patternSize/2);
                 pctx.lineTo(patternSize + patternSize/2, patternSize/2);
                 pctx.stroke();
-            } else if (patternType === 'dots') {
+            } else if (patternType === 'crosshatch dots') {
                 const dotRadius = 1;
                 pctx.beginPath();
                 pctx.arc(patternSize/2, patternSize/2, dotRadius, 0, Math.PI * 2);
@@ -1895,9 +1932,13 @@
                 if (region.points.length < 3) continue;
                 const options = [
                     `pattern=${region.pattern || 'north west lines'}`,
-                    `pattern color=${region.patternColor}`,
-                    `line width=${region.lineWidth.toFixed(1)}pt`
+                    `pattern color=${region.patternColor}`
                 ];
+                // Only add line width and use \filldraw if lineWidth > 0
+                const useFilldraw = region.lineWidth > 0;
+                if (useFilldraw) {
+                    options.push(`line width=${region.lineWidth.toFixed(1)}pt`);
+                }
                 let path = '';
                 for (let i = 0; i < region.points.length; i++) {
                     const p = region.points[i];
@@ -1913,7 +1954,8 @@
                     const nextY = nextP.y.toFixed(2);
                     path += ` to[out=${outA}, in=${inA}] (${nextX},${nextY})`;
                 }
-                code += `\\filldraw[${options.join(', ')}]\n  ${path};\n`;
+                const cmd = useFilldraw ? '\\filldraw' : '\\fill';
+                code += `${cmd}[${options.join(', ')}]\n  ${path};\n`;
             }
 
             // Lines
@@ -2254,22 +2296,30 @@
                     }
                 }
 
-                // Try parsing as \filldraw[...] for regions (polygons with pattern)
+                // Try parsing as \filldraw[...] or \fill[pattern=...] for regions (polygons with pattern)
                 if (!parsed) {
-                    // Match with or without [...] options
-                    const filldrawMatch = cmd.match(/\\filldraw\s*(?:\[(.*?)\])?\s*([\s\S]*)/i);
-                    if (filldrawMatch && filldrawMatch[2]) {
-                        const opts = filldrawMatch[1] || '';
-                        const pathStr = filldrawMatch[2];
+                    // Match \fill or \filldraw with or without [...] options
+                    const filldrawMatch = cmd.match(/\\(fill|filldraw)\s*(?:\[(.*?)\])?\s*([\s\S]*)/i);
+                    if (filldrawMatch && filldrawMatch[3]) {
+                        const cmdType = filldrawMatch[1].toLowerCase(); // 'fill' or 'filldraw'
+                        const opts = filldrawMatch[2] || '';
+                        const pathStr = filldrawMatch[3];
 
-                        // Parse pattern options (with sensible defaults)
+                        // Parse pattern options
                         const patternMatch = opts.match(/pattern\s*=\s*([^,\]]+)/i);
                         const patternColorMatch = opts.match(/pattern\s*color\s*=\s*([^,\]]+)/i);
                         const lineWidthMatch = opts.match(/line\s*width\s*=\s*([\d.]+)/i);
 
-                        const pattern = patternMatch ? patternMatch[1].trim() : 'north west lines';
-                        const patternColor = patternColorMatch ? patternColorMatch[1].trim() : 'black!30';
-                        const lineWidth = lineWidthMatch ? parseFloat(lineWidthMatch[1]) : 0.8;
+                        // Only treat \fill as a region if it has a pattern (otherwise it's something else)
+                        // \filldraw is always treated as a region
+                        if (cmdType === 'fill' && !patternMatch) {
+                            // Skip - this is not a region (could be solid fill, etc.)
+                        } else {
+                            const pattern = patternMatch ? patternMatch[1].trim() : 'north west lines';
+                            const patternColor = patternColorMatch ? patternColorMatch[1].trim() : 'black!30';
+                            // If it's \fill (not \filldraw), default lineWidth to 0
+                            const defaultLineWidth = cmdType === 'fill' ? 0 : 0.8;
+                            const lineWidth = lineWidthMatch ? parseFloat(lineWidthMatch[1]) : defaultLineWidth;
 
                         // Parse path points - handle both to[...] and -- syntax
                         // Match (x,y) followed by optional to[...] or --
@@ -2361,6 +2411,7 @@
                                 });
                                 parsed = true;
                             }
+                        }
                         }
                     }
                 }
@@ -2801,7 +2852,7 @@
                             <option value="north west lines" ${(region.pattern || 'north west lines') === 'north west lines' ? 'selected' : ''}>NW Lines</option>
                             <option value="north east lines" ${region.pattern === 'north east lines' ? 'selected' : ''}>NE Lines</option>
                             <option value="crosshatch" ${region.pattern === 'crosshatch' ? 'selected' : ''}>Crosshatch</option>
-                            <option value="dots" ${region.pattern === 'dots' ? 'selected' : ''}>Dots</option>
+                            <option value="crosshatch dots" ${region.pattern === 'crosshatch dots' ? 'selected' : ''}>Crosshatch dots</option>
                         </select>
                     </div>
                     <div class="property-group">
@@ -2859,7 +2910,16 @@
                         else if (inputId.includes('padding')) increment = 0.5;
                         const currentValue = parseFloat(input.value) || 0;
                         const delta = e.deltaY > 0 ? -increment : increment;
-                        input.value = Math.round((currentValue + delta) * 1000) / 1000;
+                        let newValue = Math.round((currentValue + delta) * 1000) / 1000;
+                        // Enforce min attribute
+                        const minAttr = input.getAttribute('min');
+                        if (minAttr !== null) {
+                            const minValue = parseFloat(minAttr);
+                            if (!isNaN(minValue) && newValue < minValue) {
+                                newValue = minValue;
+                            }
+                        }
+                        input.value = newValue;
                         updateFromPropertyBar();
                     }, { passive: false });
                 }
@@ -2928,7 +2988,8 @@
             } else if (state.selection.type === 'region') {
                 const region = state.regions.find(r => r.id === state.selection.id);
                 if (!region) return;
-                region.lineWidth = parseFloat(document.getElementById('prop-line-width').value) || 0.8;
+                const regionLineWidth = parseFloat(document.getElementById('prop-line-width').value);
+                region.lineWidth = isNaN(regionLineWidth) ? 0.8 : regionLineWidth;
                 region.pattern = document.getElementById('prop-pattern').value || 'north west lines';
                 region.patternColor = document.getElementById('prop-pattern-color').value || 'black!30';
                 region.ordering = parseFloat(document.getElementById('prop-ordering').value) || 1;
@@ -3785,6 +3846,7 @@
 
             // Show/hide toggle buttons based on mode
             modeToggles.classList.toggle('visible', mode === 'add');
+            regionToggles.classList.toggle('visible', mode === 'region');
             selectActions.classList.toggle('visible', mode === 'select');
             updateSelectActionButtons();
 
@@ -3813,6 +3875,18 @@
             updateToggleButtons();
         }
 
+        function toggleRegionPattern() {
+            const patterns = ['north west lines', 'north east lines', 'crosshatch', 'crosshatch dots'];
+            const currentIndex = patterns.indexOf(state.defaultRegionPattern);
+            state.defaultRegionPattern = patterns[(currentIndex + 1) % patterns.length];
+            updateToggleButtons();
+        }
+
+        function toggleRegionBoundary() {
+            state.defaultRegionLineWidth = state.defaultRegionLineWidth === 0 ? 0.8 : 0;
+            updateToggleButtons();
+        }
+
         function updateToggleButtons() {
             const thicknessBtn = document.getElementById('thickness-toggle');
             const whiteBtn = document.getElementById('white-toggle');
@@ -3828,6 +3902,29 @@
             const isPassover = state.defaultWhiteWidth === 6;
             whiteBtn.classList.toggle('active', isPassover);
             passoverText.textContent = isPassover ? 'Pass over ON' : 'Pass over OFF';
+
+            // Update region pattern button
+            const patternText = document.getElementById('pattern-text');
+            const patternNames = {
+                'north west lines': 'NW lines',
+                'north east lines': 'NE lines',
+                'crosshatch': 'Crosshatch',
+                'crosshatch dots': 'Crosshatch dots'
+            };
+            if (patternText) {
+                patternText.textContent = patternNames[state.defaultRegionPattern] || 'NW lines';
+            }
+
+            // Update region boundary button
+            const boundaryText = document.getElementById('boundary-text');
+            const boundaryRect = document.querySelector('.boundary-rect');
+            const hasBoundary = state.defaultRegionLineWidth > 0;
+            if (boundaryText) {
+                boundaryText.textContent = hasBoundary ? 'Boundary ON' : 'Boundary OFF';
+            }
+            if (boundaryRect) {
+                boundaryRect.classList.toggle('off', !hasBoundary);
+            }
         }
 
         // ============== INITIALIZATION ==============
@@ -3854,6 +3951,8 @@
             document.getElementById('redo-btn').addEventListener('click', redo);
             document.getElementById('thickness-toggle').addEventListener('click', toggleLineThickness);
             document.getElementById('white-toggle').addEventListener('click', toggleWhiteWidth);
+            document.getElementById('pattern-toggle').addEventListener('click', toggleRegionPattern);
+            document.getElementById('boundary-toggle').addEventListener('click', toggleRegionBoundary);
             copyActionBtn.addEventListener('click', copySelected);
             pasteActionBtn.addEventListener('click', pasteClipboard);
             deleteActionBtn.addEventListener('click', deleteSelected);
