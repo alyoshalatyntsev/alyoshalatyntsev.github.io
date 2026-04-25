@@ -179,9 +179,10 @@
         .mode-toggles {
             position: absolute;
             top: 20px;
-            left: 140px;
+            left: 160px;
             display: none;
-            gap: 6px;
+            align-items: center;
+            gap: 8px;
             pointer-events: auto;
         }
 
@@ -259,6 +260,13 @@
             color: #8B5A5A;
         }
 
+        .toggle-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-right: 4px;
+        }
+
         .toggle-btn {
             width: 28px;
             height: 28px;
@@ -271,6 +279,45 @@
             align-items: center;
             justify-content: center;
             transition: all 0.15s ease;
+        }
+
+        .toggle-btn-wide {
+            height: 28px;
+            padding: 3px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--panel-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+        }
+
+        .toggle-btn-wide:hover {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .toggle-text {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Thickness toggle - just thick black line when active */
+        .toggle-btn-wide.active .thick-line-bg {
+            stroke: #2D2A26;
+        }
+        .toggle-btn-wide.active .thick-line-fg {
+            display: none;
+        }
+
+        /* Pass over toggle - solid rectangle when active */
+        .toggle-btn-wide.active .passover-rect {
+            stroke-dasharray: none;
+            stroke: #2D2A26;
         }
 
         .toggle-btn:hover {
@@ -512,8 +559,7 @@
             color: var(--text-primary);
         }
 
-        .code-panel.collapsed .code-panel-header h3,
-        .code-panel.collapsed .copy-btn {
+        .code-panel.collapsed .code-panel-header h3 {
             display: none;
         }
 
@@ -579,6 +625,12 @@
             padding: 6px 10px;
         }
 
+        .textarea-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
         /* Keyboard hints */
         .keyboard-hint {
             font-size: 10px;
@@ -615,6 +667,69 @@
 
         .latex-warning.fading {
             color: var(--text-primary);
+        }
+
+        /* Submit button */
+        .submit-btn {
+            background: #E8F0EA;
+            border-color: #C8D8CC;
+            color: var(--accent);
+        }
+
+        .submit-btn:hover {
+            background: #D8E8DC;
+            border-color: var(--accent);
+        }
+
+        /* Error log section */
+        .error-log-section {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .error-log-section.visible {
+            display: block;
+        }
+
+        .error-log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .error-log-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8B5A5A;
+        }
+
+        .clear-log-btn {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: #F5E6E6;
+            border-color: #E8D4D4;
+            color: #8B5A5A;
+        }
+
+        .clear-log-btn:hover {
+            background: #EED9D9;
+            border-color: #D4C0C0;
+        }
+
+        #error-log {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #8B5A5A;
+            background: #FDF5F5;
+            border: 1px solid #E8D4D4;
+            border-radius: 6px;
+            padding: 10px;
+            width: 100%;
+            min-height: 80px;
+            max-height: 150px;
+            resize: vertical;
         }
     </style>
 </head>
@@ -704,15 +819,20 @@
                     <button id="delete-action" class="action-btn delete-action" title="Delete selected element">Delete <span class="hint">D</span></button>
                 </div>
                 <div class="mode-toggles" id="mode-toggles">
-                    <button id="thickness-toggle" class="toggle-btn" title="Line thickness (0.8pt / 1.6pt)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <line x1="4" y1="12" x2="20" y2="12" stroke-width="2"/>
+                    <span class="toggle-label">Toggle:</span>
+                    <button id="thickness-toggle" class="toggle-btn-wide" title="Line thickness (0.8pt / 1.6pt)">
+                        <svg width="36" height="16" viewBox="0 0 36 16" fill="none">
+                            <line class="thick-line-bg" x1="3" y1="8" x2="33" y2="8" stroke="#D4CFC8" stroke-width="5" stroke-linecap="round"/>
+                            <line class="thick-line-fg" x1="3" y1="8" x2="33" y2="8" stroke="#2D2A26" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
+                        <span class="toggle-text" id="thickness-text">Thin</span>
                     </button>
-                    <button id="white-toggle" class="toggle-btn" title="White backing (0pt / 6pt)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <line x1="4" y1="12" x2="20" y2="12" stroke-width="1.5"/>
+                    <button id="white-toggle" class="toggle-btn-wide" title="White backing (0pt / 6pt)">
+                        <svg width="36" height="16" viewBox="0 0 36 16" fill="none">
+                            <rect class="passover-rect" x="3" y="3" width="30" height="10" stroke="#D4CFC8" stroke-width="1.5" stroke-dasharray="3 2" fill="none" rx="2"/>
+                            <line class="passover-line" x1="3" y1="8" x2="33" y2="8" stroke="#2D2A26" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
+                        <span class="toggle-text" id="passover-text">Pass over OFF</span>
                     </button>
                 </div>
                 <div class="pending-indicator" id="pending-indicator">Click to place end point</div>
@@ -728,23 +848,40 @@
 
         <div class="code-panel" id="code-panel">
             <div class="code-panel-header">
-                <h3>TikZ Output</h3>
-                <button class="btn copy-btn" id="copy-btn" title="Copy (C)">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                    </svg>
-                    Copy
-                    <span class="keyboard-hint">C</span>
-                </button>
+                <h3>Editable TikZ Output</h3>
             </div>
             <div class="code-content">
-                <textarea id="tikz-output" readonly></textarea>
+                <textarea id="tikz-output"></textarea>
+                <div class="textarea-actions">
+                    <button class="btn copy-btn" id="copy-btn" title="Copy (C)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                        Copy
+                        <span class="keyboard-hint">C</span>
+                    </button>
+                    <button class="btn submit-btn" id="submit-btn" title="Submit edits to update diagram">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Submit Edits
+                    </button>
+                </div>
                 <div class="library-notice" id="library-notice">
                     <div class="library-notice-title">Required TikZ Libraries</div>
                     <div id="library-list"></div>
                 </div>
                 <div class="latex-warning" id="latex-warning">LaTeX equations won't render here, but don't worry — they will in the tikzpicture!</div>
+                <div class="error-log-section" id="error-log-section">
+                    <div class="error-log-header">
+                        <span class="error-log-title">Dropped Lines</span>
+                    </div>
+                    <textarea id="error-log" readonly></textarea>
+                    <div class="textarea-actions">
+                        <button class="btn clear-log-btn" id="clear-log-btn">Clear</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1863,6 +2000,431 @@
                 btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
                 setTimeout(() => btn.innerHTML = originalHTML, 1500);
             });
+        }
+
+        // ============== TIKZ PARSING ==============
+        function parseTikzCode(code) {
+            const result = {
+                lines: [],
+                textNodes: [],
+                shapeNodes: [],
+                regions: [],
+                circles: [],
+                droppedLines: []
+            };
+
+            // Strip wrappers (forgiving: handle with or without)
+            let content = code
+                .replace(/\\begin\{center\}/gi, '')
+                .replace(/\\end\{center\}/gi, '')
+                .replace(/\\begin\{tikzpicture\}(\[.*?\])?/gi, '')
+                .replace(/\\end\{tikzpicture\}/gi, '')
+                .trim();
+
+            // Split into lines, handling multi-line commands
+            // Join lines that don't end with ; and process
+            const rawLines = content.split('\n');
+            const commands = [];
+            let currentCmd = '';
+
+            for (const line of rawLines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+
+                currentCmd += (currentCmd ? ' ' : '') + trimmed;
+
+                // Check if command is complete (ends with ; or is a comment)
+                if (trimmed.endsWith(';') || trimmed.startsWith('%')) {
+                    commands.push(currentCmd);
+                    currentCmd = '';
+                }
+            }
+            // Add any remaining command (missing semicolon - forgiving)
+            if (currentCmd.trim()) {
+                commands.push(currentCmd.trim());
+            }
+
+            for (const cmd of commands) {
+                if (cmd.startsWith('%')) continue; // Skip comments
+
+                let parsed = false;
+
+                // Try parsing as \fill[...] (x,y) circle (...) or \fill (x,y) circle (...) - circles
+                if (!parsed) {
+                    // Match with or without [...]
+                    const circleMatch = cmd.match(/\\fill\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*circle\s*\(([^)]+)\)/i);
+                    if (circleMatch) {
+                        const opts = circleMatch[1] || '';
+                        const x = parseFloat(circleMatch[2]);
+                        const y = parseFloat(circleMatch[3]);
+                        const sizeStr = circleMatch[4].trim();
+                        // Parse size - could be "2pt" or just "2"
+                        const sizeMatch = sizeStr.match(/([\d.]+)/);
+                        const size = sizeMatch ? parseFloat(sizeMatch[1]) : 2;
+
+                        // Extract color from options (first option or 'black')
+                        const color = opts ? (opts.split(',')[0].trim() || 'black') : 'black';
+
+                        if (!isNaN(x) && !isNaN(y)) {
+                            result.circles.push({
+                                id: state.nextCircleId++,
+                                x: x,
+                                y: y,
+                                lineWidth: size,
+                                color: color
+                            });
+                            parsed = true;
+                        }
+                    }
+                }
+
+                // Try parsing as \draw[...] (x,y) to[...] (x2,y2) or \draw (x,y) -- (x2,y2) - lines
+                if (!parsed) {
+                    // First try: \draw[...] (x,y) to[...] (x2,y2) - with explicit angles
+                    let drawMatch = cmd.match(/\\draw\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*to\s*\[([^\]]*)\]\s*\(([^,]+),([^)]+)\)/i);
+                    let hasExplicitAngles = true;
+
+                    // Second try: \draw[...] (x,y) -- (x2,y2) or \draw (x,y) -- (x2,y2)
+                    if (!drawMatch) {
+                        drawMatch = cmd.match(/\\draw\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*--\s*\(([^,]+),([^)]+)\)/i);
+                        if (drawMatch) {
+                            // Remap to same structure: opts, startX, startY, (no toOpts), endX, endY
+                            drawMatch = [drawMatch[0], drawMatch[1] || '', drawMatch[2], drawMatch[3], '', drawMatch[4], drawMatch[5]];
+                            hasExplicitAngles = false;
+                        }
+                    }
+
+                    // Third try: \draw[...] (x,y) to (x2,y2) - no angles specified
+                    if (!drawMatch) {
+                        drawMatch = cmd.match(/\\draw\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*to\s+\(([^,]+),([^)]+)\)/i);
+                        if (drawMatch) {
+                            drawMatch = [drawMatch[0], drawMatch[1] || '', drawMatch[2], drawMatch[3], '', drawMatch[4], drawMatch[5]];
+                            hasExplicitAngles = false;
+                        }
+                    }
+
+                    if (drawMatch) {
+                        const opts = drawMatch[1] || '';
+                        const startX = parseFloat(drawMatch[2]);
+                        const startY = parseFloat(drawMatch[3]);
+                        const toOpts = drawMatch[4] || '';
+                        const endX = parseFloat(drawMatch[5]);
+                        const endY = parseFloat(drawMatch[6]);
+
+                        // Compute angles - use explicit if provided, otherwise calculate from coordinates
+                        let outAngle, inAngle;
+                        if (hasExplicitAngles && toOpts) {
+                            const outMatch = toOpts.match(/out\s*=\s*([-\d.]+)/i);
+                            const inMatch = toOpts.match(/in\s*=\s*([-\d.]+)/i);
+                            // Calculate straight-line angle
+                            const straightAngle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                            outAngle = outMatch ? parseFloat(outMatch[1]) : straightAngle;
+                            inAngle = inMatch ? parseFloat(inMatch[1]) : (straightAngle + 180);
+                        } else {
+                            // Calculate angles automatically for -- syntax
+                            const straightAngle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                            outAngle = straightAngle;
+                            inAngle = straightAngle + 180;
+                        }
+                        // Normalize inAngle to -180 to 180 range
+                        while (inAngle > 180) inAngle -= 360;
+                        while (inAngle < -180) inAngle += 360;
+
+                        // Parse draw options (default to 0.8pt line width, no arrow)
+                        const lineWidthMatch = opts.match(/line\s*width\s*=\s*([\d.]+)/i);
+                        const lineWidth = lineWidthMatch ? parseFloat(lineWidthMatch[1]) : 0.8;
+                        const hasArrow = opts.includes('->');
+                        const isWhite = opts.toLowerCase().includes('white');
+                        const isSquiggly = opts.includes('snake') || opts.includes('decorate');
+                        const isDashed = opts.includes('dashed');
+
+                        if (!isNaN(startX) && !isNaN(startY) && !isNaN(endX) && !isNaN(endY)) {
+                            // Skip white backing lines (they're paired with main lines)
+                            if (!isWhite) {
+                                // Check if there's a matching white line before this one
+                                let whiteWidth = 0;
+                                const cmdIndex = commands.indexOf(cmd);
+                                if (cmdIndex > 0) {
+                                    const prevCmd = commands[cmdIndex - 1];
+                                    if (prevCmd.toLowerCase().includes('white')) {
+                                        // Check if coordinates roughly match
+                                        const prevCoords = prevCmd.match(/\(([^,]+),([^)]+)\).*\(([^,]+),([^)]+)\)/);
+                                        if (prevCoords) {
+                                            const psx = parseFloat(prevCoords[1]);
+                                            const psy = parseFloat(prevCoords[2]);
+                                            const pex = parseFloat(prevCoords[3]);
+                                            const pey = parseFloat(prevCoords[4]);
+                                            if (Math.abs(psx - startX) < 0.01 && Math.abs(psy - startY) < 0.01 &&
+                                                Math.abs(pex - endX) < 0.01 && Math.abs(pey - endY) < 0.01) {
+                                                const whiteMatch = prevCmd.match(/line\s*width\s*=\s*([\d.]+)/i);
+                                                if (whiteMatch) whiteWidth = parseFloat(whiteMatch[1]);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                result.lines.push({
+                                    id: state.nextLineId++,
+                                    startX: startX,
+                                    startY: startY,
+                                    endX: endX,
+                                    endY: endY,
+                                    outAngle: outAngle,
+                                    inAngle: inAngle,
+                                    lineWidth: lineWidth,
+                                    whiteWidth: whiteWidth,
+                                    ordering: result.lines.length + 1,
+                                    arrowStyle: hasArrow ? 'arrow' : 'none',
+                                    lineStyle: isSquiggly ? 'squiggly' : (isDashed ? 'dashed' : 'straight')
+                                });
+                            }
+                            parsed = true;
+                        }
+                    }
+                }
+
+                // Try parsing as \node[...] at (x,y) {text} - text or shape nodes
+                if (!parsed) {
+                    const nodeMatch = cmd.match(/\\node\s*(\[[^\]]*\])?\s*at\s*\(([^,]+),([^)]+)\)\s*\{(.*)\}/i);
+                    if (nodeMatch) {
+                        const opts = nodeMatch[1] ? nodeMatch[1].slice(1, -1) : '';
+                        const x = parseFloat(nodeMatch[2]);
+                        const y = parseFloat(nodeMatch[3]);
+                        const text = nodeMatch[4];
+
+                        if (!isNaN(x) && !isNaN(y)) {
+                            // Determine if it's a shape node or text node
+                            const hasShape = opts.includes('circle') || opts.includes('rectangle') || opts.includes('ellipse');
+                            const hasDraw = opts.includes('draw');
+
+                            if (hasShape && hasDraw) {
+                                // Shape node
+                                let shape = 'circle';
+                                if (opts.includes('rectangle')) shape = 'rectangle';
+                                else if (opts.includes('ellipse')) shape = 'ellipse';
+
+                                const outlineMatch = opts.match(/line\s*width\s*=\s*([\d.]+)/i);
+                                const outlineWidth = outlineMatch ? parseFloat(outlineMatch[1]) : 0.8;
+
+                                const innerSepMatch = opts.match(/inner\s*sep\s*=\s*([\d.]+)/i);
+                                const innerXSepMatch = opts.match(/inner\s*xsep\s*=\s*([\d.]+)/i);
+                                const innerYSepMatch = opts.match(/inner\s*ysep\s*=\s*([\d.]+)/i);
+
+                                let paddingX = innerSepMatch ? parseFloat(innerSepMatch[1]) : 4;
+                                let paddingY = innerSepMatch ? parseFloat(innerSepMatch[1]) : 3;
+                                if (innerXSepMatch) paddingX = parseFloat(innerXSepMatch[1]);
+                                if (innerYSepMatch) paddingY = parseFloat(innerYSepMatch[1]);
+
+                                const fontMatch = opts.match(/font\s*=.*?fontsize\{(\d+)pt\}/i);
+                                const fontSize = fontMatch ? parseInt(fontMatch[1]) : 12;
+
+                                result.shapeNodes.push({
+                                    id: state.nextShapeId++,
+                                    x: x,
+                                    y: y,
+                                    text: text,
+                                    shape: shape,
+                                    outlineWidth: outlineWidth,
+                                    paddingX: paddingX,
+                                    paddingY: paddingY,
+                                    fontSize: fontSize
+                                });
+                            } else {
+                                // Text node
+                                let position = 'none';
+                                if (opts.includes('above')) position = 'above';
+                                else if (opts.includes('below')) position = 'below';
+                                else if (opts.includes('left')) position = 'left';
+                                else if (opts.includes('right')) position = 'right';
+
+                                const fontMatch = opts.match(/font\s*=.*?fontsize\{(\d+)pt\}/i);
+                                const fontSize = fontMatch ? parseInt(fontMatch[1]) : 12;
+
+                                result.textNodes.push({
+                                    id: state.nextTextId++,
+                                    x: x,
+                                    y: y,
+                                    text: text,
+                                    position: position,
+                                    fontSize: fontSize
+                                });
+                            }
+                            parsed = true;
+                        }
+                    }
+                }
+
+                // Try parsing as \filldraw[...] for regions (polygons with pattern)
+                if (!parsed) {
+                    // Match with or without [...] options
+                    const filldrawMatch = cmd.match(/\\filldraw\s*(?:\[(.*?)\])?\s*([\s\S]*)/i);
+                    if (filldrawMatch && filldrawMatch[2]) {
+                        const opts = filldrawMatch[1] || '';
+                        const pathStr = filldrawMatch[2];
+
+                        // Parse pattern options (with sensible defaults)
+                        const patternMatch = opts.match(/pattern\s*=\s*([^,\]]+)/i);
+                        const patternColorMatch = opts.match(/pattern\s*color\s*=\s*([^,\]]+)/i);
+                        const lineWidthMatch = opts.match(/line\s*width\s*=\s*([\d.]+)/i);
+
+                        const pattern = patternMatch ? patternMatch[1].trim() : 'north west lines';
+                        const patternColor = patternColorMatch ? patternColorMatch[1].trim() : 'black!30';
+                        const lineWidth = lineWidthMatch ? parseFloat(lineWidthMatch[1]) : 0.8;
+
+                        // Parse path points - handle both to[...] and -- syntax
+                        // Match (x,y) followed by optional to[...] or --
+                        const allMatches = [];
+                        // First, extract all coordinates
+                        const coordRegex = /\(([^,]+),([^)]+)\)/g;
+                        let coordMatch;
+                        const coords = [];
+                        while ((coordMatch = coordRegex.exec(pathStr)) !== null) {
+                            coords.push({
+                                x: parseFloat(coordMatch[1]),
+                                y: parseFloat(coordMatch[2]),
+                                index: coordMatch.index
+                            });
+                        }
+
+                        // Now find to[...] options between coordinates
+                        for (let i = 0; i < coords.length; i++) {
+                            const curr = coords[i];
+                            const next = coords[i + 1];
+                            let toOpts = '';
+
+                            if (next) {
+                                // Look for to[...] between this coord and next
+                                const between = pathStr.substring(curr.index, next.index);
+                                const toMatch = between.match(/to\s*\[([^\]]*)\]/i);
+                                if (toMatch) {
+                                    toOpts = toMatch[1];
+                                }
+                                // If we find --, no explicit angles
+                            }
+
+                            allMatches.push({
+                                x: curr.x,
+                                y: curr.y,
+                                toOpts: toOpts
+                            });
+                        }
+
+                        // Remove duplicate last point if it matches first (closed path)
+                        if (allMatches.length >= 2) {
+                            const first = allMatches[0];
+                            const last = allMatches[allMatches.length - 1];
+                            if (Math.abs(first.x - last.x) < 0.01 && Math.abs(first.y - last.y) < 0.01) {
+                                allMatches.pop();
+                            }
+                        }
+
+                        if (allMatches.length >= 3) {
+                            // Build region points with angles
+                            const points = [];
+                            for (let i = 0; i < allMatches.length; i++) {
+                                const curr = allMatches[i];
+                                const prev = allMatches[(i - 1 + allMatches.length) % allMatches.length];
+                                const next = allMatches[(i + 1) % allMatches.length];
+
+                                // Calculate default angles from geometry
+                                let outAngle = Math.atan2(next.y - curr.y, next.x - curr.x) * 180 / Math.PI;
+                                let inAngle = Math.atan2(prev.y - curr.y, prev.x - curr.x) * 180 / Math.PI;
+
+                                // Try to get explicit angles from to options
+                                if (curr.toOpts) {
+                                    const outMatch = curr.toOpts.match(/out\s*=\s*([-\d.]+)/i);
+                                    if (outMatch) outAngle = parseFloat(outMatch[1]);
+                                }
+                                if (prev.toOpts) {
+                                    const inMatch = prev.toOpts.match(/in\s*=\s*([-\d.]+)/i);
+                                    if (inMatch) inAngle = parseFloat(inMatch[1]);
+                                }
+
+                                if (!isNaN(curr.x) && !isNaN(curr.y)) {
+                                    points.push({
+                                        x: curr.x,
+                                        y: curr.y,
+                                        outAngle: outAngle,
+                                        inAngle: inAngle
+                                    });
+                                }
+                            }
+
+                            if (points.length >= 3) {
+                                result.regions.push({
+                                    id: state.nextRegionId++,
+                                    points: points,
+                                    lineWidth: lineWidth,
+                                    pattern: pattern,
+                                    patternColor: patternColor,
+                                    ordering: result.regions.length + 1
+                                });
+                                parsed = true;
+                            }
+                        }
+                    }
+                }
+
+                // If not parsed and not a white backing line, add to dropped
+                if (!parsed && !cmd.toLowerCase().includes('white')) {
+                    const cleanCmd = cmd.replace(/;$/, '').trim();
+                    if (cleanCmd) {
+                        result.droppedLines.push(cleanCmd);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function submitTikzEdits() {
+            const code = tikzOutput.value;
+            const parsed = parseTikzCode(code);
+
+            // Save state for undo
+            saveState();
+
+            // Update state with parsed elements
+            state.lines = parsed.lines;
+            state.textNodes = parsed.textNodes;
+            state.shapeNodes = parsed.shapeNodes;
+            state.regions = parsed.regions;
+            state.circles = parsed.circles;
+
+            // Clear selection
+            state.selection = null;
+            updatePropertyBar();
+
+            // Add dropped lines to error log
+            const errorLog = document.getElementById('error-log');
+            const errorLogSection = document.getElementById('error-log-section');
+
+            if (parsed.droppedLines.length > 0) {
+                const timestamp = new Date().toLocaleTimeString();
+                const newErrors = `[${timestamp}] Dropped ${parsed.droppedLines.length} line(s):\n${parsed.droppedLines.join('\n')}\n\n`;
+                errorLog.value = newErrors + errorLog.value;
+                // Ensure visible class is added (force re-add in case of any issues)
+                errorLogSection.classList.remove('visible');
+                void errorLogSection.offsetWidth; // Force reflow
+                errorLogSection.classList.add('visible');
+            }
+
+            // Re-render and update output
+            render();
+            updateTikzOutput();
+
+            // Flash submit button to confirm
+            const btn = document.getElementById('submit-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done!';
+            setTimeout(() => btn.innerHTML = originalHTML, 1000);
+        }
+
+        function clearErrorLog() {
+            const errorLog = document.getElementById('error-log');
+            const errorLogSection = document.getElementById('error-log-section');
+            errorLog.value = '';
+            errorLogSection.classList.remove('visible');
         }
 
         // ============== HIT TESTING ==============
@@ -3254,18 +3816,18 @@
         function updateToggleButtons() {
             const thicknessBtn = document.getElementById('thickness-toggle');
             const whiteBtn = document.getElementById('white-toggle');
+            const thicknessText = document.getElementById('thickness-text');
+            const passoverText = document.getElementById('passover-text');
 
-            // Update thickness button
-            thicknessBtn.classList.toggle('active', state.defaultLineWidth === 1.6);
-            thicknessBtn.innerHTML = state.defaultLineWidth === 1.6
-                ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12" stroke-width="4"/></svg>'
-                : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12" stroke-width="2"/></svg>';
+            // Update thickness button - active when thick (1.6pt)
+            const isThick = state.defaultLineWidth === 1.6;
+            thicknessBtn.classList.toggle('active', isThick);
+            thicknessText.textContent = isThick ? 'Thick' : 'Thin';
 
-            // Update white backing button
-            whiteBtn.classList.toggle('active', state.defaultWhiteWidth === 6);
-            whiteBtn.innerHTML = state.defaultWhiteWidth === 6
-                ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="4" y1="12" x2="20" y2="12" stroke="white" stroke-width="6"/><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5"/></svg>'
-                : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12" stroke-width="1.5"/></svg>';
+            // Update white backing button - active when white backing is on (6pt)
+            const isPassover = state.defaultWhiteWidth === 6;
+            whiteBtn.classList.toggle('active', isPassover);
+            passoverText.textContent = isPassover ? 'Pass over ON' : 'Pass over OFF';
         }
 
         // ============== INITIALIZATION ==============
@@ -3318,6 +3880,8 @@
                 render();
             }, { passive: false });
             document.getElementById('copy-btn').addEventListener('click', copyTikzToClipboard);
+            document.getElementById('submit-btn').addEventListener('click', submitTikzEdits);
+            document.getElementById('clear-log-btn').addEventListener('click', clearErrorLog);
 
             updateTikzOutput();
             updateSelectActionButtons();
