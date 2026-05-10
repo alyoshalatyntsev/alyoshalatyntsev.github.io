@@ -204,6 +204,20 @@
             display: flex;
         }
 
+        .text-toggles {
+            position: absolute;
+            top: 20px;
+            left: 160px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .text-toggles.visible {
+            display: flex;
+        }
+
         /* Boundary toggle - dashed when OFF */
         .toggle-btn-wide .boundary-rect.off {
             stroke-dasharray: 3 2;
@@ -871,6 +885,15 @@
                         <span class="toggle-text" id="boundary-text">Boundary ON</span>
                     </button>
                 </div>
+                <div class="text-toggles" id="text-toggles">
+                    <span class="toggle-label">Toggle:</span>
+                    <button id="text-position-toggle" class="toggle-btn-wide" title="Cycle text position">
+                        <svg width="24" height="16" viewBox="0 0 24 16" fill="none">
+                            <text x="12" y="12" font-size="10" text-anchor="middle" fill="#2D2A26" font-family="monospace">T</text>
+                        </svg>
+                        <span class="toggle-text" id="text-position-text">None</span>
+                    </button>
+                </div>
                 <div class="pending-indicator" id="pending-indicator">Click to place end point</div>
                 <div class="scale-indicator">
                     <div class="scale-bar" id="scale-bar"></div>
@@ -957,6 +980,9 @@
             defaultCircleLineWidth: 2,
             defaultCircleColor: 'black',
 
+            // Default text settings
+            defaultTextPosition: 'none',
+
             // Interaction state
             isDragging: false,
             dragType: null,
@@ -996,6 +1022,7 @@
         const modeIndicator = document.getElementById('mode-indicator');
         const modeToggles = document.getElementById('mode-toggles');
         const regionToggles = document.getElementById('region-toggles');
+        const textToggles = document.getElementById('text-toggles');
         const selectActions = document.getElementById('select-actions');
         const copyActionBtn = document.getElementById('copy-action');
         const pasteActionBtn = document.getElementById('paste-action');
@@ -1089,7 +1116,7 @@
                 x: snapToGrid(x),
                 y: snapToGrid(y),
                 text: 'text',
-                position: 'none', // 'none', 'above', 'below', 'left', 'right'
+                position: state.defaultTextPosition, // 'none', 'above', 'below', 'left', 'right'
                 fontSize: 12
             };
         }
@@ -2736,18 +2763,11 @@
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Arrow</span>
-                        <select class="property-select" id="prop-arrow-style">
-                            <option value="none" ${(line.arrowStyle || 'none') === 'none' ? 'selected' : ''}>–</option>
-                            <option value="arrow" ${line.arrowStyle === 'arrow' ? 'selected' : ''}>→</option>
-                        </select>
+                        <input type="text" class="property-input scrollable-select" id="prop-arrow-style" value="${line.arrowStyle || 'none'}" readonly data-options='["none","arrow"]' data-display='{"none":"–","arrow":"→"}' style="width: 40px; cursor: pointer; text-align: center;">
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Style</span>
-                        <select class="property-select" id="prop-line-style">
-                            <option value="straight" ${(line.lineStyle || 'straight') === 'straight' ? 'selected' : ''}>straight</option>
-                            <option value="dashed" ${line.lineStyle === 'dashed' ? 'selected' : ''}>dashed</option>
-                            <option value="squiggly" ${line.lineStyle === 'squiggly' ? 'selected' : ''}>squiggly</option>
-                        </select>
+                        <input type="text" class="property-input scrollable-select" id="prop-line-style" value="${line.lineStyle || 'straight'}" readonly data-options='["straight","dashed","squiggly"]' style="width: 75px; cursor: pointer;">
                     </div>
                     <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
                 `;
@@ -2766,13 +2786,7 @@
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Anchor</span>
-                        <select class="property-select wide" id="prop-position">
-                            <option value="none" ${node.position === 'none' ? 'selected' : ''}>none</option>
-                            <option value="above" ${node.position === 'above' ? 'selected' : ''}>above</option>
-                            <option value="below" ${node.position === 'below' ? 'selected' : ''}>below</option>
-                            <option value="left" ${node.position === 'left' ? 'selected' : ''}>left</option>
-                            <option value="right" ${node.position === 'right' ? 'selected' : ''}>right</option>
-                        </select>
+                        <input type="text" class="property-input scrollable-select" id="prop-position" value="${node.position}" readonly data-options='["none","above","below","left","right"]' style="width: 60px; cursor: pointer;">
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Size</span>
@@ -2848,12 +2862,7 @@
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Pattern</span>
-                        <select class="property-select" id="prop-pattern">
-                            <option value="north west lines" ${(region.pattern || 'north west lines') === 'north west lines' ? 'selected' : ''}>NW Lines</option>
-                            <option value="north east lines" ${region.pattern === 'north east lines' ? 'selected' : ''}>NE Lines</option>
-                            <option value="crosshatch" ${region.pattern === 'crosshatch' ? 'selected' : ''}>Crosshatch</option>
-                            <option value="crosshatch dots" ${region.pattern === 'crosshatch dots' ? 'selected' : ''}>Crosshatch dots</option>
-                        </select>
+                        <input type="text" class="property-input scrollable-select" id="prop-pattern" value="${region.pattern || 'north west lines'}" readonly data-options='["north west lines","north east lines","crosshatch","crosshatch dots"]' data-display='{"north west lines":"NW Lines","north east lines":"NE Lines","crosshatch":"Crosshatch","crosshatch dots":"Crosshatch dots"}' style="width: 105px; cursor: pointer;">
                     </div>
                     <div class="property-group">
                         <span class="property-group-label">Color</span>
@@ -2923,6 +2932,37 @@
                         updateFromPropertyBar();
                     }, { passive: false });
                 }
+
+                // Handle scrollable select inputs
+                if (input.classList.contains('scrollable-select')) {
+                    // Set initial display value
+                    const displayMap = input.dataset.display ? JSON.parse(input.dataset.display) : null;
+                    if (displayMap && displayMap[input.value]) {
+                        input.setAttribute('data-actual-value', input.value);
+                        input.value = displayMap[input.value];
+                    }
+
+                    input.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        const options = JSON.parse(input.dataset.options || '[]');
+                        if (options.length === 0) return;
+                        const actualValue = input.getAttribute('data-actual-value') || input.value;
+                        const currentIndex = options.indexOf(actualValue);
+                        const direction = e.deltaY > 0 ? 1 : -1;
+                        let newIndex = (currentIndex + direction + options.length) % options.length;
+                        const newValue = options[newIndex];
+
+                        // Store actual value and set display value
+                        input.setAttribute('data-actual-value', newValue);
+                        if (displayMap && displayMap[newValue]) {
+                            input.value = displayMap[newValue];
+                        } else {
+                            input.value = newValue;
+                        }
+
+                        updateFromPropertyBar();
+                    }, { passive: false });
+                }
             });
 
             // Shape button handlers
@@ -2963,14 +3003,17 @@
                 line.lineWidth = parseFloat(document.getElementById('prop-line-width').value) || 0.8;
                 line.whiteWidth = parseFloat(document.getElementById('prop-white-width').value) || 0;
                 line.ordering = parseFloat(document.getElementById('prop-ordering').value) || 1;
-                line.arrowStyle = document.getElementById('prop-arrow-style').value || 'none';
-                line.lineStyle = document.getElementById('prop-line-style').value || 'straight';
+                const arrowStyleEl = document.getElementById('prop-arrow-style');
+                line.arrowStyle = arrowStyleEl.getAttribute('data-actual-value') || arrowStyleEl.value || 'none';
+                const lineStyleEl = document.getElementById('prop-line-style');
+                line.lineStyle = lineStyleEl.getAttribute('data-actual-value') || lineStyleEl.value || 'straight';
             } else if (state.selection.type === 'text') {
                 const node = state.textNodes.find(n => n.id === state.selection.id);
                 if (!node) return;
                 node.x = parseFloat(document.getElementById('prop-x').value) || 0;
                 node.y = parseFloat(document.getElementById('prop-y').value) || 0;
-                node.position = document.getElementById('prop-position').value;
+                const positionEl = document.getElementById('prop-position');
+                node.position = positionEl.getAttribute('data-actual-value') || positionEl.value;
                 node.fontSize = parseFloat(document.getElementById('prop-font-size').value) || 12;
                 node.text = document.getElementById('prop-text').value || 'text';
             } else if (state.selection.type === 'shape') {
@@ -2990,7 +3033,8 @@
                 if (!region) return;
                 const regionLineWidth = parseFloat(document.getElementById('prop-line-width').value);
                 region.lineWidth = isNaN(regionLineWidth) ? 0.8 : regionLineWidth;
-                region.pattern = document.getElementById('prop-pattern').value || 'north west lines';
+                const patternEl = document.getElementById('prop-pattern');
+                region.pattern = patternEl.getAttribute('data-actual-value') || patternEl.value || 'north west lines';
                 region.patternColor = document.getElementById('prop-pattern-color').value || 'black!30';
                 region.ordering = parseFloat(document.getElementById('prop-ordering').value) || 1;
             } else if (state.selection.type === 'circle') {
@@ -3847,6 +3891,7 @@
             // Show/hide toggle buttons based on mode
             modeToggles.classList.toggle('visible', mode === 'add');
             regionToggles.classList.toggle('visible', mode === 'region');
+            textToggles.classList.toggle('visible', mode === 'text');
             selectActions.classList.toggle('visible', mode === 'select');
             updateSelectActionButtons();
 
@@ -3884,6 +3929,13 @@
 
         function toggleRegionBoundary() {
             state.defaultRegionLineWidth = state.defaultRegionLineWidth === 0 ? 0.8 : 0;
+            updateToggleButtons();
+        }
+
+        function toggleTextPosition() {
+            const positions = ['none', 'above', 'below', 'left', 'right'];
+            const currentIndex = positions.indexOf(state.defaultTextPosition);
+            state.defaultTextPosition = positions[(currentIndex + 1) % positions.length];
             updateToggleButtons();
         }
 
@@ -3925,6 +3977,19 @@
             if (boundaryRect) {
                 boundaryRect.classList.toggle('off', !hasBoundary);
             }
+
+            // Update text position button
+            const textPositionText = document.getElementById('text-position-text');
+            const positionNames = {
+                'none': 'None',
+                'above': 'Above',
+                'below': 'Below',
+                'left': 'Left',
+                'right': 'Right'
+            };
+            if (textPositionText) {
+                textPositionText.textContent = positionNames[state.defaultTextPosition] || 'None';
+            }
         }
 
         // ============== INITIALIZATION ==============
@@ -3953,6 +4018,7 @@
             document.getElementById('white-toggle').addEventListener('click', toggleWhiteWidth);
             document.getElementById('pattern-toggle').addEventListener('click', toggleRegionPattern);
             document.getElementById('boundary-toggle').addEventListener('click', toggleRegionBoundary);
+            document.getElementById('text-position-toggle').addEventListener('click', toggleTextPosition);
             copyActionBtn.addEventListener('click', copySelected);
             pasteActionBtn.addEventListener('click', pasteClipboard);
             deleteActionBtn.addEventListener('click', deleteSelected);
