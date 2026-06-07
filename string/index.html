@@ -94,6 +94,12 @@
             background: var(--accent-hover);
         }
 
+        /* Shift-armed (chain mode) ring on the mode indicator pill */
+        .mode-indicator.chaining {
+            box-shadow: 0 0 0 3px var(--selection-glow);
+            border-color: var(--accent);
+        }
+
         .btn-icon {
             width: 28px;
             height: 28px;
@@ -179,7 +185,7 @@
         .mode-toggles {
             position: absolute;
             top: 20px;
-            left: 160px;
+            left: 240px;
             display: none;
             align-items: center;
             gap: 8px;
@@ -2326,7 +2332,7 @@
                 // Try parsing as \filldraw[...] or \fill[pattern=...] for regions (polygons with pattern)
                 if (!parsed) {
                     // Match \fill or \filldraw with or without [...] options
-                    const filldrawMatch = cmd.match(/\\(fill|filldraw)\s*(?:\[(.*?)\])?\s*([\s\S]*)/i);
+                    const filldrawMatch = cmd.match(/\\(filldraw|fill)\b\s*(?:\[(.*?)\])?\s*([\s\S]*)/i);
                     if (filldrawMatch && filldrawMatch[3]) {
                         const cmdType = filldrawMatch[1].toLowerCase(); // 'fill' or 'filldraw'
                         const opts = filldrawMatch[2] || '';
@@ -3247,14 +3253,22 @@
                 if (state.pendingLineStart) {
                     const endX = snapToGrid(world.x);
                     const endY = snapToGrid(world.y);
+                    let lineDrawn = false;
                     if (Math.abs(endX - state.pendingLineStart.x) > 0.01 || Math.abs(endY - state.pendingLineStart.y) > 0.01) {
                         saveState();
                         state.lines.push(createLine(state.pendingLineStart.x, state.pendingLineStart.y, endX, endY));
                         updateTikzOutput();
+                        lineDrawn = true;
                     }
-                    state.pendingLineStart = null;
-                    state.previewEnd = null;
-                    pendingIndicator.classList.remove('visible');
+                    if (lineDrawn && e.shiftKey) {
+                        // Continuous chaining: next line starts where this one ended
+                        state.pendingLineStart = { x: endX, y: endY };
+                        state.previewEnd = null;
+                    } else {
+                        state.pendingLineStart = null;
+                        state.previewEnd = null;
+                        pendingIndicator.classList.remove('visible');
+                    }
                     render();
                     return;
                 }
@@ -3634,6 +3648,11 @@
                     saveState();
                     state.lines.push(createLine(state.newLineStart.x, state.newLineStart.y, endX, endY));
                     updateTikzOutput();
+                    if (e.shiftKey) {
+                        // Continuous chaining: next line starts where this one ended
+                        state.pendingLineStart = { x: endX, y: endY };
+                        pendingIndicator.classList.add('visible');
+                    }
                 }
             }
 
@@ -3876,6 +3895,7 @@
             state.pendingRegionPoints = [];
             state.previewRegionEnd = null;
             pendingIndicator.classList.remove('visible');
+            if (mode !== 'add') modeIndicator.classList.remove('chaining');
 
             document.getElementById('select-mode-btn').classList.toggle('active', mode === 'select');
             document.getElementById('add-mode-btn').classList.toggle('active', mode === 'add');
@@ -3884,7 +3904,7 @@
             document.getElementById('region-mode-btn').classList.toggle('active', mode === 'region');
             document.getElementById('circle-mode-btn').classList.toggle('active', mode === 'circle');
 
-            const modeNames = { select: 'Select Mode', add: 'Add Line Mode', text: 'Add Text Mode', node: 'Add Node Mode', region: 'Add Region Mode', circle: 'Add Circle Mode' };
+            const modeNames = { select: 'Select Mode', add: 'Add Line Mode (SHIFT to chain)', text: 'Add Text Mode', node: 'Add Node Mode', region: 'Add Region Mode', circle: 'Add Circle Mode' };
             modeIndicator.textContent = modeNames[mode] || 'Select Mode';
             modeIndicator.classList.toggle('add-mode', mode !== 'select');
 
@@ -4005,6 +4025,14 @@
 
             window.addEventListener('resize', resizeCanvas);
             window.addEventListener('keydown', handleKeyDown);
+
+            // Shift glow on mode indicator pill while in add mode
+            const updateChainGlow = (shiftDown) => {
+                modeIndicator.classList.toggle('chaining', shiftDown && state.mode === 'add');
+            };
+            window.addEventListener('keydown', (e) => { if (e.key === 'Shift') updateChainGlow(true); });
+            window.addEventListener('keyup', (e) => { if (e.key === 'Shift') updateChainGlow(false); });
+            window.addEventListener('blur', () => updateChainGlow(false));
 
             document.getElementById('select-mode-btn').addEventListener('click', () => setMode('select'));
             document.getElementById('add-mode-btn').addEventListener('click', () => setMode('add'));
