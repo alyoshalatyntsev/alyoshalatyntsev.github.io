@@ -88,6 +88,7 @@
         <canvas class="graphic" id="g3"></canvas>
         <canvas class="graphic" id="g4"></canvas>
         <canvas class="graphic" id="g5"></canvas>
+        <canvas class="graphic" id="g12"></canvas>
     </div>
     <div class="margin right">
         <canvas class="graphic" id="g6"></canvas>
@@ -454,17 +455,19 @@
         this.hw = hw; this.hh = hh;
         this.rand = r;
         this.stat = document.createElement('canvas');
-        this.ranLike = scene === 'ran' || scene === 'stokesran';
+        this.ranLike = scene === 'ran' || scene === 'stokesran' || scene === 'ostrat';
         this.stokesLike = scene === 'stokes' || scene === 'stokesran';
         this.deg = scene === 'wall2' ? 2 : 3;
         this.roots = scene === 'wall2' ? PAIR : CUBE;
         this.hasNet = scene === 'wall2' || scene === 'wall3' || scene === 'stokes3';
         this.isWall = scene === 'wall2' || scene === 'wall3';
         this.isStab = scene === 'stab1' || scene === 'stab3';
+        this.hasStratum = scene === 'stratum' || scene === 'ostrat';
+        this.orange = this.isStab || scene === 'ostrat';
         /* the three-point picture and its stability partner share the wandering phase */
         this.wander = scene === 'wall3' || scene === 'stab3';
         this.walls = scene === 'stab1' ? PAIRARG : WALLARG;
-        plain = scene === 'grid' || scene === 'stratum' || scene === 'ran';
+        plain = scene === 'grid' || this.hasStratum || scene === 'ran';
         this.phaseX = plain ? Math.floor(r() * 2 * hw) : 0;
         this.phaseY = plain ? Math.floor(r() * 2 * hh) : 0;
         this.K = scene === 'wall2' ? 1.8 : (scene === 'wall3' ? 1.5 : 2.4);
@@ -533,7 +536,7 @@
                 d.y = 2 + d.fy * (this.h - 4);
                 su = (d.dir & 1) ? 1 : -1;
                 sv = (d.dir & 2) ? 1 : -1;
-                if (this.scene === 'stratum') { sv = -su; }   /* across the stratum, not along it */
+                if (this.hasStratum) { sv = -su; }   /* across the stratum, not along it */
                 d.vx = su * this.dx * d.sp;
                 d.vy = sv * this.dy * d.sp;
                 d.placed = true;
@@ -548,9 +551,9 @@
         var g = this.stat, gx;
         g.width = this.w; g.height = this.h;
         gx = g.getContext('2d');
-        this.drawGrid(gx, this.isStab ? OGRID : GRID);
+        this.drawGrid(gx, this.orange ? OGRID : GRID);
         if (this.isWall) { return; }
-        if (this.scene === 'stratum') { this.drawStratum(gx); }
+        if (this.hasStratum) { this.drawStratum(gx); }
         if (this.stokesLike) { this.drawRays(gx); }
         if (this.scene === 'stokes3') { this.drawNetwork(gx, this.fixedTheta, true); }
         if (this.isStab) { this.drawStability(gx); }
@@ -575,7 +578,7 @@
     /* the 1-dimensional stratum: one of the axes of the grid, through the middle */
     Panel.prototype.drawStratum = function (gx) {
         var L = this.w + this.h, t, x, y;
-        gx.fillStyle = STRAT;
+        gx.fillStyle = this.orange ? OSTRAT : STRAT;
         for (t = -L; t <= L; t += 0.5) {
             x = Math.round(this.cx + this.dx * t);
             y = Math.round(this.cy + this.dy * t);
@@ -650,14 +653,14 @@
         sv = r() < 0.5 ? 1 : -1;
         if (e < 2) {
             su = e === 0 ? 1 : -1;
-            if (this.scene === 'stratum') { sv = -su; }
+            if (this.hasStratum) { sv = -su; }
             /* start in the half it is heading away from, so it really does come inside */
             half = sv > 0 ? r() * 0.45 : 0.55 + r() * 0.45;
             d.x = e === 0 ? -4 : this.w + 4;
             d.y = 2 + half * (this.h - 4);
         } else {
             sv = e === 2 ? 1 : -1;
-            if (this.scene === 'stratum') { su = -sv; }
+            if (this.hasStratum) { su = -sv; }
             half = su > 0 ? r() * 0.45 : 0.55 + r() * 0.45;
             d.y = e === 2 ? -4 : this.h + 4;
             d.x = 2 + half * (this.w - 4);
@@ -772,23 +775,58 @@
         if (this.count() < this.target) { this.groups.push(this.makeGroup([this.spawn()])); }
     };
 
+    /* meeting the stratum, starting from where the point was a moment ago */
+    Panel.prototype.stratumStep = function (d) {
+        var s0, s1, t, sgn;
+        if (d.stuck) { return; }
+        s0 = this.side(d.px, d.py);
+        s1 = this.side(d.x, d.y);
+        if (this.stuckCount() < this.maxStuck) {
+            if (s0 * s1 <= 0) {
+                t = (d.x - this.cx) * this.dx + (d.y - this.cy) * this.dy;
+                d.x = this.cx + this.dx * t;
+                d.y = this.cy + this.dy * t;
+                sgn = (d.vx * this.dx + d.vy * this.dy) >= 0 ? 1 : -1;
+                d.vx = sgn * this.dx * d.sp;
+                d.vy = sgn * this.dy * d.sp;
+                d.stuck = true;
+            }
+        } else if (Math.abs(s1) < this.keepOut && Math.abs(s1) <= Math.abs(s0)) {
+            /* the stratum is full: stay half a square clear of it */
+            d.vx = -d.vx; d.vy = -d.vy;
+            d.x = d.px; d.y = d.py;
+        }
+    };
+
     Panel.prototype.stepRan = function (dt) {
-        var k, i, j, G, g, d, a, b, cx, cy, n, dx, dy, dist, wgt, vx, vy, tx, ty;
+        var k, i, j, G, g, d, a, b, cx, cy, n, dx, dy, dist, wgt, vx, vy, tx, ty, free;
         this.matchIn -= dt;
         if (this.matchIn <= 0) { this.matchIn = 2 + this.rand() * 3; this.matchmake(); }
         for (k = 0; k < this.groups.length; k++) {
             G = this.groups[k]; g = G.m;
             n = g.length;
-            if (n < 2) {
-                d = this.dots[g[0]];
-                if (d.alive) { d.x += d.vx * dt; d.y += d.vy * dt; }
-                continue;
-            }
-            cx = 0; cy = 0;
-            for (i = 0; i < n; i++) { cx += this.dots[g[i]].x; cy += this.dots[g[i]].y; }
-            cx /= n; cy /= n;
             for (i = 0; i < n; i++) {
                 d = this.dots[g[i]];
+                d.px = d.x; d.py = d.y;
+            }
+            /* a point that has settled on the stratum is no longer pulled about */
+            free = 0; cx = 0; cy = 0;
+            for (i = 0; i < n; i++) {
+                d = this.dots[g[i]];
+                if (d.stuck) { continue; }
+                cx += d.x; cy += d.y; free++;
+            }
+            if (free < 2) {
+                for (i = 0; i < n; i++) {
+                    d = this.dots[g[i]];
+                    if (d.alive) { d.x += d.vx * dt; d.y += d.vy * dt; }
+                }
+                continue;
+            }
+            cx /= free; cy /= free;
+            for (i = 0; i < n; i++) {
+                d = this.dots[g[i]];
+                if (d.stuck) { d.x += d.vx * dt; d.y += d.vy * dt; continue; }
                 dx = cx - d.x; dy = cy - d.y;
                 dist = Math.sqrt(dx * dx + dy * dy) || 1;
                 /* the random drift fades out as the subset closes in on itself */
@@ -811,6 +849,13 @@
             if (d.entering) {
                 if (d.x > 2 && d.x < this.w - 2 && d.y > 2 && d.y < this.h - 2) { d.entering = false; }
                 continue;
+            }
+            if (this.hasStratum) {
+                if (d.stuck && (d.x < 2 || d.x > this.w - 2 || d.y < 2 || d.y > this.h - 2)) {
+                    d.alive = false;        /* it has slid off the end of the stratum */
+                    continue;
+                }
+                this.stratumStep(d);
             }
             if (d.x < 2) { d.x = 2; d.vx = Math.abs(d.vx); }
             else if (d.x > this.w - 2) { d.x = this.w - 2; d.vx = -Math.abs(d.vx); }
@@ -948,6 +993,7 @@
             if (k > 0) { d.reg = k; }
             return this.regCol[d.reg || 1] || BASE;
         }
+        if (this.orange) { return OBASE; }
         if (!this.stokesLike) { return BASE; }
         u = (d.x - this.ox) / this.hw;
         v = (d.y - this.oy) / this.hh;
@@ -1137,6 +1183,7 @@
     add('g9', 'stab1', 6161, 8, 4);
     add('g10', 'wall3', 4004, 6, 3);
     add('g11', 'stab3', 1290, 8, 4);
+    add('g12', 'ostrat', 8787, 8, 4);
 
     function sizeAll() {
         panels.forEach(function (p) {
