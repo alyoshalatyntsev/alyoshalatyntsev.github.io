@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tsinghua Informal Representation Theory Seminar — Perverse Schobers</title>
+<style>
+    body {
+        font-family: sans-serif;
+        font-size: 15px;
+        color: #000;
+        background: #fff;
+        line-height: 1.35;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .page {
+        position: relative;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    /* margin graphics */
+    .margin { position: absolute; top: 0; width: calc((100vw - 720px) / 2 - 60px); max-width: 460px; }
+    .margin.left  { right: 100%; margin-right: 35px; }
+    .margin.right { left: 100%;  margin-left: 35px; padding-top: 130px; }
+    .graphic {
+        display: block;
+        width: 100%;
+        height: 170px;
+        margin-bottom: 75px;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+    }
+    @media (max-width: 1080px) { .margin { display: none; } }
+
+    h1 { font-size: 1.5em; font-weight: bold; margin: 0; }
+    h2 { font-size: 1.15em; font-weight: bold; margin: 0 0 0.6em 0; }
+    h3 { font-size: 1em; font-weight: bold; margin: 1.2em 0 0.3em 0; }
+
+    p { margin: 0.5em 0; }
+
+    a { color: #0000cc; }
+
+    .email-link {
+        color: #0000cc;
+        cursor: pointer;
+        margin-left: 4px;
+        font-size: 1.6em;
+        line-height: 1;
+        vertical-align: -0.08em;
+    }
+
+    .copy-tooltip {
+        position: fixed;
+        background: #333;
+        color: #fff;
+        padding: 3px 8px;
+        font-size: 0.85em;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 10;
+    }
+    .copy-tooltip.show { opacity: 1; }
+
+    table { border-collapse: collapse; width: 100%; margin-top: 0.3em; border: 1px solid #ccc; }
+    th { text-align: left; font-weight: bold; padding: 3px 8px; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc; background: #e0e0e0; }
+    td { padding: 3px 8px; vertical-align: top; border-right: 1px solid #ccc; }
+    tr.lec td { border-top: 1px solid #ccc; }
+    td.date { white-space: nowrap; }
+    td.jc { color: #333; }
+    tr.jcrow td { background: #f2f2f2; }
+    .tbl { overflow-x: auto; }
+
+    ul { margin: 0.3em 0; padding-left: 1.4em; }
+    li { margin: 0.15em 0; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+    <div class="margin left">
+        <canvas class="graphic" id="g1"></canvas>
+        <canvas class="graphic" id="g2"></canvas>
+        <canvas class="graphic" id="g3"></canvas>
+        <canvas class="graphic" id="g4"></canvas>
+        <canvas class="graphic" id="g5"></canvas>
+    </div>
+    <div class="margin right">
+        <canvas class="graphic" id="g6"></canvas>
+        <canvas class="graphic" id="g7"></canvas>
+        <canvas class="graphic" id="g8"></canvas>
+        <canvas class="graphic" id="g9"></canvas>
+        <canvas class="graphic" id="g10"></canvas>
+        <canvas class="graphic" id="g11"></canvas>
+    </div>
+
+    <h1>Tsinghua Informal Representation Theory Seminar</h1>
+    <h2>Winter semester 2026&ndash;7: Perverse Schobers</h2>
+
+    <p>Organised by: Li Fan<span class="email-link" data-email="fanli@amss.ac.cn" title="Copy email">&#9993;</span> and Alyosha Latyntsev<span class="email-link" data-email="alyoshalatyntsev@gmail.com" title="Copy email">&#9993;</span></p>
+
+    <p>Weekly on Tuesdays 1:00&ndash;3:00 PM, room TBD.</p>
+
+    <p>Each week we have a talk and an informal review of an interesting paper. Lots of time for discussion.</p>
+
+    <h3>Schedule</h3>
+
+    <div class="tbl">
+    <table>
+        <tr>
+            <th>Date</th><th>Speaker</th><th>Title</th><th>Links</th>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">22 Sep</td>
+            <td>Alyosha</td>
+            <td>Stokes data and perverse sheaves</td>
+            <td></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">Li</td>
+            <td class="jc">Journal club: categorical Lusztig cycles and weave schobers</td>
+            <td><a href="https://arxiv.org/abs/2605.22440">2605.22440</a></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">29 Sep</td>
+            <td>Li</td>
+            <td>Stable &infin;-categories</td>
+            <td></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">Alyosha</td>
+            <td class="jc">Journal club: Fock&ndash;Goncharov</td>
+            <td><a href="https://arxiv.org/abs/math/0311149">math/0311149</a></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">13 Oct</td>
+            <td>Li</td>
+            <td>Perverse schobers on a surface</td>
+            <td></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">&mdash;</td>
+            <td class="jc">Journal club: &mdash;</td>
+            <td></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">20 Oct</td>
+            <td>Li</td>
+            <td>Perverse t-structures and schobers</td>
+            <td></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">&mdash;</td>
+            <td class="jc">Journal club: Kapranov&ndash;Schechtman, shuffle algebras, bisheaves and perverse sheaves</td>
+            <td><a href="https://arxiv.org/abs/1904.09325">1904.09325</a></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">27 Oct</td>
+            <td>Alyosha</td>
+            <td>Exodromy and perverse sheaves. E<sub>n</sub> algebras.</td>
+            <td></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">&mdash;</td>
+            <td class="jc">Journal club: &mdash;</td>
+            <td></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">3 Nov</td>
+            <td>Alyosha</td>
+            <td>Porta&ndash;Teyssier</td>
+            <td><a href="https://arxiv.org/abs/2211.05004">2211.05004</a>, <a href="https://arxiv.org/abs/2401.12335">2401.12335</a></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">&mdash;</td>
+            <td class="jc">Journal club: &mdash;</td>
+            <td></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">10 Nov</td>
+            <td>&mdash;</td>
+            <td>Sheaves of QCoh-module categories</td>
+            <td></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">&mdash;</td>
+            <td class="jc">Journal club: &mdash;</td>
+            <td></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">17 Nov</td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td></td>
+        </tr>
+        <tr class="jcrow">
+            <td class="jc">&mdash;</td>
+            <td class="jc">Journal club: &mdash;</td>
+            <td></td>
+        </tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">24 Nov</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">1 Dec</td>
+            <td>&mdash;</td><td>(Around here we'll switch from basics about perverse schobers to rep theory applications)</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">8 Dec</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">15 Dec</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">5 Jan</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">12 Jan</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">19 Jan</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+        <tr class="lec">
+            <td class="date" rowspan="2">26 Jan</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+        <tr class="lec">
+            <td class="date" rowspan="2">2 Feb</td>
+            <td>&mdash;</td><td>&mdash;</td><td></td>
+        </tr>
+        <tr class="jcrow"><td class="jc">&mdash;</td><td class="jc">Journal club: &mdash;</td><td></td></tr>
+
+    </table>
+    </div>
+
+    <h3>Plans for the semester</h3>
+
+    <p>We'll first learn the main techniques people use to study perverse schobers, then about halfway through will switch to the kind of links with geometric representation theory we'll have seen in the journal club.</p>
+
+    <p>Papers we might review:</p>
+    <ul>
+        <li>Gaiotto, Moore, Neitzke, <i>Spectral networks</i>, and WKB [<a href="https://arxiv.org/abs/1204.4824">1204.4824</a>]</li>
+        <li>Fock, Goncharov, <i>Moduli spaces of local systems and higher Teichm&uuml;ller theory</i> [<a href="https://arxiv.org/abs/math/0311149">math/0311149</a>]</li>
+        <li>Casals, Christ, <i>Categorical Lusztig cycles and weave schobers</i> [<a href="https://arxiv.org/abs/2605.22440">2605.22440</a>]</li>
+        <li>Christ, Lampetti, <i>Lagrangian structures on the derived moduli of constructible sheaves</i> [<a href="https://arxiv.org/abs/2603.04983">2603.04983</a>]</li>
+        <li>Gaiotto, Moore, Witten, <i>Algebra of the infrared</i> [<a href="https://arxiv.org/abs/1408.2673">1408.2673</a>, <a href="https://arxiv.org/abs/2011.00845">2011.00845</a>]</li>
+        <li>Porta, Teyssier, <i>Homotopy theory of Stokes data</i> and <i>The derived moduli of Stokes data</i> [<a href="https://arxiv.org/abs/2401.12335">2401.12335</a>, <a href="https://arxiv.org/abs/2504.05360">2504.05360</a>]</li>
+        <li>Kapranov, Schechtman, <i>Shuffle algebras and perverse sheaves</i> [<a href="https://arxiv.org/abs/1904.09325">1904.09325</a>]</li>
+        <li>Bridgeland, <i>Stability conditions on triangulated categories</i> [<a href="https://arxiv.org/abs/math/0212237">math/0212237</a>]</li>
+        <li>Arg&uuml;z, Bousseau, attractor flow trees [<a href="https://arxiv.org/abs/2102.11200">2102.11200</a>, <a href="https://arxiv.org/abs/2302.02068">2302.02068</a>]</li>
+        <li>Kontsevich, Soibelman, <i>Stability structures, motivic Donaldson&ndash;Thomas invariants and cluster transformations</i>, and wall crossing [<a href="https://arxiv.org/abs/0811.2435">0811.2435</a>]</li>
+        <li>The KZ equations, and Drinfeld, <i>On quasitriangular quasi-Hopf algebras and a group closely connected with Gal(<span style="text-decoration: overline">Q</span>/Q)</i></li>
+        <li>Cluster algebras and cluster categories, and Hernandez, Leclerc, <i>Cluster algebras and quantum affine algebras</i> [<a href="https://arxiv.org/abs/0903.1452">0903.1452</a>]</li>
+    </ul>
+
+</div>
+
+<script>
+    var tooltip = document.createElement('div');
+    tooltip.className = 'copy-tooltip';
+    tooltip.textContent = 'Copied!';
+    document.body.appendChild(tooltip);
+
+    document.querySelectorAll('.email-link').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            navigator.clipboard.writeText(link.getAttribute('data-email')).then(function () {
+                tooltip.style.left = e.clientX + 'px';
+                tooltip.style.top = (e.clientY - 30) + 'px';
+                tooltip.classList.add('show');
+                setTimeout(function () { tooltip.classList.remove('show'); }, 1500);
+            });
+        });
+    });
+</script>
+
+<script>
+(function () {
+    var SCALE = 4;              /* css pixels per drawn pixel */
+    var BASE = '#1a3fd0';       /* spacetime / equivariant parameters: blue */
+    var GRID = '#9db4ec';
+    var STRAT = '#6f89cf';
+    var RAY = '#8e5bd0';
+    var DARK = '#0a1f7a';
+    var OBASE = '#a8400c';      /* Kahler moduli / stability space: the same in orange */
+    var OGRID = '#f0c08a';
+    var OSTRAT = '#d9822b';
+    var ODARK = '#7a3b0a';
+    var WALL = ['#6d28a8', '#c193e8', '#9a52c9'];   /* one shade per turning point */
+    /* one colour per total order of the three exponential factors */
+    var SECTOR = ['#e03127', '#f5c518', '#17a98c', '#f07818', '#a8c42a', '#3fae3a'];
+    var STEPS = 8;
+    var FULL = 2.4;             /* inside this radius the colour is simply the sector's */
+    var BAND = 1.4;             /* and it washes out to blue over this much more */
+
+    /* Porta-Teyssier's sheaf of posets, in the simplest interesting case:
+       I = { a/z : a^3 = 1 }, with a <=_x b iff e^{a-b} has moderate growth at x.
+       The order is locally constant on the six sectors cut out by the Stokes
+       rays arg(z) = 0, 60, ... 300 degrees, and jumps across each ray. */
+    var EXP = [[1, 0], [-0.5, 0.8660254], [-0.5, -0.8660254]];
+    var ORDER = { '012': 0, '021': 1, '102': 2, '120': 3, '201': 4, '210': 5 };
+
+    /* phi = (z^3 - 1) dz^2, with simple zeros at the cube roots of unity. Its three
+       periods have arguments 0, 60 and 120 degrees mod pi, so saddle connections --
+       wall crossings -- happen exactly at those phases. */
+    var CUBE = [[1, 0], [-0.5, 0.8660254], [-0.5, -0.8660254]];
+    var WALLARG = [0, Math.PI / 3, 2 * Math.PI / 3];
+    /* phi = (z^2 - 1) dz^2 is the simpler picture: two turning points, one period */
+    var PAIR = [[1, 0], [-1, 0]];
+
+    var THETA = 0;              /* the phase, shared by a wall picture and its stability partner */
+    /* phi = (z^2 - 1) dz^2 has the single period i pi / 2, so its one wall is at 90 degrees */
+    var PAIRARG = [Math.PI / 2];
+    /* the second phase wanders: it turns back now and then, and drifts in and out */
+    var WANDER = { th: 0, dir: 1, r: 2, rt: 2, sp: 1, spt: 1, next: 9 };
+
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function chan(c, i) { return parseInt(c.substr(1 + 2 * i, 2), 16); }
+    function mix(a, b, t) {
+        var o = '#', i, v;
+        for (i = 0; i < 3; i++) {
+            v = Math.round(chan(a, i) + (chan(b, i) - chan(a, i)) * t);
+            o += (v < 16 ? '0' : '') + v.toString(16);
+        }
+        return o;
+    }
+    /* where two families of walls coincide, take the colour in between */
+    var BLEND = WALL.map(function (a) {
+        return WALL.map(function (b) { return mix(a, b, 0.5); });
+    });
+
+    function gcd(a, b) { while (b) { var t = a % b; a = b; b = t; } return a; }
+
+    /* hue in degrees, s and l in [0,1] */
+    function hsl(h, sa, li) {
+        var c = (1 - Math.abs(2 * li - 1)) * sa, hp = (h % 360) / 60;
+        var x = c * (1 - Math.abs(hp % 2 - 1)), m = li - c / 2, r, g, b, o = '#', i, v;
+        if (hp < 1) { r = c; g = x; b = 0; }
+        else if (hp < 2) { r = x; g = c; b = 0; }
+        else if (hp < 3) { r = 0; g = c; b = x; }
+        else if (hp < 4) { r = 0; g = x; b = c; }
+        else if (hp < 5) { r = x; g = 0; b = c; }
+        else { r = c; g = 0; b = x; }
+        for (i = 0; i < 3; i++) {
+            v = Math.round(([r, g, b][i] + m) * 255);
+            v = Math.max(0, Math.min(255, v));
+            o += (v < 16 ? '0' : '') + v.toString(16);
+        }
+        return o;
+    }
+
+    var PALETTE = SECTOR.map(function (c) {
+        var col = [], i;
+        for (i = 0; i < STEPS; i++) { col.push(mix(BASE, c, i / (STEPS - 1))); }
+        return col;
+    });
+
+    function sectorAt(th) {
+        var s = [], i;
+        for (i = 0; i < 3; i++) { s.push(EXP[i][0] * Math.cos(th) + EXP[i][1] * Math.sin(th)); }
+        return ORDER[[0, 1, 2].sort(function (a, b) { return s[b] - s[a]; }).join('')];
+    }
+
+    function stokesRays() {
+        var out = [], i, j, A, B, t;
+        for (i = 0; i < 3; i++) {
+            for (j = i + 1; j < 3; j++) {
+                A = EXP[i][0] - EXP[j][0];
+                B = EXP[i][1] - EXP[j][1];
+                t = Math.atan2(-A, B);
+                out.push(t);
+                out.push(t + Math.PI);
+            }
+        }
+        return out;
+    }
+    var RAYS = stokesRays();
+    var wrnd = null;
+
+    function stepWander(dt) {
+        WANDER.next -= dt;
+        if (WANDER.next <= 0) {
+            WANDER.next = 9 + wrnd() * 15;
+            if (wrnd() < 0.4) { WANDER.dir = -WANDER.dir; }
+            if (wrnd() < 0.5) { WANDER.rt = 1.5 + wrnd() * 1.3; }   /* between 1.5 and 2.8 */
+            if (wrnd() < 0.55) { WANDER.spt = 0.45 + wrnd() * 1.25; }
+        }
+        WANDER.th += WANDER.dir * WANDER.sp * dt * 0.07;
+        WANDER.r += (WANDER.rt - WANDER.r) * Math.min(1, dt * 0.4);
+        WANDER.sp += (WANDER.spt - WANDER.sp) * Math.min(1, dt * 0.3);
+    }
+
+    function rng(a) {
+        return function () {
+            a |= 0; a = a + 0x6D2B79F5 | 0;
+            var t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+
+    function line(ctx, x0, y0, x1, y1) {
+        var dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        var dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        var err = dx + dy, e2;
+        for (;;) {
+            ctx.fillRect(x0, y0, 1, 1);
+            if (x0 === x1 && y0 === y1) { break; }
+            e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+    }
+
+    function Panel(canvas, scene, seed, hw, hh) {
+        var r = rng(seed), i, n, plain;
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.scene = scene;
+        this.hw = hw; this.hh = hh;
+        this.rand = r;
+        this.stat = document.createElement('canvas');
+        this.ranLike = scene === 'ran' || scene === 'stokesran';
+        this.stokesLike = scene === 'stokes' || scene === 'stokesran';
+        this.deg = scene === 'wall2' ? 2 : 3;
+        this.roots = scene === 'wall2' ? PAIR : CUBE;
+        this.hasNet = scene === 'wall2' || scene === 'wall3' || scene === 'stokes3';
+        this.isWall = scene === 'wall2' || scene === 'wall3';
+        this.isStab = scene === 'stab1' || scene === 'stab3';
+        /* the three-point picture and its stability partner share the wandering phase */
+        this.wander = scene === 'wall3' || scene === 'stab3';
+        this.walls = scene === 'stab1' ? PAIRARG : WALLARG;
+        plain = scene === 'grid' || scene === 'stratum' || scene === 'ran';
+        this.phaseX = plain ? Math.floor(r() * 2 * hw) : 0;
+        this.phaseY = plain ? Math.floor(r() * 2 * hh) : 0;
+        this.K = scene === 'wall2' ? 1.8 : (scene === 'wall3' ? 1.5 : 2.4);
+        this.fixedTheta = 0.45;      /* the stokes3 picture is drawn once, at this phase */
+        this.flash = []; this.flashCol = [];
+        this.canFall = scene === 'stokes' || scene === 'stokes3';
+        this.nextFall = 5 + r() * 8;
+        this.maxStuck = 3;
+        this.checkIn = 4;
+        this.w = 0; this.h = 0; this.active = false;
+        this.dots = [];
+        n = this.isWall || this.isStab ? 0 : (this.stokesLike || scene === 'stokes3' ? 9 : 6);
+        this.target = n;
+        for (i = 0; i < n; i++) {
+            this.dots.push({
+                fx: r(), fy: r(),
+                dir: Math.floor(r() * 4),
+                sp: 1.8 + r() * 2.4,        /* drawn pixels per second */
+                placed: false, stuck: false, alive: true, entering: false,
+                falling: false, bigT: 0
+            });
+        }
+    }
+
+    Panel.prototype.resize = function () {
+        var cw = this.canvas.clientWidth, ch = this.canvas.clientHeight, w, h, n, i;
+        if (!cw || !ch) { this.active = false; return; }
+        this.active = true;
+        w = Math.round(cw / SCALE);
+        h = Math.round(ch / SCALE);
+        if (w === this.w && h === this.h) { return; }
+        this.w = w; this.h = h;
+        this.canvas.width = w; this.canvas.height = h;
+        this.cx = Math.round(w / 2); this.cy = Math.round(h / 2);
+        this.ox = this.cx + this.phaseX; this.oy = this.cy + this.phaseY;
+        n = Math.sqrt(this.hw * this.hw + this.hh * this.hh);
+        this.dx = this.hw / n; this.dy = this.hh / n;   /* one axis of the tilted plane */
+        this.keepOut = this.hw * this.hh / n;           /* half a grid square, across the stratum */
+        this.berth = 0.6 * this.hw;
+        /* where the singularities sit on the screen */
+        this.sing = [];
+        if (this.stokesLike) { this.sing.push([this.ox, this.oy]); }
+        if (this.hasNet) {
+            for (i = 0; i < this.roots.length; i++) {
+                this.sing.push(this.project(this.roots[i][0], this.roots[i][1]));
+            }
+        }
+        for (i = 0; i < this.sing.length; i++) { this.flash.push(0); this.flashCol.push(DARK); }
+        this.place();
+        if (this.ranLike && !this.groups) { this.regroup(); }
+        this.buildStatic();
+    };
+
+    /* the plane of the picture, seen at an angle */
+    Panel.prototype.project = function (zr, zi) {
+        return [this.ox + this.K * (zr - zi) * this.hw,
+                this.oy + this.K * (zr + zi) * this.hh];
+    };
+
+    Panel.prototype.place = function () {
+        var i, d, su, sv;
+        for (i = 0; i < this.dots.length; i++) {
+            d = this.dots[i];
+            if (!d.placed) {
+                d.x = 2 + d.fx * (this.w - 4);
+                d.y = 2 + d.fy * (this.h - 4);
+                su = (d.dir & 1) ? 1 : -1;
+                sv = (d.dir & 2) ? 1 : -1;
+                if (this.scene === 'stratum') { sv = -su; }   /* across the stratum, not along it */
+                d.vx = su * this.dx * d.sp;
+                d.vy = sv * this.dy * d.sp;
+                d.placed = true;
+            } else if (!d.entering) {
+                d.x = Math.min(this.w - 2, Math.max(2, d.x));
+                d.y = Math.min(this.h - 2, Math.max(2, d.y));
+            }
+        }
+    };
+
+    Panel.prototype.buildStatic = function () {
+        var g = this.stat, gx;
+        g.width = this.w; g.height = this.h;
+        gx = g.getContext('2d');
+        this.drawGrid(gx, this.isStab ? OGRID : GRID);
+        if (this.isWall) { return; }
+        if (this.scene === 'stratum') { this.drawStratum(gx); }
+        if (this.stokesLike) { this.drawRays(gx); }
+        if (this.scene === 'stokes3') { this.drawNetwork(gx, this.fixedTheta, true); }
+        if (this.isStab) { this.drawStability(gx); }
+    };
+
+    Panel.prototype.drawGrid = function (gx, col) {
+        var i, j, x, y, N;
+        gx.fillStyle = col;
+        N = Math.ceil(Math.max(this.w / (2 * this.hw), this.h / (2 * this.hh))) + 2;
+        for (i = -N; i <= N; i++) {
+            for (j = -N; j <= N; j++) {
+                x = this.ox + (i - j) * this.hw;
+                y = this.oy + (i + j) * this.hh;
+                if (x < -2 * this.hw || x > this.w + 2 * this.hw) { continue; }
+                if (y < -2 * this.hh || y > this.h + 2 * this.hh) { continue; }
+                line(gx, x, y, x + this.hw, y + this.hh);
+                line(gx, x, y, x - this.hw, y + this.hh);
+            }
+        }
+    };
+
+    /* the 1-dimensional stratum: one of the axes of the grid, through the middle */
+    Panel.prototype.drawStratum = function (gx) {
+        var L = this.w + this.h, t, x, y;
+        gx.fillStyle = STRAT;
+        for (t = -L; t <= L; t += 0.5) {
+            x = Math.round(this.cx + this.dx * t);
+            y = Math.round(this.cy + this.dy * t);
+            if (x < 0 || x >= this.w || y < 0 || y >= this.h) { continue; }
+            gx.fillRect(x, y, 1, 1);
+        }
+    };
+
+    Panel.prototype.side = function (x, y) {
+        return (x - this.cx) * (-this.dy) + (y - this.cy) * this.dx;
+    };
+
+    Panel.prototype.stuckCount = function () {
+        var i, n = 0;
+        for (i = 0; i < this.dots.length; i++) {
+            if (this.dots[i].alive && this.dots[i].stuck) { n++; }
+        }
+        return n;
+    };
+
+    /* dashed, so they do not read as strata */
+    Panel.prototype.drawRays = function (gx) {
+        var i, th, t, x, y, step, lim, px, py, n;
+        gx.fillStyle = RAY;
+        step = 0.4 / this.hw;
+        lim = (this.w + this.h) / this.hh;
+        for (i = 0; i < RAYS.length; i++) {
+            th = RAYS[i];
+            n = 0;
+            for (t = 0; t < lim; t += step) {
+                n++;
+                px = t * Math.cos(th); py = t * Math.sin(th);
+                x = Math.round(this.ox + (px - py) * this.hw);
+                y = Math.round(this.oy + (px + py) * this.hh);
+                if (x < 0 || x >= this.w || y < 0 || y >= this.h) { break; }
+                if (n % 8 < 4) { gx.fillRect(x, y, 1, 1); }
+            }
+        }
+    };
+
+    /* the three walls of the stability picture, and the point Z_theta going round */
+    Panel.prototype.drawStability = function (gx) {
+        var i, t, x, y, L = this.w / this.hw + this.h / this.hh, c, s;
+        gx.fillStyle = OSTRAT;
+        for (i = 0; i < this.walls.length; i++) {
+            c = Math.cos(this.walls[i]); s = Math.sin(this.walls[i]);
+            for (t = -L; t <= L; t += 0.03) {
+                x = Math.round(this.ox + (t * c - t * s) * this.hw);
+                y = Math.round(this.oy + (t * c + t * s) * this.hh);
+                if (x < 0 || x >= this.w || y < 0 || y >= this.h) { continue; }
+                gx.fillRect(x, y, 1, 1);
+            }
+        }
+        gx.fillStyle = ODARK;
+        gx.fillRect(this.ox - 1, this.oy - 1, 2, 2);
+    };
+
+    /* new points are born outside the frame and walk in, heading for the middle */
+    Panel.prototype.spawn = function () {
+        var r = this.rand, i, k = -1, d = null, e, su, sv, half;
+        for (i = 0; i < this.dots.length; i++) {
+            if (!this.dots[i].alive) { d = this.dots[i]; k = i; break; }
+        }
+        if (!d) {
+            d = { sp: 1.8 + r() * 2.4, placed: true, bigT: 0 };
+            this.dots.push(d);
+            k = this.dots.length - 1;
+        }
+        d.alive = true; d.stuck = false; d.falling = false; d.entering = true; d.bigT = 0;
+        e = Math.floor(r() * 4);
+        su = r() < 0.5 ? 1 : -1;
+        sv = r() < 0.5 ? 1 : -1;
+        if (e < 2) {
+            su = e === 0 ? 1 : -1;
+            if (this.scene === 'stratum') { sv = -su; }
+            /* start in the half it is heading away from, so it really does come inside */
+            half = sv > 0 ? r() * 0.45 : 0.55 + r() * 0.45;
+            d.x = e === 0 ? -4 : this.w + 4;
+            d.y = 2 + half * (this.h - 4);
+        } else {
+            sv = e === 2 ? 1 : -1;
+            if (this.scene === 'stratum') { su = -sv; }
+            half = su > 0 ? r() * 0.45 : 0.55 + r() * 0.45;
+            d.y = e === 2 ? -4 : this.h + 4;
+            d.x = 2 + half * (this.w - 4);
+        }
+        d.vx = su * this.dx * d.sp;
+        d.vy = sv * this.dy * d.sp;
+        return k;
+    };
+
+    /* nothing may be lost for good: anything adrift is put back */
+    Panel.prototype.patrol = function (dt) {
+        var i, d;
+        this.checkIn -= dt;
+        if (this.checkIn > 0) { return; }
+        this.checkIn = 4;
+        for (i = 0; i < this.dots.length; i++) {
+            d = this.dots[i];
+            if (!d.alive) { continue; }
+            if (d.x < -25 || d.x > this.w + 25 || d.y < -25 || d.y > this.h + 25) {
+                d.alive = false;
+            }
+        }
+        while (this.count() < this.target) {
+            if (this.ranLike) { this.groups.push(this.makeGroup([this.spawn()])); }
+            else { this.spawn(); }
+        }
+    };
+
+    /* ---- subsets of points, and their collisions ---- */
+
+    Panel.prototype.eligible = function (d) {
+        var M = 6;
+        return d.alive && !d.entering &&
+            d.x > M && d.x < this.w - M && d.y > M && d.y < this.h - M;
+    };
+
+    Panel.prototype.makeGroup = function (m) {
+        var r = this.rand;
+        /* now and then a subset comes with angular momentum, and spirals together */
+        return { m: m, spin: (m.length > 1 && r() < 0.3) ? (r() < 0.5 ? -1 : 1) : 0 };
+    };
+
+    Panel.prototype.regroup = function () {
+        var r = this.rand, idx = [], i, j, t;
+        for (i = 0; i < this.dots.length; i++) { if (this.dots[i].alive) { idx.push(i); } }
+        for (i = idx.length - 1; i > 0; i--) {
+            j = Math.floor(r() * (i + 1));
+            t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+        }
+        this.groups = [];
+        this.maxThree = 2;
+        this.singleFrac = 0.65;         /* about two thirds stay on their own */
+        this.matchIn = 2 + r() * 3;
+        i = 0;
+        while (i < idx.length) {
+            if (idx.length - i >= 2 && r() > this.singleFrac) {
+                this.groups.push(this.makeGroup([idx[i], idx[i + 1]])); i += 2;
+            } else {
+                this.groups.push(this.makeGroup([idx[i]])); i += 1;
+            }
+        }
+    };
+
+    Panel.prototype.count = function () {
+        var i, n = 0;
+        for (i = 0; i < this.dots.length; i++) { if (this.dots[i].alive) { n++; } }
+        return n;
+    };
+
+    /* pair up the two nearest lone points, so that nobody is dragged across the frame */
+    Panel.prototype.matchmake = function () {
+        var sing = [], i, j, g, a, b, dx, dy, dd;
+        var best = 1e9, bi = -1, bj = -1, threes = 0, k, pair = -1;
+        for (i = 0; i < this.groups.length; i++) {
+            g = this.groups[i];
+            if (g.m.length === 1 && this.eligible(this.dots[g.m[0]])) { sing.push(i); }
+        }
+        if (sing.length < 2) { return; }
+        if (sing.length <= Math.ceil(this.groups.length * this.singleFrac)) { return; }
+        for (i = 0; i < sing.length; i++) {
+            for (j = i + 1; j < sing.length; j++) {
+                a = this.dots[this.groups[sing[i]].m[0]];
+                b = this.dots[this.groups[sing[j]].m[0]];
+                dx = a.x - b.x; dy = (a.y - b.y) * (this.hw / this.hh);
+                dd = dx * dx + dy * dy;
+                if (dd < best) { best = dd; bi = sing[i]; bj = sing[j]; }
+            }
+        }
+        if (bi < 0) { return; }
+        for (k = 0; k < this.groups.length; k++) {
+            if (this.groups[k].m.length >= 3) { threes++; }
+            else if (this.groups[k].m.length === 2 && pair < 0) { pair = k; }
+        }
+        if (pair >= 0 && threes < this.maxThree && this.rand() < 0.25) {
+            this.groups[pair].m.push(this.groups[bi].m[0]);   /* make it a triple */
+            this.groups.splice(bi, 1);
+            return;
+        }
+        this.groups[bi] = this.makeGroup([this.groups[bi].m[0], this.groups[bj].m[0]]);
+        this.groups.splice(bj, 1);
+    };
+
+    Panel.prototype.merge = function (k, i, j) {
+        var g = this.groups[k].m, a = this.dots[g[i]], b = this.dots[g[j]];
+        a.x = (a.x + b.x) / 2; a.y = (a.y + b.y) / 2;
+        a.vx = (a.vx + b.vx) / 2; a.vy = (a.vy + b.vy) / 2;
+        a.bigT = 6;                    /* big for a few seconds, then slowly back to normal */
+        b.alive = false;
+        g.splice(j, 1);
+        if (g.length < 2) { this.groups[k].spin = 0; }
+        /* the replacement walks in on its own, and joins up only once it is inside */
+        if (this.count() < this.target) { this.groups.push(this.makeGroup([this.spawn()])); }
+    };
+
+    Panel.prototype.stepRan = function (dt) {
+        var k, i, j, G, g, d, a, b, cx, cy, n, dx, dy, dist, wgt, vx, vy, tx, ty;
+        this.matchIn -= dt;
+        if (this.matchIn <= 0) { this.matchIn = 2 + this.rand() * 3; this.matchmake(); }
+        for (k = 0; k < this.groups.length; k++) {
+            G = this.groups[k]; g = G.m;
+            n = g.length;
+            if (n < 2) {
+                d = this.dots[g[0]];
+                if (d.alive) { d.x += d.vx * dt; d.y += d.vy * dt; }
+                continue;
+            }
+            cx = 0; cy = 0;
+            for (i = 0; i < n; i++) { cx += this.dots[g[i]].x; cy += this.dots[g[i]].y; }
+            cx /= n; cy /= n;
+            for (i = 0; i < n; i++) {
+                d = this.dots[g[i]];
+                dx = cx - d.x; dy = cy - d.y;
+                dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                /* the random drift fades out as the subset closes in on itself */
+                wgt = Math.min(1, Math.max(0.15, dist / 12));
+                vx = d.vx * wgt + (dx / dist) * 2.4;
+                vy = d.vy * wgt + (dy / dist) * 2.4 * (this.hh / this.hw);
+                if (G.spin) {
+                    tx = -dy / dist; ty = dx / dist;
+                    vx += G.spin * tx * 2;
+                    vy += G.spin * ty * 2 * (this.hh / this.hw);
+                }
+                d.x += vx * dt;
+                d.y += vy * dt;
+            }
+        }
+        for (i = 0; i < this.dots.length; i++) {
+            d = this.dots[i];
+            if (!d.alive) { continue; }
+            if (d.bigT > 0) { d.bigT -= dt; }
+            if (d.entering) {
+                if (d.x > 2 && d.x < this.w - 2 && d.y > 2 && d.y < this.h - 2) { d.entering = false; }
+                continue;
+            }
+            if (d.x < 2) { d.x = 2; d.vx = Math.abs(d.vx); }
+            else if (d.x > this.w - 2) { d.x = this.w - 2; d.vx = -Math.abs(d.vx); }
+            if (d.y < 2) { d.y = 2; d.vy = Math.abs(d.vy); }
+            else if (d.y > this.h - 2) { d.y = this.h - 2; d.vy = -Math.abs(d.vy); }
+            if (this.sing.length) { this.avoid(d, dt); }
+        }
+        for (k = this.groups.length - 1; k >= 0; k--) {
+            g = this.groups[k].m;
+            for (i = 0; i < g.length; i++) {
+                for (j = i + 1; j < g.length; j++) {
+                    a = this.dots[g[i]]; b = this.dots[g[j]];
+                    dx = a.x - b.x;
+                    dy = (a.y - b.y) * (this.hw / this.hh);
+                    if (dx * dx + dy * dy < 4) { this.merge(k, i, j); i = g.length; break; }
+                }
+            }
+        }
+        this.patrol(dt);
+    };
+
+    /* points keep a respectful distance from the singularities */
+    Panel.prototype.avoid = function (d, dt) {
+        var i, ax, ay, ad, push, R = this.berth;
+        for (i = 0; i < this.sing.length; i++) {
+            ax = d.x - this.sing[i][0];
+            ay = (d.y - this.sing[i][1]) * (this.hw / this.hh);
+            ad = Math.sqrt(ax * ax + ay * ay);
+            if (ad < R && ad > 0.01) {
+                push = (1 - ad / R) * 6 * dt;
+                d.x += (ax / ad) * push;
+                d.y += (ay / ad) * push * (this.hh / this.hw);
+            }
+        }
+    };
+
+    /* ---- a point is now and then swallowed by the singularity ---- */
+    Panel.prototype.stepFalling = function (dt) {
+        var i, d, pick = [], dx, dy, t;
+        for (i = 0; i < this.flash.length; i++) { this.flash[i] -= dt; }
+        this.nextFall -= dt;
+        if (this.nextFall <= 0) {
+            for (i = 0; i < this.dots.length; i++) {
+                d = this.dots[i];
+                if (d.alive && !d.falling && !d.entering) { pick.push(d); }
+            }
+            if (pick.length) {
+                d = pick[Math.floor(this.rand() * pick.length)];
+                d.falling = true;
+                d.tgt = Math.floor(this.rand() * this.sing.length);
+            }
+            this.nextFall = 6 + this.rand() * 10;
+        }
+        for (i = 0; i < this.dots.length; i++) {
+            d = this.dots[i];
+            if (!d.alive || !d.falling) { continue; }
+            t = this.sing[d.tgt] || this.sing[0];
+            dx = t[0] - d.x; dy = t[1] - d.y;
+            if (Math.sqrt(dx * dx + dy * dy) < 1.6) {
+                this.flashCol[d.tgt] = this.colour(d);
+                this.flash[d.tgt] = 2.2;
+                d.alive = false;
+                this.spawn();
+            }
+        }
+    };
+
+    Panel.prototype.step = function (dt) {
+        var i, d, nx, ny, bx, by, s0, s1, t, sgn;
+        if (this.isWall || this.isStab) { return; }
+        if (this.ranLike) { this.stepRan(dt); return; }
+        if (this.canFall) { this.stepFalling(dt); }
+        for (i = 0; i < this.dots.length; i++) {
+            d = this.dots[i];
+            if (!d.alive) { continue; }
+            if (d.bigT > 0) { d.bigT -= dt; }
+            nx = d.x + d.vx * dt;
+            ny = d.y + d.vy * dt;
+            if (d.falling) {
+                t = this.sing[d.tgt] || this.sing[0];
+                s0 = t[0] - d.x; s1 = t[1] - d.y;
+                t = Math.sqrt(s0 * s0 + s1 * s1) || 1;
+                d.x += (d.vx * 0.25 + (s0 / t) * 6.4) * dt;
+                d.y += (d.vy * 0.25 + (s1 / t) * 6.4 * (this.hh / this.hw)) * dt;
+                continue;
+            }
+            if (d.entering) {
+                if (nx > 2 && nx < this.w - 2 && ny > 2 && ny < this.h - 2) { d.entering = false; }
+            } else {
+                bx = nx < 2 || nx > this.w - 2;
+                by = ny < 2 || ny > this.h - 2;
+                if (bx || by) {
+                    /* a dot that has slid off the end of the stratum is replaced */
+                    if (d.stuck) { d.alive = false; this.spawn(); continue; }
+                    if (bx) { d.vx = -d.vx; }
+                    if (by) { d.vy = -d.vy; }
+                    nx = Math.min(this.w - 2, Math.max(2, nx));
+                    ny = Math.min(this.h - 2, Math.max(2, ny));
+                }
+                if (this.scene === 'stratum' && !d.stuck) {
+                    s1 = this.side(nx, ny);
+                    s0 = this.side(d.x, d.y);
+                    if (this.stuckCount() < this.maxStuck) {
+                        if (s0 * s1 <= 0) {
+                            /* it has met the stratum, and from now on it lives there */
+                            t = (nx - this.cx) * this.dx + (ny - this.cy) * this.dy;
+                            nx = this.cx + this.dx * t;
+                            ny = this.cy + this.dy * t;
+                            sgn = (d.vx * this.dx + d.vy * this.dy) >= 0 ? 1 : -1;
+                            d.vx = sgn * this.dx * d.sp;
+                            d.vy = sgn * this.dy * d.sp;
+                            d.stuck = true;
+                        }
+                    } else if (Math.abs(s1) < this.keepOut && Math.abs(s1) <= Math.abs(s0)) {
+                        /* the stratum is full: stay half a square clear of it */
+                        d.vx = -d.vx; d.vy = -d.vy;
+                        nx = d.x; ny = d.y;
+                    }
+                }
+            }
+            d.x = nx; d.y = ny;
+            if (this.sing.length) { this.avoid(d, dt); }
+        }
+        this.patrol(dt);
+    };
+
+    Panel.prototype.colour = function (d) {
+        var u, v, px, py, r, lev, k;
+        if (this.scene === 'stokes3') {
+            k = Math.round(d.y) * this.w + Math.round(d.x);
+            k = this.reg && k >= 0 && k < this.reg.length ? this.reg[k] : 0;
+            /* while it is on a wall it keeps the colour of the region it came from,
+               so the change happens once, on the far side, rather than through a
+               third colour on the line itself */
+            if (k > 0) { d.reg = k; }
+            return this.regCol[d.reg || 1] || BASE;
+        }
+        if (!this.stokesLike) { return BASE; }
+        u = (d.x - this.ox) / this.hw;
+        v = (d.y - this.oy) / this.hh;
+        px = (u + v) / 2; py = (v - u) / 2;
+        r = Math.sqrt(px * px + py * py);
+        /* simply the sector's colour nearby; only well outside does it wash out */
+        lev = r <= FULL ? STEPS - 1
+            : Math.round((1 - Math.min(1, (r - FULL) / BAND)) * (STEPS - 1));
+        return PALETTE[sectorAt(Math.atan2(py, px))][lev];
+    };
+
+    /* ---- walls of the spectral network of phi = (z^3 - 1) dz^2, at phase th ---- */
+    /* the derivative of phi at z, which sets both the branch and the initial directions */
+    Panel.prototype.dphi = function (zr, zi) {
+        if (this.deg === 2) { return [2 * zr, 2 * zi]; }
+        return [3 * (zr * zr - zi * zi), 6 * zr * zi];
+    };
+
+    Panel.prototype.traceWall = function (ctx, m, k, th, mode) {
+        var z0r = this.roots[m][0], z0i = this.roots[m][1];
+        var d0 = this.dphi(z0r, z0i), argG = Math.atan2(d0[1], d0[0]) / 2;
+        var gm = Math.sqrt(Math.sqrt(d0[0] * d0[0] + d0[1] * d0[1]));
+        var eps = 0.05, a, zr, zi, sr, si, i, dt, mag, vr, vi, x, y, pp;
+        var sm2, qr, qi, nsr, nsi, S = this.K * this.hw * 1.6, key, cur = null, col, n = 0, who;
+        a = (2 / 3) * (th - argG) + 4.18879 * k;
+        zr = z0r + eps * Math.cos(a);
+        zi = z0i + eps * Math.sin(a);
+        mag = gm * Math.sqrt(eps);
+        sr = mag * Math.cos(a / 2 + argG);
+        si = mag * Math.sin(a / 2 + argG);
+        for (i = 0; i < 1400; i++) {
+            sm2 = sr * sr + si * si;
+            if (sm2 < 1e-7) { break; }
+            vr = (Math.cos(th) * sr + Math.sin(th) * si) / sm2;
+            vi = (Math.sin(th) * sr - Math.cos(th) * si) / sm2;
+            dt = Math.min(0.4, (0.5 / S) / Math.sqrt(vr * vr + vi * vi));
+            /* s' = phi'(z) v / (2 s), carried along so that the branch stays continuous */
+            pp = this.dphi(zr, zi);
+            qr = 0.5 * (pp[0] * vr - pp[1] * vi);
+            qi = 0.5 * (pp[0] * vi + pp[1] * vr);
+            nsr = sr + dt * (qr * sr + qi * si) / sm2;
+            nsi = si + dt * (qi * sr - qr * si) / sm2;
+            sr = nsr; si = nsi;
+            zr += dt * vr;
+            zi += dt * vi;
+            if (zr < -6 || zr > 6 || zi < -6 || zi > 6) { break; }
+            x = Math.round(this.ox + this.K * (zr - zi) * this.hw);
+            y = Math.round(this.oy + this.K * (zr + zi) * this.hh);
+            /* keep going even when off the panel, so that what comes back is drawn */
+            if (x < 0 || x >= this.w || y < 0 || y >= this.h) { continue; }
+            n++;
+            if (mode === 'net') {
+                this.mask[y * this.w + x] = 1;
+                if (n % 8 < 4) { ctx.fillRect(x, y, 1, 1); }
+            } else {
+                key = x + ',' + y;
+                who = this.hitA[key];
+                col = (who === undefined || who === m) ? WALL[m] : BLEND[who][m];
+                if (who === undefined) { this.hitA[key] = m; }
+                if (col !== cur) { ctx.fillStyle = col; cur = col; }
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+    };
+
+    Panel.prototype.turningPoints = function (ctx) {
+        var i, p;
+        ctx.fillStyle = DARK;
+        for (i = 0; i < this.roots.length; i++) {
+            p = this.project(this.roots[i][0], this.roots[i][1]);
+            ctx.fillRect(Math.round(p[0]) - 1, Math.round(p[1]) - 1, 2, 2);
+        }
+    };
+
+    Panel.prototype.phase = function () { return this.wander ? WANDER.th : THETA; };
+
+    Panel.prototype.drawWall = function (ctx) {
+        var m, k, th = this.phase();
+        this.hitA = {};
+        for (m = 0; m < this.roots.length; m++) {
+            for (k = 0; k < 3; k++) { this.traceWall(ctx, m, k, th, 'wall'); }
+        }
+        this.turningPoints(ctx);
+    };
+
+    /* the same network at a fixed phase, with the sectors it cuts out */
+    Panel.prototype.drawNetwork = function (gx, th) {
+        var m, k, pt, ax, ay, x, y;
+        this.mask = [];
+        for (m = 0; m < this.w * this.h; m++) { this.mask.push(0); }
+        gx.fillStyle = RAY;
+        for (m = 0; m < this.roots.length; m++) {
+            for (k = 0; k < 3; k++) { this.traceWall(gx, m, k, th, 'net'); }
+        }
+        /* the walls begin a short way out from each zero: plug the gap, or the
+           sectors around it would all run into one another */
+        for (m = 0; m < this.roots.length; m++) {
+            pt = this.project(this.roots[m][0], this.roots[m][1]);
+            for (ax = -2; ax <= 2; ax++) {
+                for (ay = -2; ay <= 2; ay++) {
+                    if (ax * ax + ay * ay > 4) { continue; }
+                    x = Math.round(pt[0]) + ax; y = Math.round(pt[1]) + ay;
+                    if (x >= 0 && x < this.w && y >= 0 && y < this.h) {
+                        this.mask[y * this.w + x] = 1;
+                    }
+                }
+            }
+        }
+        this.buildRegions();
+    };
+
+    /* flood fill the complement of the walls: the sectors of the picture */
+    Panel.prototype.buildRegions = function () {
+        var w = this.w, h = this.h, reg = [], id = 0, i, stack, p, x, y, stride, hue;
+        for (i = 0; i < w * h; i++) { reg.push(this.mask[i] ? -1 : 0); }
+        for (i = 0; i < w * h; i++) {
+            if (reg[i] !== 0) { continue; }
+            id++;
+            stack = [i];
+            reg[i] = id;
+            while (stack.length) {
+                p = stack.pop();
+                x = p % w; y = (p - x) / w;
+                if (x > 0 && reg[p - 1] === 0) { reg[p - 1] = id; stack.push(p - 1); }
+                if (x < w - 1 && reg[p + 1] === 0) { reg[p + 1] = id; stack.push(p + 1); }
+                if (y > 0 && reg[p - w] === 0) { reg[p - w] = id; stack.push(p - w); }
+                if (y < h - 1 && reg[p + w] === 0) { reg[p + w] = id; stack.push(p + w); }
+            }
+        }
+        this.reg = reg;
+        this.regions = id;
+        /* every region gets its own colour: the hues are spread evenly over the warm
+           part of the wheel, and taken in a stride so that neighbours are far apart */
+        this.regCol = [BASE];
+        stride = Math.max(1, Math.round(id * 0.4));
+        while (stride > 1 && gcd(stride, id) !== 1) { stride--; }
+        for (i = 1; i <= id; i++) {
+            hue = (325 + ((i * stride) % id) * (210 / id)) % 360;
+            this.regCol.push(hsl(hue, 0.8, 0.42 + 0.07 * (i % 2)));
+        }
+    };
+
+    Panel.prototype.draw = function () {
+        var ctx = this.ctx, i, d, sz, px, py, x, y;
+        ctx.clearRect(0, 0, this.w, this.h);
+        ctx.drawImage(this.stat, 0, 0);
+        if (this.isWall) { this.drawWall(ctx); return; }
+        if (this.isStab) {
+            /* Z_theta, going round the singular point of the stability picture */
+            sz = this.wander ? WANDER.r : 2;
+            px = sz * Math.cos(this.phase()); py = sz * Math.sin(this.phase());
+            x = Math.round(this.ox + (px - py) * this.hw);
+            y = Math.round(this.oy + (px + py) * this.hh);
+            ctx.fillStyle = OBASE;
+            ctx.fillRect(x - 1, y - 1, 2, 2);
+            return;
+        }
+        for (i = 0; i < this.dots.length; i++) {
+            d = this.dots[i];
+            if (!d.alive) { continue; }
+            sz = d.bigT > 4.5 ? 4 : (d.bigT > 1.5 ? 3 : 2);
+            ctx.fillStyle = this.colour(d);
+            ctx.fillRect(Math.round(d.x) - (sz >> 1), Math.round(d.y) - (sz >> 1), sz, sz);
+        }
+        for (i = 0; i < this.sing.length; i++) {
+            ctx.fillStyle = this.flash[i] > 0 ? this.flashCol[i] : DARK;
+            ctx.fillRect(Math.round(this.sing[i][0]) - 1, Math.round(this.sing[i][1]) - 1, 2, 2);
+        }
+    };
+
+    var panels = [];
+    function add(id, scene, seed, hw, hh) {
+        var el = document.getElementById(id);
+        if (el && el.getContext) { panels.push(new Panel(el, scene, seed, hw, hh)); }
+    }
+    wrnd = rng(31337);
+    /* left column, down the page */
+    add('g1', 'grid', 8123, 8, 4);
+    add('g2', 'stokes', 9100, 16, 8);
+    add('g3', 'ran', 3312, 8, 4);
+    add('g4', 'stokesran', 5501, 16, 8);
+    add('g5', 'stokes3', 2024, 8, 4);
+    /* right column, down the page: each wall picture with its stability space below it */
+    add('g6', 'grid', 4471, 8, 4);
+    add('g7', 'stratum', 9977, 8, 4);
+    add('g8', 'wall2', 7755, 6, 3);
+    add('g9', 'stab1', 6161, 8, 4);
+    add('g10', 'wall3', 4004, 6, 3);
+    add('g11', 'stab3', 1290, 8, 4);
+
+    function sizeAll() {
+        panels.forEach(function (p) {
+            p.resize();
+            if (p.active) { p.draw(); }
+        });
+    }
+
+    var prev = 0, lastDraw = 0;
+    function frame(t) {
+        var dt;
+        if (!prev) { prev = t; }
+        dt = Math.min(0.5, (t - prev) / 1000);
+        prev = t;
+        THETA += dt * 0.07;
+        stepWander(dt);
+        panels.forEach(function (p) { if (p.active) { p.step(dt); } });
+        if (t - lastDraw > 80) {
+            lastDraw = t;
+            panels.forEach(function (p) { if (p.active) { p.draw(); } });
+        }
+        requestAnimationFrame(frame);
+    }
+
+    window.addEventListener('resize', sizeAll);
+    sizeAll();
+    if (!reduce) { requestAnimationFrame(frame); }
+}());
+</script>
+
+</body>
+</html>
