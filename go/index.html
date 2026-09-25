@@ -362,7 +362,7 @@ function render() {
   svg.setAttribute('viewBox', `0 0 ${V} ${V}`);
   svg.innerHTML = '';
   if (hasOwn) for (let p = 0; p < n * n; p++) {
-    const v = own[p]; if (Math.abs(v) < 0.08 || P.board[p]) continue;
+    const v = own[p]; if (Math.abs(v) < 0.08) continue;
     el('rect', { x: p % n + 0.5, y: Math.floor(p / n) + 0.5, width: 1, height: 1, fill: v > 0 ? `rgba(0,0,0,${(v * 0.6).toFixed(2)})` : `rgba(255,255,255,${(-v * 0.8).toFixed(2)})` }, svg);
   }
   drawGrid(n, svg, 0.04);
