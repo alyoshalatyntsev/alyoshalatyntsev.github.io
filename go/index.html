@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Go</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: #f3ede2; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color: #222; }
+  #app { max-width: 720px; margin: 0 auto; padding: 10px 12px 24px; }
+  #banner { font-size: 30px; font-weight: 700; text-align: center; padding: 16px 10px; border-radius: 14px; margin-bottom: 10px; background: #ddd; color: #555; }
+  #banner.turn { background: #2e7d32; color: #fff; }
+  #banner.wait { background: #d8d2c6; color: #555; }
+  #banner.alert { background: #e65100; color: #fff; }
+  #sub { text-align: center; font-size: 17px; margin: -2px 0 10px; min-height: 22px; }
+  #info { display: flex; justify-content: space-between; align-items: center; font-size: 17px; margin-bottom: 8px; gap: 8px; }
+  .dot { display: inline-block; width: 18px; height: 18px; border-radius: 50%; vertical-align: -3px; margin-right: 5px; border: 1px solid #000; }
+  .dot.b { background: #111; } .dot.w { background: #fff; }
+  #boardwrap { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }
+  svg { width: 100%; height: 100%; display: block; }
+  #buttons { display: flex; gap: 10px; margin-top: 14px; }
+  button { flex: 1; font-size: 20px; padding: 16px 6px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: .4; }
+  #dialog { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+  #dialog .box { background: #fff; border-radius: 16px; padding: 22px; max-width: 420px; width: 100%; text-align: center; }
+  #dialog p { font-size: 21px; margin: 0 0 18px; }
+  #dialog .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #dialog button { background: #eee; }
+  #dialog button.primary { background: #2e7d32; color: #fff; }
+  #claim { display: none; text-align: center; margin-top: 16px; font-size: 16px; }
+  #claim button { font-size: 16px; padding: 10px; margin: 6px 4px; flex: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="banner" class="wait">Connecting…</div>
+  <div id="sub"></div>
+  <div id="info">
+    <div id="me"></div>
+    <div id="caps"></div>
+  </div>
+  <div id="boardwrap"><svg id="board"></svg></div>
+  <div id="buttons">
+    <button id="pass">Pass</button>
+    <button id="undo">Undo</button>
+    <button id="new">New game</button>
+  </div>
+  <div id="claim">
+    Playing on a new phone or computer?<br>
+    <button data-c="b">I am Black</button><button data-c="w">I am White</button>
+  </div>
+</div>
+<div id="dialog"><div class="box"><p id="dmsg"></p><div class="row" id="dbtns"></div></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDf2aZioehr3Owb9bf4gmRjgRii0i5Ctbc",
+  authDomain: "project-0cbb7d36-56e5-441e-8fe.firebaseapp.com",
+  databaseURL: "https://project-0cbb7d36-56e5-441e-8fe-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "project-0cbb7d36-56e5-441e-8fe",
+  appId: "1:531740406755:web:fe0ee4c37001a9d4e966d6"
+};
+firebase.initializeApp(firebaseConfig);
+const ref = firebase.database().ref('go/game');
+
+// ---------- device identity ----------
+let me = null;
+try { me = localStorage.getItem('goDevice'); } catch (e) {}
+if (!me) { me = Math.random().toString(36).slice(2) + Date.now().toString(36); try { localStorage.setItem('goDevice', me); } catch (e) {} }
+
+const NAME = { b: 'Black', w: 'White' };
+const other = c => c === 'b' ? 'w' : 'b';
+const coarse = matchMedia('(pointer: coarse)').matches;
+
+// ---------- rules engine: replay the move list ----------
+function replay(size, moves) {
+  let board = new Array(size * size).fill('');
+  const caps = { b: 0, w: 0 };
+  let prev = null;           // board before the last move (for ko)
+  for (let i = 0; i < moves.length; i++) {
+    const c = i % 2 === 0 ? 'b' : 'w';
+    const r = play(size, board, prev, c, moves[i]);
+    if (!r) break;           // should not happen
+    prev = board; board = r.board; caps[c] += r.captured;
+  }
+  return { board, caps, prev };
+}
+
+function neighbours(size, p) {
+  const x = p % size, y = (p - x) / size, n = [];
+  if (x > 0) n.push(p - 1); if (x < size - 1) n.push(p + 1);
+  if (y > 0) n.push(p - size); if (y < size - 1) n.push(p + size);
+  return n;
+}
+function group(size, board, p) {
+  const c = board[p], stones = [p], seen = new Set([p]); let libs = 0; const libSeen = new Set();
+  for (let i = 0; i < stones.length; i++) for (const q of neighbours(size, stones[i])) {
+    if (board[q] === '') { if (!libSeen.has(q)) { libSeen.add(q); libs++; } }
+    else if (board[q] === c && !seen.has(q)) { seen.add(q); stones.push(q); }
+  }
+  return { stones, libs };
+}
+// returns {board, captured} or null if illegal (with reason in play.why)
+function play(size, board, prev, c, mv) {
+  if (mv === 'pass') return { board, captured: 0 };
+  const p = mv;
+  if (board[p] !== '') { play.why = 'There is already a stone there.'; return null; }
+  const nb = board.slice(); nb[p] = c; let captured = 0;
+  for (const q of neighbours(size, p)) if (nb[q] === other(c)) {
+    const g = group(size, nb, q);
+    if (g.libs === 0) { for (const s of g.stones) nb[s] = ''; captured += g.stones.length; }
+  }
+  if (group(size, nb, p).libs === 0) { play.why = 'You can’t play there – your stone would have no liberties.'; return null; }
+  if (prev && nb.every((v, i) => v === prev[i])) { play.why = 'Ko: you must play somewhere else first before retaking.'; return null; }
+  return { board: nb, captured };
+}
+
+// ---------- state ----------
+let G = null, S = null, myColour = null, ghost = null;
+
+ref.on('value', snap => {
+  G = snap.val();
+  if (!G || !G.size) { newGame(19, true); return; }
+  G.moves = G.moves || [];
+  G.players = G.players || {};
+  S = replay(G.size, G.moves);
+  // claim a seat if free
+  if (G.players.b === me) myColour = 'b';
+  else if (G.players.w === me) myColour = 'w';
+  else {
+    myColour = null;
+    const seat = !G.players.b ? 'b' : !G.players.w ? 'w' : null;
+    if (seat) { claim(seat, false); return; }
+  }
+  ghost = null;
+  render();
+  handleUndoRequest();
+});
+
+function claim(c, force) {
+  ref.child('players/' + c).transaction(cur => (!cur || force) ? me : undefined);
+}
+
+function newGame(size, onlyIfEmpty) {
+  ref.transaction(cur => {
+    if (onlyIfEmpty && cur && cur.size) return undefined;
+    return { size, moves: [], players: (cur && cur.players) || {}, id: Date.now() };
+  });
+}
+
+function turn() { return G.moves.length % 2 === 0 ? 'b' : 'w'; }
+function gameOver() { const m = G.moves, n = m.length; return n >= 2 && m[n - 1] === 'pass' && m[n - 2] === 'pass'; }
+
+function submit(mv) {
+  const n = G.moves.length;
+  ref.transaction(cur => {
+    if (!cur || (cur.moves || []).length !== n || cur.undo) return undefined;
+    cur.moves = cur.moves || []; cur.moves.push(mv); return cur;
+  });
+}
+
+// ---------- rendering ----------
+const svg = document.getElementById('board');
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+
+function render() {
+  const n = G.size, m = 1, V = n + 1;   // one-unit margin each side, points at 1..n
+  svg.setAttribute('viewBox', `0 0 ${V} ${V}`);
+  svg.innerHTML = '';
+  const lw = 0.04;
+  for (let i = 0; i < n; i++) {
+    el('line', { x1: m, y1: m + i, x2: m + n - 1, y2: m + i, stroke: '#3b2a14', 'stroke-width': lw }, svg);
+    el('line', { x1: m + i, y1: m, x2: m + i, y2: m + n - 1, stroke: '#3b2a14', 'stroke-width': lw }, svg);
+  }
+  const stars = n === 19 ? [3, 9, 15] : n === 13 ? [3, 6, 9] : [2, 4, 6];
+  for (const a of stars) for (const b of stars) {
+    if (n === 9 && (a === 4) !== (b === 4)) continue;
+    if (n === 13 && (a === 6) !== (b === 6)) continue;
+    el('circle', { cx: m + a, cy: m + b, r: 0.12, fill: '#3b2a14' }, svg);
+  }
+  const last = G.moves.length ? G.moves[G.moves.length - 1] : null;
+  for (let p = 0; p < n * n; p++) {
+    const c = S.board[p]; if (!c) continue;
+    const x = m + p % n, y = m + Math.floor(p / n);
+    el('circle', { cx: x, cy: y + 0.04, r: 0.47, fill: 'rgba(0,0,0,.25)' }, svg);
+    el('circle', { cx: x, cy: y, r: 0.47, fill: c === 'b' ? '#111' : '#fafafa', stroke: '#000', 'stroke-width': 0.03 }, svg);
+    if (p === last) el('circle', { cx: x, cy: y, r: 0.2, fill: 'none', stroke: c === 'b' ? '#fff' : '#000', 'stroke-width': 0.08 }, svg);
+  }
+  if (ghost !== null) {
+    el('circle', { cx: m + ghost % n, cy: m + Math.floor(ghost / n), r: 0.47, fill: myColour === 'b' ? 'rgba(0,0,0,.5)' : 'rgba(255,255,255,.7)', stroke: '#000', 'stroke-width': 0.03 }, svg);
+  }
+
+  // banner
+  const B = document.getElementById('banner'), sub = document.getElementById('sub');
+  const t = turn();
+  if (gameOver()) { B.className = 'alert'; B.textContent = 'Game over'; sub.textContent = 'Both players passed. Count your territory, then press New game.'; }
+  else if (G.undo) { B.className = 'alert'; B.textContent = 'Undo requested'; sub.textContent = G.undo.by === myColour ? 'Waiting for the other player to accept…' : ''; }
+  else if (!myColour) { B.className = 'wait'; B.textContent = 'Watching'; sub.textContent = NAME[t] + ' to play'; }
+  else if (t === myColour) {
+    B.className = 'turn'; B.textContent = 'Your turn';
+    sub.textContent = ghost !== null ? 'Tap the same spot again to place your stone' : (last === 'pass' ? 'The other player passed.' : '');
+  } else {
+    B.className = 'wait'; B.textContent = 'Waiting for other player';
+    sub.textContent = !G.players[other(myColour)] ? 'Send the link to the other player.' : '';
+  }
+  document.getElementById('me').innerHTML = myColour ? `You are <span class="dot ${myColour}"></span><b>${NAME[myColour]}</b>` : 'You are watching';
+  document.getElementById('caps').innerHTML = `Captured: <span class="dot b"></span>${S.caps.b} &nbsp; <span class="dot w"></span>${S.caps.w}`;
+  document.getElementById('caps').title = 'Stones captured by each colour';
+
+  document.getElementById('pass').disabled = !myColour || t !== myColour || !!G.undo || gameOver();
+  document.getElementById('undo').disabled = !myColour || !G.moves.length || !!G.undo;
+  document.getElementById('new').disabled = !myColour;
+  document.getElementById('claim').style.display = myColour ? 'none' : 'block';
+}
+
+// ---------- input ----------
+svg.addEventListener('click', ev => {
+  if (!G || !myColour || turn() !== myColour || G.undo || gameOver()) return;
+  const r = svg.getBoundingClientRect(), n = G.size, V = n + 1;
+  const x = Math.round((ev.clientX - r.left) / r.width * V - 1);
+  const y = Math.round((ev.clientY - r.top) / r.height * V - 1);
+  if (x < 0 || y < 0 || x >= n || y >= n) return;
+  const p = y * n + x;
+  const res = play(n, S.board, S.prev, myColour, p);
+  if (!res) { ghost = null; render(); flash(play.why); return; }
+  if (coarse && ghost !== p) { ghost = p; render(); return; }
+  ghost = null;
+  submit(p);
+});
+
+function flash(msg) { const sub = document.getElementById('sub'); sub.textContent = msg; sub.style.color = '#c62828'; setTimeout(() => { sub.style.color = ''; }, 2500); }
+
+function dialog(msg, buttons) {
+  document.getElementById('dmsg').textContent = msg;
+  const row = document.getElementById('dbtns'); row.innerHTML = '';
+  for (const [label, fn, primary] of buttons) {
+    const b = document.createElement('button'); b.textContent = label; if (primary) b.className = 'primary';
+    b.onclick = () => { closeDialog(); fn && fn(); }; row.appendChild(b);
+  }
+  document.getElementById('dialog').style.display = 'flex';
+}
+function closeDialog() { document.getElementById('dialog').style.display = 'none'; }
+
+document.getElementById('pass').onclick = () => dialog('Pass your turn?', [['Yes, pass', () => submit('pass'), true], ['Cancel']]);
+document.getElementById('undo').onclick = () => dialog('Ask the other player to undo the last move?', [['Yes, ask', () => {
+  ref.child('undo').transaction(cur => cur ? undefined : { by: myColour, n: G.moves.length });
+}, true], ['Cancel']]);
+document.getElementById('new').onclick = () => dialog('Start a new game? The current game will be lost. Choose the board size:', [
+  ['19×19', () => newGame(19), true], ['13×13', () => newGame(13)], ['9×9', () => newGame(9)], ['Cancel']]);
+document.querySelectorAll('#claim button').forEach(b => b.onclick = () => {
+  const c = b.dataset.c; dialog(`Take over ${NAME[c]} on this device?`, [['Yes', () => claim(c, true), true], ['Cancel']]);
+});
+
+let shownUndo = null;
+function handleUndoRequest() {
+  const u = G.undo;
+  if (!u) { if (shownUndo) { shownUndo = null; closeDialog(); } return; }
+  if (u.by === myColour || !myColour) return;
+  const key = u.by + u.n;
+  if (shownUndo === key) return;
+  shownUndo = key;
+  dialog('The other player asks to undo the last move. OK?', [
+    ['Yes, undo', () => ref.transaction(cur => {
+      if (!cur || !cur.undo) return undefined;
+      const mv = cur.moves || [];
+      if (mv.length === cur.undo.n && mv.length) mv.pop();
+      cur.moves = mv; cur.undo = null; return cur;
+    }), true],
+    ['No', () => ref.child('undo').remove()]]);
+}
+</script>
+</body>
+</html>
