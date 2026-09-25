@@ -7,272 +7,518 @@
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: #f3ede2; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color: #222; }
-  #app { max-width: 720px; margin: 0 auto; padding: 10px 12px 24px; }
-  #banner { font-size: 30px; font-weight: 700; text-align: center; padding: 16px 10px; border-radius: 14px; margin-bottom: 10px; background: #ddd; color: #555; }
+  #app { max-width: 720px; margin: 0 auto; padding: 10px 12px 40px; }
+  @media (min-width: 600px) { #app { max-width: max(440px, min(720px, calc(100vh - 290px))); } }
+  #banner { font-size: 28px; font-weight: 700; text-align: center; padding: 14px 10px; border-radius: 14px; margin-bottom: 8px; }
   #banner.turn { background: #2e7d32; color: #fff; }
   #banner.wait { background: #d8d2c6; color: #555; }
   #banner.alert { background: #e65100; color: #fff; }
-  #sub { text-align: center; font-size: 17px; margin: -2px 0 10px; min-height: 22px; }
-  #info { display: flex; justify-content: space-between; align-items: center; font-size: 17px; margin-bottom: 8px; gap: 8px; }
-  .dot { display: inline-block; width: 18px; height: 18px; border-radius: 50%; vertical-align: -3px; margin-right: 5px; border: 1px solid #000; }
-  .dot.b { background: #111; } .dot.w { background: #fff; }
+  #banner.trial { background: #1565c0; color: #fff; }
+  #sub { text-align: center; font-size: 16px; margin: 0 0 6px; min-height: 20px; }
+  #notice { display: none; text-align: center; font-size: 15px; background: #fff3cd; border-radius: 10px; padding: 8px; margin-bottom: 8px; }
+  #notice button { font-size: 14px; padding: 5px 10px; margin: 3px; border-radius: 8px; flex: none; }
+  #bowls { display: flex; gap: 8px; margin-bottom: 6px; }
+  .bowl { flex: 1; background: rgba(255,255,255,.55); border: 3px solid transparent; border-radius: 12px; padding: 6px 8px; cursor: pointer; min-height: 62px; }
+  .bowl.mine { border-color: #2e7d32; background: #fff; }
+  .bhead { display: flex; align-items: center; gap: 6px; font-size: 16px; flex-wrap: wrap; }
+  .stone { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #000; flex: none; }
+  .stone.b { background: radial-gradient(circle at 35% 35%, #555, #000); }
+  .stone.w { background: radial-gradient(circle at 35% 35%, #fff, #ccc); }
+  .cap { color: #666; font-size: 14px; margin-left: auto; }
+  .hint { color: #2e7d32; font-size: 13px; }
+  .chips { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; background: #eee8dc; font-size: 14px; white-space: nowrap; }
+  .chip.you { background: #ffd54f; font-weight: 700; cursor: pointer; }
+  .chip.away { opacity: .5; }
+  #watchers { font-size: 14px; color: #555; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   #boardwrap { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }
-  svg { width: 100%; height: 100%; display: block; }
-  #buttons { display: flex; gap: 10px; margin-top: 14px; }
-  button { flex: 1; font-size: 20px; padding: 16px 6px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; }
+  svg { display: block; }
+  #board { width: 100%; height: 100%; }
+  #estimate { text-align: center; font-size: 14px; color: #1565c0; min-height: 18px; margin-top: 4px; }
+  #buttons { display: flex; gap: 8px; margin-top: 8px; }
+  button { flex: 1; font-size: 18px; padding: 14px 4px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; font-family: inherit; }
   button:active { transform: translateY(1px); }
   button:disabled { opacity: .4; }
+  button.on { background: #1565c0; color: #fff; }
+  #others { display: none; margin-top: 45vh; }
+  #others h3 { font-size: 15px; color: #666; font-weight: 600; margin: 0 0 8px; }
+  #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .thumb { opacity: .5; cursor: pointer; background: rgba(255,255,255,.5); border-radius: 8px; padding: 5px; }
+  .thumb.live { opacity: 1; background: #fff; }
+  .thumb svg { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 4px; }
+  .tl { font-size: 12px; color: #444; margin-top: 3px; line-height: 1.3; }
   #dialog { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
   #dialog .box { background: #fff; border-radius: 16px; padding: 22px; max-width: 420px; width: 100%; text-align: center; }
-  #dialog p { font-size: 21px; margin: 0 0 18px; }
+  #dialog p { font-size: 20px; margin: 0 0 18px; }
   #dialog .row { display: flex; gap: 10px; flex-wrap: wrap; }
   #dialog button { background: #eee; }
   #dialog button.primary { background: #2e7d32; color: #fff; }
-  @media (min-width: 600px) { #app { max-width: max(420px, min(720px, calc(100vh - 230px))); } }
-  #claim { display: none; text-align: center; margin-top: 16px; font-size: 16px; }
-  #claim button { font-size: 16px; padding: 10px; margin: 6px 4px; flex: none; }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="banner" class="wait">Connecting…</div>
   <div id="sub"></div>
-  <div id="info">
-    <div id="me"></div>
-    <div id="caps"></div>
+  <div id="notice"></div>
+  <div id="bowls">
+    <div class="bowl" data-c="b"><div class="bhead"><span class="stone b"></span><b>Black</b><span class="hint" id="hintb"></span><span class="cap" id="capb"></span></div><div class="chips" id="chipsb"></div></div>
+    <div class="bowl" data-c="w"><div class="bhead"><span class="stone w"></span><b>White</b><span class="hint" id="hintw"></span><span class="cap" id="capw"></span></div><div class="chips" id="chipsw"></div></div>
   </div>
+  <div id="watchers"></div>
   <div id="boardwrap"><svg id="board"></svg></div>
+  <div id="estimate"></div>
   <div id="buttons">
     <button id="pass">Pass</button>
     <button id="undo">Undo</button>
+    <button id="cloud">Territory</button>
     <button id="new">New game</button>
   </div>
-  <div id="claim">
-    Playing on a new phone or computer?<br>
-    <button data-c="b">I am Black</button><button data-c="w">I am White</button>
-  </div>
+  <div id="others"><h3>Other games (tap one to look at it)</h3><div id="grid"></div></div>
 </div>
 <div id="dialog"><div class="box"><p id="dmsg"></p><div class="row" id="dbtns"></div></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyDf2aZioehr3Owb9bf4gmRjgRii0i5Ctbc",
   authDomain: "project-0cbb7d36-56e5-441e-8fe.firebaseapp.com",
   databaseURL: "https://project-0cbb7d36-56e5-441e-8fe-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "project-0cbb7d36-56e5-441e-8fe",
   appId: "1:531740406755:web:fe0ee4c37001a9d4e966d6"
+});
+const DB = firebase.database(), R = DB.ref('go'), TS = firebase.database.ServerValue.TIMESTAMP;
+const ls = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 };
-firebase.initializeApp(firebaseConfig);
-const ref = firebase.database().ref('go/game');
 
-// ---------- device identity ----------
-let me = null;
-try { me = localStorage.getItem('goDevice'); } catch (e) {}
-if (!me) { me = Math.random().toString(36).slice(2) + Date.now().toString(36); try { localStorage.setItem('goDevice', me); } catch (e) {} }
+// ---------- who am I ----------
+const ANIMALS = [['🦊','Fox'],['🐼','Panda'],['🐸','Frog'],['🐯','Tiger'],['🐨','Koala'],['🦉','Owl'],['🐢','Turtle'],['🐧','Penguin'],['🐙','Octopus'],['🦁','Lion'],['🐰','Rabbit'],['🦔','Hedgehog']];
+let me = ls.get('goDevice');
+if (!me) { me = Math.random().toString(36).slice(2) + Date.now().toString(36); ls.set('goDevice', me); }
+const tab = me.slice(0, 20) + '-' + Math.random().toString(36).slice(2, 7);
+let myAnimal = ls.get('goAnimal') === null ? -1 : +ls.get('goAnimal');
+let myName = ls.get('goName') || '';
+let myColour = ls.get('goColour');      // null = never chosen, '' = just watching
+let viewing = ls.get('goGame');
 
 const NAME = { b: 'Black', w: 'White' };
 const other = c => c === 'b' ? 'w' : 'b';
 const coarse = matchMedia('(pointer: coarse)').matches;
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
-// ---------- rules engine: replay the move list ----------
-function replay(size, moves) {
-  let board = new Array(size * size).fill('');
-  const caps = { b: 0, w: 0 };
-  let prev = null;           // board before the last move (for ko)
-  for (let i = 0; i < moves.length; i++) {
-    const c = i % 2 === 0 ? 'b' : 'w';
-    const r = play(size, board, prev, c, moves[i]);
-    if (!r) break;           // should not happen
-    prev = board; board = r.board; caps[c] += r.captured;
+// ---------- rules engine ----------
+function neighbours(n, p) {
+  const x = p % n, y = (p - x) / n, a = [];
+  if (x > 0) a.push(p - 1); if (x < n - 1) a.push(p + 1);
+  if (y > 0) a.push(p - n); if (y < n - 1) a.push(p + n);
+  return a;
+}
+function group(n, board, p) {
+  const c = board[p], stones = [p], seen = new Set([p]), libs = new Set();
+  for (let i = 0; i < stones.length; i++) for (const q of neighbours(n, stones[i])) {
+    if (board[q] === '') libs.add(q);
+    else if (board[q] === c && !seen.has(q)) { seen.add(q); stones.push(q); }
+  }
+  return { stones, libs: libs.size };
+}
+// {board, captured} or null if illegal (reason in play.why)
+function play(n, board, prev, c, p) {
+  if (board[p] !== '') { play.why = 'There is already a stone there.'; return null; }
+  const nb = board.slice(); nb[p] = c; let captured = 0;
+  for (const q of neighbours(n, p)) if (nb[q] === other(c)) {
+    const g = group(n, nb, q);
+    if (g.libs === 0) { for (const s of g.stones) nb[s] = ''; captured += g.stones.length; }
+  }
+  if (group(n, nb, p).libs === 0) { play.why = 'You can’t play there – the stone would have no liberties.'; return null; }
+  if (prev && nb.every((v, i) => v === prev[i])) { play.why = 'Ko: play somewhere else first before taking back.'; return null; }
+  return { board: nb, captured };
+}
+const toArr = m => (Array.isArray(m) ? m : m ? Object.values(m) : []).filter(Boolean);
+function replay(g) {
+  const n = g.size; let board = new Array(n * n).fill(''), prev = null; const caps = { b: 0, w: 0 };
+  for (const m of toArr(g.moves)) {
+    if (m.p < 0) { prev = board; continue; }
+    const r = play(n, board, prev, m.c, m.p);
+    if (!r) continue;
+    prev = board; board = r.board; caps[m.c] += r.captured;
   }
   return { board, caps, prev };
 }
 
-function neighbours(size, p) {
-  const x = p % size, y = (p - x) / size, n = [];
-  if (x > 0) n.push(p - 1); if (x < size - 1) n.push(p + 1);
-  if (y > 0) n.push(p - size); if (y < size - 1) n.push(p + size);
-  return n;
-}
-function group(size, board, p) {
-  const c = board[p], stones = [p], seen = new Set([p]); let libs = 0; const libSeen = new Set();
-  for (let i = 0; i < stones.length; i++) for (const q of neighbours(size, stones[i])) {
-    if (board[q] === '') { if (!libSeen.has(q)) { libSeen.add(q); libs++; } }
-    else if (board[q] === c && !seen.has(q)) { seen.add(q); stones.push(q); }
+// ---------- territory estimate: Monte Carlo ownership in a worker ----------
+const WORKER = `
+let cur = 0;
+onmessage = e => { cur = e.data.id; start(e.data); };
+function start(J) {
+  const n = J.size, N = n * n, id = J.id, total = J.total;
+  const nb = [], dg = [];
+  for (let p = 0; p < N; p++) {
+    const x = p % n, y = (p - x) / n, a = [], d = [];
+    if (x > 0) a.push(p - 1); if (x < n - 1) a.push(p + 1); if (y > 0) a.push(p - n); if (y < n - 1) a.push(p + n);
+    for (const [dx, dy] of [[1,1],[1,-1],[-1,1],[-1,-1]]) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < n && Y < n) d.push(Y * n + X); }
+    nb.push(a); dg.push(d);
   }
-  return { stones, libs };
-}
-// returns {board, captured} or null if illegal (with reason in play.why)
-function play(size, board, prev, c, mv) {
-  if (mv === 'pass') return { board, captured: 0 };
-  const p = mv;
-  if (board[p] !== '') { play.why = 'There is already a stone there.'; return null; }
-  const nb = board.slice(); nb[p] = c; let captured = 0;
-  for (const q of neighbours(size, p)) if (nb[q] === other(c)) {
-    const g = group(size, nb, q);
-    if (g.libs === 0) { for (const s of g.stones) nb[s] = ''; captured += g.stones.length; }
+  const b = new Uint8Array(N), mark = new Int32Array(N), markL = new Int32Array(N), stk = new Int32Array(N), emp = new Int32Array(N), pos = new Int32Array(N), acc = new Float64Array(N);
+  let stamp = 0, ne = 0, done = 0;
+  function libs(p, max) {
+    stamp++; const c = b[p]; let sp = 0, k = 0; stk[sp++] = p; mark[p] = stamp;
+    while (sp) { const q = stk[--sp], a = nb[q];
+      for (let i = 0; i < a.length; i++) { const r = a[i], v = b[r];
+        if (v === 0) { if (markL[r] !== stamp) { markL[r] = stamp; if (++k >= max) return k; } }
+        else if (v === c && mark[r] !== stamp) { mark[r] = stamp; stk[sp++] = r; } } }
+    return k;
   }
-  if (group(size, nb, p).libs === 0) { play.why = 'You can’t play there – your stone would have no liberties.'; return null; }
-  if (prev && nb.every((v, i) => v === prev[i])) { play.why = 'Ko: you must play somewhere else first before retaking.'; return null; }
-  return { board: nb, captured };
-}
+  function addE(p) { pos[p] = ne; emp[ne++] = p; }
+  function delE(p) { const i = pos[p], l = emp[--ne]; emp[i] = l; pos[l] = i; }
+  function removeG(p) { const c = b[p]; let sp = 0, k = 1; stk[sp++] = p; b[p] = 0; addE(p);
+    while (sp) { const q = stk[--sp], a = nb[q]; for (let i = 0; i < a.length; i++) { const r = a[i]; if (b[r] === c) { b[r] = 0; addE(r); k++; stk[sp++] = r; } } }
+    return k; }
+  function eye(p, c) { const a = nb[p]; for (let i = 0; i < a.length; i++) if (b[a[i]] !== c) return false;
+    const d = dg[p]; let bad = 0; for (let i = 0; i < d.length; i++) if (b[d[i]] === 3 - c) bad++;
+    return d.length < 4 ? bad === 0 : bad < 2; }
+  function legal(p, c, ko) { if (p === ko) return false; const a = nb[p];
+    for (let i = 0; i < a.length; i++) if (b[a[i]] === 0) return true;
+    b[p] = c; let ok = false;
+    for (let i = 0; i < a.length && !ok; i++) { const r = a[i]; if (b[r] === 3 - c && libs(r, 1) === 0) ok = true; }
+    if (!ok) ok = libs(p, 1) > 0; b[p] = 0; return ok; }
+  function place(p, c) { delE(p); b[p] = c; let cap = 0, last = -1; const a = nb[p];
+    for (let i = 0; i < a.length; i++) { const r = a[i]; if (b[r] === 3 - c && libs(r, 1) === 0) { cap += removeG(r); last = r; } }
+    if (cap === 1) { for (let i = 0; i < a.length; i++) if (b[a[i]] === c) return -1; if (libs(p, 2) === 1) return last; }
+    return -1; }
+  function playout() {
+    ne = 0; for (let p = 0; p < N; p++) { b[p] = J.board[p]; if (b[p] === 0) addE(p); }
+    let c = J.toPlay, passes = 0, ko = -1, m = 0; const maxM = N * 3;
+    while (passes < 2 && m < maxM) {
+      let moved = false;
+      if (ne > 0) { const s = (Math.random() * ne) | 0;
+        for (let k = 0; k < ne; k++) { const p = emp[(s + k) % ne]; if (!eye(p, c) && legal(p, c, ko)) { ko = place(p, c); moved = true; break; } } }
+      if (moved) passes = 0; else { passes++; ko = -1; }
+      c = 3 - c; m++;
+    }
+    for (let p = 0; p < N; p++) { let v = b[p];
+      if (v === 0) { let bl = 0, wh = 0; const a = nb[p]; for (let i = 0; i < a.length; i++) { if (b[a[i]] === 1) bl++; else if (b[a[i]] === 2) wh++; } v = bl && !wh ? 1 : wh && !bl ? 2 : 0; }
+      if (v === 1) acc[p] += 1; else if (v === 2) acc[p] -= 1; }
+  }
+  function chunk() {
+    if (cur !== id) return;
+    const t = performance.now();
+    while (done < total && performance.now() - t < 50) { playout(); done++; }
+    const own = new Float32Array(N); for (let p = 0; p < N; p++) own[p] = acc[p] / done;
+    postMessage({ id, own, n: done });
+    if (done < total) setTimeout(chunk, 0);
+  }
+  chunk();
+}`;
+const worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: 'text/javascript' })));
+let jobId = 0, own = null, ownN = 0, ownTimer = null;
+worker.onmessage = e => { if (e.data.id !== jobId) return; own = e.data.own; ownN = e.data.n; render(); };
 
 // ---------- state ----------
-let G = null, S = null, myColour = null, ghost = null;
+let D = null, G = null, S = null, first = true, lastSnap = null;
+let cloud = false, phantoms = [], hoverP = null, ghost = null;
 
-ref.on('value', snap => {
-  G = snap.val();
-  if (!G || !G.size) { newGame(19, true); return; }
-  G.moves = G.moves || [];
-  G.players = G.players || {};
-  S = replay(G.size, G.moves);
-  // claim a seat if free
-  if (G.players.b === me) myColour = 'b';
-  else if (G.players.w === me) myColour = 'w';
-  else {
-    myColour = null;
-    const seat = !G.players.b ? 'b' : !G.players.w ? 'w' : null;
-    if (seat) { claim(seat, false); return; }
+R.on('value', snap => {
+  D = snap.val() || {}; D.games = D.games || {}; D.presence = D.presence || {};
+  const sk = D.snap ? D.snap.g + ':' + D.snap.t : null;
+  if (!first && sk && sk !== lastSnap && D.snap.by !== tab && D.games[D.snap.g]) {
+    lastSnap = sk; switchTo(D.snap.g); flash(`${who(D.snap.by)} brought everyone to this game.`); return;
   }
-  ghost = null;
+  lastSnap = sk;
+  if (!viewing || !D.games[viewing]) {
+    const ids = sortedGames();
+    viewing = D.current && D.games[D.current] ? D.current : ids[0] || null;
+    if (!viewing) { createGame(19); return; }
+    ls.set('goGame', viewing);
+  }
+  if (first) {
+    first = false;
+    if (myAnimal < 0 || myAnimal >= ANIMALS.length) {
+      const used = new Set(others().map(p => p.a));
+      const free = ANIMALS.map((_, i) => i).filter(i => !used.has(i));
+      myAnimal = free.length ? free[Math.floor(Math.random() * free.length)] : Math.floor(Math.random() * ANIMALS.length);
+      ls.set('goAnimal', myAnimal);
+    }
+    if (myColour === null) {
+      const taken = new Set(others().map(p => p.c));
+      myColour = !taken.has('b') ? 'b' : !taken.has('w') ? 'w' : '';
+      ls.set('goColour', myColour);
+    }
+    DB.ref('.info/connected').on('value', s => { if (s.val()) { presRef.onDisconnect().remove(); writePresence(); } });
+  }
+  const g = D.games[viewing], key = viewing + ':' + toArr(g.moves).length;
+  G = g; S = replay(g);
+  if (key !== render.key) { render.key = key; ghost = null; if (cloud) requestOwn(); }
   render();
-  handleUndoRequest();
 });
 
-function claim(c, force) {
-  ref.child('players/' + c).transaction(cur => (!cur || force) ? me : undefined);
+const presRef = R.child('presence/' + tab);
+function writePresence() {
+  if (first) return;
+  presRef.set({ a: myAnimal, n: myName.slice(0, 20), c: myColour || '', g: viewing || '', d: coarse ? 'm' : 'd', t: TS });
+}
+function others() { return Object.entries(D.presence).filter(([k]) => k !== tab).map(([k, v]) => ({ ...v, k })); }
+function everyone() { return Object.entries(D.presence).map(([k, v]) => ({ ...v, k })); }
+function label(p) { const A = ANIMALS[p.a] || ANIMALS[0]; return A[0] + ' ' + esc(p.n || A[1]); }
+function who(k) { const p = D.presence[k]; return p ? label(p) : 'Someone'; }
+function sortedGames() { return Object.keys(D.games).sort((a, b) => (D.games[b].created || 0) - (D.games[a].created || 0)); }
+
+function switchTo(id) {
+  viewing = id; ls.set('goGame', id);
+  cloud = false; phantoms = []; hoverP = null; ghost = null; own = null;
+  G = D.games[id]; S = replay(G); render.key = id + ':' + toArr(G.moves).length;
+  writePresence(); render();
 }
 
-function newGame(size, onlyIfEmpty) {
-  ref.transaction(cur => {
-    if (onlyIfEmpty && cur && cur.size) return undefined;
-    return { size, moves: [], players: (cur && cur.players) || {}, id: Date.now() };
-  });
+function createGame(size) {
+  const ref = R.child('games').push(), leaving = viewing;
+  viewing = ref.key; ls.set('goGame', viewing);
+  cloud = false; phantoms = []; hoverP = null; ghost = null; own = null;
+  ref.set({ size, created: TS });
+  R.child('current').set(ref.key);
+  if (D) prune(ref.key, leaving);
+  writePresence();
+}
+// keep the 9 most recent games with more than 4 stones (plus any game someone else is looking at)
+function prune(newId, leaving) {
+  const busy = new Set(others().map(p => p.g));
+  let kept = 0;
+  for (const id of sortedGames()) {
+    if (id === newId || !D.games[id]) continue;
+    const stones = replay(D.games[id]).board.filter(Boolean).length;
+    if (stones > 4 && kept < 9) kept++;
+    else if (!busy.has(id)) R.child('games/' + id).remove();
+  }
 }
 
-function turn() { return G.moves.length % 2 === 0 ? 'b' : 'w'; }
-function gameOver() { const m = G.moves, n = m.length; return n >= 2 && m[n - 1] === 'pass' && m[n - 2] === 'pass'; }
+function lastMove() { const m = toArr(G.moves); return m.length ? m[m.length - 1] : null; }
+function nextColour() { const m = lastMove(); return m ? other(m.c) : 'b'; }
+function gameOver() { const m = toArr(G.moves), n = m.length; return n >= 2 && m[n - 1].p < 0 && m[n - 2].p < 0; }
 
 function submit(mv) {
-  const n = G.moves.length;
-  ref.transaction(cur => {
-    if (!cur || (cur.moves || []).length !== n || cur.undo) return undefined;
-    cur.moves = cur.moves || []; cur.moves.push(mv); return cur;
+  const size = G.size;
+  R.child(`games/${viewing}/moves`).transaction(cur => {
+    const list = toArr(cur);
+    if (mv.p >= 0) {
+      const r = replay({ size, moves: list });
+      if (!play(size, r.board, r.prev, mv.c, mv.p)) return undefined;
+    }
+    list.push(mv); return list;
   });
+}
+
+// ---------- trial (phantom) stones ----------
+function position() {
+  let board = S.board, prev = S.prev; const ok = [];
+  for (const ph of phantoms) { const r = play(G.size, board, prev, ph.c, ph.p); if (!r) continue; prev = board; board = r.board; ok.push(ph); }
+  phantoms = ok;
+  return { board, prev };
+}
+function nextPhantom() { return phantoms.length ? other(phantoms[phantoms.length - 1].c) : nextColour(); }
+function requestOwn() {
+  if (!cloud) return;
+  clearTimeout(ownTimer);
+  ownTimer = setTimeout(() => {
+    const n = G.size, P = position(); let board = P.board, toPlay = nextPhantom();
+    if (hoverP !== null) { const r = play(n, board, P.prev, toPlay, hoverP); if (r) { board = r.board; toPlay = other(toPlay); } }
+    worker.postMessage({ id: ++jobId, size: n, board: board.map(v => v === 'b' ? 1 : v === 'w' ? 2 : 0), toPlay: toPlay === 'b' ? 1 : 2, total: n === 19 ? 250 : 400 });
+  }, 40);
 }
 
 // ---------- rendering ----------
 const svg = document.getElementById('board');
 const NS = 'http://www.w3.org/2000/svg';
 function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+function stars(n) {
+  const s = n === 19 ? [3, 9, 15] : n === 13 ? [3, 6, 9] : [2, 4, 6], out = [];
+  for (const a of s) for (const b of s) { if (n !== 19 && (a === s[1]) !== (b === s[1])) continue; out.push([a, b]); }
+  return out;
+}
+function drawGrid(n, parent, lw) {
+  for (let i = 0; i < n; i++) {
+    el('line', { x1: 1, y1: 1 + i, x2: n, y2: 1 + i, stroke: '#3b2a14', 'stroke-width': lw }, parent);
+    el('line', { x1: 1 + i, y1: 1, x2: 1 + i, y2: n, stroke: '#3b2a14', 'stroke-width': lw }, parent);
+  }
+  for (const [a, b] of stars(n)) el('circle', { cx: 1 + a, cy: 1 + b, r: 0.12, fill: '#3b2a14' }, parent);
+}
+function stone(x, y, c, parent, opacity) {
+  const g = el('g', { opacity: opacity || 1 }, parent);
+  if (!opacity) el('circle', { cx: x, cy: y + 0.04, r: 0.47, fill: 'rgba(0,0,0,.25)' }, g);
+  el('circle', { cx: x, cy: y, r: 0.47, fill: c === 'b' ? '#111' : '#fafafa', stroke: '#000', 'stroke-width': 0.03 }, g);
+}
 
 function render() {
-  const n = G.size, m = 1, V = n + 1;   // one-unit margin each side, points at 1..n
+  if (!G) return;
+  const n = G.size, V = n + 1;
+  const P = cloud ? position() : { board: S.board };
+  const hasOwn = cloud && own && own.length === n * n;
   svg.setAttribute('viewBox', `0 0 ${V} ${V}`);
   svg.innerHTML = '';
-  const lw = 0.04;
-  for (let i = 0; i < n; i++) {
-    el('line', { x1: m, y1: m + i, x2: m + n - 1, y2: m + i, stroke: '#3b2a14', 'stroke-width': lw }, svg);
-    el('line', { x1: m + i, y1: m, x2: m + i, y2: m + n - 1, stroke: '#3b2a14', 'stroke-width': lw }, svg);
+  if (hasOwn) for (let p = 0; p < n * n; p++) {
+    const v = own[p]; if (Math.abs(v) < 0.08 || P.board[p]) continue;
+    el('rect', { x: p % n + 0.5, y: Math.floor(p / n) + 0.5, width: 1, height: 1, fill: v > 0 ? `rgba(0,0,0,${(v * 0.6).toFixed(2)})` : `rgba(255,255,255,${(-v * 0.8).toFixed(2)})` }, svg);
   }
-  const stars = n === 19 ? [3, 9, 15] : n === 13 ? [3, 6, 9] : [2, 4, 6];
-  for (const a of stars) for (const b of stars) {
-    if (n === 9 && (a === 4) !== (b === 4)) continue;
-    if (n === 13 && (a === 6) !== (b === 6)) continue;
-    el('circle', { cx: m + a, cy: m + b, r: 0.12, fill: '#3b2a14' }, svg);
-  }
-  const last = G.moves.length ? G.moves[G.moves.length - 1] : null;
+  drawGrid(n, svg, 0.04);
+  const lm = lastMove();
   for (let p = 0; p < n * n; p++) {
-    const c = S.board[p]; if (!c) continue;
-    const x = m + p % n, y = m + Math.floor(p / n);
-    el('circle', { cx: x, cy: y + 0.04, r: 0.47, fill: 'rgba(0,0,0,.25)' }, svg);
-    el('circle', { cx: x, cy: y, r: 0.47, fill: c === 'b' ? '#111' : '#fafafa', stroke: '#000', 'stroke-width': 0.03 }, svg);
-    if (p === last) el('circle', { cx: x, cy: y, r: 0.2, fill: 'none', stroke: c === 'b' ? '#fff' : '#000', 'stroke-width': 0.08 }, svg);
+    const c = P.board[p]; if (!c) continue;
+    const x = 1 + p % n, y = 1 + Math.floor(p / n), trial = S.board[p] !== c;
+    stone(x, y, c, svg, trial ? 0.55 : 0);
+    if (hasOwn && ((c === 'b' && own[p] < -0.4) || (c === 'w' && own[p] > 0.4)))
+      el('rect', { x: x - 0.17, y: y - 0.17, width: 0.34, height: 0.34, fill: c === 'b' ? '#fff' : '#000', opacity: Math.min(1, Math.abs(own[p])).toFixed(2) }, svg);
+    if (!trial && lm && lm.p === p) el('circle', { cx: x, cy: y, r: 0.2, fill: 'none', stroke: c === 'b' ? '#fff' : '#000', 'stroke-width': 0.08 }, svg);
   }
-  if (ghost !== null) {
-    el('circle', { cx: m + ghost % n, cy: m + Math.floor(ghost / n), r: 0.47, fill: myColour === 'b' ? 'rgba(0,0,0,.5)' : 'rgba(255,255,255,.7)', stroke: '#000', 'stroke-width': 0.03 }, svg);
-  }
+  if (cloud && hoverP !== null && !P.board[hoverP]) stone(1 + hoverP % n, 1 + Math.floor(hoverP / n), nextPhantom(), svg, 0.35);
+  if (ghost !== null && !cloud) stone(1 + ghost % n, 1 + Math.floor(ghost / n), myColour, svg, 0.5);
 
   // banner
   const B = document.getElementById('banner'), sub = document.getElementById('sub');
-  const t = turn();
-  if (gameOver()) { B.className = 'alert'; B.textContent = 'Game over'; sub.textContent = 'Both players passed. Count your territory, then press New game.'; }
-  else if (G.undo) { B.className = 'alert'; B.textContent = 'Undo requested'; sub.textContent = G.undo.by === myColour ? 'Waiting for the other player to accept…' : ''; }
-  else if (!myColour) { B.className = 'wait'; B.textContent = 'Watching'; sub.textContent = NAME[t] + ' to play'; }
-  else if (t === myColour) {
+  if (!flash.on) sub.textContent = '';
+  if (cloud) {
+    B.className = 'trial'; B.textContent = 'Trial stones';
+    if (!flash.on) sub.textContent = `Tap to try moves (next: ${NAME[nextPhantom()]}). Only you see them. Press "Hide" to go back.`;
+  } else if (gameOver()) { B.className = 'alert'; B.textContent = 'Both passed'; if (!flash.on) sub.textContent = 'Count your territory, or press New game.'; }
+  else if (!myColour) { B.className = 'wait'; B.textContent = 'Tap Black or White to play'; }
+  else if (nextColour() === myColour) {
     B.className = 'turn'; B.textContent = 'Your turn';
-    sub.textContent = ghost !== null ? 'Tap the same spot again to place your stone' : (last === 'pass' ? 'The other player passed.' : '');
-  } else {
-    B.className = 'wait'; B.textContent = 'Waiting for other player';
-    sub.textContent = !G.players[other(myColour)] ? 'Send the link to the other player.' : '';
-  }
-  document.getElementById('me').innerHTML = myColour ? `You are <span class="dot ${myColour}"></span><b>${NAME[myColour]}</b>` : 'You are watching';
-  document.getElementById('caps').innerHTML = `Captured: <span class="dot b"></span>${S.caps.b} &nbsp; <span class="dot w"></span>${S.caps.w}`;
-  document.getElementById('caps').title = 'Stones captured by each colour';
+    if (!flash.on) sub.textContent = ghost !== null ? 'Tap the same spot again to place your stone' : (lm && lm.p < 0 ? 'The other player passed.' : '');
+  } else { B.className = 'wait'; B.textContent = 'Waiting for other player'; }
 
-  document.getElementById('pass').disabled = !myColour || t !== myColour || !!G.undo || gameOver();
-  document.getElementById('undo').disabled = !myColour || !G.moves.length || !!G.undo;
-  document.getElementById('new').disabled = !myColour;
-  document.getElementById('claim').style.display = myColour ? 'none' : 'block';
+  // people
+  const all = everyone();
+  for (const c of ['b', 'w']) {
+    document.querySelector(`.bowl[data-c="${c}"]`).classList.toggle('mine', myColour === c);
+    document.getElementById('cap' + c).textContent = `captured ${S.caps[c]}`;
+    document.getElementById('hint' + c).textContent = myColour === c ? '' : 'tap to play';
+    document.getElementById('chips' + c).innerHTML = all.filter(p => p.c === c).map(chip).join('');
+  }
+  const watchers = all.filter(p => !p.c);
+  document.getElementById('watchers').innerHTML = `<span>${all.length} online${watchers.length ? ' · watching:' : ''}</span>` + watchers.map(chip).join('');
+
+  // notice about people on other games
+  const away = others().filter(p => p.g && p.g !== viewing && D.games[p.g]);
+  const N = document.getElementById('notice');
+  if (away.length) {
+    const games = [...new Set(away.map(p => p.g))];
+    N.innerHTML = games.map(g => { const ps = away.filter(p => p.g === g);
+      return `${ps.map(label).join(', ')} ${ps.length > 1 ? 'are' : 'is'} on a different game (${D.games[g].size}×${D.games[g].size}) <button data-go="${g}">Go there</button>`; }).join('<br>')
+      + `<br><button id="snap">Bring everyone to this game</button>`;
+    N.style.display = 'block';
+  } else N.style.display = 'none';
+
+  let est = cloud ? 'Thinking…' : '';
+  if (hasOwn) { let b = 0, w = 0; for (const v of own) { b += (1 + v) / 2; w += (1 - v) / 2; }
+    est = `Estimate: Black ≈ ${Math.round(b)}, White ≈ ${Math.round(w)} points (no komi) · ${ownN} simulations`; }
+  document.getElementById('estimate').textContent = est;
+
+  document.getElementById('pass').disabled = cloud || !myColour;
+  document.getElementById('undo').disabled = cloud ? !phantoms.length : !toArr(G.moves).length;
+  const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Territory'; cb.classList.toggle('on', cloud);
+  renderGrid();
+}
+function chip(p) {
+  const you = p.k === tab, away = p.g !== viewing;
+  const info = (p.d === 'm' ? 'On a phone' : 'On a computer') + (away ? ', looking at a different game' : '') + (you ? ' – tap to change your name' : '');
+  return `<span class="chip${you ? ' you' : ''}${away ? ' away' : ''}" title="${info}" ${you ? 'data-you="1"' : ''}>${label(p)}${you ? ' (you)' : ''} ${p.d === 'm' ? '📱' : '💻'}</span>`;
+}
+function renderGrid() {
+  const ids = sortedGames().filter(id => id !== viewing).slice(0, 9);
+  const busy = {}; for (const p of others()) (busy[p.g] = busy[p.g] || []).push(p);
+  const key = ids.map(id => id + ':' + toArr(D.games[id].moves).length + ':' + (busy[id] || []).map(p => p.a + p.n).join()).join('|');
+  if (key === renderGrid.key) return;
+  renderGrid.key = key;
+  const grid = document.getElementById('grid'); grid.innerHTML = '';
+  document.getElementById('others').style.display = ids.length ? 'block' : 'none';
+  for (const id of ids) {
+    const g = D.games[id], n = g.size, b = replay(g).board, ppl = busy[id] || [];
+    const d = document.createElement('div'); d.className = 'thumb' + (ppl.length ? ' live' : ''); d.dataset.id = id;
+    const s = el('svg', { viewBox: `0 0 ${n + 1} ${n + 1}` }, d);
+    drawGrid(n, s, 0.06);
+    b.forEach((c, p) => { if (c) el('circle', { cx: 1 + p % n, cy: 1 + Math.floor(p / n), r: 0.46, fill: c === 'b' ? '#111' : '#fafafa', stroke: '#000', 'stroke-width': 0.04 }, s); });
+    const when = g.created ? new Date(g.created).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const t = document.createElement('div'); t.className = 'tl';
+    t.innerHTML = `${n}×${n} · ${toArr(g.moves).length} moves<br>${when}${ppl.length ? '<br>' + ppl.map(label).join(' ') : ''}`;
+    d.appendChild(t); grid.appendChild(d);
+  }
 }
 
 // ---------- input ----------
-svg.addEventListener('click', ev => {
-  if (!G || !myColour || turn() !== myColour || G.undo || gameOver()) return;
+function pointAt(ev) {
   const r = svg.getBoundingClientRect(), n = G.size, V = n + 1;
-  const x = Math.round((ev.clientX - r.left) / r.width * V - 1);
-  const y = Math.round((ev.clientY - r.top) / r.height * V - 1);
-  if (x < 0 || y < 0 || x >= n || y >= n) return;
-  const p = y * n + x;
-  const res = play(n, S.board, S.prev, myColour, p);
-  if (!res) { ghost = null; render(); flash(play.why); return; }
+  const x = Math.round((ev.clientX - r.left) / r.width * V - 1), y = Math.round((ev.clientY - r.top) / r.height * V - 1);
+  return x < 0 || y < 0 || x >= n || y >= n ? null : y * n + x;
+}
+svg.addEventListener('click', ev => {
+  if (!G) return;
+  const p = pointAt(ev); if (p === null) return;
+  if (cloud) {
+    const i = phantoms.findIndex(ph => ph.p === p);
+    if (i >= 0) phantoms.splice(i, 1);
+    else {
+      const P = position(), c = nextPhantom();
+      if (!play(G.size, P.board, P.prev, c, p)) { flash(play.why); return; }
+      phantoms.push({ c, p });
+    }
+    hoverP = null; render(); requestOwn(); return;
+  }
+  if (!myColour) { flash('First tap Black or White above the board to choose your colour.'); return; }
+  if (!play(G.size, S.board, S.prev, myColour, p)) { ghost = null; render(); flash(play.why); return; }
   if (coarse && ghost !== p) { ghost = p; render(); return; }
   ghost = null;
-  submit(p);
+  submit({ c: myColour, p });
 });
+svg.addEventListener('mousemove', ev => {
+  if (!cloud || !G || coarse) return;
+  let p = pointAt(ev);
+  if (p !== null && position().board[p]) p = null;
+  if (p === hoverP) return;
+  hoverP = p; render(); requestOwn();
+});
+svg.addEventListener('mouseleave', () => { if (cloud && hoverP !== null) { hoverP = null; render(); requestOwn(); } });
 
-function flash(msg) { const sub = document.getElementById('sub'); sub.textContent = msg; sub.style.color = '#c62828'; setTimeout(() => { sub.style.color = ''; }, 2500); }
-
+function flash(msg) {
+  const sub = document.getElementById('sub'); sub.textContent = msg; sub.style.color = '#c62828'; flash.on = true;
+  clearTimeout(flash.t); flash.t = setTimeout(() => { sub.style.color = ''; flash.on = false; render(); }, 2500);
+}
 function dialog(msg, buttons) {
   document.getElementById('dmsg').textContent = msg;
   const row = document.getElementById('dbtns'); row.innerHTML = '';
-  for (const [label, fn, primary] of buttons) {
-    const b = document.createElement('button'); b.textContent = label; if (primary) b.className = 'primary';
-    b.onclick = () => { closeDialog(); fn && fn(); }; row.appendChild(b);
+  for (const [text, fn, primary] of buttons) {
+    const b = document.createElement('button'); b.textContent = text; if (primary) b.className = 'primary';
+    b.onclick = () => { document.getElementById('dialog').style.display = 'none'; fn && fn(); }; row.appendChild(b);
   }
   document.getElementById('dialog').style.display = 'flex';
 }
-function closeDialog() { document.getElementById('dialog').style.display = 'none'; }
 
-document.getElementById('pass').onclick = () => dialog('Pass your turn?', [['Yes, pass', () => submit('pass'), true], ['Cancel']]);
-document.getElementById('undo').onclick = () => dialog('Ask the other player to undo the last move?', [['Yes, ask', () => {
-  ref.child('undo').transaction(cur => cur ? undefined : { by: myColour, n: G.moves.length });
-}, true], ['Cancel']]);
-document.getElementById('new').onclick = () => dialog('Start a new game? The current game will be lost. Choose the board size:', [
-  ['19×19', () => newGame(19), true], ['13×13', () => newGame(13)], ['9×9', () => newGame(9)], ['Cancel']]);
-document.querySelectorAll('#claim button').forEach(b => b.onclick = () => {
-  const c = b.dataset.c; dialog(`Take over ${NAME[c]} on this device?`, [['Yes', () => claim(c, true), true], ['Cancel']]);
+document.getElementById('pass').onclick = () => submit({ c: myColour, p: -1 });
+document.getElementById('undo').onclick = () => {
+  if (cloud) { phantoms.pop(); render(); requestOwn(); return; }
+  R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur); l.pop(); return l; });
+};
+document.getElementById('cloud').onclick = () => {
+  cloud = !cloud; phantoms = []; hoverP = null; ghost = null; own = null;
+  render(); requestOwn();
+};
+document.getElementById('new').onclick = () => dialog('Start a new game? This one is kept at the bottom of the page. Board size:', [
+  ['19×19', () => createGame(19), true], ['13×13', () => createGame(13)], ['9×9', () => createGame(9)], ['Cancel']]);
+document.querySelectorAll('.bowl').forEach(b => b.onclick = () => {
+  const c = b.dataset.c;
+  myColour = myColour === c ? '' : c; ls.set('goColour', myColour);
+  ghost = null; writePresence(); render();
 });
-
-let shownUndo = null;
-function handleUndoRequest() {
-  const u = G.undo;
-  if (!u) { if (shownUndo) { shownUndo = null; closeDialog(); } return; }
-  if (u.by === myColour || !myColour) return;
-  const key = u.by + u.n;
-  if (shownUndo === key) return;
-  shownUndo = key;
-  dialog('The other player asks to undo the last move. OK?', [
-    ['Yes, undo', () => ref.transaction(cur => {
-      if (!cur || !cur.undo) return undefined;
-      const mv = cur.moves || [];
-      if (mv.length === cur.undo.n && mv.length) mv.pop();
-      cur.moves = mv; cur.undo = null; return cur;
-    }), true],
-    ['No', () => ref.child('undo').remove()]]);
-}
+document.getElementById('app').addEventListener('click', ev => {
+  const t = ev.target;
+  if (t.closest('[data-you]')) {
+    ev.stopPropagation();
+    const n = prompt('Your name (shown to the other player):', myName);
+    if (n !== null) { myName = n.trim().slice(0, 20); ls.set('goName', myName); writePresence(); }
+    return;
+  }
+  if (t.dataset.go) { switchTo(t.dataset.go); return; }
+  if (t.id === 'snap') { R.child('snap').set({ g: viewing, by: tab, t: TS }); return; }
+  const th = t.closest('.thumb'); if (th) { switchTo(th.dataset.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+}, true);
 </script>
 </body>
 </html>
