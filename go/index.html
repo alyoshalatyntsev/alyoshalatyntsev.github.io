@@ -40,9 +40,13 @@
   button:active { transform: translateY(1px); }
   button:disabled { opacity: .4; }
   button.on { background: #1565c0; color: #fff; }
-  #others { display: none; margin-top: 45vh; }
+  #others { margin-top: 28px; }
   #others h3 { font-size: 15px; color: #666; font-weight: 600; margin: 0 0 8px; }
   #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  #newtile { display: flex; align-items: center; gap: 14px; cursor: pointer; margin: 0 0 18px; padding: 8px; border-radius: 10px; border: 2px dashed #b9a987; }
+  #newtile svg { width: 64px; height: 64px; opacity: .45; background: #dcb35c; border-radius: 4px; }
+  #newtile .plus { font-size: 40px; font-weight: 300; line-height: 1; color: #555; }
+  #newtile .nt { font-size: 20px; font-weight: 600; color: #444; }
   .thumb { opacity: .5; cursor: pointer; background: rgba(255,255,255,.5); border-radius: 8px; padding: 5px; }
   .thumb.live { opacity: 1; background: #fff; }
   .thumb svg { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 4px; }
@@ -70,10 +74,12 @@
   <div id="buttons">
     <button id="pass">Pass</button>
     <button id="undo">Undo</button>
-    <button id="cloud">Territory</button>
-    <button id="new">New game</button>
+    <button id="cloud">Analysis</button>
   </div>
-  <div id="others"><h3>Other games (tap one to look at it)</h3><div id="grid"></div></div>
+  <div id="others">
+    <div id="newtile"><span class="plus">+</span><svg id="newsvg"></svg><span class="nt">New game</span></div>
+    <h3 id="othersh">Other games (tap one to look at it)</h3><div id="grid"></div>
+  </div>
 </div>
 <div id="dialog"><div class="box"><p id="dmsg"></p><div class="row" id="dbtns"></div></div></div>
 
@@ -376,7 +382,7 @@ function render() {
   const B = document.getElementById('banner'), sub = document.getElementById('sub');
   if (!flash.on) sub.textContent = '';
   if (cloud) {
-    B.className = 'trial'; B.textContent = 'Trial stones';
+    B.className = 'trial'; B.textContent = 'Analysis';
     if (!flash.on) sub.textContent = `Tap to try moves (next: ${NAME[nextPhantom()]}). Only you see them. Press "Hide" to go back.`;
   } else if (gameOver()) { B.className = 'alert'; B.textContent = 'Both passed'; if (!flash.on) sub.textContent = 'Count your territory, or press New game.'; }
   else if (!myColour) { B.className = 'wait'; B.textContent = 'Tap Black or White to play'; }
@@ -414,7 +420,7 @@ function render() {
 
   document.getElementById('pass').disabled = cloud || !myColour;
   document.getElementById('undo').disabled = cloud ? !phantoms.length : !toArr(G.moves).length;
-  const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Territory'; cb.classList.toggle('on', cloud);
+  const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Analysis'; cb.classList.toggle('on', cloud);
   renderGrid();
 }
 function chip(p) {
@@ -429,7 +435,7 @@ function renderGrid() {
   if (key === renderGrid.key) return;
   renderGrid.key = key;
   const grid = document.getElementById('grid'); grid.innerHTML = '';
-  document.getElementById('others').style.display = ids.length ? 'block' : 'none';
+  document.getElementById('othersh').style.display = ids.length ? 'block' : 'none';
   for (const id of ids) {
     const g = D.games[id], n = g.size, b = replay(g).board, ppl = busy[id] || [];
     const d = document.createElement('div'); d.className = 'thumb' + (ppl.length ? ' live' : ''); d.dataset.id = id;
@@ -475,6 +481,20 @@ svg.addEventListener('mousemove', ev => {
   if (p === hoverP) return;
   hoverP = p; render(); requestOwn();
 });
+// right-click the stone that was just played to take it back
+svg.addEventListener('contextmenu', ev => {
+  if (!G) return;
+  const p = pointAt(ev); if (p === null) return;
+  if (cloud) {
+    const i = phantoms.findIndex(ph => ph.p === p);
+    if (i >= 0) { ev.preventDefault(); phantoms.splice(i, 1); render(); requestOwn(); }
+    return;
+  }
+  const lm = lastMove();
+  if (!lm || lm.p !== p) return;
+  ev.preventDefault();
+  R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur), m = l[l.length - 1]; if (!m || m.p !== p) return undefined; l.pop(); return l; });
+});
 svg.addEventListener('mouseleave', () => { if (cloud && hoverP !== null) { hoverP = null; render(); requestOwn(); } });
 
 function flash(msg) {
@@ -500,7 +520,8 @@ document.getElementById('cloud').onclick = () => {
   cloud = !cloud; phantoms = []; hoverP = null; ghost = null; own = null;
   render(); requestOwn();
 };
-document.getElementById('new').onclick = () => dialog('Start a new game? This one is kept at the bottom of the page. Board size:', [
+drawGrid(9, document.getElementById('newsvg'), 0.08); document.getElementById('newsvg').setAttribute('viewBox', '0 0 10 10');
+document.getElementById('newtile').onclick = () => dialog('Start a new game? This one is kept at the bottom of the page. Board size:', [
   ['19×19', () => createGame(19), true], ['13×13', () => createGame(13)], ['9×9', () => createGame(9)], ['Cancel']]);
 document.querySelectorAll('.bowl').forEach(b => b.onclick = () => {
   const c = b.dataset.c;
