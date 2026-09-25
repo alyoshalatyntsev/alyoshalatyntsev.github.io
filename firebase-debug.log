@@ -1,0 +1,32 @@
+[debug] [2026-09-25T15:03:34.129Z] ----------------------------------------------------------------------
+[debug] [2026-09-25T15:03:34.131Z] Command:       /opt/homebrew/Cellar/node/26.10.0_1/bin/node /opt/homebrew/bin/firebase login --interactive
+[debug] [2026-09-25T15:03:34.131Z] CLI Version:   15.31.0
+[debug] [2026-09-25T15:03:34.131Z] Platform:      darwin
+[debug] [2026-09-25T15:03:34.131Z] Node Version:  v26.10.0
+[debug] [2026-09-25T15:03:34.131Z] Detected Agent: claude-code_2-1-282_agent
+[debug] [2026-09-25T15:03:34.131Z] Time:          Fri Sep 25 2026 23:03:34 GMT+0800 (China Standard Time)
+[debug] [2026-09-25T15:03:34.131Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  The Firebase CLI’s MCP server feature can optionally make use of Gemini in Firebase. Learn more about Gemini in Firebase and how it uses your data: https://firebase.google.com/docs/gemini-in-firebase#how-gemini-in-firebase-uses-your-data 
+[info] 
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you. 
+[debug] [2026-09-25T15:03:53.616Z] ----------------------------------------------------------------------
+[debug] [2026-09-25T15:03:53.618Z] Command:       /opt/homebrew/Cellar/node/26.10.0_1/bin/node /opt/homebrew/bin/firebase login --interactive
+[debug] [2026-09-25T15:03:53.618Z] CLI Version:   15.31.0
+[debug] [2026-09-25T15:03:53.618Z] Platform:      darwin
+[debug] [2026-09-25T15:03:53.618Z] Node Version:  v26.10.0
+[debug] [2026-09-25T15:03:53.618Z] Detected Agent: claude-code_2-1-282_agent
+[debug] [2026-09-25T15:03:53.618Z] Time:          Fri Sep 25 2026 23:03:53 GMT+0800 (China Standard Time)
+[debug] [2026-09-25T15:03:53.618Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  The Firebase CLI’s MCP server feature can optionally make use of Gemini in Firebase. Learn more about Gemini in Firebase and how it uses your data: https://firebase.google.com/docs/gemini-in-firebase#how-gemini-in-firebase-uses-your-data 
+[info] 
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you. 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=307954668&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] [2026-09-25T15:05:35.445Z] >>> [apiv2][query] POST https://accounts.google.com/o/oauth2/token [none]
+[debug] [2026-09-25T15:05:35.445Z] >>> [apiv2][body] POST https://accounts.google.com/o/oauth2/token [omitted]
+[debug] [2026-09-25T15:05:36.737Z] <<< [apiv2][status] POST https://accounts.google.com/o/oauth2/token 200
