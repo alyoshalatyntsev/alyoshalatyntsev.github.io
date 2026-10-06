@@ -370,67 +370,6 @@ button svg {
   height: 52px;
   overflow: visible;
 }
-.drawing-strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 118px;
-  flex-shrink: 0;
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
-}
-#drawings {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-  height: 104px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-.drawing-card {
-  flex: 0 0 128px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: var(--paper);
-  color: var(--muted);
-  font: inherit;
-  cursor: pointer;
-}
-.drawing-card:hover,
-.drawing-card:focus-visible {
-  border-color: var(--blue);
-  background: var(--active);
-}
-.drawing-card svg {
-  width: 116px;
-  height: 70px;
-}
-.drawing-card span,
-.history-note {
-  font-size: 10px;
-  white-space: nowrap;
-}
-.history-note {
-  color: var(--muted);
-}
-.sidebar-toolbar .apply-code {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 7px;
-}
-@media (max-width: 750px) {
-  .history-note {
-    display: none;
-  }
-}
 .sidebar {
   min-width: 0;
   border-left: 1px solid var(--border);
@@ -472,12 +411,11 @@ button svg {
   border-top: 1px solid #e1e1e1;
   padding: 4px 8px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
 }
 .sidebar-bottom button {
   font-size: 18px;
   font-weight: 500;
-  line-height: 1;
 }
 #tikz {
   width: 100%;
@@ -655,445 +593,47 @@ button svg {
   }
 }
 
-/* File commands and context share a quiet, readable top row. */
-.filebar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 3px 10px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  background: #fafafa;
-  overflow-x: auto;
-}
-.file-commands {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-.file-commands + .file-commands {
-  border-left: 1px solid var(--border);
-  padding-left: 8px;
-}
-.filebar .icon-button,
-.filebar .menu-trigger {
-  gap: 6px;
-  width: auto;
-  padding: 5px 9px;
-  height: 30px;
-  white-space: nowrap;
-}
-.filebar svg {
-  width: 16px;
-  height: 16px;
-}
-.tool-tip {
-  margin-left: auto;
-  padding: 0 10px;
-  color: #60666d;
-  font-size: 12px;
-  white-space: nowrap;
-  min-width: 280px;
-  text-align: right;
-}
-.toolbar {
-  height: 72px;
-}
-.toolbar-group {
-  height: 56px;
-}
-.toolbar .menu-trigger {
-  height: 54px;
-  min-width: 60px;
-  position: relative;
-  padding: 4px 13px 17px 5px;
-}
-.toolbar .menu-trigger .chevron {
-  position: absolute;
-  right: 3px;
-  top: 21px;
-}
-.control-caption {
-  position: absolute;
-  bottom: 3px;
-  left: 0;
-  right: 0;
-  font-size: 10px;
-  text-align: center;
-  color: #555;
-}
-.colours {
-  gap: 10px;
-}
-.current-colours {
-  gap: 3px;
-}
-.colour-well {
-  width: 43px;
-  height: 57px;
-  flex-direction: column;
-  gap: 3px;
-  padding: 3px;
-  font-size: 10px;
-}
-.colour-chip {
-  display: block;
-  width: 29px;
-  height: 29px;
-  border: 1px solid #999;
-  box-shadow: inset 0 0 0 2px white;
-}
-.custom-colour {
-  width: 23px;
-  height: 29px;
-  border: 1px solid #999;
-  border-radius: 2px;
-  background: conic-gradient(red, #ff0, #0c6, #09f, #80f, red);
-  box-shadow: inset 0 0 0 2px #fff;
-}
-.fill-controls {
-  display: flex;
-  border-left: 1px solid var(--border);
-  padding-left: 7px;
-  gap: 2px;
-}
-.fill-controls.inactive {
-  filter: grayscale(1);
-  opacity: 0.4;
-}
-.fill-controls .menu-trigger:disabled {
-  opacity: 1;
-}
-.quick-tooltip {
-  position: fixed;
-  z-index: 100;
-  padding: 6px 9px;
-  background: #30343a;
-  color: white;
-  border-radius: 3px;
-  box-shadow: 0 2px 7px #0002;
-  font-size: 12px;
-  pointer-events: none;
-  max-width: 270px;
-}
-@media (max-width: 1100px) {
-  .toolbar {
-    height: 70px;
-  }
-  .toolbar-group {
-    padding: 0 5px;
-    height: 56px;
-  }
-  .toolbar .menu-trigger {
-    min-width: 54px;
-  }
-  .colours {
-    gap: 6px;
-  }
-  .tool-tip {
-    font-size: 11px;
-  }
-}
-@media (max-width: 750px) {
-  .filebar {
-    padding-left: 5px;
-  }
-  .filebar .icon-button,
-  .filebar .menu-trigger {
-    padding: 5px 7px;
-  }
-  .filebar .file-commands svg {
-    display: none;
-  }
-  .sidebar {
-    top: 110px;
-  }
-  .tool-tip {
-    min-width: 260px;
-  }
-  .toolbar {
-    height: 70px;
-  }
-}
-.layer-control {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 10px;
-  padding-left: 14px;
-  border-left: 1px solid var(--border);
-  font-size: 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.layer-control input {
-  width: 94px;
-  height: 22px;
-  accent-color: var(--blue);
-  margin: 0;
-}
-.layer-control output {
-  min-width: 30px;
-  font: 10px var(--mono);
-}
-.layer-control.inactive {
-  opacity: 0.4;
-}
-.template-scroll {
-  font-size: 28px;
-  padding: 3px;
-  min-width: 24px;
-  flex-shrink: 0;
-}
-.template-card.active {
-  background: var(--active);
-  border-color: #8ab6d8;
-}
-#template-ghost {
-  position: fixed;
-  z-index: 65;
-  pointer-events: none;
-  opacity: 0.7;
-  overflow: visible;
-}
-#templates {
-  min-width: 0;
-}
-@media (max-width: 1100px) {
-  .layer-control {
-    margin-left: 3px;
-    padding-left: 6px;
-  }
-  .layer-control input {
-    width: 76px;
-  }
-}
-/* Keep each caption centred on its graphic, with the chevron in its own column. */
-.toolbar .menu-trigger {
-  display: grid;
-  grid-template-columns: minmax(34px, 1fr) 8px;
-  grid-template-rows: 30px 14px;
-  column-gap: 3px;
-  row-gap: 0;
-  padding: 4px 5px;
-  height: 54px;
-}
-.toolbar .menu-trigger .preview-icon {
-  grid-column: 1;
-  grid-row: 1;
-  justify-self: center;
-}
-.toolbar .menu-trigger .chevron {
-  position: static;
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: center;
-  align-self: center;
-}
-.toolbar .control-caption {
-  position: static;
-  grid-column: 1;
-  grid-row: 2;
-  justify-self: stretch;
-  align-self: center;
-  line-height: 14px;
-}
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding-left: 7px;
-  margin-left: 7px;
-  border-left: 1px solid var(--border);
-}
-.zoom-readout,
-.grid-readout {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  height: 48px;
-  padding: 3px;
-  min-width: 48px;
-  white-space: nowrap;
-  font: 11px var(--mono);
-}
-.stepper-caption {
-  font:
-    10px "Segoe UI",
-    sans-serif;
-  color: #555;
-}
-.swatches {
-  grid-template-columns: repeat(10, 14px);
-}
-.selection-section {
-  border-top: 1px solid var(--border);
-  padding: 8px 0 5px;
-}
-.side-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 32px);
-  gap: 3px 2px;
-}
-.side-actions .icon-button {
-  width: 32px;
-  height: 32px;
-  min-width: 0;
-  padding: 5px;
-}
-.layer-control {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin: 0;
-  padding: 8px 1px 0;
-  border: 0;
-  width: 100%;
-}
-.layer-labels {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  font-size: 9px;
-}
-.layer-control input {
-  width: 100%;
-  height: 18px;
-}
-.layer-control output {
-  min-width: 0;
-}
-.preamble-panel {
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-}
-.preamble-panel .sidebar-toolbar {
-  height: 32px;
-  font-size: 11px;
-}
-#tikz-preamble {
-  display: block;
-  width: 100%;
-  height: 76px;
-  min-height: 58px;
-  max-height: 150px;
-  border: 0;
-  padding: 8px 12px;
-  background: #f4f5f6;
-  resize: vertical;
-  font: 10px/1.65 var(--mono);
-  color: #575757;
-  outline-offset: -2px;
-}
-@media (max-width: 1100px) {
-  .swatches {
-    grid-template-columns: repeat(10, 12px);
-  }
-}
-@media (max-width: 750px) {
-  .side-actions {
-    grid-template-columns: repeat(2, 30px);
-  }
-  .side-actions .icon-button {
-    width: 30px;
-  }
-  .stepper {
-    padding-left: 4px;
-    margin-left: 4px;
-  }
-  .toolbar .zoom-readout,
-  .toolbar .grid-readout {
-    min-width: 46px;
-  }
-}
-
 </style>
   </head>
   <body>
     <header
-      id="filebar"
-      class="filebar"
-      role="toolbar"
-      aria-label="File and help"
-    >
-      <div id="file-actions" class="file-commands"></div>
-      <div id="document-actions" class="file-commands"></div>
-      <span id="tool-tip" class="tool-tip" role="status"></span>
-    </header>
-    <div
       id="toolbar"
       class="toolbar"
       role="toolbar"
       aria-label="Drawing controls"
     >
+      <div class="toolbar-group" id="file-actions"></div>
       <div class="toolbar-group" id="history-actions"></div>
+      <div class="toolbar-group" id="clipboard-actions"></div>
       <div class="toolbar-group" id="line-controls"></div>
       <div class="toolbar-group colours" aria-label="Colours">
         <div class="current-colours">
-          <button
-            class="colour-well stroke-well"
-            title="Line colour"
-            aria-label="Line colour"
-            data-colour-target="color"
-          >
-            <span class="colour-chip" id="stroke-chip"></span><span>Line</span>
-          </button>
-          <button
-            class="colour-well fill-well"
-            title="Fill colour"
-            aria-label="Fill colour"
-            data-colour-target="fillColor"
-          >
-            <span class="colour-chip" id="fill-chip"></span><span>Fill</span>
-          </button>
-          <input
-            type="color"
-            id="color"
-            value="#000000"
-            aria-label="Custom line colour"
-            hidden
-          />
-          <input
-            type="color"
-            id="fill-color"
-            value="#008080"
-            aria-label="Custom fill colour"
-            hidden
-          />
+          <label class="colour-well stroke-well" title="Line colour"
+            ><svg viewBox="0 0 22 22" aria-hidden="true">
+              <path d="M4 17L17 4" /></svg
+            ><input
+              type="color"
+              id="color"
+              value="#2d2a26"
+              aria-label="Line colour"
+          /></label>
+          <label class="colour-well fill-well" title="Fill colour"
+            ><svg viewBox="0 0 22 22" aria-hidden="true">
+              <path d="M5 10l6-6 7 7-6 6zM5 10h13" /></svg
+            ><input
+              type="color"
+              id="fill-color"
+              value="#7c9885"
+              aria-label="Fill colour"
+          /></label>
         </div>
         <div id="swatches" class="swatches" aria-label="Colour palette"></div>
-        <button
-          id="custom-colour"
-          class="custom-colour"
-          title="Edit colours"
-          aria-label="Edit colours"
-        ></button>
-        <div id="fill-controls" class="fill-controls"></div>
       </div>
+      <div class="toolbar-group" id="fill-controls"></div>
       <div class="toolbar-group" id="view-actions"></div>
-    </div>
+    </header>
     <div id="template-strip" class="template-strip" hidden>
-      <button
-        id="templates-prev"
-        class="icon-button template-scroll"
-        title="Previous templates (<)"
-        aria-label="Previous templates"
-        hidden
-      >
-        ‹
-      </button>
       <div id="templates" role="toolbar" aria-label="Templates"></div>
-      <button
-        id="templates-next"
-        class="icon-button template-scroll"
-        title="More templates (>)"
-        aria-label="More templates"
-        hidden
-      >
-        ›
-      </button>
       <button
         id="close-templates"
         class="icon-button"
@@ -1101,67 +641,8 @@ button svg {
         aria-label="Close templates"
       ></button>
     </div>
-    <div
-      id="drawing-strip"
-      class="drawing-strip"
-      aria-label="Saved drawings"
-      hidden
-    >
-      <button
-        id="drawings-prev"
-        class="icon-button template-scroll"
-        title="Previous drawings (<)"
-        aria-label="Previous drawings"
-        hidden
-      >
-        ‹
-      </button>
-      <span id="drawings-empty">No saved drawings yet.</span>
-      <div id="drawings" aria-label="Recent drawings"></div>
-      <button
-        id="drawings-next"
-        class="icon-button template-scroll"
-        title="More drawings (>)"
-        aria-label="More drawings"
-        hidden
-      >
-        ›
-      </button>
-      <span class="history-note">Last 20 · this browser</span>
-      <button
-        id="close-drawings"
-        class="icon-button"
-        title="Close saved drawings"
-        aria-label="Close saved drawings"
-      ></button>
-    </div>
     <main class="workspace">
-      <aside class="toolbox" aria-label="Tools and selection actions">
-        <nav id="tools" aria-label="Drawing tools"></nav>
-        <section class="selection-section" aria-label="Edit selection">
-          <div id="clipboard-actions" class="side-actions"></div>
-        </section>
-        <section class="selection-section" aria-label="Arrange selection">
-          <div id="arrange-actions" class="side-actions"></div>
-          <div
-            id="layer-control"
-            class="layer-control inactive"
-            aria-label="Line layer order"
-          >
-            <div class="layer-labels"><span>Back</span><span>Front</span></div>
-            <input
-              id="layer-order"
-              type="range"
-              min="0"
-              max="0"
-              value="0"
-              step="1"
-              aria-label="Line layer order, back to front"
-              disabled
-            /><output id="layer-position" for="layer-order">—</output>
-          </div>
-        </section>
-      </aside>
+      <nav id="tools" class="toolbox" aria-label="Drawing tools"></nav>
       <section class="drawing-area" aria-label="Drawing area">
         <div id="viewport" class="viewport">
           <svg
@@ -1188,23 +669,6 @@ button svg {
       </section>
       <aside id="sidebar" class="sidebar" aria-label="TikZ and help">
         <section id="code-panel" class="code-panel">
-          <div class="preamble-panel">
-            <div class="sidebar-toolbar">
-              <span>Preamble</span
-              ><button
-                id="copy-preamble"
-                class="icon-button"
-                title="Copy preamble"
-                aria-label="Copy preamble"
-              ></button>
-            </div>
-            <textarea
-              id="tikz-preamble"
-              spellcheck="false"
-              aria-label="TikZ preamble"
-              readonly
-            ></textarea>
-          </div>
           <div class="sidebar-toolbar">
             <span class="code-symbol" title="TikZ" aria-label="TikZ"
               >〈/〉</span
@@ -1218,8 +682,8 @@ button svg {
               ></button
               ><button
                 id="apply-code"
-                class="icon-button apply-code"
-                title="Apply TikZ edits (Ctrl/⌘ Enter)"
+                class="icon-button"
+                title="Apply TikZ edits"
                 aria-label="Apply TikZ edits"
               ></button>
             </div>
@@ -1259,10 +723,9 @@ button svg {
               Escape, or press Enter to finish.
             </p>
             <p>
-              Curves pass smoothly through the points. Use the white arrow to
-              drag points and tangent handles; the black arrow moves whole
-              objects. Hold Ctrl/⌘ while dragging a tangent to adjust one side
-              independently.
+              Curves pass smoothly through the points. Select a curve to move
+              its points and tangent handles. Hold Ctrl/⌘ while dragging a
+              tangent to adjust one side independently.
             </p>
             <h2>Select</h2>
             <p>
@@ -1270,38 +733,6 @@ button svg {
               Shift-click adds or removes objects. Drag a selected object to
               move the selection. A drawn path is one object; template pieces
               are separate objects.
-            </p>
-            <h2>Templates & groups</h2>
-            <p>
-              Choose a template, then click the canvas to place it. Escape
-              cancels; Shift places it underneath. Dragging from the strip also
-              works. Colours and stroke settings update the previews and new
-              pieces. Use ‹ / › or the &lt; / &gt; keys to scroll the strip.
-            </p>
-            <p>
-              Select pieces and press Ctrl/⌘ G to move them together. Ctrl/⌘
-              Shift G ungroups them. The white arrow edits individual points
-              inside a group. Groups are saved in project files.
-            </p>
-            <p>
-              The Back–Front slider under Arrange changes the stack position of
-              selected lines. Region fills remain behind the strings. Changing a
-              line's order resets its individual crossing overrides.
-            </p>
-            <h2>Regions & dots</h2>
-            <p>
-              For a curved region, click boundary points and finish with Escape,
-              Enter, or a double-click. Drag the handles to reshape it. Click
-              the dot tool to place a 2pt dot; drag its radius handle to resize
-              it.
-            </p>
-            <h2>Snapping</h2>
-            <p>
-              The grid − / + buttons beside zoom set the spacing in centimetres.
-              Click the spacing readout to return to 1 cm. The grid magnet snaps
-              to grid points. The node magnet snaps to path anchors and dot
-              centres; a blue ring marks the target. Node snapping takes
-              priority when both are on.
             </p>
             <h2>Crossings</h2>
             <p>
@@ -1313,7 +744,7 @@ button svg {
             <h2>Fill & colour</h2>
             <p>
               The bucket fills closed outlines or existing regions. Choose a
-              pattern and fill colour in the top bar. Click the Line or Fill
+              pattern and fill colour in the top bar. Click the line or fill
               colour chip to choose which colour the palette changes.
               Right-click a swatch to set the fill colour.
             </p>
@@ -1327,8 +758,6 @@ button svg {
               <dd>P / C</dd>
               <dt>Fill / region</dt>
               <dd>F / R</dd>
-              <dt>Curved region / dot</dt>
-              <dd>G / D</dd>
               <dt>Rectangle / ellipse</dt>
               <dd>U / O</dd>
               <dt>Text / crossing</dt>
@@ -1339,8 +768,6 @@ button svg {
               <dd>Delete / Backspace</dd>
               <dt>Copy / cut / paste</dt>
               <dd>Ctrl/⌘ C / X / V</dd>
-              <dt>Group / ungroup</dt>
-              <dd>Ctrl/⌘ G / Shift G</dd>
               <dt>Select all</dt>
               <dd>Ctrl/⌘ A</dd>
               <dt>Undo / redo</dt>
@@ -1356,24 +783,10 @@ button svg {
             </dl>
             <h2>Files & TikZ</h2>
             <p>
-              Each visit starts blank. Load shows previews of the last 20
-              nonempty drawings saved in this browser. New and Open keep the
-              current drawing there before switching. Save downloads a project
-              for keeping elsewhere.
-            </p>
-            <p>
               Save a project to keep editable curves and crossing settings. SVG
-              and PNG export with transparency. Copy the Preamble box into your
-              LaTeX preamble and the diagram into the document. Coordinates use
-              centimetres; weights and text sizes use points. Standard colours
-              use TikZ names. Enter LaTeX labels as text; they render in LaTeX
-              output.
-            </p>
-            <p>
-              Edit the diagram code, then click Apply or press Ctrl/⌘ Enter to
-              update the canvas. Undo reverses the edit. The editor supports its
-              exported TikZ commands and reports unsupported commands; it does
-              not run a full LaTeX compiler.
+              and PNG export with transparency. TikZ requires
+              <code>\usetikzlibrary{patterns,arrows.meta}</code>. Enter LaTeX
+              labels as text; they render in LaTeX output.
             </p>
             <a href="index-legacy.html" target="_blank" rel="noopener"
               >Original editor</a
@@ -1397,10 +810,7 @@ button svg {
         type="checkbox"
         id="grid"
         checked
-      /><input type="checkbox" id="snap" /><input
-        type="checkbox"
-        id="node-snap"
-      />
+      /><input type="checkbox" id="snap" />
     </div>
   <script>
 "use strict";
@@ -1408,38 +818,8 @@ button svg {
   const $ = (id) => document.getElementById(id);
   const NS = "http://www.w3.org/2000/svg";
   const STORAGE = "string-studio-v2";
-  const DRAWINGS_STORAGE = "string-drawings-v1";
-  let drawingId = null;
-  const INK = "#000000",
+  const INK = "#2d2a26",
     RED = "#ff0000";
-  // Existing world coordinates use 0.75 TeX pt per unit. Keep saved geometry
-  // unchanged while exposing exact centimetres in the grid and TikZ output.
-  const CM = 72.27 / 2.54 / 0.75;
-  const GRID_STEPS = [0.1, 0.2, 0.25, 0.5, 1, 2, 5];
-  const TIKZ_COLOURS = {
-    black: "#000000",
-    darkgray: "#404040",
-    gray: "#808080",
-    lightgray: "#bfbfbf",
-    white: "#ffffff",
-    red: "#ff0000",
-    orange: "#ff8000",
-    yellow: "#ffff00",
-    lime: "#bfff00",
-    green: "#00ff00",
-    cyan: "#00ffff",
-    teal: "#008080",
-    blue: "#0000ff",
-    violet: "#800080",
-    magenta: "#ff00ff",
-    pink: "#ffbfbf",
-    purple: "#bf0040",
-    brown: "#bf8040",
-    olive: "#808000",
-  };
-  const colourNames = new Map(
-    Object.entries(TIKZ_COLOURS).map(([name, hex]) => [hex, name]),
-  );
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const esc = (value) =>
     String(value).replace(
@@ -1496,7 +876,7 @@ button svg {
       "bezier",
       "Bézier curve",
       "C",
-      "M3 18C18 18 4 4 19 4M5 18h10M17 4H7M1.5 16.5h3v3h-3zM17.5 2.5h3v3h-3zM14 17v2M8 3v2",
+      "M3 17C3 0 19 21 19 3M3 17V4m16-1v14M1 4h4m12 13h4",
     ],
     [
       "fill",
@@ -1512,13 +892,6 @@ button svg {
     ],
     ["rectangle", "Rectangle", "U", "M3 4h16v14H3z"],
     ["ellipse", "Ellipse / node", "O", "M20 11a9 7 0 1 1-18 0 9 7 0 1 1 18 0"],
-    [
-      "bezier-region",
-      "Curved region",
-      "G",
-      "M4 16C-2 5 10 2 15 5s8 15-1 14S7 20 4 16zM4 14h3v3H4zM13 3h3v3h-3z",
-    ],
-    ["dot", "Dot · 2pt radius", "D", "M15 11a4 4 0 1 1-8 0 4 4 0 1 1 8 0"],
     ["text", "Text / label", "T", "M4 5V3h14v2M11 3v16m-4 0h8"],
     ["crossing", "Flip a crossing", "X", "M3 3l16 16M19 3l-5 5M8 14l-5 5"],
   ];
@@ -1536,7 +909,7 @@ button svg {
     editPoints = false;
   let defaults = {
     color: INK,
-    fillColor: "#008080",
+    fillColor: "#7c9885",
     width: 2,
     style: "solid",
     arrows: "none",
@@ -1590,196 +963,14 @@ button svg {
   function persist() {
     clearTimeout(changedTimer);
     $("save-state").textContent = "Saving…";
-    changedTimer = setTimeout(saveDrawing, 250);
-  }
-  function readDrawings() {
-    const entries = JSON.parse(localStorage.getItem(DRAWINGS_STORAGE) || "[]");
-    if (!Array.isArray(entries)) throw new Error("Invalid drawing history");
-    return entries
-      .filter((entry) => {
-        try {
-          return (
-            typeof entry.id === "string" &&
-            Number.isFinite(entry.updated) &&
-            (validateProject(entry.project).objects.length > 0 ||
-              (entry.codeDirty &&
-                typeof entry.code === "string" &&
-                entry.code.trim()))
-          );
-        } catch {
-          return false;
-        }
-      })
-      .sort((a, b) => b.updated - a.updated)
-      .slice(0, 20);
-  }
-  function saveDrawing() {
-    clearTimeout(changedTimer);
-    if (!model.objects.length && !(codeDirty && $("tikz").value.trim())) {
-      $("save-state").textContent = "";
-      return true;
-    }
-    try {
-      const entries = readDrawings();
-      const previous = entries.find((entry) => entry.id === drawingId);
-      const code = codeDirty ? $("tikz").value : generateTikZ();
-      if (
-        previous &&
-        JSON.stringify(previous.project) === snapshot() &&
-        previous.code === code &&
-        !!previous.codeDirty === codeDirty
-      ) {
-        $("save-state").textContent = "Saved in Load on this browser";
-        return true;
+    changedTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE, snapshot());
+        $("save-state").textContent = "Saved on this device";
+      } catch {
+        $("save-state").textContent = "Save a project to keep your work";
       }
-      drawingId ||= `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-      const entry = {
-        id: drawingId,
-        updated: Date.now(),
-        project: clone(model),
-        code,
-        codeDirty,
-        preamble: generatePreamble(),
-      };
-      localStorage.setItem(
-        DRAWINGS_STORAGE,
-        JSON.stringify(
-          [entry, ...entries.filter((item) => item.id !== drawingId)].slice(
-            0,
-            20,
-          ),
-        ),
-      );
-      $("save-state").textContent = "Saved in Load on this browser";
-      return true;
-    } catch {
-      $("save-state").textContent =
-        "History could not be saved. Use Save to download a project.";
-      toast("History could not be saved. Use Save to download a project.");
-      return false;
-    }
-  }
-  function openDrawing(project, entry = null) {
-    // Flush the pending autosave before replacing the document.
-    if (!saveDrawing()) return false;
-    cancelDrawing();
-    model = clone(project);
-    drawingId = entry?.id || null;
-    selected.clear();
-    history = [];
-    future = [];
-    view = { x: 0, y: 0, zoom: 1 };
-    finishChange();
-    if (entry?.codeDirty && typeof entry.code === "string") {
-      $("tikz").value = entry.code;
-      codeDirty = true;
-    }
-    $("import-report").hidden = true;
-    setTool("select");
-    if (model.objects.length) fit();
-    showDrawings(false);
-    return true;
-  }
-  function drawingPreview(project, prefix) {
-    const root = svg("svg", { "aria-hidden": "true" });
-    if (!project.objects.length) {
-      root.setAttribute("viewBox", "0 0 116 70");
-      svg(
-        "text",
-        {
-          x: 58,
-          y: 40,
-          "text-anchor": "middle",
-          fill: "#777",
-          "font-size": 13,
-        },
-        root,
-      ).textContent = "TikZ draft";
-      return root;
-    }
-    const defs = svg("defs", {}, root),
-      b = bounds(project.objects);
-    const pad = Math.max(15, ...project.objects.map((o) => o.width + o.gap));
-    root.setAttribute(
-      "viewBox",
-      `${b.x - pad} ${b.y - pad} ${b.w + 2 * pad} ${b.h + 2 * pad}`,
-    );
-    const scene = computeCrossings(project.objects, project.overrides);
-    for (const kind of ["region", "line", "ellipse", "text"])
-      for (const o of project.objects
-        .filter((o) => o.kind === kind)
-        .sort((a, b) => a.z - b.z))
-        renderObject(o, root, defs, true, false, scene, prefix);
-    return root;
-  }
-  function showDrawings(show) {
-    $("drawing-strip").hidden = !show;
-    $("load").classList.toggle("active", show);
-    $("load").setAttribute("aria-expanded", String(show));
-    if (!show) return;
-    cancelTemplate();
-    $("close-templates").click();
-    saveDrawing();
-    const list = $("drawings");
-    list.replaceChildren();
-    let entries;
-    try {
-      entries = readDrawings();
-    } catch {
-      $("drawings-empty").textContent = "Drawing history is unavailable.";
-      entries = [];
-    }
-    $("drawings-empty").hidden = entries.length > 0;
-    entries.forEach((entry, i) => {
-      const button = document.createElement("button");
-      button.className = "drawing-card";
-      button.dataset.drawingId = entry.id;
-      button.setAttribute(
-        "aria-label",
-        `Load drawing ${i + 1}, ${new Date(entry.updated).toLocaleString()}`,
-      );
-      const label = document.createElement("span");
-      label.textContent = new Date(entry.updated).toLocaleString([], {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      button.append(drawingPreview(entry.project, `saved-${i}-`), label);
-      button.addEventListener("click", () => {
-        if (!saveDrawing()) return;
-        try {
-          // The canvas can be edited while the gallery is open. Resolve the
-          // latest record after saving, never the thumbnail's old snapshot.
-          const latest = readDrawings().find((item) => item.id === entry.id);
-          if (latest) openDrawing(latest.project, latest);
-          else {
-            showDrawings(true);
-            toast("This drawing is no longer in recent history.");
-          }
-        } catch {
-          toast("Drawing history is unavailable.");
-        }
-      });
-      list.append(button);
-    });
-    list.scrollLeft = 0;
-    requestAnimationFrame(updateDrawingArrows);
-  }
-  function updateDrawingArrows() {
-    const list = $("drawings");
-    const overflow = list.scrollWidth > list.clientWidth + 2;
-    for (const id of ["drawings-prev", "drawings-next"])
-      $(id).hidden = !overflow;
-    $("drawings-prev").disabled = list.scrollLeft <= 1;
-    $("drawings-next").disabled =
-      list.scrollLeft + list.clientWidth >= list.scrollWidth - 2;
-  }
-  function scrollDrawings(direction) {
-    $("drawings").scrollBy({
-      left: direction * Math.max(150, $("drawings").clientWidth * 0.7),
-      behavior: "smooth",
-    });
+    }, 250);
   }
   function undo() {
     cancelDrawing();
@@ -1860,10 +1051,7 @@ button svg {
     change(() => {
       clipboard.pastes++;
       const map = new Map(),
-        groupMap = new Map(),
         offset = 24 * clipboard.pastes;
-      let nextGroup =
-        Math.max(0, ...model.objects.map((o) => o.group || 0)) + 1;
       const base = zNext();
       const sorted = [...clipboard.objects].sort((a, b) => a.z - b.z);
       for (const o of [...clipboard.objects].sort((a, b) => a.id - b.id))
@@ -1871,10 +1059,6 @@ button svg {
       const pasted = sorted.map((o, i) => {
         const n = clone(o);
         n.id = map.get(o.id);
-        if (o.group) {
-          if (!groupMap.has(o.group)) groupMap.set(o.group, nextGroup++);
-          n.group = groupMap.get(o.group);
-        }
         n.name = `${o.name} copy`;
         n.z = base + i;
         moveObject(n, offset, offset);
@@ -1966,97 +1150,6 @@ button svg {
       }
     });
   }
-  function expandGroups(ids) {
-    const result = new Set(ids),
-      groups = new Set(
-        model.objects
-          .filter((o) => result.has(o.id) && o.group)
-          .map((o) => o.group),
-      );
-    for (const o of model.objects)
-      if (o.group && groups.has(o.group)) result.add(o.id);
-    return result;
-  }
-  function groupSelection() {
-    const ids = expandGroups(selected);
-    if (ids.size < 2) return;
-    change(() => {
-      const group = Math.max(0, ...model.objects.map((o) => o.group || 0)) + 1;
-      model.objects.forEach((o) => {
-        if (ids.has(o.id)) o.group = group;
-      });
-      selected = ids;
-    });
-  }
-  function ungroupSelection() {
-    const groups = new Set(
-      selectedObjects()
-        .map((o) => o.group)
-        .filter(Boolean),
-    );
-    if (!groups.size) return;
-    change(() =>
-      model.objects.forEach((o) => {
-        if (groups.has(o.group)) delete o.group;
-      }),
-    );
-  }
-  let layerBefore = null;
-  function layerState() {
-    const lines = model.objects
-        .filter((o) => o.kind === "line")
-        .sort((a, b) => a.z - b.z),
-      picked = lines.filter((o) => selected.has(o.id)),
-      others = lines.filter((o) => !selected.has(o.id));
-    return {
-      lines,
-      picked,
-      others,
-      index: picked.length
-        ? others.filter((o) => lines.indexOf(o) < lines.indexOf(picked[0]))
-            .length
-        : 0,
-    };
-  }
-  function updateLayerControl() {
-    if (!$("layer-order")) return;
-    const { picked, others, index } = layerState(),
-      slider = $("layer-order");
-    slider.disabled = !picked.length || !others.length;
-    slider.max = others.length;
-    slider.value = index;
-    slider.setAttribute(
-      "aria-valuetext",
-      picked.length
-        ? `${index + 1} of ${others.length + 1}, back to front`
-        : "Select a line",
-    );
-    $("layer-position").textContent = picked.length
-      ? `${index + 1}/${others.length + 1}`
-      : "—";
-    $("layer-control").classList.toggle("inactive", !picked.length);
-  }
-  function setLayerPosition(index) {
-    const { picked, others } = layerState();
-    if (!picked.length) return;
-    index = Math.max(0, Math.min(others.length, index));
-    const order = [
-      ...others.slice(0, index),
-      ...picked,
-      ...others.slice(index),
-    ];
-    order.forEach((o, i) => (o.z = i + 1));
-    for (const key of Object.keys(model.overrides)) {
-      const [a, b] = key.split(":").map(Number);
-      if (selected.has(a) || selected.has(b)) delete model.overrides[key];
-    }
-    finishChange();
-  }
-  function commitLayerOrder() {
-    if (layerBefore && layerBefore !== snapshot()) pushHistory(layerBefore);
-    layerBefore = null;
-    updateButtons();
-  }
   function reorder(front) {
     if (!selected.size) return;
     change(() => {
@@ -2076,7 +1169,6 @@ button svg {
     if (textTarget) finishText();
     cancelDrawing();
     tool = next;
-    if (["select", "lasso"].includes(tool)) selected = expandGroups(selected);
     editPoints = false;
     if (!["select", "direct", "lasso", "crossing"].includes(tool))
       selected.clear();
@@ -2089,19 +1181,11 @@ button svg {
       : tool === "text"
         ? "text"
         : "crosshair";
-    if (
-      ["fill", "region", "rectangle", "ellipse", "bezier-region"].includes(tool)
-    )
-      colourTarget = "fillColor";
-    else if (["freehand", "line", "polyline", "bezier", "dot"].includes(tool))
-      colourTarget = "color";
     render();
     updateInspector();
   }
   function cancelDrawing() {
-    cancelTemplate();
     draft = null;
-    snapTarget = null;
     if (interaction?.before) {
       model = JSON.parse(interaction.before);
       selected = new Set(interaction.selection || []);
@@ -2110,67 +1194,17 @@ button svg {
     editPoints = false;
     render();
   }
-  let snapTarget = null,
-    gridSpacing = CM;
-  function setGridCM(cm) {
-    gridSpacing = cm * CM;
-    updateControlPreviews();
-    render();
-    try {
-      localStorage.setItem("string-grid-cm", String(cm));
-    } catch {}
-  }
-  function stepGrid(direction) {
-    const at = GRID_STEPS.findIndex(
-      (n) => Math.abs(n - gridSpacing / CM) < 1e-8,
-    );
-    setGridCM(
-      GRID_STEPS[Math.max(0, Math.min(GRID_STEPS.length - 1, at + direction))],
-    );
-  }
-  function snapPoint(p) {
-    snapTarget = null;
-    if ($("node-snap").checked) {
-      const candidates = [];
-      for (const o of model.objects) {
-        if (interaction?.type === "move" && selected.has(o.id)) continue;
-        if (o.points)
-          o.points.forEach((q, i) => {
-            if (
-              interaction?.type === "handle" &&
-              interaction.id === o.id &&
-              (interaction.key === i ||
-                (interaction.key === "start" && i === 0) ||
-                (interaction.key === "end" && i === 1))
-            )
-              return;
-            candidates.push(q);
-          });
-        else if (o.kind === "ellipse") candidates.push({ x: o.x, y: o.y });
-      }
-      if (draft) candidates.push(...draft.points);
-      const nearest = candidates
-        .map((q) => ({ q, d: dist(p, q) }))
-        .sort((a, b) => a.d - b.d)[0];
-      if (nearest && nearest.d <= 13 / view.zoom) {
-        snapTarget = { ...nearest.q };
-        return { ...nearest.q };
-      }
-    }
-    if ($("snap").checked)
-      return {
-        x: Math.round(p.x / gridSpacing) * gridSpacing,
-        y: Math.round(p.y / gridSpacing) * gridSpacing,
-      };
-    return p;
-  }
   function toWorld(e, snap = false) {
     const r = canvas.getBoundingClientRect();
     const p = {
       x: view.x + (e.clientX - r.left) / view.zoom,
       y: view.y + (e.clientY - r.top) / view.zoom,
     };
-    return snap ? snapPoint(p) : p;
+    if (snap && $("snap").checked) {
+      p.x = Math.round(p.x / 20) * 20;
+      p.y = Math.round(p.y / 20) * 20;
+    }
+    return p;
   }
   function toScreen(p) {
     return { x: (p.x - view.x) * view.zoom, y: (p.y - view.y) * view.zoom };
@@ -2215,18 +1249,7 @@ button svg {
     render();
   }
 
-  function naturalTangents(points, closed = false) {
-    if (closed && points.length >= 3)
-      return points.map((p, i) => {
-        const v = sub(
-          points[(i + 1) % points.length],
-          points[(i + points.length - 1) % points.length],
-        );
-        return {
-          in: { x: -v.x / 6, y: -v.y / 6 },
-          out: { x: v.x / 6, y: v.y / 6 },
-        };
-      });
+  function naturalTangents(points) {
     const n = points.length;
     if (n < 2)
       return points.map(() => ({ in: { x: 0, y: 0 }, out: { x: 0, y: 0 } }));
@@ -2262,10 +1285,7 @@ button svg {
     if (o.curve === "bezier")
       return [{ a: o.points[0], b: o.points[1], c1: o.c1, c2: o.c2 }];
     if (o.curve !== "spline") return [];
-    const endpoints = o.closed
-      ? [...o.points.slice(1), o.points[0]]
-      : o.points.slice(1);
-    return endpoints.map((b, i) => ({
+    return o.points.slice(1).map((b, i) => ({
       a: o.points[i],
       b,
       c1: {
@@ -2273,13 +1293,10 @@ button svg {
         y: o.points[i].y + o.tangents[i].out.y,
       },
       c2: {
-        x: b.x + o.tangents[(i + 1) % o.points.length].in.x,
-        y: b.y + o.tangents[(i + 1) % o.points.length].in.y,
+        x: b.x + o.tangents[i + 1].in.x,
+        y: b.y + o.tangents[i + 1].in.y,
       },
     }));
-  }
-  function regionPath(o) {
-    return (o.curve === "spline" ? curvePath(o) : paths(o.points)) + " Z";
   }
   function curvePath(o) {
     return (
@@ -2426,31 +1443,27 @@ button svg {
     }
     return tangent;
   }
-  function computeCrossings(
-    objects = model.objects,
-    overrides = model.overrides,
-  ) {
-    const cache = new Map();
-    if (objects === model.objects) geometry = cache;
-    const lines = objects
+  function computeCrossings() {
+    geometry = new Map();
+    const lines = model.objects
       .filter((o) => o.kind === "line")
       .sort((a, b) => a.id - b.id);
-    for (const o of lines) cache.set(o.id, lineGeometry(o));
+    for (const o of lines) geometry.set(o.id, lineGeometry(o));
     const result = [];
     for (let i = 0; i < lines.length; i++)
       for (let j = i + 1; j < lines.length; j++) {
         const a = lines[i],
           b = lines[j],
-          ap = cache.get(a.id).points,
-          bp = cache.get(b.id).points,
+          ap = geometry.get(a.id).points,
+          bp = geometry.get(b.id).points,
           found = [];
         for (let m = 1; m < ap.length; m++)
           for (let n = 1; n < bp.length; n++) {
             const hit = segmentIntersection(ap[m - 1], ap[m], bp[n - 1], bp[n]);
             if (!hit) continue;
             if (a.style === "squiggly" || b.style === "squiggly") {
-              const ta = tangentNear(cache.get(a.id).base, hit.p),
-                tb = tangentNear(cache.get(b.id).base, hit.p);
+              const ta = tangentNear(geometry.get(a.id).base, hit.p),
+                tb = tangentNear(geometry.get(b.id).base, hit.p);
               hit.angle =
                 (Math.asin(
                   Math.min(
@@ -2476,7 +1489,7 @@ button svg {
           .sort((x, y) => x.along - y.along)
           .forEach((h, k) => {
             const key = `${a.id}:${b.id}:${k}`;
-            const chosen = overrides[key];
+            const chosen = model.overrides[key];
             const upper =
               chosen === a.id ? a : chosen === b.id ? b : a.z > b.z ? a : b;
             const lower = upper === a ? b : a;
@@ -2519,7 +1532,7 @@ button svg {
         )
           return o;
       } else if (o.kind === "region") {
-        if (pointInPolygon(p, sampleBase(o))) return o;
+        if (pointInPolygon(p, o.points)) return o;
       } else if (o.kind === "ellipse") {
         if (
           ((p.x - o.x) / Math.max(1, o.rx + threshold)) ** 2 +
@@ -2567,7 +1580,7 @@ button svg {
         o.kind === "line"
           ? geometry.get(o.id)?.points || sampleBase(o)
           : o.kind === "region"
-            ? sampleBase(o)
+            ? o.points
             : o.kind === "ellipse"
               ? Array.from({ length: 32 }, (_, i) => ({
                   x: o.x + o.rx * Math.cos((i / 32) * 2 * Math.PI),
@@ -2604,14 +1617,14 @@ button svg {
           }
       if (hit) ids.add(o.id);
     }
-    selected = tool === "direct" ? ids : expandGroups(ids);
+    selected = ids;
     editPoints = false;
     render();
     updateInspector();
   }
 
-  function patternDef(o, parent, prefix = "") {
-    const id = `${prefix}pattern-${o.id}`;
+  function patternDef(o, parent) {
+    const id = `pattern-${o.id}`;
     const pat = svg(
       "pattern",
       { id, width: 8, height: 8, patternUnits: "userSpaceOnUse" },
@@ -2675,18 +1688,15 @@ button svg {
     defs,
     withMasks = true,
     diagnostics = false,
-    sceneCrossings = crossings,
-    prefix = "",
   ) {
     const group = svg("g", { "data-id": o.id }, parent);
     if (o.kind === "line") {
-      const g =
-        (sceneCrossings === crossings && geometry.get(o.id)) || lineGeometry(o);
+      const g = geometry.get(o.id) || lineGeometry(o);
       const holes = withMasks
-        ? sceneCrossings.filter((c) => c.lower === o.id && c.r > o.width / 2)
+        ? crossings.filter((c) => c.lower === o.id && c.r > o.width / 2)
         : [];
       if (holes.length) {
-        const id = `${prefix}mask-${o.id}`,
+        const id = `mask-${o.id}`,
           b = bounds([o]),
           pad = Math.max(50, o.width + o.gap);
         const extent = {
@@ -2753,7 +1763,7 @@ button svg {
           ? "none"
           : o.pattern === "solid"
             ? o.fillColor || o.color
-            : patternDef(o, defs, prefix);
+            : patternDef(o, defs);
       const attrs = {
         fill,
         "fill-rule": "evenodd",
@@ -2763,7 +1773,7 @@ button svg {
         "stroke-linejoin": "round",
       };
       if (o.kind === "region")
-        svg("path", { d: regionPath(o), ...attrs }, group);
+        svg("path", { d: paths(o.points) + " Z", ...attrs }, group);
       else
         svg(
           "ellipse",
@@ -2805,14 +1815,13 @@ button svg {
     return group;
   }
   function handlePoints(o) {
-    if (o.curve === "spline") {
+    if (o.kind === "line" && o.curve === "spline") {
       const handles = o.points.map((p, i) => ({ p, key: i, anchor: true }));
       o.points.forEach((p, i) => {
         for (const side of ["in", "out"]) {
           if (
-            !o.closed &&
-            ((side === "in" && i === 0) ||
-              (side === "out" && i === o.points.length - 1))
+            (side === "in" && i === 0) ||
+            (side === "out" && i === o.points.length - 1)
           )
             continue;
           const v = o.tangents[i][side];
@@ -2839,15 +1848,6 @@ button svg {
         ? [handles[0], handles.at(-1)]
         : handles;
     }
-    if (o.kind === "ellipse" && o.dot)
-      return [
-        {
-          p: { x: o.x + Math.max(o.rx, 18 / view.zoom), y: o.y },
-          origin: { x: o.x, y: o.y },
-          key: "radius",
-          anchor: false,
-        },
-      ];
     if (o.kind === "ellipse")
       return [
         { p: { x: o.x + o.rx, y: o.y }, key: "rx", anchor: true },
@@ -2856,16 +1856,10 @@ button svg {
     return [];
   }
 
-  function handleHit(p, all = false) {
-    const candidates = (
-      all ? model.objects : selected.size === 1 ? selectedObjects() : []
-    ).flatMap((o) =>
-      handlePoints(o).map((h) => ({ ...h, id: o.id, d: dist(h.p, p) })),
-    );
-    const radius = (tool === "direct" ? 15 : 8) / view.zoom;
-    return (
-      candidates.filter((h) => h.d <= radius).sort((a, b) => a.d - b.d)[0] ||
-      null
+  function handleHit(p) {
+    if (selected.size !== 1) return null;
+    return handlePoints(selectedObjects()[0]).find(
+      (h) => dist(h.p, p) < 7 / view.zoom,
     );
   }
 
@@ -2897,7 +1891,7 @@ button svg {
           svg(
             "path",
             {
-              d: regionPath(o),
+              d: paths(o.points) + " Z",
               stroke: "#1976c9",
               "stroke-width": 1.3 / view.zoom,
               fill: "none",
@@ -2968,11 +1962,7 @@ button svg {
           ".65",
         );
       }
-      if (
-        ["polyline", "bezier", "region", "bezier-region", "line"].includes(
-          draft.tool,
-        )
-      )
+      if (["polyline", "bezier", "region", "line"].includes(draft.tool))
         for (const p of draft.points)
           svg(
             "circle",
@@ -2998,20 +1988,6 @@ button svg {
         parent,
       );
     }
-    if (snapTarget)
-      svg(
-        "circle",
-        {
-          cx: snapTarget.x,
-          cy: snapTarget.y,
-          r: 7 / view.zoom,
-          fill: "none",
-          stroke: "#1976c9",
-          "stroke-width": 1.5 / view.zoom,
-          "data-snap-target": "true",
-        },
-        parent,
-      );
     if (tool === "crossing")
       for (const c of crossings)
         svg(
@@ -3028,7 +2004,6 @@ button svg {
         );
   }
   function render() {
-    updateToolTip();
     crossings = computeCrossings();
     canvas.setAttribute(
       "viewBox",
@@ -3039,28 +2014,21 @@ button svg {
     for (const id of ["region-layer", "line-layer", "node-layer", "grid-layer"])
       $(id).replaceChildren();
     if ($("grid").checked) {
-      const spacing =
-        gridSpacing *
-        Math.max(1, 2 ** Math.ceil(Math.log2(8 / (gridSpacing * view.zoom))));
       const pat = svg(
         "pattern",
         {
           id: "grid-dots",
-          x: -spacing / 2,
-          y: -spacing / 2,
-          width: spacing,
-          height: spacing,
+          x: 0,
+          y: 0,
+          width: 20,
+          height: 20,
           patternUnits: "userSpaceOnUse",
         },
         defs,
         true,
         true,
       );
-      svg(
-        "circle",
-        { cx: spacing / 2, cy: spacing / 2, r: 1 / view.zoom, fill: "#a9aeb4" },
-        pat,
-      );
+      svg("circle", { cx: 0, cy: 0, r: 0.7 / view.zoom, fill: "#d8d3cc" }, pat);
       svg(
         "rect",
         {
@@ -3089,7 +2057,6 @@ button svg {
         true,
       );
     renderOverlay();
-    if (pendingTemplate) moveTemplateGhost();
     $("zoom").textContent = `${Math.round(view.zoom * 100)}%`;
     updateButtons();
   }
@@ -3116,10 +2083,7 @@ button svg {
     $("paste").disabled = !clipboard;
     $("undo").disabled = !history.length;
     $("redo").disabled = !future.length;
-    if ($("group")) $("group").disabled = selected.size < 2;
-    if ($("ungroup"))
-      $("ungroup").disabled = !selectedObjects().some((o) => o.group);
-    updateLayerControl();
+    if ($("arrange")) $("arrange").disabled = !has;
   }
   function updateInspector() {
     const o = selectedObjects()[0];
@@ -3156,7 +2120,6 @@ button svg {
       );
     if (objects.length) change(() => objects.forEach((o) => (o[key] = value)));
     updateControlPreviews();
-    refreshTemplates();
     requestRender();
   }
   function swapCrossing(c) {
@@ -3194,17 +2157,16 @@ button svg {
         ry: Math.abs(d.points[0].y - end.y) / 2,
       };
     }
-    if (["bezier", "bezier-region"].includes(d.tool)) {
+    if (d.tool === "bezier") {
       const points = [...d.points];
       const tip = d.preview || cursor;
       if (dist(points.at(-1), tip) > 1) points.push(tip);
       return {
         ...base,
-        kind: d.tool === "bezier-region" ? "region" : "line",
-        closed: d.tool === "bezier-region",
+        kind: "line",
         curve: "spline",
         points,
-        tangents: naturalTangents(points, d.tool === "bezier-region"),
+        tangents: naturalTangents(points),
       };
     }
     const points = d.free ? d.points : [...d.points, d.preview || cursor];
@@ -3219,10 +2181,9 @@ button svg {
     if (!draft) return;
     const d = draft;
     let o = previewDraft();
-    if (["polyline", "region", "bezier", "bezier-region"].includes(d.tool))
+    if (["polyline", "region", "bezier"].includes(d.tool))
       o.points = d.free ? simplify(d.points, 0.8) : d.points;
-    if (["bezier", "bezier-region"].includes(d.tool))
-      o.tangents = naturalTangents(o.points, o.closed);
+    if (d.tool === "bezier") o.tangents = naturalTangents(o.points);
     o.drawing = d.tool;
     if (d.tool === "freehand") o.points = simplify(d.points, 0.7);
     if (d.tool === "line") o.points = [d.points[0], d.end || cursor];
@@ -3252,7 +2213,7 @@ button svg {
     o.z = zNext(d.under);
     draft = null;
     addObject(o);
-    if (["bezier", "bezier-region"].includes(d.tool)) setTool("direct");
+    if (d.tool === "bezier") setTool("direct");
     else if (d.tool === "polyline") setTool("select");
   }
   function draftClick(p, e) {
@@ -3266,7 +2227,7 @@ button svg {
       return;
     }
     if (
-      ["region", "bezier-region"].includes(tool) &&
+      tool === "region" &&
       draft.points.length >= 3 &&
       dist(p, draft.points[0]) < 10 / view.zoom
     ) {
@@ -3289,7 +2250,7 @@ button svg {
     e.preventDefault();
     if (textTarget) finishText();
     canvas.focus({ preventScroll: true });
-    cursor = toWorld(e, !["select", "direct", "lasso"].includes(tool));
+    cursor = toWorld(e, true);
     const p = cursor;
     canvas.setPointerCapture(e.pointerId);
     if (e.button === 1 || space || e.altKey) {
@@ -3301,42 +2262,28 @@ button svg {
       canvas.style.cursor = "grabbing";
       return;
     }
-    if (pendingTemplate) {
-      placeTemplate(pendingTemplate, toWorld(e, true), e.shiftKey);
-      return;
-    }
     if (["select", "direct", "lasso"].includes(tool)) {
-      const handle = handleHit(p, tool === "direct");
+      const handle = handleHit(p);
       if (handle) {
-        selected = new Set([handle.id]);
         interaction = {
           type: "handle",
           key: handle.key,
-          id: handle.id,
-          start: { ...p },
-          original: clone(model.objects.find((o) => o.id === handle.id)),
+          id: [...selected][0],
           before: snapshot(),
           selection: [...selected],
         };
-        render();
-        updateInspector();
         return;
       }
       const hit = hitTest(p);
       if (hit) {
-        const hitIds =
-          tool === "direct" ? new Set([hit.id]) : expandGroups([hit.id]);
         if (e.shiftKey) {
-          if (selected.has(hit.id)) hitIds.forEach((id) => selected.delete(id));
-          else hitIds.forEach((id) => selected.add(id));
-        } else if (
-          !selected.has(hit.id) ||
-          (tool !== "direct" && [...hitIds].some((id) => !selected.has(id)))
-        ) {
-          selected = hitIds;
+          if (selected.has(hit.id)) selected.delete(hit.id);
+          else selected.add(hit.id);
+        } else if (!selected.has(hit.id)) {
+          selected = new Set([hit.id]);
           editPoints = false;
         }
-        if (selected.has(hit.id) && tool !== "direct") startMove(p);
+        if (selected.has(hit.id)) startMove(p);
         render();
         updateInspector();
         return;
@@ -3363,33 +2310,11 @@ button svg {
       fillAt(p);
       return;
     }
-    if (tool === "dot") {
-      addObject(
-        makeObject(
-          "ellipse",
-          {
-            x: p.x,
-            y: p.y,
-            rx: 2 / 0.75,
-            ry: 2 / 0.75,
-            dot: true,
-            width: 0,
-            pattern: "solid",
-            fillColor: defaults.color,
-            opacity: 1,
-            text: "",
-          },
-          e.shiftKey,
-        ),
-      );
-      setTool("select");
-      return;
-    }
     if (tool === "text") {
       startText(p);
       return;
     }
-    if (["polyline", "bezier", "bezier-region"].includes(tool)) {
+    if (["polyline", "bezier"].includes(tool)) {
       if (e.detail > 1) return;
       draftClick(p, e);
       render();
@@ -3410,12 +2335,9 @@ button svg {
     render();
   }
   function pointerMove(e) {
-    if (pendingTemplate) return;
     cursor = toWorld(
       e,
-      interaction?.type === "handle" ||
-        (!["select", "direct", "lasso", "freehand"].includes(tool) &&
-          interaction?.type !== "pan"),
+      interaction?.type !== "pan" && tool !== "freehand" && tool !== "lasso",
     );
     if (draft) {
       draft.preview = cursor;
@@ -3423,12 +2345,12 @@ button svg {
     }
     if (!interaction) {
       if (["select", "direct", "lasso"].includes(tool))
-        canvas.style.cursor = handleHit(cursor, tool === "direct")
+        canvas.style.cursor = handleHit(cursor)
           ? "crosshair"
-          : hitTest(cursor) && tool !== "direct"
+          : hitTest(cursor)
             ? "move"
             : "default";
-      if (draft || $("node-snap").checked) requestRender();
+      if (draft) requestRender();
       return;
     }
     const d = interaction;
@@ -3450,12 +2372,7 @@ button svg {
     }
     if (d.type === "handle") {
       const o = model.objects.find((n) => n.id === d.id);
-      if (d.key === "radius") {
-        o.rx = o.ry = Math.max(
-          0.5,
-          d.original.rx + dist(cursor, o) - dist(d.start, d.original),
-        );
-      } else if (String(d.key).startsWith("tangent-")) {
+      if (String(d.key).startsWith("tangent-")) {
         const [, side, index] = d.key.split("-"),
           i = Number(index),
           v = sub(cursor, o.points[i]);
@@ -3501,7 +2418,7 @@ button svg {
     if (!interaction) return;
     cursor = toWorld(
       e,
-      !["select", "direct", "freehand", "lasso"].includes(tool),
+      $("snap").checked && tool !== "freehand" && tool !== "lasso",
     );
     const d = interaction;
     interaction = null;
@@ -3555,10 +2472,7 @@ button svg {
   }
   function doubleClick(e) {
     e.preventDefault();
-    if (
-      ["polyline", "region", "bezier", "bezier-region"].includes(tool) &&
-      draft
-    ) {
+    if (["polyline", "region", "bezier"].includes(tool) && draft) {
       finishDraft();
       return;
     }
@@ -3705,7 +2619,7 @@ button svg {
       .sort((a, b) => b.z - a.z)
       .find((o) =>
         o.kind === "region"
-          ? pointInPolygon(p, sampleBase(o))
+          ? pointInPolygon(p, o.points)
           : ((p.x - o.x) / o.rx) ** 2 + ((p.y - o.y) / o.ry) ** 2 <= 1,
       );
     if (existing) {
@@ -3727,11 +2641,8 @@ button svg {
   const templateNames = {
     cup: "Cup",
     cap: "Cap",
-    "cup-arc": "Semicircular cup",
-    "cap-arc": "Semicircular cap",
     crossing: "Crossing",
-    braid: "Three-strand braid",
-    categories: "Regions A, B, C",
+    braid: "Braid",
     sheet: "2D surface",
     box: "3D block",
     identity: "Identity",
@@ -3753,6 +2664,10 @@ button svg {
     const region = (points, extra = {}) => ({
       kind: "region",
       points,
+      pattern: "hatch",
+      color: "#7c9885",
+      opacity: 0.5,
+      width: 1.4,
       ...extra,
     });
     const p = (x, y) => ({ x, y });
@@ -3761,65 +2676,25 @@ button svg {
         return [curve(p(-55, -35), p(55, -35), p(-55, 65), p(55, 65))];
       case "cap":
         return [curve(p(-55, 35), p(55, 35), p(-55, -65), p(55, -65))];
-      case "cup-arc":
-      case "cap-arc": {
-        const sign = type === "cup-arc" ? 1 : -1,
-          k = 26.51;
-        return [
-          line([p(-48, 0), p(0, 48 * sign), p(48, 0)], {
-            curve: "spline",
-            tangents: [
-              { in: p(0, 0), out: p(0, k * sign) },
-              { in: p(-k, 0), out: p(k, 0) },
-              { in: p(0, k * sign), out: p(0, 0) },
-            ],
-          }),
-        ];
-      }
-      case "categories":
-        return [
-          ...[-72, -24, 24].map((x, i) =>
-            region([p(x, -55), p(x + 48, -55), p(x + 48, 55), p(x, 55)], {
-              width: 0,
-              opacity: [0.2, 0.45, 0.7][i],
-            }),
-          ),
-          line([p(-24, -55), p(-24, 55)]),
-          line([p(24, -55), p(24, 55)]),
-          ...["A", "B", "C"].map((text, i) => ({
-            kind: "text",
-            x: -48 + i * 48,
-            y: 0,
-            text,
-            fontSize: 18,
-          })),
-        ];
       case "identity":
         return [line([p(-30, -55), p(-30, 55)]), line([p(30, -55), p(30, 55)])];
       case "crossing":
         return [line([p(-50, -50), p(50, 50)]), line([p(50, -50), p(-50, 50)])];
       case "braid":
         return [
-          [-46, 0, 46, 46],
-          [0, -46, -46, 0],
-          [46, 46, 0, -46],
-        ].map((xs, j) =>
-          line(
-            xs.map((x, i) => p(x, -66 + i * 44)),
-            {
-              curve: "spline",
-              _layer: 3 - j,
-              tangents: xs.map(() => ({ in: p(0, -22), out: p(0, 22) })),
-            },
-          ),
-        );
+          curve(p(-40, -65), p(40, 65), p(80, -20), p(-80, 20)),
+          curve(p(40, -65), p(-40, 65), p(-80, -20), p(80, 20)),
+        ];
       case "sheet":
         return [region([p(-65, -20), p(25, -50), p(65, 20), p(-25, 50)])];
       case "sheetSide":
         return [
           region([p(-65, 0), p(35, -35), p(65, 0), p(-35, 35)]),
-          line([p(-65, 0), p(-65, 12), p(-35, 47), p(65, 12), p(65, 0)], {}),
-          line([p(-35, 35), p(-35, 47)]),
+          line([p(-65, 0), p(-65, 12), p(-35, 47), p(65, 12), p(65, 0)], {
+            width: 1.3,
+            color: "#7c9885",
+          }),
+          line([p(-35, 35), p(-35, 47)], { width: 1.3, color: "#7c9885" }),
         ];
       case "box":
         return [
@@ -3827,6 +2702,7 @@ button svg {
             opacity: 0.3,
           }),
           region([p(-50, -25), p(-10, 5), p(-10, 55), p(-50, 25)], {
+            pattern: "backhatch",
             opacity: 0.6,
           }),
           region([p(-10, 5), p(55, -20), p(55, 30), p(-10, 55)], {
@@ -3884,152 +2760,51 @@ button svg {
             opacity: 0.12,
             text: "f",
             fontSize: 22,
+            color: "#7c9885",
           },
         ];
       default:
         return [];
     }
   }
-  let pendingTemplate = null,
-    templatePointer = { x: 0, y: 0 };
-  let templatePreviewSignature = "";
-  function templatePieces(type) {
-    const pieces = [],
-      edges = new Set();
-    for (const raw of templateObjects(type)) {
-      const item = { ...clone(defaults), ...raw };
-      if (raw.opacity !== undefined && raw.kind === "region")
-        item.opacity = Math.min(1, (raw.opacity * defaults.opacity) / 0.45);
-      if (item.kind === "region") {
-        pieces.push({ ...item, width: 0 });
-        if (raw.width !== 0)
-          for (let i = 0; i < item.points.length; i++) {
-            const a = item.points[i],
-              b = item.points[(i + 1) % item.points.length];
-            const key = [`${a.x},${a.y}`, `${b.x},${b.y}`].sort().join(":");
-            if (!edges.has(key)) {
-              edges.add(key);
-              pieces.push({
-                ...clone(defaults),
-                kind: "line",
-                curve: "polyline",
-                points: [clone(a), clone(b)],
-              });
-            }
-          }
-      } else if (
-        item.kind === "line" &&
-        item.curve === "polyline" &&
-        item.points.length > 2
-      ) {
-        for (let i = 1; i < item.points.length; i++)
-          pieces.push({
-            ...item,
-            points: [clone(item.points[i - 1]), clone(item.points[i])],
-          });
-      } else pieces.push(item);
-    }
-    return pieces;
-  }
-  function templateScene(type) {
-    return templatePieces(type).map((item, i) => ({
-      ...item,
-      id: i + 1,
-      z: item._layer ?? i + 1,
-    }));
-  }
-  function paintTemplate(target, type, prefix) {
-    target.replaceChildren();
-    const objects = templateScene(type),
-      cs = computeCrossings(objects, {}),
-      defs = svg("defs", {}, target);
-    for (const kind of ["region", "line", "ellipse", "text"])
-      for (const o of objects
-        .filter((o) => o.kind === kind)
-        .sort((a, b) => a.z - b.z))
-        renderObject(o, target, defs, true, false, cs, prefix);
-  }
-  function refreshTemplates() {
-    const signature = JSON.stringify(defaults);
-    if (signature !== templatePreviewSignature) {
-      templatePreviewSignature = signature;
-      for (const button of document.querySelectorAll(".template-card"))
-        paintTemplate(
-          button.querySelector("svg"),
-          button.dataset.template,
-          `thumb-${button.dataset.template}-`,
-        );
-      if (pendingTemplate)
-        paintTemplate($("template-ghost"), pendingTemplate, "ghost-");
-    }
-  }
-  function cancelTemplate() {
-    pendingTemplate = null;
-    $("template-ghost")?.remove();
-    document
-      .querySelectorAll(".template-card")
-      .forEach((b) => b.classList.remove("active"));
-  }
-  function moveTemplateGhost(e) {
-    if (!pendingTemplate) return;
-    if (e) templatePointer = { x: e.clientX, y: e.clientY };
-    const ghost = $("template-ghost"),
-      size = 180 * view.zoom;
-    if (!ghost) return;
-    let point = templatePointer;
-    const rect = canvas.getBoundingClientRect();
-    if (
-      point.x >= rect.left &&
-      point.x <= rect.right &&
-      point.y >= rect.top &&
-      point.y <= rect.bottom
-    ) {
-      const world = toWorld({ clientX: point.x, clientY: point.y }, true),
-        screen = toScreen(world);
-      point = { x: rect.left + screen.x, y: rect.top + screen.y };
-    }
-    ghost.style.width = ghost.style.height = size + "px";
-    ghost.style.left = point.x - size / 2 + "px";
-    ghost.style.top = point.y - size / 2 + "px";
-  }
-  function beginTemplate(type, e) {
-    setTool("select");
-    selected.clear();
-    pendingTemplate = type;
-    const ghost = svg(
-      "svg",
-      {
-        id: "template-ghost",
-        viewBox: "-90 -90 180 180",
-        "aria-hidden": "true",
-      },
-      document.body,
-    );
-    paintTemplate(ghost, type, "ghost-");
-    templatePointer = { x: e.clientX, y: e.clientY };
-    document
-      .querySelectorAll(".template-card")
-      .forEach((b) =>
-        b.classList.toggle("active", b.dataset.template === type),
-      );
-    moveTemplateGhost();
-    render();
-    updateInspector();
-  }
-  function placeTemplate(type, p, under = false) {
+  function placeTemplate(type, p) {
     cancelDrawing();
     change(() => {
-      const objects = templateScene(type).sort((a, b) => a.z - b.z);
-      const base = under
-        ? Math.min(0, ...model.objects.map((o) => o.z)) - objects.length
-        : zNext();
-      for (const [i, item] of objects.entries()) {
-        const { id, z, _layer, ...data } = item;
-        const o = makeObject(item.kind, {
-          ...data,
-          name: templateNames[type],
-          z: base + i,
-        });
+      const pieces = [],
+        edges = new Set();
+      for (const item of templateObjects(type)) {
+        if (item.kind === "region") {
+          pieces.push({ ...item, width: 0 });
+          if (item.width !== 0)
+            for (let i = 0; i < item.points.length; i++) {
+              const a = item.points[i],
+                b = item.points[(i + 1) % item.points.length];
+              const key = [`${a.x},${a.y}`, `${b.x},${b.y}`].sort().join(":");
+              if (!edges.has(key)) {
+                edges.add(key);
+                pieces.push({
+                  kind: "line",
+                  curve: "polyline",
+                  points: [clone(a), clone(b)],
+                  color: item.color,
+                  width: item.width || defaults.width,
+                });
+              }
+            }
+        } else if (
+          item.kind === "line" &&
+          item.curve === "polyline" &&
+          item.points.length > 2
+        ) {
+          for (let i = 1; i < item.points.length; i++)
+            pieces.push({
+              ...item,
+              points: [clone(item.points[i - 1]), clone(item.points[i])],
+            });
+        } else pieces.push(item);
+      }
+      for (const item of pieces) {
+        const o = makeObject(item.kind, { ...item, name: templateNames[type] });
         moveObject(o, p.x, p.y);
         model.objects.push(o);
       }
@@ -4037,48 +2812,42 @@ button svg {
     });
     setTool("select");
   }
-  function scrollTemplates(direction) {
-    $("templates").scrollBy({
-      left: direction * Math.max(150, $("templates").clientWidth * 0.7),
-      behavior: "smooth",
-    });
-  }
-  function updateTemplateArrows() {
-    const strip = $("templates");
-    if (!strip) return;
-    const overflow = strip.scrollWidth > strip.clientWidth + 2;
-    for (const id of ["templates-prev", "templates-next"])
-      $(id).hidden = !overflow;
-    $("templates-prev").disabled = strip.scrollLeft <= 1;
-    $("templates-next").disabled =
-      strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2;
-  }
+
   function buildTemplates() {
     for (const [type, name] of Object.entries(templateNames)) {
       const button = document.createElement("button");
       button.className = "template-card";
       button.draggable = true;
-      button.title = name + " · click, then place";
+      button.title = `Drag ${name} onto the canvas, or click to insert`;
+      const thumb = svg("svg", {
+        viewBox: "-80 -80 160 160",
+        "aria-hidden": "true",
+      });
+      const defs = svg("defs", {}, thumb);
+      templateObjects(type).forEach((item, i) =>
+        renderObject(
+          { id: `thumb-${type}-${i}`, ...clone(defaults), ...item },
+          thumb,
+          defs,
+          false,
+        ),
+      );
       button.setAttribute("aria-label", name);
       button.dataset.template = type;
-      button.append(
-        svg("svg", { viewBox: "-90 -90 180 180", "aria-hidden": "true" }),
-      );
+      button.append(thumb);
       button.addEventListener("dragstart", (e) => {
-        cancelTemplate();
         e.dataTransfer.setData("application/x-string-template", type);
         e.dataTransfer.setData("text/plain", type);
         e.dataTransfer.effectAllowed = "copy";
       });
-      button.addEventListener("click", (e) => beginTemplate(type, e));
+      button.addEventListener("click", () =>
+        placeTemplate(type, {
+          x: view.x + dimensions.w / view.zoom / 2,
+          y: view.y + dimensions.h / view.zoom / 2,
+        }),
+      );
       $("templates").append(button);
     }
-    $("templates-prev").addEventListener("click", () => scrollTemplates(-1));
-    $("templates-next").addEventListener("click", () => scrollTemplates(1));
-    $("templates").addEventListener("scroll", updateTemplateArrows);
-    new ResizeObserver(updateTemplateArrows).observe($("templates"));
-    document.addEventListener("pointermove", moveTemplateGhost);
-    refreshTemplates();
   }
   function loadDemo() {
     cancelDrawing();
@@ -4184,11 +2953,7 @@ button svg {
       return;
     }
     if (format === "tikz") {
-      download(
-        generatePreamble() + "\n\n" + generateTikZ(),
-        "text/plain",
-        "string-diagram.tex",
-      );
+      download(generateTikZ(), "text/plain", "string-diagram.tex");
       return;
     }
     const source = exportSVG();
@@ -4224,10 +2989,9 @@ button svg {
       URL.revokeObjectURL(url);
     }
   }
-  const cmCoord = (value) => Number((value / CM).toFixed(5));
-  const tikzCoord = (p) => `(${cmCoord(p.x)},${cmCoord(p.y)})`;
+  const tikzCoord = (p) => `(${fmt(p.x * 0.75)},${fmt(p.y * 0.75)})`;
   function tikzPath(o) {
-    if (["bezier", "spline"].includes(o.curve))
+    if (["bezier", "spline"].includes(o.curve) && o.style !== "squiggly")
       return (
         tikzCoord(o.points[0]) +
         " " +
@@ -4238,7 +3002,11 @@ button svg {
           )
           .join(" ")
       );
-    return o.points.map(tikzCoord).join(" -- ");
+    const pts =
+      o.kind === "line"
+        ? (geometry.get(o.id) || lineGeometry(o)).points
+        : o.points;
+    return pts.map(tikzCoord).join(" -- ");
   }
 
   function texLabel(text) {
@@ -4260,18 +3028,15 @@ button svg {
     );
   }
   function generateTikZ() {
-    const ordered = ["region", "line", "ellipse", "text"].flatMap((kind) =>
-      model.objects.filter((o) => o.kind === kind).sort((a, b) => a.z - b.z),
-    );
-    const palette = new Map(),
-      styles = new Map(),
-      codes = [];
-    const colour = (hex) => {
-      hex = hex.toLowerCase();
-      if (colourNames.has(hex)) return colourNames.get(hex);
-      if (!palette.has(hex)) palette.set(hex, `c${palette.size + 1}`);
-      return palette.get(hex);
-    };
+    const codes = [
+      "% String diagram · add \\usetikzlibrary{patterns,arrows.meta} to your preamble.",
+    ];
+    for (const o of model.objects)
+      codes.push(
+        `\\definecolor{string${o.id}}{HTML}{${o.color.slice(1).toUpperCase()}}`,
+        `\\definecolor{stringfill${o.id}}{HTML}{${(o.fillColor || o.color).slice(1).toUpperCase()}}`,
+      );
+    codes.push("\\begin{tikzpicture}[x=1pt,y=-1pt]");
     const patterns = {
       hatch: "north east lines",
       backhatch: "north west lines",
@@ -4279,183 +3044,115 @@ button svg {
       dots: "dots",
       horizontal: "horizontal lines",
     };
-    const options = (o) => {
-      const opts = [
-        `draw=${o.width || o.kind === "line" ? colour(o.color) : "none"}`,
-      ];
-      if (o.width) opts.push(`line width=${fmt(o.width * 0.75)}pt`);
-      if (o.kind === "line") {
-        if (o.style === "dashed")
-          opts.push(
-            `dash pattern=on ${fmt((o.width * 4 + 4) * 0.75)}pt off ${fmt((o.width * 2 + 3) * 0.75)}pt`,
-          );
-        if (o.style === "dotted")
-          opts.push(
-            `dash pattern=on 0.01pt off ${fmt((o.width * 2 + 4) * 0.75)}pt`,
-          );
-        if (o.style === "squiggly")
-          opts.push(
-            "decorate",
-            "decoration={snake,amplitude=2.7pt,segment length=13.5pt}",
-          );
-        if (o.arrows === "end") opts.push("-{Stealth}");
-        if (o.arrows === "start") opts.push("{Stealth}-");
-        if (o.arrows === "both") opts.push("{Stealth}-{Stealth}");
-      } else {
-        opts.push("even odd rule");
-        if (o.pattern === "solid")
-          opts.push(`fill=${colour(o.fillColor || o.color)}`);
-        else if (o.pattern !== "none")
-          opts.push(
-            `pattern=${patterns[o.pattern]}`,
-            `pattern color=${colour(o.fillColor || o.color)}`,
-          );
-        if (o.pattern !== "none" && o.opacity !== 1)
-          opts.push(`fill opacity=${o.opacity}`);
-      }
-      return opts.join(", ");
-    };
-    const objectOptions = new Map();
-    for (const o of ordered) {
-      if (o.kind === "text") {
-        colour(o.color);
-        continue;
-      }
-      if (o.text) colour(o.color);
-      const opts = options(o);
-      objectOptions.set(o.id, opts);
-      styles.set(opts, (styles.get(opts) || 0) + 1);
-    }
-    const shared = new Map();
-    for (const [opts, count] of styles)
-      if (count > 1) shared.set(opts, `s${shared.size + 1}`);
-    codes.push(
-      "\\begin{tikzpicture}[x=1cm,y=-1cm,line cap=round,line join=round]",
-    );
-    if (palette.size) codes.push("");
-    for (const [hex, name] of palette)
-      codes.push(`\\definecolor{${name}}{HTML}{${hex.slice(1).toUpperCase()}}`);
-    if (shared.size) codes.push("");
-    for (const [opts, name] of shared)
-      codes.push(`\\tikzset{${name}/.style={${opts}}}`);
-    const preserveIds = Object.keys(model.overrides).length > 0;
     const b = bounds(),
-      pad = 100,
-      ids = new Map(ordered.map((o, i) => [o.id, preserveIds ? o.id : i + 1]));
-    const extent = `${tikzCoord({ x: b.x - pad, y: b.y - pad })} rectangle ${tikzCoord({ x: b.x + b.w + pad, y: b.y + b.h + pad })}`;
-    const textOptions = (o) =>
-      `text=${colour(o.color)},font=\\fontsize{${fmt((o.fontSize || 18) * 0.75)}pt}{${fmt((o.fontSize || 18) * 0.9)}pt}\\selectfont`;
-    for (const o of ordered) {
-      codes.push("");
-      // Crossing ordinals are measured along the lower-ID line. Preserve those
-      // IDs when overrides exist so reordering paths cannot move an override.
-      if (preserveIds)
+      pad = 100;
+    for (const kind of ["region", "line", "ellipse", "text"])
+      for (const o of model.objects
+        .filter((o) => o.kind === kind)
+        .sort((a, b) => a.z - b.z)) {
         codes.push(`% string-id: ${o.id}; name: ${encodeURIComponent(o.name)}`);
-      const opts =
-        shared.get(objectOptions.get(o.id)) || objectOptions.get(o.id);
-      if (o.kind === "line") {
-        const holes = crossings.filter(
-          (c) => c.lower === o.id && c.r > o.width / 2,
-        );
-        if (holes.length) {
-          codes.push("\\begin{scope}[even odd rule]");
-          for (const c of holes)
-            codes.push(
-              `\\clip ${extent} ${tikzCoord(c.p)} circle (${fmt(c.r * 0.75)}pt);`,
+        if (o.kind === "line") {
+          const holes = crossings.filter(
+            (c) => c.lower === o.id && c.r > o.width / 2,
+          );
+          if (holes.length) {
+            codes.push("\\begin{scope}[even odd rule]");
+            // Intersect separate complements so overlapping gaps stay clipped.
+            for (const c of holes)
+              codes.push(
+                `\\clip ${tikzCoord({ x: b.x - pad, y: b.y - pad })} rectangle ${tikzCoord({ x: b.x + b.w + pad, y: b.y + b.h + pad })} ${tikzCoord(c.p)} circle (${fmt(c.r * 0.75)}pt);`,
+              );
+          }
+          const opts = [
+            `draw=string${o.id}`,
+            `line width=${fmt(o.width * 0.75)}pt`,
+            "line cap=round",
+            "line join=round",
+          ];
+          if (o.style === "dashed")
+            opts.push(
+              `dash pattern=on ${fmt((o.width * 4 + 4) * 0.75)}pt off ${fmt((o.width * 2 + 3) * 0.75)}pt`,
             );
-        }
-        codes.push(`\\draw[${opts}] ${tikzPath(o)};`);
-        if (o.arrows === "middle") {
-          const { p, x, y } = arrowPath(
+          if (o.style === "dotted")
+            opts.push(
+              `dash pattern=on 0.01pt off ${fmt((o.width * 2 + 4) * 0.75)}pt`,
+            );
+          if (o.arrows === "end") opts.push("-{Stealth}");
+          if (o.arrows === "start") opts.push("{Stealth}-");
+          if (o.arrows === "both") opts.push("{Stealth}-{Stealth}");
+          codes.push(`\\draw[${opts.join(", ")}] ${tikzPath(o)};`);
+          if (o.arrows === "middle") {
+            const { p, x, y } = arrowPath(
               (geometry.get(o.id) || lineGeometry(o)).points,
               "middle",
-            ),
-            size = Math.max(7, o.width * 3);
+            );
+            const size = Math.max(7, o.width * 3);
+            codes.push(
+              `% string-arrow\n\\draw[draw=string${o.id}, line width=${fmt(o.width * 0.75)}pt, line cap=round, line join=round] ${tikzCoord({ x: p.x - x * size - y * size * 0.45, y: p.y - y * size + x * size * 0.45 })} -- ${tikzCoord(p)} -- ${tikzCoord({ x: p.x - x * size + y * size * 0.45, y: p.y - y * size - x * size * 0.45 })};`,
+            );
+          }
+          if (holes.length) codes.push("\\end{scope}");
+        } else if (o.kind === "text") {
           codes.push(
-            `% string-arrow\n\\draw[draw=${colour(o.color)},line width=${fmt(o.width * 0.75)}pt] ${tikzCoord({ x: p.x - x * size - y * size * 0.45, y: p.y - y * size + x * size * 0.45 })} -- ${tikzCoord(p)} -- ${tikzCoord({ x: p.x - x * size + y * size * 0.45, y: p.y - y * size - x * size * 0.45 })};`,
+            `\\node[text=string${o.id}, font=\\fontsize{${fmt(o.fontSize * 0.75)}pt}{${fmt(o.fontSize * 0.9)}pt}\\selectfont] at ${tikzCoord(o)} {${texLabel(o.text)}};`,
           );
+        } else {
+          const opts = [
+            `draw=string${o.id}`,
+            `line width=${fmt(o.width * 0.75)}pt`,
+            "even odd rule",
+          ];
+          if (o.width === 0) opts[0] = "draw=none";
+          if (o.pattern === "solid")
+            opts.push(`fill=stringfill${o.id}`, `fill opacity=${o.opacity}`);
+          else if (o.pattern !== "none")
+            opts.push(
+              `pattern=${patterns[o.pattern]}`,
+              `pattern color=stringfill${o.id}`,
+              `fill opacity=${o.opacity}`,
+            );
+          codes.push(
+            `\\path[${opts.join(", ")}] ${o.kind === "region" ? tikzPath(o) + " -- cycle" : `${tikzCoord(o)} ellipse (${fmt(o.rx * 0.75)}pt and ${fmt(o.ry * 0.75)}pt)`};`,
+          );
+          if (o.kind === "ellipse" && o.text)
+            codes.push(
+              `% string-node-label\n\\node[text=string${o.id}, font=\\fontsize{${fmt((o.fontSize || 18) * 0.75)}pt}{18pt}\\selectfont] at ${tikzCoord(o)} {${texLabel(o.text)}};`,
+            );
         }
-        if (holes.length) codes.push("\\end{scope}");
-        const meta = {};
-        if (o.gap !== 7) meta.gap = o.gap;
-        if (o.arrows === "middle") meta.arrows = "middle";
-        if (Object.keys(meta).length)
-          codes.push(
-            `% string-settings: ${ids.get(o.id)} ${JSON.stringify(meta)}`,
-          );
-      } else if (o.kind === "text")
-        codes.push(
-          `\\node[${textOptions(o)}] at ${tikzCoord(o)} {${texLabel(o.text)}};`,
-        );
-      else {
-        const shape =
-          o.kind === "region"
-            ? tikzPath(o) + " -- cycle"
-            : o.dot
-              ? `${tikzCoord(o)} circle (${fmt(o.rx * 0.75)}pt)`
-              : `${tikzCoord(o)} ellipse (${fmt(o.rx * 0.75)}pt and ${fmt(o.ry * 0.75)}pt)`;
-        codes.push(`\\path[${opts}] ${shape};`);
-        if (o.kind === "ellipse" && o.text)
-          codes.push(
-            `% string-node-label\n\\node[${textOptions(o)}] at ${tikzCoord(o)} {${texLabel(o.text)}};`,
-          );
       }
-    }
-    if (preserveIds)
-      codes.push(`% string-overrides: ${JSON.stringify(model.overrides)}`);
-    codes.push("", "\\end{tikzpicture}");
-    let depth = 0;
-    return codes
-      .join("\n")
-      .split("\n")
-      .map((line) => {
-        const text = line.trim();
-        if (!text) return "";
-        if (text.startsWith("\\end{")) depth = Math.max(0, depth - 1);
-        const result = "  ".repeat(depth) + text;
-        if (text.startsWith("\\begin{")) depth++;
-        return result;
-      })
-      .join("\n");
-  }
-  function generatePreamble() {
-    const libraries = [];
-    if (
-      model.objects.some(
-        (o) =>
-          ["region", "ellipse"].includes(o.kind) &&
-          !["none", "solid"].includes(o.pattern),
-      )
-    )
-      libraries.push("patterns");
-    if (model.objects.some((o) => o.kind === "line" && o.arrows !== "none"))
-      libraries.push("arrows.meta");
-    if (model.objects.some((o) => o.kind === "line" && o.style === "squiggly"))
-      libraries.push("decorations.pathmorphing");
-    return (
-      "\\usepackage{tikz}" +
-      (libraries.length
-        ? "\n\\usetikzlibrary{" + libraries.join(",") + "}"
-        : "")
+    codes.push(
+      "% Crossing order and per-string settings for round-trip editing.",
     );
+    for (const o of model.objects)
+      codes.push(
+        `% string-settings: ${o.id} ${JSON.stringify({ gap: o.gap, z: o.z, style: o.style, arrows: o.arrows, pattern: o.pattern, opacity: o.opacity })}`,
+      );
+    codes.push(`% string-overrides: ${JSON.stringify(model.overrides)}`);
+    codes.push("\\end{tikzpicture}");
+    return codes.join("\n");
   }
   function updateCode() {
     if (!codeDirty) $("tikz").value = generateTikZ();
-    $("tikz-preamble").value = generatePreamble();
   }
 
   // Accept the editor's output and the original editor's ordinary TikZ paths.
   // Unrecognised commands are reported; no commands are evaluated as code.
   function parseTikZ(code) {
-    const colors = { ...TIKZ_COLOURS, grey: TIKZ_COLOURS.gray };
+    const colors = {
+      black: INK,
+      white: "#ffffff",
+      red: "#b95650",
+      blue: "#587c9b",
+      green: "#7c9885",
+      gray: "#837c73",
+      grey: "#837c73",
+    };
     for (const match of code.matchAll(
       /\\definecolor\{([^}]+)\}\{HTML\}\{([\da-f]{6})\}/gi,
     ))
       colors[match[1]] = "#" + match[2].toLowerCase();
-    const ownPT = /\\begin\{tikzpicture\}\[x=1pt,y=-1pt(?:,|\])/.test(code);
-    const ownCM = /\\begin\{tikzpicture\}\[x=1cm,y=-1cm(?:,|\])/.test(code);
-    const own = ownPT || ownCM;
-    const factor = ownCM ? CM : ownPT ? 1 / 0.75 : 50,
+    const own = /\\begin\{tikzpicture\}\[x=1pt,y=-1pt\]/.test(code);
+    const factor = own ? 1 / 0.75 : 50,
       flip = own ? 1 : -1;
     const point = (x, y) => ({
       x: Number(x) * factor,
@@ -4480,21 +3177,15 @@ button svg {
       }
       return INK;
     };
-    const sharedStyles = new Map(
-      [...code.matchAll(/\\tikzset\{(\w+)\/\.style=\{(.*)\}\}/g)].map((m) => [
-        m[1],
-        m[2],
-      ]),
-    );
     const result = { version: 2, objects: [], overrides: {}, nextId: 1 },
       dropped = [];
     const settings = new Map();
-    for (const m of code.matchAll(/^[ \t]*% string-settings: (\d+) (.+)$/gm)) {
+    for (const m of code.matchAll(/^% string-settings: (\d+) (.+)$/gm)) {
       try {
         settings.set(+m[1], JSON.parse(m[2]));
       } catch {}
     }
-    const override = code.match(/^[ \t]*% string-overrides: (.+)$/m);
+    const override = code.match(/^% string-overrides: (.+)$/m);
     if (override) {
       try {
         result.overrides = JSON.parse(override[1]);
@@ -4513,11 +3204,7 @@ button svg {
         continue;
       }
       if (!line) continue;
-      if (
-        /^\\(?:begin|end|definecolor|usetikzlibrary|tikzset|usepackage)/.test(
-          line,
-        )
-      ) {
+      if (/^\\(?:begin|end|definecolor|usetikzlibrary)/.test(line)) {
         continue;
       }
       buffer += " " + line;
@@ -4562,8 +3249,7 @@ button svg {
         dropped.push(command);
         continue;
       }
-      const [, verb, rawOpts = "", body] = header;
-      const opts = sharedStyles.get(rawOpts) || rawOpts;
+      const [, verb, opts = "", body] = header;
       const numberOpt = (name, fallback) => {
         const m = opts.match(new RegExp(name + "\\s*=\\s*([\\d.]+)"));
         return m ? +m[1] : fallback;
@@ -4593,7 +3279,6 @@ button svg {
         id,
         name: nameHint || `Object ${id}`,
         ...clone(defaults),
-        gap: 7,
         color: stroke,
         fillColor: color(getOpt("pattern color") || getOpt("fill") || stroke),
         width: getOpt("draw") === "none" ? 0 : width,
@@ -4621,7 +3306,6 @@ button svg {
             last.fontSize = fs ? +fs[1] / 0.75 : 18;
           }
           labelNext = false;
-          result.nextId = id;
           continue;
         }
         if (
@@ -4675,7 +3359,7 @@ button svg {
           continue;
         }
         const unit = (value, suffix) =>
-          +value * (suffix === "pt" ? 1 / 0.75 : suffix === "cm" ? CM : factor);
+          +value * (suffix === "pt" ? 1 / 0.75 : 50);
         o = {
           ...base,
           kind: "ellipse",
@@ -4704,7 +3388,7 @@ button svg {
         o = { ...base, kind: "region", points: coords };
         if (verb === "fill") o.width = 0;
       } else if (coords.length >= 2) {
-        if (!own && /\bwhite\b/.test(opts)) continue;
+        if (/\bwhite\b/.test(opts)) continue;
         o = {
           ...base,
           kind: "line",
@@ -4712,11 +3396,9 @@ button svg {
           curve: "polyline",
           style: /snake|decorate/.test(opts)
             ? "squiggly"
-            : /dash pattern=on 0\.01pt|\bdotted\b/.test(opts)
-              ? "dotted"
-              : /dashed|dash pattern/.test(opts)
-                ? "dashed"
-                : "solid",
+            : /dashed|dash pattern/.test(opts)
+              ? "dashed"
+              : "solid",
           arrows: /Stealth\}-\{Stealth|<->/.test(opts)
             ? "both"
             : /-\{|->/.test(opts)
@@ -4775,37 +3457,6 @@ button svg {
         dropped.push(command);
         continue;
       }
-      if (
-        o.kind === "region" &&
-        /controls/.test(body) &&
-        (coords.length - 1) % 3 === 0
-      ) {
-        const points = [coords[0]],
-          tangents = [{ in: { x: 0, y: 0 }, out: { x: 0, y: 0 } }];
-        for (let i = 1; i < coords.length; i += 3) {
-          tangents.at(-1).out = sub(coords[i], points.at(-1));
-          points.push(coords[i + 2]);
-          tangents.push({
-            in: sub(coords[i + 1], coords[i + 2]),
-            out: { x: 0, y: 0 },
-          });
-        }
-        if (dist(points[0], points.at(-1)) < 0.01) {
-          tangents[0].in = tangents.pop().in;
-          points.pop();
-        } else {
-          tangents.at(-1).out = { x: 0, y: 0 };
-          tangents[0].in = { x: 0, y: 0 };
-        }
-        Object.assign(o, { curve: "spline", closed: true, points, tangents });
-      }
-      if (
-        o.kind === "ellipse" &&
-        /circle/.test(body) &&
-        o.width === 0 &&
-        o.pattern === "solid"
-      )
-        o.dot = true;
       if (settings.has(o.id)) {
         const metadata = settings.get(o.id);
         for (const key of ["gap", "z"])
@@ -4817,9 +3468,7 @@ button svg {
         if (o.kind === "line" && own)
           o.style =
             metadata.style === "squiggly"
-              ? /snake/.test(opts)
-                ? "squiggly"
-                : "solid"
+              ? "solid"
               : ["solid", "dashed", "dotted"].includes(metadata.style)
                 ? metadata.style
                 : o.style;
@@ -4846,11 +3495,6 @@ button svg {
       )
         throw new Error("Invalid object in project");
       ids.add(o.id);
-      if (
-        o.group !== undefined &&
-        (!Number.isSafeInteger(o.group) || o.group < 1)
-      )
-        throw new Error("Invalid movement group");
       o.fillColor ??= o.color;
       if (
         !/^#[\da-f]{6}$/i.test(o.color) ||
@@ -4955,28 +3599,20 @@ button svg {
     value.nextId = Math.max(0, ...ids) + 1;
     return value;
   }
-  function applyTikZ(code, asNew = false) {
+  function applyTikZ(code) {
     try {
       const parsed = parseTikZ(code);
       validateProject(parsed.model);
-      const emptyPicture =
-        /\\begin\{tikzpicture\}[\s\S]*\\end\{tikzpicture\}/.test(code) &&
-        !parsed.dropped.length;
-      if (!parsed.model.objects.length && !emptyPicture) {
+      if (!parsed.model.objects.length) {
         toast("No supported diagram commands found");
         $("import-report").hidden = false;
         $("import-report").textContent = parsed.dropped.join("\n");
         return;
       }
-      if (asNew) {
-        if (!openDrawing(parsed.model)) return;
-      } else {
-        cancelDrawing();
-        change(() => {
-          model = parsed.model;
-          selected.clear();
-        });
-      }
+      change(() => {
+        model = parsed.model;
+        selected.clear();
+      });
       fit();
       $("import-report").hidden = !parsed.dropped.length;
       $("import-report").textContent =
@@ -5008,12 +3644,7 @@ button svg {
     front: "M3 3h10v10H3zM10 16v5h11V10h-5",
     back: "M3 3h10v4M3 3v10h4M10 10h11v11H10z",
     flip: "M12 2v20M3 18V6l6 12zM21 18V6l-6 12z",
-    group: "M2 7V2h5m10 0h5v5M2 17v5h5m10 0h5v-5M6 6h7v7H6zM11 11h7v7h-7z",
-    ungroup: "M2 2h8v8H2zM14 14h8v8h-8zM14 3h7v7M3 14v7h7",
     templates: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z",
-    help: "M9 7a3 3 0 1 1 5 2c-2 1-2 2-2 4M12 17h.01M21 12a9 9 0 1 1-18 0 9 9 0 1 1 18 0",
-    nodeSnap:
-      "M3 3v7a5 5 0 0 0 10 0V3h-3v7a2 2 0 0 1-4 0V3zM3 6h3m4 0h3M19 13v8m-4-4h8M21 17a2 2 0 1 1-4 0 2 2 0 1 1 4 0",
     grid: "M5 5h.01M12 5h.01M19 5h.01M5 12h.01M12 12h.01M19 12h.01M5 19h.01M12 19h.01M19 19h.01",
     snap: "M5 3v10a7 7 0 0 0 14 0V3h-5v10a2 2 0 0 1-4 0V3zM5 7h5m4 0h5",
     fit: "M3 9V3h6m6 0h6v6M3 15v6h6m6 0h6v-6M8 8h8v8H8z",
@@ -5201,119 +3832,6 @@ button svg {
     }
     return el;
   }
-  function controlIcon(key) {
-    if (!["style", "width", "arrows", "gap"].includes(key))
-      return sampleIcon(key, $(key)?.value);
-    const el = svg("svg", {
-      viewBox: "0 0 36 24",
-      class: "preview-icon",
-      "aria-hidden": "true",
-    });
-    const path = (d, width = 1.5, extra = {}) =>
-      svg(
-        "path",
-        {
-          d,
-          fill: "none",
-          stroke: "currentColor",
-          "stroke-width": width,
-          "stroke-linecap": "round",
-          ...extra,
-        },
-        el,
-      );
-    if (key === "style") {
-      path("M3 4H33");
-      path("M3 12H33", 1.5, { "stroke-dasharray": "4 3" });
-      path("M3 21q3-6 6 0t6 0t6 0t6 0");
-    }
-    if (key === "width") {
-      path("M4 4H32", 1);
-      path("M4 11H32", 3);
-      path("M4 20H32", 6);
-    }
-    if (key === "arrows") {
-      path("M3 7H31M26 2l6 5-6 5");
-      path("M5 19H32M10 14l-6 5 6 5");
-    }
-    if (key === "gap") {
-      path("M10 1v5m0 12v5", 2);
-      path("M3 12H22", 2);
-      path("M27 6v12m-3-12h6m-6 12h6", 1, { stroke: "#1976c9" });
-    }
-    return el;
-  }
-  function updateToolTip() {
-    if (!$("tool-tip")) return;
-    const line = ["freehand", "line", "polyline", "bezier"].includes(tool),
-      region = [
-        "region",
-        "rectangle",
-        "ellipse",
-        "bezier-region",
-        "dot",
-      ].includes(tool);
-    let tip = "";
-    if (line || region)
-      tip = draft
-        ? draft.under
-          ? "Drawing underneath"
-          : "Drawing on top"
-        : "Hold Shift to draw underneath";
-    if (
-      draft &&
-      ["polyline", "bezier", "region", "bezier-region"].includes(tool)
-    )
-      tip += " · Esc / double-click to finish";
-    if (tool === "direct") tip = "Drag a point or tangent · V moves the object";
-    if (tool === "dot") tip = "Click for a 2pt dot · drag its handle to resize";
-    if (pendingTemplate)
-      tip = "Click to place · Shift underneath · Esc cancels";
-    $("tool-tip").textContent = tip;
-  }
-  function installTooltips() {
-    const tip = document.createElement("div");
-    tip.className = "quick-tooltip";
-    tip.id = "quick-tooltip";
-    tip.setAttribute("role", "tooltip");
-    tip.hidden = true;
-    document.body.append(tip);
-    let timer, active;
-    const hide = () => {
-      clearTimeout(timer);
-      tip.hidden = true;
-      if (active) active.removeAttribute("aria-describedby");
-      active = null;
-    };
-    document.addEventListener("pointerover", (e) => {
-      const el = e.target.closest("[title],[data-tooltip]");
-      if (!el || el === active) return;
-      hide();
-      if (el.title) {
-        el.dataset.tooltip = el.title;
-        el.removeAttribute("title");
-      }
-      active = el;
-      timer = setTimeout(() => {
-        if (!el.isConnected) return;
-        tip.textContent = el.dataset.tooltip;
-        tip.hidden = false;
-        el.setAttribute("aria-describedby", tip.id);
-        const r = el.getBoundingClientRect();
-        tip.style.left =
-          Math.max(5, Math.min(innerWidth - tip.offsetWidth - 5, r.left)) +
-          "px";
-        tip.style.top =
-          Math.min(innerHeight - tip.offsetHeight - 5, r.bottom + 6) + "px";
-      }, 120);
-    });
-    document.addEventListener("pointerout", (e) => {
-      if (active && !active.contains(e.relatedTarget)) hide();
-    });
-    document.addEventListener("pointerdown", hide);
-    document.addEventListener("keydown", hide);
-    window.addEventListener("blur", hide);
-  }
   function closeMenus() {
     openPopup?.remove();
     openPopup = null;
@@ -5333,7 +3851,7 @@ button svg {
       const picture = icon(graphic);
       picture.classList.add("preview-icon");
       b.append(picture);
-    } else b.append(controlIcon(id));
+    } else b.append(sampleIcon(id, $(id)?.value || options[0].value));
     const chevron = svg("svg", {
       viewBox: "0 0 8 8",
       class: "chevron",
@@ -5405,15 +3923,11 @@ button svg {
     return b;
   }
   function updateControlPreviews() {
-    if ($("grid-size")) {
-      const cm = Number((gridSpacing / CM).toFixed(3));
-      $("grid-size").textContent = `${cm} cm`;
-      $("grid-minus").disabled = cm <= GRID_STEPS[0];
-      $("grid-plus").disabled = cm >= GRID_STEPS.at(-1);
-    }
     for (const [id, { b, graphic }] of menuSpecs)
       if (!graphic && $(id)) {
-        b.querySelector(".preview-icon")?.replaceWith(controlIcon(id));
+        b.querySelector(".preview-icon")?.replaceWith(
+          sampleIcon(id, $(id).value),
+        );
       }
     document
       .querySelector(".stroke-well")
@@ -5432,22 +3946,6 @@ button svg {
               : $("fill-color").value),
         ),
       );
-    $("stroke-chip").style.background = $("color").value;
-    $("fill-chip").style.background = $("fill-color").value;
-    document
-      .querySelectorAll("[data-colour-target]")
-      .forEach((b) =>
-        b.setAttribute("aria-pressed", b.dataset.colourTarget === colourTarget),
-      );
-    const fillActive =
-      !!pendingTemplate ||
-      ["fill", "region", "rectangle", "ellipse", "bezier-region"].includes(
-        tool,
-      ) ||
-      selectedObjects().some((o) => ["region", "ellipse"].includes(o.kind));
-    $("fill-controls").classList.toggle("inactive", !fillActive);
-    for (const id of ["pattern-menu", "opacity-menu"])
-      if ($(id)) $(id).disabled = !fillActive;
     if ($("font-size-menu"))
       $("font-size-menu").hidden =
         tool !== "text" &&
@@ -5467,12 +3965,6 @@ button svg {
     );
   }
   function showHelp(show) {
-    if (show) {
-      const workspace = document.querySelector(".workspace");
-      workspace.classList.remove("sidebar-hidden");
-      if (innerWidth <= 750) workspace.classList.add("sidebar-open");
-      $("sidebar-toggle").classList.add("active");
-    }
     $("code-panel").hidden = show;
     $("help-panel").hidden = !show;
   }
@@ -5482,26 +3974,21 @@ button svg {
       clip = $("clipboard-actions"),
       line = $("line-controls"),
       fill = $("fill-controls"),
-      viewBar = $("view-actions"),
-      documentBar = $("document-actions");
+      viewBar = $("view-actions");
     actionButton(
       "new",
       "New (Ctrl/⌘ N)",
       "new",
       () => {
-        if (openDrawing({ version: 2, objects: [], overrides: {}, nextId: 1 }))
-          showDrawings(false);
+        cancelDrawing();
+        change(() => {
+          model = { version: 2, objects: [], overrides: {}, nextId: 1 };
+          selected.clear();
+        });
+        setTool("select");
       },
       file,
     );
-    actionButton(
-      "load",
-      "Load recent drawing",
-      "open",
-      () => showDrawings($("drawing-strip").hidden),
-      file,
-    );
-    $("load").setAttribute("aria-expanded", "false");
     actionButton(
       "open",
       "Open project or TikZ",
@@ -5535,31 +4022,26 @@ button svg {
     actionButton("copy", "Copy (Ctrl/⌘ C)", "copy", copySelection, clip);
     actionButton("paste", "Paste (Ctrl/⌘ V)", "paste", pasteSelection, clip);
     actionButton("delete", "Delete", "delete", removeSelected, clip);
-    const arrange = $("arrange-actions");
-    actionButton(
-      "front",
-      "Bring to front",
-      "front",
-      () => reorder(true),
-      arrange,
+    const arrange = menuButton(
+      "arrange",
+      "Arrange",
+      [
+        { value: "front", title: "Bring to front", icon: "front" },
+        { value: "back", title: "Send to back", icon: "back" },
+        { value: "duplicate", title: "Duplicate", icon: "duplicate" },
+        { value: "flip", title: "Flip horizontally", icon: "flip" },
+      ],
+      (value) =>
+        ({
+          front: () => reorder(true),
+          back: () => reorder(false),
+          duplicate,
+          flip: flipSelection,
+        })[value](),
+      clip,
+      "arrange",
     );
-    actionButton("back", "Send to back", "back", () => reorder(false), arrange);
-    actionButton(
-      "duplicate",
-      "Duplicate (Ctrl/⌘ D)",
-      "duplicate",
-      duplicate,
-      arrange,
-    );
-    actionButton("flip-x", "Flip horizontally", "flip", flipSelection, arrange);
-    actionButton("group", "Group (Ctrl/⌘ G)", "group", groupSelection, arrange);
-    actionButton(
-      "ungroup",
-      "Ungroup (Ctrl/⌘ Shift G)",
-      "ungroup",
-      ungroupSelection,
-      arrange,
-    );
+    arrange.id = "arrange";
     const options = {
       style: [
         ["solid", "Solid"],
@@ -5609,17 +4091,9 @@ button svg {
       const choices = options[key].map((value) =>
         Array.isArray(value)
           ? { value: value[0], title: value[1] }
-          : {
-              value,
-              title:
-                key === "opacity"
-                  ? `${value}%`
-                  : key === "font-size"
-                    ? `${fmt(value * 0.75)} pt`
-                    : `${Number((value / CM).toFixed(3))} cm`,
-            },
+          : { value, title: `${value}${key === "opacity" ? "%" : " px"}` },
       );
-      const control = menuButton(
+      menuButton(
         key,
         titles[key],
         choices,
@@ -5629,25 +4103,12 @@ button svg {
         },
         ["pattern", "opacity"].includes(key) ? fill : line,
       );
-      const caption = document.createElement("span");
-      caption.className = "control-caption";
-      caption.textContent = {
-        style: "Style",
-        width: "Width",
-        arrows: "Arrows",
-        gap: "Gap",
-        pattern: "Pattern",
-        opacity: "Opacity",
-        "font-size": "Type",
-      }[key];
-      control.append(caption);
     }
     actionButton(
       "templates-toggle",
       "Templates",
       "templates",
       () => {
-        showDrawings(false);
         $("template-strip").hidden = !$("template-strip").hidden;
         $("templates-toggle").classList.toggle(
           "active",
@@ -5658,29 +4119,8 @@ button svg {
           !$("template-strip").hidden,
         );
       },
-      documentBar,
+      viewBar,
     );
-    actionButton("top-help", "Help", "help", () => showHelp(true), documentBar);
-    const labels = {
-      new: "New",
-      load: "Load",
-      open: "Open",
-      save: "Save",
-      "export-menu": "Export",
-      "templates-toggle": "Templates",
-      "top-help": "Help",
-    };
-    for (const [id, label] of Object.entries(labels)) {
-      const text = document.createElement("span");
-      text.textContent = label;
-      $(id).append(text);
-    }
-    $("layer-order").addEventListener("input", () => {
-      if (layerBefore === null) layerBefore = snapshot();
-      setLayerPosition(Number($("layer-order").value));
-    });
-    $("layer-order").addEventListener("change", commitLayerOrder);
-    $("layer-order").addEventListener("blur", commitLayerOrder);
     const grid = actionButton(
       "grid-toggle",
       "Show grid",
@@ -5707,20 +4147,6 @@ button svg {
       viewBar,
     );
     snap.setAttribute("aria-pressed", "false");
-    const nodeSnap = actionButton(
-      "node-snap-toggle",
-      "Snap to nodes",
-      "nodeSnap",
-      () => {
-        $("node-snap").checked = !$("node-snap").checked;
-        nodeSnap.classList.toggle("active", $("node-snap").checked);
-        nodeSnap.setAttribute("aria-pressed", $("node-snap").checked);
-        snapTarget = null;
-        render();
-      },
-      viewBar,
-    );
-    nodeSnap.setAttribute("aria-pressed", "false");
     actionButton("fit", "Fit drawing", "fit", fit, viewBar);
     actionButton(
       "zoom-out",
@@ -5733,38 +4159,10 @@ button svg {
     zoom.id = "zoom-reset";
     zoom.className = "icon-button zoom-readout";
     zoom.title = "Reset zoom";
-    zoom.innerHTML =
-      '<span id="zoom">100%</span><span class="stepper-caption">Zoom</span>';
+    zoom.innerHTML = '<span id="zoom">100%</span>';
     zoom.addEventListener("click", () => zoomBy(1 / view.zoom));
     viewBar.append(zoom);
     actionButton("zoom-in", "Zoom in", "plus", () => zoomBy(1.2), viewBar);
-    const gridControls = document.createElement("div");
-    gridControls.className = "stepper";
-    gridControls.setAttribute("aria-label", "Grid spacing");
-    viewBar.append(gridControls);
-    actionButton(
-      "grid-minus",
-      "Finer grid",
-      "minus",
-      () => stepGrid(-1),
-      gridControls,
-    );
-    const gridReset = document.createElement("button");
-    gridReset.id = "grid-reset";
-    gridReset.className = "icon-button grid-readout";
-    gridReset.title = "Reset grid to 1 cm";
-    gridReset.setAttribute("aria-label", "Reset grid to 1 cm");
-    gridReset.innerHTML =
-      '<span id="grid-size">1 cm</span><span class="stepper-caption">Grid</span>';
-    gridReset.addEventListener("click", () => setGridCM(1));
-    gridControls.append(gridReset);
-    actionButton(
-      "grid-plus",
-      "Coarser grid",
-      "plus",
-      () => stepGrid(1),
-      gridControls,
-    );
     actionButton(
       "sidebar-toggle",
       "TikZ sidebar (I)",
@@ -5774,29 +4172,11 @@ button svg {
     );
     for (const [id, name] of [
       ["copy-code", "copy"],
-      ["copy-preamble", "copy"],
       ["apply-code", "check"],
       ["close-help", "close"],
       ["close-templates", "close"],
-      ["close-drawings", "close"],
     ])
       $(id).append(icon(name));
-    const applyLabel = document.createElement("span");
-    applyLabel.textContent = "Apply";
-    $("apply-code").append(applyLabel);
-    $("close-drawings").addEventListener("click", () => showDrawings(false));
-    $("drawings-prev").addEventListener("click", () => scrollDrawings(-1));
-    $("drawings-next").addEventListener("click", () => scrollDrawings(1));
-    $("drawings").addEventListener("scroll", updateDrawingArrows);
-    new ResizeObserver(updateDrawingArrows).observe($("drawings"));
-    $("copy-preamble").addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText($("tikz-preamble").value);
-      } catch {
-        $("tikz-preamble").focus();
-        $("tikz-preamble").select();
-      }
-    });
     $("copy-code").addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText($("tikz").value);
@@ -5809,8 +4189,6 @@ button svg {
     $("help").addEventListener("click", () => showHelp(true));
     $("close-help").addEventListener("click", () => showHelp(false));
     $("close-templates").addEventListener("click", () => {
-      cancelTemplate();
-      render();
       $("template-strip").hidden = true;
       $("templates-toggle").classList.remove("active");
       $("templates-toggle").setAttribute("aria-expanded", "false");
@@ -5832,10 +4210,7 @@ button svg {
     const groups = [
       ["Selection", ["select", "direct", "lasso"]],
       ["Lines", ["freehand", "line", "polyline", "bezier"]],
-      [
-        "Regions",
-        ["fill", "region", "rectangle", "ellipse", "bezier-region", "dot"],
-      ],
+      ["Regions", ["fill", "region", "rectangle", "ellipse"]],
       ["Text and crossings", ["text", "crossing"]],
     ];
     for (const [label, ids] of groups) {
@@ -5859,11 +4234,12 @@ button svg {
           "path",
           {
             d: path,
-            fill: ["select", "dot"].includes(id)
-              ? "currentColor"
-              : id === "direct"
-                ? "white"
-                : "none",
+            fill:
+              id === "select"
+                ? "currentColor"
+                : id === "direct"
+                  ? "white"
+                  : "none",
           },
           image,
         );
@@ -5873,14 +4249,31 @@ button svg {
       }
       $("tools").append(group);
     }
-    for (const [name, colour] of Object.entries(TIKZ_COLOURS)) {
+    const colours = [
+      "#000000",
+      "#808080",
+      "#b00020",
+      "#ff0000",
+      "#ffb400",
+      "#fff200",
+      "#22a652",
+      "#0085d1",
+      "#ffffff",
+      "#c0c0c0",
+      "#7c9885",
+      "#ffadc0",
+      "#ffe4a1",
+      "#b5e61d",
+      "#91dce8",
+      "#8064a2",
+    ];
+    for (const colour of colours) {
       const button = document.createElement("button");
       button.className = "swatch";
       button.style.background = colour;
       button.dataset.color = colour;
-      button.dataset.name = name;
-      button.title = name;
-      button.setAttribute("aria-label", name);
+      button.title = colour;
+      button.setAttribute("aria-label", `Colour ${colour}`);
       const apply = (target) => {
         const id = target === "fillColor" ? "fill-color" : "color";
         $(id).value = colour;
@@ -5898,13 +4291,12 @@ button svg {
       ["stroke-well", "color"],
       ["fill-well", "fillColor"],
     ])
-      document.querySelector("." + className).addEventListener("click", () => {
-        colourTarget = target;
-        updateControlPreviews();
-      });
-    $("custom-colour").addEventListener("click", () =>
-      $(colourTarget === "color" ? "color" : "fill-color").click(),
-    );
+      document
+        .querySelector("." + className)
+        .addEventListener("pointerdown", () => {
+          colourTarget = target;
+          updateControlPreviews();
+        });
     for (const key of ["style", "arrows", "pattern", "color"])
       $(key).addEventListener("change", () => applyProperty(key, $(key).value));
     $("fill-color").addEventListener("change", () =>
@@ -5926,17 +4318,7 @@ button svg {
       updateControlPreviews();
     });
     $("grid").addEventListener("change", render);
-    $("tikz").addEventListener("input", () => {
-      codeDirty = true;
-      persist();
-    });
-    $("tikz").addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        applyTikZ($("tikz").value);
-      }
-    });
+    $("tikz").addEventListener("input", () => (codeDirty = true));
     $("file-input").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       e.target.value = "";
@@ -5949,8 +4331,14 @@ button svg {
         const text = await file.text();
         if (file.name.endsWith(".json")) {
           const project = validateProject(JSON.parse(text));
-          if (openDrawing(project)) toast("Project opened");
-        } else applyTikZ(text, true);
+          cancelDrawing();
+          change(() => {
+            model = project;
+            selected.clear();
+          });
+          fit();
+          toast("Project opened");
+        } else applyTikZ(text);
       } catch (error) {
         toast(`Could not open file: ${error.message}`);
       }
@@ -5962,10 +4350,7 @@ button svg {
     canvas.addEventListener("dblclick", doubleClick);
     canvas.addEventListener("contextmenu", (e) => {
       e.preventDefault();
-      if (
-        draft &&
-        ["polyline", "region", "bezier", "bezier-region"].includes(tool)
-      )
+      if (draft && ["polyline", "region", "bezier"].includes(tool))
         finishDraft();
     });
     canvas.addEventListener(
@@ -5985,8 +4370,7 @@ button svg {
       const type =
         e.dataTransfer.getData("application/x-string-template") ||
         e.dataTransfer.getData("text/plain");
-      if (templateNames[type])
-        placeTemplate(type, toWorld(e, true), e.shiftKey);
+      if (templateNames[type]) placeTemplate(type, toWorld(e, true));
     });
     $("text-editor").addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -6024,7 +4408,6 @@ button svg {
           s: () => exportFile("json"),
           n: () => $("new").click(),
           d: duplicate,
-          g: e.shiftKey ? ungroupSelection : groupSelection,
         };
         if (shortcuts[key]) {
           e.preventDefault();
@@ -6043,18 +4426,10 @@ button svg {
         return;
       }
       if (key === "escape") {
-        if (pendingTemplate) {
-          cancelDrawing();
-          updateInspector();
-          return;
-        }
         if (
           draft &&
-          ["polyline", "bezier", "region", "bezier-region"].includes(
-            draft.tool,
-          ) &&
-          draft.points.length >=
-            (["region", "bezier-region"].includes(draft.tool) ? 3 : 2)
+          ["polyline", "bezier", "region"].includes(draft.tool) &&
+          draft.points.length >= (draft.tool === "region" ? 3 : 2)
         ) {
           finishDraft();
           return;
@@ -6066,10 +4441,7 @@ button svg {
         return;
       }
       if (key === "enter") {
-        if (
-          draft &&
-          ["polyline", "region", "bezier", "bezier-region"].includes(tool)
-        )
+        if (draft && ["polyline", "region", "bezier"].includes(tool))
           finishDraft();
         return;
       }
@@ -6095,16 +4467,6 @@ button svg {
         );
         return;
       }
-      if ((key === "<" || key === ">") && !$("drawing-strip").hidden) {
-        e.preventDefault();
-        scrollDrawings(key === "<" ? -1 : 1);
-        return;
-      }
-      if ((key === "<" || key === ">") && !$("template-strip").hidden) {
-        e.preventDefault();
-        scrollTemplates(key === "<" ? -1 : 1);
-        return;
-      }
       if (key === "i") {
         toggleSidebar();
         return;
@@ -6128,28 +4490,14 @@ button svg {
       space = false;
       if (interaction) cancelDrawing();
     });
-    window.addEventListener("pagehide", saveDrawing);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") saveDrawing();
-    });
-    installTooltips();
     new ResizeObserver(resize).observe(viewport);
   }
   try {
-    const spacing = Number(localStorage.getItem("string-grid-cm"));
-    if (GRID_STEPS.includes(spacing)) gridSpacing = spacing * CM;
     const saved = localStorage.getItem(STORAGE);
-    if (saved) {
-      // Move the old single autosave into history once, without reopening it.
-      model = validateProject(JSON.parse(saved));
-      crossings = computeCrossings();
-      if (saveDrawing()) localStorage.removeItem(STORAGE);
-    }
+    if (saved) model = validateProject(JSON.parse(saved));
   } catch {
     $("save-state").textContent = "Start fresh or open a saved project";
   }
-  model = { version: 2, objects: [], overrides: {}, nextId: 1 };
-  drawingId = null;
   bind();
   buildTemplates();
   syncDefaultControls();
@@ -6179,7 +4527,6 @@ button svg {
     validateProject,
     exportSVG,
     generateTikZ,
-    generatePreamble,
     enclosedFace,
     loadDemo,
     placeTemplate,

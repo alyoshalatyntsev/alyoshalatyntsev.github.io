@@ -1,0 +1,4288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#faf8f5" />
+    <title>String diagram editor</title>
+    <style>
+:root {
+  --bg: #faf8f5;
+  --panel: #fff;
+  --border: #e8e4df;
+  --ink: #2d2a26;
+  --muted: #837c73;
+  --sage: #7c9885;
+  --sage-dark: #526f5c;
+  --sage-light: #edf2ed;
+  --red: #b95650;
+  --mono: "SFMono-Regular", Consolas, monospace;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font:
+    13px -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button,
+select,
+input:not([type="checkbox"]) {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+}
+button {
+  cursor: pointer;
+  padding: 7px 11px;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+}
+button:hover {
+  background: var(--bg);
+  border-color: #b5bdb3;
+}
+button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 3px;
+}
+button.primary,
+button.active {
+  background: var(--sage);
+  color: #fff;
+  border-color: var(--sage);
+}
+button.primary:hover,
+button.active:hover {
+  background: var(--sage-dark);
+}
+input:not([type="checkbox"]),
+select {
+  padding: 6px 8px;
+  min-width: 0;
+}
+input[type="number"] {
+  width: 62px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+select {
+  font-size: 12px;
+  max-width: 150px;
+}
+input[type="checkbox"] {
+  accent-color: var(--sage);
+}
+[hidden] {
+  display: none !important;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  padding: 13px 22px;
+  gap: 22px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  min-height: 64px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 27px;
+  letter-spacing: -1.5px;
+  font-weight: 650;
+}
+.brand svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.brand-dot {
+  color: var(--sage);
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.save-state {
+  font-size: 11px;
+  color: var(--muted);
+  margin-right: 12px;
+}
+.save-state:before {
+  content: "●";
+  color: var(--sage);
+  margin-right: 6px;
+  font-size: 8px;
+}
+.ribbon {
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  gap: 0;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.ribbon-group {
+  padding: 0 14px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ribbon-group:last-child {
+  border: 0;
+}
+.ribbon-group:first-child {
+  padding-left: 0;
+}
+.group-label {
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 650;
+  letter-spacing: 1.4px;
+}
+.control-row {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+}
+.control-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.control-row label input,
+.control-row label select {
+  color: var(--ink);
+}
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 34px);
+  gap: 4px;
+}
+.tool-button {
+  width: 34px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border-color: transparent;
+  background: var(--bg);
+}
+.tool-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tool-button.active {
+  background: var(--sage-light);
+  color: var(--sage-dark);
+  border-color: #c1d0c4;
+}
+.colour-controls {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  height: 57px;
+}
+input[type="color"] {
+  padding: 3px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+}
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 16px);
+  gap: 5px;
+}
+.swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  padding: 0;
+  border: 1px solid #0001;
+}
+.swatch.active {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: 194px minmax(240px, 1fr) 270px;
+  flex: 1;
+  min-height: 0;
+}
+.templates-panel,
+.inspector {
+  background: #fff;
+  overflow: auto;
+  padding: 21px 16px;
+  border-right: 1px solid var(--border);
+}
+.inspector {
+  border-left: 1px solid var(--border);
+  border-right: 0;
+  padding: 0 18px 20px;
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.panel-title h2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+.panel-title > span {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: 11px;
+  line-height: 1.65;
+}
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 19px 0 23px;
+}
+.template-card {
+  padding: 7px 5px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg);
+  gap: 5px;
+  cursor: grab;
+  font-size: 10px;
+}
+.template-card:active {
+  cursor: grabbing;
+}
+.template-card svg {
+  width: 65px;
+  height: 54px;
+  overflow: visible;
+}
+.sidebar-note {
+  display: flex;
+  gap: 9px;
+  margin: 12px 0 18px;
+  color: var(--muted);
+}
+.sidebar-note p {
+  font-size: 11px;
+  line-height: 1.65;
+  margin: 0;
+}
+.sidebar-note strong {
+  color: var(--sage-dark);
+  font-weight: 500;
+}
+.note-icon {
+  background: var(--sage-light);
+  color: var(--sage-dark);
+  width: 25px;
+  height: 25px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+}
+.wide {
+  width: 100%;
+  font-size: 10px;
+}
+.legacy-link {
+  display: block;
+  text-align: center;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 10px;
+  margin: 17px 0;
+}
+.legacy-link:hover {
+  color: var(--sage-dark);
+}
+.drawing-area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.canvas-toolbar {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  background: #fdfcf9;
+}
+.history,
+.view-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.canvas-toolbar button {
+  font-size: 11px;
+  padding: 5px 7px;
+  background: transparent;
+  border-color: transparent;
+}
+.history button:first-child,
+.history button:nth-child(2) {
+  font-size: 20px;
+  padding: 0 7px;
+}
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 6px;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.viewport {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+#canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  outline: none;
+}
+.canvas-pill {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: #ffffffef;
+  border-radius: 20px;
+  padding: 7px 12px;
+  font-size: 10px;
+  pointer-events: none;
+  box-shadow: 0 2px 6px #2d2a2604;
+}
+#tool-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sage);
+}
+#under-indicator {
+  color: var(--sage-dark);
+  font-size: 9px;
+  margin-left: 6px;
+}
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  width: 300px;
+}
+.empty-mark {
+  font-size: 58px;
+  color: #9caf9e;
+  font-family: Georgia, serif;
+}
+.empty-state h1 {
+  font:
+    24px Georgia,
+    serif;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  margin: 12px 0;
+}
+.empty-state p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.empty-state button {
+  pointer-events: auto;
+  color: var(--sage-dark);
+  background: var(--sage-light);
+  border-color: #d4dfd5;
+  margin-top: 8px;
+  font-size: 11px;
+}
+.zoom-controls {
+  position: absolute;
+  right: 16px;
+  bottom: 17px;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  box-shadow: 0 2px 8px #2d2a2605;
+}
+.zoom-controls button {
+  border: 0;
+  background: transparent;
+  padding: 4px 9px;
+  font-size: 15px;
+}
+.zoom-controls span {
+  font: 10px var(--mono);
+}
+.statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 15px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  min-height: 32px;
+}
+.statusbar #coordinates {
+  font: 10px var(--mono);
+  white-space: nowrap;
+}
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 22px;
+  height: 47px;
+  gap: 18px;
+}
+.tabs button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 13px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.tabs button.active {
+  color: var(--sage-dark);
+  border-bottom: 2px solid var(--sage);
+  background: transparent;
+}
+.section-heading {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink);
+  border-top: 1px solid var(--border);
+  padding-top: 17px;
+  margin: 23px 0 10px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 10px;
+  margin: 15px 0;
+}
+.field input {
+  width: 100%;
+  font-size: 12px;
+}
+.button-pair {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+}
+.button-pair button {
+  flex: 1;
+  font-size: 10px;
+  padding: 7px 5px;
+}
+.shortcuts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px 5px;
+  font-size: 10px;
+  color: var(--muted);
+  align-items: center;
+  margin: 17px 0 23px;
+}
+.shortcuts dd {
+  margin: 0;
+  text-align: right;
+  font-size: 9px;
+}
+kbd {
+  font: 9px var(--mono);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 3px;
+  padding: 2px 4px;
+  color: #706b64;
+}
+.crossing-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+}
+.crossing-item span {
+  flex: 1;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.crossing-item button {
+  font-size: 10px;
+  padding: 4px 6px;
+}
+.crossing-swatch {
+  width: 6px;
+  height: 18px;
+  border-radius: 3px;
+  flex: none !important;
+}
+#tikz {
+  width: 100%;
+  height: calc(100dvh - 390px);
+  min-height: 170px;
+  resize: vertical;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 11px;
+  font: 10px/1.65 var(--mono);
+  tab-size: 2;
+}
+.code-note {
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.code-note code {
+  font: 9px var(--mono);
+}
+.import-report {
+  padding: 9px;
+  background: #faf0e7;
+  color: #9b6037;
+  font-size: 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow: auto;
+  border-radius: 5px;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  transform: translate(-50%, 10px);
+  background: var(--ink);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 17px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+  z-index: 50;
+  max-width: 90vw;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.text-editor {
+  position: absolute;
+  background: #fffffff5 !important;
+  border: 1px solid var(--sage) !important;
+  min-width: 150px;
+  padding: 6px 9px;
+  box-shadow: 0 4px 20px #0001;
+  z-index: 5;
+}
+dialog {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 25px;
+  width: 440px;
+  max-width: 90vw;
+  color: var(--ink);
+  box-shadow: 0 18px 70px #0002;
+}
+dialog::backdrop {
+  background: #2d2a2633;
+}
+.dialog-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dialog-title h2 {
+  font:
+    22px Georgia,
+    serif;
+  margin: 0;
+}
+.dialog-title button {
+  border: 0;
+  font-size: 22px;
+}
+.export-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+.export-options button {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 17px 13px;
+  gap: 7px;
+  background: var(--bg);
+}
+.export-options strong {
+  color: var(--sage-dark);
+  font-size: 16px;
+}
+.export-options span {
+  font-size: 10px;
+  color: var(--muted);
+}
+@media (min-width: 1650px) {
+  .ribbon-group {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+  .workspace {
+    grid-template-columns: 220px minmax(240px, 1fr) 290px;
+  }
+  .templates-panel {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+}
+@media (max-width: 1150px) {
+  .workspace {
+    grid-template-columns: 160px minmax(220px, 1fr) 230px;
+  }
+  .subtitle,
+  .save-state {
+    display: none;
+  }
+  .templates-panel {
+    padding: 18px 11px;
+  }
+  .inspector {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .canvas-toolbar {
+    padding: 8px;
+  }
+  .history {
+    gap: 0;
+  }
+  .canvas-toolbar button {
+    padding: 4px;
+  }
+  .ribbon-group {
+    padding: 0 10px;
+  }
+}
+@media (max-width: 850px) {
+  .workspace {
+    grid-template-columns: 124px minmax(200px, 1fr);
+  }
+  .inspector {
+    position: absolute;
+    right: 12px;
+    top: 185px;
+    bottom: 45px;
+    width: 230px;
+    box-shadow: 0 6px 30px #0001;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    z-index: 10;
+    display: none;
+  }
+  .workspace.show-inspector .inspector {
+    display: block;
+  }
+  .templates-panel {
+    padding: 15px 8px;
+  }
+  .template-grid {
+    gap: 5px;
+  }
+  .template-card svg {
+    width: 43px;
+    height: 40px;
+  }
+  .panel-title > span {
+    display: none;
+  }
+  .topbar {
+    padding: 10px 14px;
+  }
+  .top-actions button {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  .brand {
+    font-size: 24px;
+  }
+  .sidebar-note {
+    gap: 5px;
+  }
+  .note-icon {
+    display: none;
+  }
+  .statusbar {
+    font-size: 9px;
+  }
+  .history #cut,
+  .history #copy {
+    display: none;
+  }
+  .view-controls {
+    gap: 2px;
+  }
+}
+@media (max-width: 550px) {
+  .workspace {
+    grid-template-columns: 90px minmax(180px, 1fr);
+  }
+  .brand svg {
+    display: none;
+  }
+  .topbar {
+    gap: 10px;
+  }
+  .top-actions {
+    gap: 3px;
+  }
+  .top-actions #new {
+    display: none;
+  }
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+  .template-card svg {
+    width: 55px;
+    height: 42px;
+  }
+  .templates-panel > .small,
+  .sidebar-note,
+  .templates-panel .wide {
+    display: none;
+  }
+  .ribbon {
+    padding: 9px;
+  }
+  .canvas-toolbar {
+    flex-wrap: wrap;
+  }
+  .empty-state {
+    width: 230px;
+  }
+  .empty-state h1 {
+    font-size: 20px;
+  }
+  #hint {
+    max-width: 75%;
+    line-height: 1.4;
+  }
+  .legacy-link {
+    font-size: 9px;
+  }
+  .ribbon-group {
+    padding: 0 8px;
+  }
+}
+
+#inspector-toggle {
+  display: none;
+}
+@media (max-width: 850px) {
+  #inspector-toggle {
+    display: block;
+  }
+}
+
+</style>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="String editor"
+        ><svg viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M6 5C6 25 26 7 26 27M26 5C26 12 6 20 6 27" /></svg
+        ><span>String</span></a
+      >
+      <div class="top-actions">
+        <span id="save-state" class="save-state">Saved on this device</span
+        ><button id="new" title="Start an empty diagram">New</button
+        ><button id="open">Open</button><button id="save">Save project</button
+        ><button class="primary" id="export">Export <span>↗</span></button>
+      </div>
+    </header>
+    <nav class="ribbon" aria-label="Drawing toolbar">
+      <div class="ribbon-group tools">
+        <div class="group-label">TOOLS</div>
+        <div id="tools" class="tool-grid"></div>
+      </div>
+      <div class="ribbon-group">
+        <div class="group-label">LINE</div>
+        <div class="control-row">
+          <label
+            >Style<select id="style">
+              <option value="solid">Straight / solid</option>
+              <option value="squiggly">Squiggly</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+            </select></label
+          ><label
+            >Width<input
+              id="width"
+              type="number"
+              min="0.5"
+              max="30"
+              step="0.5"
+              value="2" /></label
+          ><label
+            >Arrows<select id="arrows">
+              <option value="none">None</option>
+              <option value="end">At end →</option>
+              <option value="start">At start ←</option>
+              <option value="both">Both ↔</option>
+              <option value="middle">Middle →</option>
+            </select></label
+          >
+        </div>
+      </div>
+      <div class="ribbon-group">
+        <div class="group-label">LINE COLOUR</div>
+        <div class="colour-controls">
+          <input
+            type="color"
+            id="color"
+            value="#2d2a26"
+            aria-label="Line colour"
+          />
+          <div id="swatches" class="swatches"></div>
+        </div>
+      </div>
+      <div class="ribbon-group">
+        <div class="group-label">FILL</div>
+        <div class="control-row">
+          <label
+            >Colour<input
+              id="fill-color"
+              type="color"
+              value="#7c9885"
+              aria-label="Fill and pattern colour"
+          /></label>
+          <label
+            >Pattern<select id="pattern">
+              <option value="hatch">Diagonal ↗</option>
+              <option value="backhatch">Diagonal ↘</option>
+              <option value="crosshatch">Crosshatch</option>
+              <option value="dots">Dots</option>
+              <option value="horizontal">Horizontal</option>
+              <option value="solid">Solid colour</option>
+              <option value="none">No fill</option>
+            </select></label
+          ><label
+            >Opacity<input
+              id="opacity"
+              type="number"
+              min="5"
+              max="100"
+              step="5"
+              value="45"
+          /></label>
+        </div>
+      </div>
+      <div class="ribbon-group">
+        <div class="group-label">CROSSINGS</div>
+        <div class="control-row">
+          <label
+            >Berth (px)<input
+              id="gap"
+              type="number"
+              min="0"
+              max="40"
+              step="1"
+              value="7" /></label
+          ><label
+            >Red highlight<select id="highlight">
+              <option value="crossings">Overpasses</option>
+              <option value="over">Above selected</option>
+              <option value="under">Below selected</option>
+              <option value="related">All related lines</option>
+              <option value="off">Off</option>
+            </select></label
+          >
+        </div>
+      </div>
+    </nav>
+    <main class="workspace">
+      <aside class="templates-panel">
+        <div class="panel-title">
+          <h2>Templates</h2>
+          <span>DRAG & DROP</span>
+        </div>
+        <p class="muted small">Drag a template onto the canvas.</p>
+        <div id="templates" class="template-grid"></div>
+        <div class="sidebar-note">
+          <span class="note-icon">⇧</span>
+          <p>
+            Hold <strong>Shift</strong> while drawing to pass
+            <strong>under</strong> existing strings.
+          </p>
+        </div>
+        <div class="sidebar-note">
+          <span class="note-icon">⌁</span>
+          <p>
+            Crossing gaps clip strings only. Your shaded surfaces stay intact.
+          </p>
+        </div>
+        <button id="demo" class="wide">Load example</button>
+        <a
+          class="legacy-link"
+          href="index-legacy.html"
+          target="_blank"
+          rel="noopener"
+          >Open the original editor ↗</a
+        >
+      </aside>
+      <section class="drawing-area" aria-label="Diagram workspace">
+        <div class="canvas-toolbar">
+          <div class="history">
+            <button id="undo" title="Undo (Ctrl/⌘ Z)" aria-label="Undo">
+              ↶</button
+            ><button id="redo" title="Redo (Ctrl/⌘ Shift Z)" aria-label="Redo">
+              ↷</button
+            ><span class="divider"></span
+            ><button id="copy" title="Copy (Ctrl/⌘ C)">Copy</button
+            ><button id="cut" title="Cut (Ctrl/⌘ X)">Cut</button
+            ><button id="paste" title="Paste (Ctrl/⌘ V)">Paste</button
+            ><button id="delete" title="Delete selection">Delete</button>
+          </div>
+          <div class="view-controls">
+            <label class="check"
+              ><input type="checkbox" id="grid" checked /> Grid</label
+            ><label class="check"
+              ><input type="checkbox" id="snap" /> Snap</label
+            ><button id="fit" title="Fit diagram in view">Fit</button
+            ><button id="inspector-toggle" title="Properties and TikZ (I)">
+              Properties
+            </button>
+          </div>
+        </div>
+        <div id="viewport" class="viewport">
+          <svg
+            id="canvas"
+            xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-label="Editable string diagram canvas"
+            tabindex="0"
+          >
+            <defs id="defs"></defs>
+            <g id="grid-layer"></g>
+            <g id="region-layer"></g>
+            <g id="line-layer"></g>
+            <g id="node-layer"></g>
+            <g id="overlay-layer"></g>
+          </svg>
+          <div class="canvas-pill">
+            <span id="tool-dot"></span><span id="tool-name">Select</span
+            ><kbd id="under-indicator" hidden>SHIFT · UNDER</kbd>
+          </div>
+          <div id="empty-state" class="empty-state">
+            <h1>New diagram</h1>
+            <p>Choose a drawing tool or drag in a template.</p>
+            <button id="empty-demo">Load example</button>
+          </div>
+          <input
+            id="text-editor"
+            aria-label="Diagram text"
+            class="text-editor"
+            hidden
+          />
+          <div class="zoom-controls">
+            <button id="zoom-out" aria-label="Zoom out">−</button
+            ><button id="zoom-reset" title="Reset zoom">
+              <span id="zoom">100%</span></button
+            ><button id="zoom-in" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+        <footer class="statusbar">
+          <span id="hint"
+            >Click an object to select it. Drag empty space to select a
+            group.</span
+          ><span id="coordinates">0, 0</span>
+        </footer>
+      </section>
+      <aside class="inspector">
+        <div class="tabs" role="tablist" aria-label="Sidebar panels">
+          <button
+            id="properties-tab"
+            class="active"
+            role="tab"
+            aria-selected="true"
+            aria-controls="properties-panel"
+          >
+            Properties</button
+          ><button
+            id="code-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="code-panel"
+          >
+            TikZ
+          </button>
+        </div>
+        <section
+          id="properties-panel"
+          role="tabpanel"
+          aria-labelledby="properties-tab"
+        >
+          <div class="panel-title">
+            <h2 id="selection-title">Drawing settings</h2>
+            <span id="selection-count">READY</span>
+          </div>
+          <p id="selection-description" class="muted small">
+            Settings above apply to your next drawing. Select an object to edit
+            it.
+          </p>
+          <div id="selected-properties" hidden>
+            <label class="field"
+              >Name<input id="object-name" maxlength="120"
+            /></label>
+            <label class="field" id="text-field" hidden
+              >Label<input id="object-text" maxlength="2000"
+            /></label>
+            <label class="field" id="font-field" hidden
+              >Font size<input
+                id="font-size"
+                type="number"
+                min="6"
+                max="120"
+                value="18"
+            /></label>
+            <div class="section-heading">Arrange</div>
+            <div class="button-pair">
+              <button id="back">Send to back</button
+              ><button id="front">Bring to front</button>
+            </div>
+            <div class="button-pair">
+              <button id="duplicate">Duplicate</button
+              ><button id="flip-x">Flip horizontally</button>
+            </div>
+            <div class="section-heading">Crossing relationships</div>
+            <p id="crossing-description" class="muted small">
+              Select a string to inspect its crossings.
+            </p>
+            <div id="crossing-list"></div>
+          </div>
+          <div class="section-heading">Keyboard shortcuts</div>
+          <dl class="shortcuts">
+            <dt>Select / lasso</dt>
+            <dd><kbd>V</kbd> / <kbd>Q</kbd></dd>
+            <dt>Freehand / straight</dt>
+            <dd><kbd>B</kbd> / <kbd>L</kbd></dd>
+            <dt>Dot-to-dot / Bézier</dt>
+            <dd><kbd>P</kbd> / <kbd>C</kbd></dd>
+            <dt>Fill / text</dt>
+            <dd><kbd>F</kbd> / <kbd>T</kbd></dd>
+            <dt>Finish path</dt>
+            <dd><kbd>Enter</kbd></dd>
+            <dt>Cancel</dt>
+            <dd><kbd>Esc</kbd></dd>
+            <dt>Pan canvas</dt>
+            <dd><kbd>Space</kbd> + drag</dd>
+            <dt>Copy / cut / paste</dt>
+            <dd><kbd>Ctrl/⌘</kbd> C / X / V</dd>
+          </dl>
+          <p class="muted small">
+            Double-click a string to edit its points. Bézier curves have
+            draggable control handles. Select groups with a rectangle or a
+            freehand lasso.
+          </p>
+        </section>
+        <section
+          id="code-panel"
+          role="tabpanel"
+          aria-labelledby="code-tab"
+          hidden
+        >
+          <div class="panel-title">
+            <h2>Editable TikZ</h2>
+            <span>LIVE OUTPUT</span>
+          </div>
+          <p class="muted small">
+            Edit or paste TikZ, then apply. Project files preserve every detail;
+            SVG preserves transparent crossing gaps.
+          </p>
+          <textarea
+            id="tikz"
+            spellcheck="false"
+            aria-label="TikZ code"
+          ></textarea>
+          <div class="button-pair">
+            <button id="copy-code">Copy code</button
+            ><button id="apply-code" class="primary">Apply edits</button>
+          </div>
+          <p class="muted small code-note">
+            Preamble: <code>\usetikzlibrary{patterns,arrows.meta}</code
+            ><br />Curves and squiggles export as paths. Crossing gaps use
+            even-odd clipping, so fills remain visible.
+          </p>
+          <div id="import-report" class="import-report" hidden></div>
+        </section>
+      </aside>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <dialog id="export-dialog">
+      <form method="dialog">
+        <div class="dialog-title">
+          <h2>Export diagram</h2>
+          <button value="cancel" aria-label="Close export dialog">×</button>
+        </div>
+        <p class="muted">Choose a file format.</p>
+        <div class="export-options">
+          <button type="button" data-export="svg">
+            <strong>SVG</strong
+            ><span>Vector · transparent background</span></button
+          ><button type="button" data-export="png">
+            <strong>PNG</strong
+            ><span>Image · transparent background</span></button
+          ><button type="button" data-export="tikz">
+            <strong>TikZ</strong><span>LaTeX · editable paths</span></button
+          ><button type="button" data-export="json">
+            <strong>Project</strong><span>Continue editing later</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <input type="file" id="file-input" accept=".json,.tikz,.tex" hidden />
+  <script>
+"use strict";
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const STORAGE = "string-studio-v2";
+  const INK = "#2d2a26",
+    RED = "#b95650";
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const esc = (value) =>
+    String(value).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+  const fmt = (n) => Number(n.toFixed(3));
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const lerp = (a, b, t) => ({
+    x: a.x + (b.x - a.x) * t,
+    y: a.y + (b.y - a.y) * t,
+  });
+  const cross = (a, b) => a.x * b.y - a.y * b.x;
+  const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
+  const svg = (tag, attrs = {}, parent) => {
+    const el = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs))
+      if (v !== undefined) el.setAttribute(k, v);
+    if (parent) parent.append(el);
+    return el;
+  };
+  const paths = (points) =>
+    points.map((p, i) => `${i ? "L" : "M"}${fmt(p.x)},${fmt(p.y)}`).join(" ");
+  const tools = [
+    ["select", "Select", "V", "M4 3l5 15 3-6 6-3z"],
+    [
+      "lasso",
+      "Freehand select",
+      "Q",
+      "M7 16C-2 11 4 2 13 3s10 10 2 13c-4 2-8-2-8-5 0-2 3-3 4-1s-2 8-5 9",
+    ],
+    ["freehand", "Freehand", "B", "M3 16C5 3 8 4 9 11s5 7 7-3 5-6 5-3"],
+    ["line", "Straight line", "L", "M4 17L18 3"],
+    [
+      "polyline",
+      "Dot-to-dot",
+      "P",
+      "M3 17L7 4l7 11 5-10M3 17h.01M7 4h.01M14 15h.01M19 5h.01",
+    ],
+    [
+      "bezier",
+      "Bézier curve",
+      "C",
+      "M3 17C3 0 19 21 19 3M3 17V4m16-1v14M1 4h4m12 13h4",
+    ],
+    [
+      "fill",
+      "Fill bucket",
+      "F",
+      "M4 10l7-7 8 8-7 7zM4 10h15M11 3L8 0m12 13s-4 5 0 5 0-5 0-5",
+    ],
+    [
+      "region",
+      "Filled region (draw or click points)",
+      "R",
+      "M3 15l4-12 12 5-4 10zM7 8l7 3m-8 2 6 2",
+    ],
+    ["rectangle", "Rectangle", "U", "M3 4h16v14H3z"],
+    ["ellipse", "Ellipse / node", "O", "M20 11a9 7 0 1 1-18 0 9 7 0 1 1 18 0"],
+    ["text", "Text / label", "T", "M4 5V3h14v2M11 3v16m-4 0h8"],
+    ["crossing", "Flip a crossing", "X", "M3 3l16 16M19 3l-5 5M8 14l-5 5"],
+  ];
+  const hints = {
+    select:
+      "Click to select; drag an object to move it. Drag empty space for rectangle selection. Shift adds to selection.",
+    lasso:
+      "Draw a freehand loop to select objects. Shift adds to selection. Drag a selected object to move the group.",
+    freehand:
+      "Drag to draw freely. Hold Shift at the start to pass under existing strings.",
+    line: "Drag a straight string, or click its two endpoints. Shift draws underneath.",
+    polyline:
+      "Click to place points. Enter or double-click finishes. Escape cancels. Shift starts underneath.",
+    bezier:
+      "Drag start to end (or click both), then click two control points. Drag the handles later to reshape.",
+    fill: "Click a shaded region or an enclosed area to fill it with the chosen colour and pattern.",
+    region:
+      "Drag a freehand filled region, or click its corners. Enter or double-click closes the polygon.",
+    rectangle:
+      "Drag to draw a rectangle with the current fill. Choose “No fill” for an outline.",
+    ellipse: "Drag to draw an ellipse / node with the current fill.",
+    text: "Click to add text. Double-click a label to edit it.",
+    crossing:
+      "Click a crossing to swap over / under. Only intersections at 30° or more create a gap.",
+  };
+  let model = { version: 2, objects: [], overrides: {}, nextId: 1 };
+  let selected = new Set(),
+    history = [],
+    future = [],
+    clipboard = null;
+  let tool = "select",
+    draft = null,
+    interaction = null,
+    cursor = { x: 500, y: 350 },
+    shift = false,
+    space = false,
+    editPoints = false;
+  let defaults = {
+    color: INK,
+    fillColor: "#7c9885",
+    width: 2,
+    style: "solid",
+    arrows: "none",
+    gap: 7,
+    pattern: "hatch",
+    opacity: 0.45,
+  };
+  let view = { x: 0, y: 0, zoom: 1 },
+    dimensions = { w: 800, h: 600 },
+    crossings = [],
+    geometry = new Map();
+  let changedTimer,
+    toastTimer,
+    renderQueued = false,
+    textTarget = null,
+    codeDirty = false;
+  const canvas = $("canvas"),
+    viewport = $("viewport");
+
+  function toast(message) {
+    $("toast").textContent = message;
+    $("toast").classList.add("visible");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 2600);
+  }
+  function selectedObjects() {
+    return model.objects.filter((o) => selected.has(o.id));
+  }
+  function snapshot() {
+    return JSON.stringify(model);
+  }
+  function pushHistory(before = snapshot()) {
+    history.push(before);
+    if (history.length > 80) history.shift();
+    future = [];
+  }
+  function change(fn) {
+    pushHistory();
+    fn();
+    editPoints = false;
+    finishChange();
+  }
+  function finishChange() {
+    codeDirty = false;
+    persist();
+    render();
+    updateInspector();
+    updateCode();
+  }
+  function persist() {
+    clearTimeout(changedTimer);
+    $("save-state").textContent = "Saving…";
+    changedTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE, snapshot());
+        $("save-state").textContent = "Saved on this device";
+      } catch {
+        $("save-state").textContent = "Save a project to keep your work";
+      }
+    }, 250);
+  }
+  function undo() {
+    cancelDrawing();
+    if (!history.length) return;
+    future.push(snapshot());
+    model = JSON.parse(history.pop());
+    selected = new Set(
+      [...selected].filter((id) => model.objects.some((o) => o.id === id)),
+    );
+    finishChange();
+  }
+  function redo() {
+    cancelDrawing();
+    if (!future.length) return;
+    history.push(snapshot());
+    model = JSON.parse(future.pop());
+    selected.clear();
+    finishChange();
+  }
+  function zNext(under = false) {
+    const zs = model.objects.filter((o) => o.kind === "line").map((o) => o.z);
+    return under ? Math.min(0, ...zs) - 1 : Math.max(0, ...zs) + 1;
+  }
+  function makeObject(kind, extra = {}, under = false) {
+    const id = model.nextId++;
+    return {
+      id,
+      name: `${kind === "line" ? "String" : kind === "region" ? "Region" : kind === "ellipse" ? "Node" : "Label"} ${id}`,
+      kind,
+      ...clone(defaults),
+      z: zNext(under),
+      ...extra,
+    };
+  }
+  function addObject(o) {
+    change(() => {
+      model.objects.push(o);
+      selected = new Set([o.id]);
+    });
+  }
+  function cleanOverrides() {
+    const ids = new Set(model.objects.map((o) => o.id));
+    for (const key of Object.keys(model.overrides)) {
+      const [a, b] = key.split(":").map(Number);
+      if (!ids.has(a) || !ids.has(b)) delete model.overrides[key];
+    }
+  }
+  function removeSelected() {
+    if (!selected.size) return;
+    change(() => {
+      model.objects = model.objects.filter((o) => !selected.has(o.id));
+      selected.clear();
+      cleanOverrides();
+    });
+  }
+  function copySelection() {
+    const objects = selectedObjects();
+    if (!objects.length) return;
+    const ids = new Set(objects.map((o) => o.id));
+    clipboard = {
+      objects: clone(objects),
+      overrides: Object.fromEntries(
+        Object.entries(model.overrides).filter(([key]) =>
+          key
+            .split(":")
+            .slice(0, 2)
+            .every((id) => ids.has(+id)),
+        ),
+      ),
+      pastes: 0,
+    };
+    toast(`Copied ${objects.length} object${objects.length === 1 ? "" : "s"}`);
+    updateButtons();
+  }
+  function pasteSelection() {
+    if (!clipboard) return;
+    cancelDrawing();
+    change(() => {
+      clipboard.pastes++;
+      const map = new Map(),
+        offset = 24 * clipboard.pastes;
+      const base = zNext();
+      const sorted = [...clipboard.objects].sort((a, b) => a.z - b.z);
+      for (const o of [...clipboard.objects].sort((a, b) => a.id - b.id))
+        map.set(o.id, model.nextId++);
+      const pasted = sorted.map((o, i) => {
+        const n = clone(o);
+        n.id = map.get(o.id);
+        n.name = `${o.name} copy`;
+        n.z = base + i;
+        moveObject(n, offset, offset);
+        return n;
+      });
+      for (const [key, value] of Object.entries(clipboard.overrides)) {
+        const [a, b, n] = key.split(":");
+        model.overrides[`${map.get(+a)}:${map.get(+b)}:${n}`] = map.get(value);
+      }
+      model.objects.push(...pasted);
+      selected = new Set(pasted.map((o) => o.id));
+    });
+  }
+  function cutSelection() {
+    copySelection();
+    removeSelected();
+  }
+  function duplicate() {
+    copySelection();
+    pasteSelection();
+  }
+  function moveObject(o, dx, dy) {
+    if (o.points)
+      for (const p of o.points) {
+        p.x += dx;
+        p.y += dy;
+      }
+    if (o.c1) {
+      o.c1.x += dx;
+      o.c1.y += dy;
+      o.c2.x += dx;
+      o.c2.y += dy;
+    }
+    if (o.x !== undefined) {
+      o.x += dx;
+      o.y += dy;
+    }
+  }
+  function allPoints(o) {
+    if (o.kind === "text")
+      return [
+        {
+          x: o.x - o.text.length * o.fontSize * 0.3,
+          y: o.y - o.fontSize * 0.65,
+        },
+        {
+          x: o.x + o.text.length * o.fontSize * 0.3,
+          y: o.y + o.fontSize * 0.65,
+        },
+      ];
+    if (o.kind === "ellipse")
+      return [
+        { x: o.x - o.rx, y: o.y - o.ry },
+        { x: o.x + o.rx, y: o.y + o.ry },
+      ];
+    return o.curve === "bezier" ? [...o.points, o.c1, o.c2] : o.points;
+  }
+  function bounds(objects = model.objects) {
+    const points = objects.flatMap(allPoints);
+    if (!points.length) return { x: 300, y: 200, w: 400, h: 300 };
+    const xs = points.map((p) => p.x),
+      ys = points.map((p) => p.y);
+    const x = Math.min(...xs),
+      y = Math.min(...ys);
+    return {
+      x,
+      y,
+      w: Math.max(1, Math.max(...xs) - x),
+      h: Math.max(1, Math.max(...ys) - y),
+    };
+  }
+  function flipSelection() {
+    if (!selected.size) return;
+    change(() => {
+      const b = bounds(selectedObjects()),
+        cx = b.x + b.w / 2;
+      for (const o of selectedObjects()) {
+        if (o.points) for (const p of o.points) p.x = 2 * cx - p.x;
+        if (o.c1) {
+          o.c1.x = 2 * cx - o.c1.x;
+          o.c2.x = 2 * cx - o.c2.x;
+        }
+        if (o.x !== undefined) o.x = 2 * cx - o.x;
+      }
+    });
+  }
+  function reorder(front) {
+    if (!selected.size) return;
+    change(() => {
+      const group = selectedObjects().sort((a, b) => a.z - b.z),
+        zs = model.objects.map((o) => o.z);
+      const base = front
+        ? Math.max(0, ...zs) + 1
+        : Math.min(0, ...zs) - group.length;
+      group.forEach((o, i) => (o.z = base + i));
+      for (const key of Object.keys(model.overrides)) {
+        const [a, b] = key.split(":").map(Number);
+        if (selected.has(a) || selected.has(b)) delete model.overrides[key];
+      }
+    });
+  }
+  function setTool(next) {
+    if (textTarget) finishText();
+    cancelDrawing();
+    tool = next;
+    editPoints = false;
+    if (!["select", "lasso", "crossing"].includes(tool)) selected.clear();
+    $("tool-name").textContent = tools
+      .find((t) => t[0] === tool)[1]
+      .split(" (")[0];
+    $("hint").textContent = hints[tool];
+    document.querySelectorAll("[data-tool]").forEach((b) => {
+      b.classList.toggle("active", b.dataset.tool === tool);
+      b.setAttribute("aria-pressed", b.dataset.tool === tool);
+    });
+    canvas.style.cursor = ["select", "lasso"].includes(tool)
+      ? "default"
+      : tool === "text"
+        ? "text"
+        : "crosshair";
+    render();
+    updateInspector();
+  }
+  function cancelDrawing() {
+    draft = null;
+    if (interaction?.before) {
+      model = JSON.parse(interaction.before);
+      selected = new Set(interaction.selection || []);
+    }
+    interaction = null;
+    editPoints = false;
+    render();
+  }
+  function toWorld(e, snap = false) {
+    const r = canvas.getBoundingClientRect();
+    const p = {
+      x: view.x + (e.clientX - r.left) / view.zoom,
+      y: view.y + (e.clientY - r.top) / view.zoom,
+    };
+    if (snap && $("snap").checked) {
+      p.x = Math.round(p.x / 20) * 20;
+      p.y = Math.round(p.y / 20) * 20;
+    }
+    return p;
+  }
+  function toScreen(p) {
+    return { x: (p.x - view.x) * view.zoom, y: (p.y - view.y) * view.zoom };
+  }
+  function fit() {
+    const b = bounds();
+    const pad = 75;
+    view.zoom = Math.max(
+      0.15,
+      Math.min(
+        2,
+        (dimensions.w - pad * 2) / (b.w || 1),
+        (dimensions.h - pad * 2) / (b.h || 1),
+      ),
+    );
+    view.x = b.x + b.w / 2 - dimensions.w / view.zoom / 2;
+    view.y = b.y + b.h / 2 - dimensions.h / view.zoom / 2;
+    render();
+  }
+  function zoomBy(
+    factor,
+    p = {
+      x: view.x + dimensions.w / view.zoom / 2,
+      y: view.y + dimensions.h / view.zoom / 2,
+    },
+  ) {
+    const old = view.zoom;
+    view.zoom = Math.min(6, Math.max(0.15, old * factor));
+    view.x = p.x - ((p.x - view.x) * old) / view.zoom;
+    view.y = p.y - ((p.y - view.y) * old) / view.zoom;
+    render();
+  }
+  function resize() {
+    const r = viewport.getBoundingClientRect();
+    const center = {
+      x: view.x + dimensions.w / view.zoom / 2,
+      y: view.y + dimensions.h / view.zoom / 2,
+    };
+    dimensions = { w: r.width, h: r.height };
+    view.x = center.x - r.width / view.zoom / 2;
+    view.y = center.y - r.height / view.zoom / 2;
+    render();
+  }
+
+  // Geometry is shared by rendering, hit testing, crossings, selection and exports.
+  function sampleBase(o) {
+    if (o.curve !== "bezier") return o.points;
+    const [a, b] = o.points;
+    const n = Math.min(
+      160,
+      Math.max(
+        24,
+        Math.ceil((dist(a, o.c1) + dist(o.c1, o.c2) + dist(o.c2, b)) / 8),
+      ),
+    );
+    return Array.from({ length: n + 1 }, (_, i) => {
+      const t = i / n,
+        u = 1 - t;
+      return {
+        x:
+          u * u * u * a.x +
+          3 * u * u * t * o.c1.x +
+          3 * u * t * t * o.c2.x +
+          t * t * t * b.x,
+        y:
+          u * u * u * a.y +
+          3 * u * u * t * o.c1.y +
+          3 * u * t * t * o.c2.y +
+          t * t * t * b.y,
+      };
+    });
+  }
+  function resample(points, step = 3) {
+    const result = [points[0]];
+    let travel = 0,
+      next = step;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1],
+        b = points[i],
+        length = dist(a, b);
+      while (next <= travel + length) {
+        result.push(lerp(a, b, (next - travel) / length));
+        next += step;
+      }
+      travel += length;
+    }
+    if (dist(result.at(-1), points.at(-1)) > 0.01) result.push(points.at(-1));
+    return result;
+  }
+  function lineGeometry(o) {
+    const base = sampleBase(o);
+    let points = base;
+    if (o.style === "squiggly" && base.length > 1) {
+      const evenly = resample(base, 2),
+        total = evenly.reduce(
+          (sum, p, i) => (i ? sum + dist(evenly[i - 1], p) : 0),
+          0,
+        );
+      let along = 0;
+      points = evenly.map((p, i) => {
+        if (i) along += dist(evenly[i - 1], p);
+        const a = evenly[Math.max(0, i - 1)],
+          b = evenly[Math.min(evenly.length - 1, i + 1)],
+          v = sub(b, a),
+          len = Math.hypot(v.x, v.y) || 1;
+        const amount =
+          Math.sin((along / 18) * Math.PI * 2) *
+          3.6 *
+          Math.min(1, along / 9, (total - along) / 9);
+        return { x: p.x - (v.y / len) * amount, y: p.y + (v.x / len) * amount };
+      });
+    }
+    return {
+      base,
+      points,
+      path:
+        o.curve === "bezier" && o.style !== "squiggly"
+          ? `M${fmt(o.points[0].x)},${fmt(o.points[0].y)} C${fmt(o.c1.x)},${fmt(o.c1.y)} ${fmt(o.c2.x)},${fmt(o.c2.y)} ${fmt(o.points[1].x)},${fmt(o.points[1].y)}`
+          : paths(points),
+    };
+  }
+  function pointSegment(p, a, b) {
+    const v = sub(b, a),
+      w = sub(p, a),
+      l = v.x * v.x + v.y * v.y;
+    const t = l ? Math.max(0, Math.min(1, (w.x * v.x + w.y * v.y) / l)) : 0;
+    const q = lerp(a, b, t);
+    return { d: dist(p, q), t, q };
+  }
+  function segmentIntersection(a, b, c, d) {
+    const r = sub(b, a),
+      s = sub(d, c),
+      den = cross(r, s);
+    if (Math.abs(den) < 1e-9) return null;
+    const v = sub(c, a),
+      t = cross(v, s) / den,
+      u = cross(v, r) / den;
+    if (t < -1e-7 || t > 1 + 1e-7 || u < -1e-7 || u > 1 + 1e-7) return null;
+    return {
+      p: lerp(a, b, t),
+      t: Math.max(0, Math.min(1, t)),
+      u: Math.max(0, Math.min(1, u)),
+      angle:
+        (Math.asin(
+          Math.min(1, Math.abs(den) / (dist(a, b) * dist(c, d) || 1)),
+        ) *
+          180) /
+        Math.PI,
+    };
+  }
+  function pointInPolygon(p, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const a = polygon[i],
+        b = polygon[j];
+      if (pointSegment(p, a, b).d < 0.5) return true;
+      if (
+        a.y > p.y !== b.y > p.y &&
+        p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x
+      )
+        inside = !inside;
+    }
+    return inside;
+  }
+  function tangentNear(points, p) {
+    let best = Infinity,
+      tangent = { x: 1, y: 0 };
+    for (let i = 1; i < points.length; i++) {
+      const d = pointSegment(p, points[i - 1], points[i]).d;
+      if (d < best) {
+        best = d;
+        tangent = sub(points[i], points[i - 1]);
+      }
+    }
+    return tangent;
+  }
+  function computeCrossings() {
+    geometry = new Map();
+    const lines = model.objects
+      .filter((o) => o.kind === "line")
+      .sort((a, b) => a.id - b.id);
+    for (const o of lines) geometry.set(o.id, lineGeometry(o));
+    const result = [];
+    for (let i = 0; i < lines.length; i++)
+      for (let j = i + 1; j < lines.length; j++) {
+        const a = lines[i],
+          b = lines[j],
+          ap = geometry.get(a.id).points,
+          bp = geometry.get(b.id).points,
+          found = [];
+        for (let m = 1; m < ap.length; m++)
+          for (let n = 1; n < bp.length; n++) {
+            const hit = segmentIntersection(ap[m - 1], ap[m], bp[n - 1], bp[n]);
+            if (!hit) continue;
+            if (a.style === "squiggly" || b.style === "squiggly") {
+              const ta = tangentNear(geometry.get(a.id).base, hit.p),
+                tb = tangentNear(geometry.get(b.id).base, hit.p);
+              hit.angle =
+                (Math.asin(
+                  Math.min(
+                    1,
+                    Math.abs(cross(ta, tb)) /
+                      (Math.hypot(ta.x, ta.y) * Math.hypot(tb.x, tb.y) || 1),
+                  ),
+                ) *
+                  180) /
+                Math.PI;
+            }
+            if (hit.angle < 30) continue;
+            if (
+              [ap[0], ap.at(-1), bp[0], bp.at(-1)].some(
+                (p) => dist(p, hit.p) < 3,
+              )
+            )
+              continue;
+            if (found.some((h) => dist(h.p, hit.p) < 3)) continue;
+            found.push({ ...hit, along: m - 1 + hit.t });
+          }
+        found
+          .sort((x, y) => x.along - y.along)
+          .forEach((h, k) => {
+            const key = `${a.id}:${b.id}:${k}`;
+            const chosen = model.overrides[key];
+            const upper =
+              chosen === a.id ? a : chosen === b.id ? b : a.z > b.z ? a : b;
+            const lower = upper === a ? b : a;
+            result.push({
+              key,
+              a: a.id,
+              b: b.id,
+              upper: upper.id,
+              lower: lower.id,
+              p: h.p,
+              angle: h.angle,
+              r:
+                upper.gap > 0
+                  ? upper.gap + Math.max(upper.width, lower.width) / 2
+                  : 0,
+            });
+          });
+      }
+    return result;
+  }
+  function hitTest(p) {
+    const threshold = 7 / view.zoom;
+    const objects = [...model.objects].sort((a, b) => {
+      const priority = (o) =>
+        o.kind === "region" ? 0 : o.kind === "line" ? 1 : 2;
+      return priority(b) - priority(a) || b.z - a.z;
+    });
+    for (const o of objects) {
+      if (o.kind === "line") {
+        const pts = geometry.get(o.id)?.points || lineGeometry(o).points;
+        const nearest = pts
+          .slice(1)
+          .reduce(
+            (best, b, i) => Math.min(best, pointSegment(p, pts[i], b).d),
+            Infinity,
+          );
+        if (
+          nearest < threshold + o.width / 2 &&
+          !crossings.some((c) => c.lower === o.id && dist(p, c.p) < c.r)
+        )
+          return o;
+      } else if (o.kind === "region") {
+        if (pointInPolygon(p, o.points)) return o;
+      } else if (o.kind === "ellipse") {
+        if (
+          ((p.x - o.x) / Math.max(1, o.rx + threshold)) ** 2 +
+            ((p.y - o.y) / Math.max(1, o.ry + threshold)) ** 2 <=
+          1
+        )
+          return o;
+      } else if (o.kind === "text") {
+        const b = bounds([o]);
+        if (
+          p.x >= b.x - threshold &&
+          p.x <= b.x + b.w + threshold &&
+          p.y >= b.y - threshold &&
+          p.y <= b.y + b.h + threshold
+        )
+          return o;
+      }
+    }
+    return null;
+  }
+  function simplify(points, tolerance = 1) {
+    if (points.length <= 2) return points;
+    const first = points[0],
+      last = points.at(-1);
+    let max = 0,
+      index = 0;
+    for (let i = 1; i < points.length - 1; i++) {
+      const d = pointSegment(points[i], first, last).d;
+      if (d > max) {
+        max = d;
+        index = i;
+      }
+    }
+    if (max > tolerance)
+      return [
+        ...simplify(points.slice(0, index + 1), tolerance).slice(0, -1),
+        ...simplify(points.slice(index), tolerance),
+      ];
+    return [first, last];
+  }
+  function selectionPolygon(polygon, append) {
+    const ids = append ? new Set(selected) : new Set();
+    for (const o of model.objects) {
+      const points =
+        o.kind === "line"
+          ? geometry.get(o.id)?.points || sampleBase(o)
+          : o.kind === "region"
+            ? o.points
+            : o.kind === "ellipse"
+              ? Array.from({ length: 32 }, (_, i) => ({
+                  x: o.x + o.rx * Math.cos((i / 32) * 2 * Math.PI),
+                  y: o.y + o.ry * Math.sin((i / 32) * 2 * Math.PI),
+                }))
+              : (() => {
+                  const b = bounds([o]);
+                  return [
+                    { x: b.x, y: b.y },
+                    { x: b.x + b.w, y: b.y },
+                    { x: b.x + b.w, y: b.y + b.h },
+                    { x: b.x, y: b.y + b.h },
+                  ];
+                })();
+      let hit = points.some((p) => pointInPolygon(p, polygon));
+      const closed = o.kind !== "line";
+      if (closed && polygon.some((p) => pointInPolygon(p, points))) hit = true;
+      for (
+        let i = 0;
+        !hit && i < (closed ? points.length : points.length - 1);
+        i++
+      )
+        for (let j = 0; j < polygon.length; j++)
+          if (
+            segmentIntersection(
+              points[i],
+              points[(i + 1) % points.length],
+              polygon[j],
+              polygon[(j + 1) % polygon.length],
+            )
+          ) {
+            hit = true;
+            break;
+          }
+      if (hit) ids.add(o.id);
+    }
+    selected = ids;
+    editPoints = false;
+    render();
+    updateInspector();
+  }
+
+  function patternDef(o, parent) {
+    const id = `pattern-${o.id}`;
+    const pat = svg(
+      "pattern",
+      { id, width: 8, height: 8, patternUnits: "userSpaceOnUse" },
+      parent,
+    );
+    const fillColor = o.fillColor || o.color;
+    const attrs = { stroke: fillColor, "stroke-width": 0.85, fill: "none" };
+    if (o.pattern === "dots")
+      svg("circle", { cx: 2, cy: 2, r: 1, fill: fillColor }, pat);
+    else {
+      if (["hatch", "crosshatch"].includes(o.pattern))
+        svg("path", { d: "M-2 2L2 -2M0 8L8 0M6 10L10 6", ...attrs }, pat);
+      if (["backhatch", "crosshatch"].includes(o.pattern))
+        svg("path", { d: "M-2 6L2 10M0 0L8 8M6 -2L10 2", ...attrs }, pat);
+      if (o.pattern === "horizontal")
+        svg("path", { d: "M0 4H8", ...attrs }, pat);
+    }
+    return `url(#${id})`;
+  }
+  function arrowPath(points, at, reverse = false) {
+    let a, b;
+    if (at === "middle") {
+      const pts = resample(points, 4),
+        i = Math.max(1, Math.floor(pts.length / 2));
+      a = pts[i - 1];
+      b = pts[i];
+    } else if (reverse) {
+      a = points[1];
+      b = points[0];
+    } else {
+      a = points.at(-2);
+      b = points.at(-1);
+    }
+    const v = sub(b, a),
+      len = Math.hypot(v.x, v.y) || 1;
+    return { p: b, x: v.x / len, y: v.y / len };
+  }
+  function drawArrows(o, points, parent) {
+    if (o.arrows === "none" || points.length < 2) return;
+    const ats = o.arrows === "both" ? ["start", "end"] : [o.arrows];
+    for (const at of ats) {
+      const { p, x, y } = arrowPath(points, at, at === "start");
+      const size = Math.max(7, o.width * 3);
+      svg(
+        "path",
+        {
+          d: `M${p.x - x * size - y * size * 0.45},${p.y - y * size + x * size * 0.45} L${p.x},${p.y} L${p.x - x * size + y * size * 0.45},${p.y - y * size - x * size * 0.45}`,
+          stroke: o.color,
+          "stroke-width": o.width,
+          fill: "none",
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+        },
+        parent,
+      );
+    }
+  }
+  function renderObject(o, parent, defs, withMasks = true) {
+    const group = svg("g", { "data-id": o.id }, parent);
+    if (o.kind === "line") {
+      const g = geometry.get(o.id) || lineGeometry(o);
+      const holes = withMasks
+        ? crossings.filter((c) => c.lower === o.id && c.r > o.width / 2)
+        : [];
+      if (holes.length) {
+        const id = `mask-${o.id}`,
+          b = bounds([o]),
+          pad = Math.max(50, o.width + o.gap);
+        const extent = {
+          x: b.x - pad,
+          y: b.y - pad,
+          width: b.w + pad * 2,
+          height: b.h + pad * 2,
+        };
+        const mask = svg(
+          "mask",
+          {
+            id,
+            maskUnits: "userSpaceOnUse",
+            ...extent,
+            style: "mask-type:luminance",
+          },
+          defs,
+        );
+        svg("rect", { ...extent, fill: "white" }, mask);
+        for (const h of holes)
+          svg("circle", { cx: h.p.x, cy: h.p.y, r: h.r, fill: "black" }, mask);
+        group.setAttribute("mask", `url(#${id})`);
+      }
+      const attrs = {
+        d: g.path,
+        stroke: o.color,
+        "stroke-width": o.width,
+        fill: "none",
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round",
+      };
+      if (o.style === "dashed")
+        attrs["stroke-dasharray"] = `${o.width * 4 + 4} ${o.width * 2 + 3}`;
+      if (o.style === "dotted")
+        attrs["stroke-dasharray"] = `.01 ${o.width * 2 + 4}`;
+      svg("path", attrs, group);
+      drawArrows(o, g.points, group);
+      const mode = $("highlight").value;
+      let redWhole = false;
+      if (
+        selected.size &&
+        ["over", "under", "related"].includes(mode) &&
+        !selected.has(o.id)
+      ) {
+        redWhole = crossings.some(
+          (c) =>
+            (mode === "over" && c.upper === o.id && selected.has(c.lower)) ||
+            (mode === "under" && c.lower === o.id && selected.has(c.upper)) ||
+            (mode === "related" &&
+              ((c.upper === o.id && selected.has(c.lower)) ||
+                (c.lower === o.id && selected.has(c.upper)))),
+        );
+      }
+      if (redWhole) svg("path", { ...attrs, stroke: RED }, group);
+      if (mode === "crossings")
+        for (const c of crossings.filter((c) => c.upper === o.id)) {
+          const clip = svg("clipPath", { id: `red-${c.key}` }, defs);
+          svg("circle", { cx: c.p.x, cy: c.p.y, r: Math.max(6, c.r) }, clip);
+          svg(
+            "path",
+            { ...attrs, stroke: RED, "clip-path": `url(#red-${c.key})` },
+            group,
+          );
+        }
+    } else if (o.kind === "region" || o.kind === "ellipse") {
+      const fill =
+        o.pattern === "none"
+          ? "none"
+          : o.pattern === "solid"
+            ? o.fillColor || o.color
+            : patternDef(o, defs);
+      const attrs = {
+        fill,
+        "fill-rule": "evenodd",
+        "fill-opacity": o.opacity,
+        stroke: o.color,
+        "stroke-width": o.width,
+        "stroke-linejoin": "round",
+      };
+      if (o.kind === "region")
+        svg("path", { d: paths(o.points) + " Z", ...attrs }, group);
+      else
+        svg(
+          "ellipse",
+          { cx: o.x, cy: o.y, rx: o.rx, ry: o.ry, ...attrs },
+          group,
+        );
+      if (o.kind === "ellipse" && o.text) {
+        const label = svg(
+          "text",
+          {
+            x: o.x,
+            y: o.y,
+            "text-anchor": "middle",
+            "dominant-baseline": "central",
+            "font-size": o.fontSize || 18,
+            "font-family": "Georgia, serif",
+            fill: o.color,
+          },
+          group,
+        );
+        label.textContent = o.text;
+      }
+    } else {
+      const el = svg(
+        "text",
+        {
+          x: o.x,
+          y: o.y,
+          "text-anchor": "middle",
+          "dominant-baseline": "central",
+          "font-size": o.fontSize,
+          "font-family": "Georgia, serif",
+          fill: o.color,
+        },
+        group,
+      );
+      el.textContent = o.text;
+    }
+    return group;
+  }
+  function handlePoints(o) {
+    if (o.kind === "line" && o.curve === "bezier")
+      return [
+        { p: o.points[0], key: "start" },
+        { p: o.points[1], key: "end" },
+        { p: o.c1, key: "c1" },
+        { p: o.c2, key: "c2" },
+      ];
+    if (o.points) return o.points.map((p, i) => ({ p, key: i }));
+    if (o.kind === "ellipse")
+      return [
+        { p: { x: o.x + o.rx, y: o.y }, key: "rx" },
+        { p: { x: o.x, y: o.y + o.ry }, key: "ry" },
+      ];
+    return [];
+  }
+  function handleHit(p) {
+    if (selected.size !== 1) return null;
+    const o = selectedObjects()[0];
+    if (
+      !editPoints &&
+      !(o.kind === "line" && o.curve === "bezier") &&
+      o.kind !== "ellipse"
+    )
+      return null;
+    return handlePoints(o).find((h) => dist(h.p, p) < 8 / view.zoom);
+  }
+  function renderOverlay() {
+    const parent = $("overlay-layer");
+    parent.replaceChildren();
+    if (selected.size) {
+      const b = bounds(selectedObjects()),
+        pad = 7 / view.zoom;
+      svg(
+        "rect",
+        {
+          x: b.x - pad,
+          y: b.y - pad,
+          width: b.w + pad * 2,
+          height: b.h + pad * 2,
+          fill: "none",
+          stroke: "#7c9885",
+          "stroke-width": 1 / view.zoom,
+          "stroke-dasharray": `${4 / view.zoom} ${4 / view.zoom}`,
+          "pointer-events": "none",
+        },
+        parent,
+      );
+      if (selected.size === 1) {
+        const o = selectedObjects()[0];
+        if (editPoints || o.curve === "bezier" || o.kind === "ellipse") {
+          if (o.curve === "bezier")
+            svg(
+              "path",
+              {
+                d:
+                  paths([o.points[0], o.c1]) + " " + paths([o.points[1], o.c2]),
+                stroke: "#9eb09f",
+                "stroke-width": 1 / view.zoom,
+                fill: "none",
+                "stroke-dasharray": `${3 / view.zoom} ${3 / view.zoom}`,
+              },
+              parent,
+            );
+          for (const h of handlePoints(o))
+            svg(
+              "circle",
+              {
+                cx: h.p.x,
+                cy: h.p.y,
+                r: 4 / view.zoom,
+                fill: ["c1", "c2"].includes(h.key) ? "#7c9885" : "white",
+                stroke: "#7c9885",
+                "stroke-width": 1.4 / view.zoom,
+              },
+              parent,
+            );
+        }
+      }
+    }
+    if (draft) {
+      const o = previewDraft();
+      if (o) {
+        geometry.delete(o.id);
+        renderObject(o, parent, $("defs"), false).setAttribute(
+          "opacity",
+          ".65",
+        );
+      }
+      if (["polyline", "bezier", "region", "line"].includes(draft.tool))
+        for (const p of draft.points)
+          svg(
+            "circle",
+            { cx: p.x, cy: p.y, r: 3 / view.zoom, fill: "#7c9885" },
+            parent,
+          );
+    }
+    if (interaction && ["marquee", "lasso"].includes(interaction.type)) {
+      const pts =
+        interaction.type === "marquee"
+          ? rectanglePoints(interaction.start, cursor)
+          : interaction.points;
+      svg(
+        "path",
+        {
+          d: paths(pts) + " Z",
+          fill: "#7c9885",
+          "fill-opacity": 0.09,
+          stroke: "#7c9885",
+          "stroke-width": 1 / view.zoom,
+          "stroke-dasharray": `${4 / view.zoom} ${3 / view.zoom}`,
+        },
+        parent,
+      );
+    }
+    if (tool === "crossing")
+      for (const c of crossings)
+        svg(
+          "circle",
+          {
+            cx: c.p.x,
+            cy: c.p.y,
+            r: 8 / view.zoom,
+            fill: "#ffffffb0",
+            stroke: RED,
+            "stroke-width": 1 / view.zoom,
+          },
+          parent,
+        );
+  }
+  function render() {
+    crossings = computeCrossings();
+    canvas.setAttribute(
+      "viewBox",
+      `${view.x} ${view.y} ${dimensions.w / view.zoom} ${dimensions.h / view.zoom}`,
+    );
+    const defs = $("defs");
+    defs.replaceChildren();
+    for (const id of ["region-layer", "line-layer", "node-layer", "grid-layer"])
+      $(id).replaceChildren();
+    if ($("grid").checked) {
+      const pat = svg(
+        "pattern",
+        {
+          id: "grid-dots",
+          x: 0,
+          y: 0,
+          width: 20,
+          height: 20,
+          patternUnits: "userSpaceOnUse",
+        },
+        defs,
+      );
+      svg("circle", { cx: 0, cy: 0, r: 0.7 / view.zoom, fill: "#d8d3cc" }, pat);
+      svg(
+        "rect",
+        {
+          x: view.x,
+          y: view.y,
+          width: dimensions.w / view.zoom,
+          height: dimensions.h / view.zoom,
+          fill: "url(#grid-dots)",
+        },
+        $("grid-layer"),
+      );
+    }
+    const sorted = [...model.objects].sort((a, b) => a.z - b.z);
+    for (const o of sorted)
+      renderObject(
+        o,
+        $(
+          o.kind === "region"
+            ? "region-layer"
+            : o.kind === "line"
+              ? "line-layer"
+              : "node-layer",
+        ),
+        defs,
+      );
+    renderOverlay();
+    $("empty-state").hidden = model.objects.length > 0 || !!draft;
+    $("zoom").textContent = `${Math.round(view.zoom * 100)}%`;
+    updateButtons();
+  }
+  function requestRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      render();
+    });
+  }
+  function updateButtons() {
+    const has = selected.size > 0;
+    for (const id of [
+      "copy",
+      "cut",
+      "delete",
+      "back",
+      "front",
+      "duplicate",
+      "flip-x",
+    ])
+      $(id).disabled = !has;
+    $("paste").disabled = !clipboard;
+    $("undo").disabled = !history.length;
+    $("redo").disabled = !future.length;
+  }
+  function updateInspector() {
+    const objects = selectedObjects(),
+      o = objects[0];
+    $("selection-title").textContent =
+      objects.length === 1
+        ? o.name
+        : objects.length
+          ? `${objects.length} objects`
+          : "Drawing settings";
+    $("selection-count").textContent = objects.length ? "SELECTED" : "READY";
+    $("selection-description").textContent = objects.length
+      ? "Changes in the toolbar apply to this selection."
+      : "Settings above apply to your next drawing. Select an object to edit it.";
+    $("selected-properties").hidden = !objects.length;
+    $("object-name").value = objects.length === 1 ? o.name : "";
+    $("object-name").disabled = objects.length !== 1;
+    const text = objects.length === 1 && ["text", "ellipse"].includes(o.kind);
+    $("text-field").hidden = !text;
+    $("font-field").hidden = !text;
+    if (text) {
+      $("object-text").value = o.text || "";
+      $("font-size").value = o.fontSize || 18;
+    }
+    if (o) {
+      for (const key of ["color", "width", "style", "arrows", "gap", "pattern"])
+        $(key).value = o[key] ?? defaults[key];
+      $("opacity").value = Math.round(o.opacity * 100);
+      $("fill-color").value = o.fillColor || o.color;
+    } else syncDefaultControls();
+    const related =
+      objects.length === 1 && o.kind === "line"
+        ? crossings.filter((c) => c.a === o.id || c.b === o.id)
+        : [];
+    $("crossing-description").textContent =
+      objects.length === 1 && o.kind === "line"
+        ? related.length
+          ? `${related.length} crossing${related.length === 1 ? "" : "s"} · click Swap to reverse one.`
+          : "No crossings at 30° or more."
+        : "Select a string to inspect its crossings.";
+    const list = $("crossing-list");
+    list.replaceChildren();
+    for (const c of related) {
+      const other = model.objects.find(
+        (n) => n.id === (c.a === o.id ? c.b : c.a),
+      );
+      const row = document.createElement("div");
+      row.className = "crossing-item";
+      const swatch = document.createElement("i");
+      swatch.className = "crossing-swatch";
+      swatch.style.background = other.color;
+      const span = document.createElement("span");
+      span.textContent = `${o.id === c.upper ? "Over" : "Under"} ${other.name}`;
+      const button = document.createElement("button");
+      button.textContent = "Swap";
+      button.addEventListener("click", () => swapCrossing(c));
+      row.append(swatch, span, button);
+      list.append(row);
+    }
+    updateButtons();
+  }
+  function syncDefaultControls() {
+    for (const key of ["color", "width", "style", "arrows", "gap", "pattern"])
+      $(key).value = defaults[key];
+    $("opacity").value = Math.round(defaults.opacity * 100);
+    $("fill-color").value = defaults.fillColor;
+  }
+  function applyProperty(key, value) {
+    defaults[key] = value;
+    const objects = selectedObjects()
+      .filter(
+        (o) => !["style", "arrows", "gap"].includes(key) || o.kind === "line",
+      )
+      .filter(
+        (o) =>
+          !["pattern", "opacity", "fillColor"].includes(key) ||
+          ["region", "ellipse"].includes(o.kind),
+      );
+    if (objects.length) change(() => objects.forEach((o) => (o[key] = value)));
+    document
+      .querySelectorAll(".swatch")
+      .forEach((b) =>
+        b.classList.toggle("active", b.dataset.color === defaults.color),
+      );
+  }
+  function swapCrossing(c) {
+    change(() => (model.overrides[c.key] = c.lower));
+    toast("Crossing reversed");
+  }
+  function rectanglePoints(a, b) {
+    return [
+      { x: a.x, y: a.y },
+      { x: b.x, y: a.y },
+      { x: b.x, y: b.y },
+      { x: a.x, y: b.y },
+    ];
+  }
+  function beginDraft(kind, p, under) {
+    draft = { tool: kind, points: [p], settings: clone(defaults), under };
+  }
+  function previewDraft() {
+    if (!draft) return null;
+    const d = draft,
+      base = { id: "preview", name: "Preview", ...d.settings, z: 0 };
+    if (["rectangle", "ellipse"].includes(d.tool)) {
+      const end = d.end || cursor;
+      if (d.tool === "rectangle")
+        return {
+          ...base,
+          kind: "region",
+          points: rectanglePoints(d.points[0], end),
+        };
+      return {
+        ...base,
+        kind: "ellipse",
+        x: (d.points[0].x + end.x) / 2,
+        y: (d.points[0].y + end.y) / 2,
+        rx: Math.abs(d.points[0].x - end.x) / 2,
+        ry: Math.abs(d.points[0].y - end.y) / 2,
+      };
+    }
+    if (d.tool === "bezier") {
+      const [start, end = d.preview || cursor] = d.points,
+        c1 = d.c1 || lerp(start, end, 1 / 3),
+        c2 = d.c2 || lerp(start, end, 2 / 3);
+      return {
+        ...base,
+        kind: "line",
+        curve: "bezier",
+        points: [start, end],
+        c1: d.stage === 2 ? d.preview || cursor : c1,
+        c2: d.stage === 3 ? d.preview || cursor : c2,
+      };
+    }
+    const points = d.free ? d.points : [...d.points, d.preview || cursor];
+    return {
+      ...base,
+      kind: d.tool === "region" ? "region" : "line",
+      curve: "polyline",
+      points,
+    };
+  }
+  function finishDraft() {
+    if (!draft) return;
+    const d = draft;
+    let o = previewDraft();
+    if (["polyline", "region"].includes(d.tool))
+      o.points = d.free ? simplify(d.points, 0.8) : d.points;
+    if (d.tool === "freehand") o.points = simplify(d.points, 0.7);
+    if (d.tool === "line") o.points = [d.points[0], d.end || cursor];
+    if (
+      o.kind === "line" &&
+      (o.points.length < 2 || o.points.every((p) => dist(p, o.points[0]) < 1))
+    ) {
+      draft = null;
+      render();
+      return;
+    }
+    if (o.kind === "region" && o.points.length < 3) {
+      toast("A filled region needs at least three points");
+      return;
+    }
+    if (o.kind === "ellipse" && (o.rx < 1 || o.ry < 1)) {
+      draft = null;
+      render();
+      return;
+    }
+    o = makeObject(
+      o.kind,
+      { ...o, id: model.nextId, name: undefined },
+      d.under,
+    );
+    o.name = `${o.kind === "line" ? "String" : o.kind === "region" ? "Region" : "Node"} ${o.id}`;
+    o.z = zNext(d.under);
+    draft = null;
+    addObject(o);
+  }
+  function draftClick(p, e) {
+    if (!draft) {
+      beginDraft(tool, p, e.shiftKey);
+      if (tool === "bezier") draft.stage = 1;
+      return;
+    }
+    if (tool === "line") {
+      draft.end = p;
+      finishDraft();
+      return;
+    }
+    if (tool === "bezier") {
+      if (draft.stage === 1) {
+        draft.points.push(p);
+        draft.stage = 2;
+        toast("Place the first control point");
+      } else if (draft.stage === 2) {
+        draft.c1 = p;
+        draft.stage = 3;
+        toast("Place the second control point");
+      } else {
+        draft.c2 = p;
+        finishDraft();
+      }
+      return;
+    }
+    if (
+      tool === "region" &&
+      draft.points.length >= 3 &&
+      dist(p, draft.points[0]) < 10 / view.zoom
+    ) {
+      finishDraft();
+      return;
+    }
+    if (dist(p, draft.points.at(-1)) > 1) draft.points.push(p);
+  }
+  function startMove(p) {
+    interaction = {
+      type: "move",
+      start: p,
+      before: snapshot(),
+      selection: [...selected],
+      original: clone(selectedObjects()),
+    };
+  }
+  function pointerDown(e) {
+    if (e.button === 2) return;
+    e.preventDefault();
+    if (textTarget) finishText();
+    canvas.focus({ preventScroll: true });
+    cursor = toWorld(e, true);
+    const p = cursor;
+    canvas.setPointerCapture(e.pointerId);
+    if (e.button === 1 || space || e.altKey) {
+      interaction = {
+        type: "pan",
+        start: { x: e.clientX, y: e.clientY },
+        view: { ...view },
+      };
+      canvas.style.cursor = "grabbing";
+      return;
+    }
+    if (["select", "lasso"].includes(tool)) {
+      const handle = handleHit(p);
+      if (handle) {
+        interaction = {
+          type: "handle",
+          key: handle.key,
+          id: [...selected][0],
+          before: snapshot(),
+          selection: [...selected],
+        };
+        return;
+      }
+      const hit = hitTest(p);
+      if (hit) {
+        if (e.shiftKey) {
+          if (selected.has(hit.id)) selected.delete(hit.id);
+          else selected.add(hit.id);
+        } else if (!selected.has(hit.id)) {
+          selected = new Set([hit.id]);
+          editPoints = false;
+        }
+        if (selected.has(hit.id)) startMove(p);
+        render();
+        updateInspector();
+        return;
+      }
+      if (!e.shiftKey) selected.clear();
+      interaction = {
+        type: tool === "lasso" ? "lasso" : "marquee",
+        start: p,
+        points: [p],
+        append: e.shiftKey,
+      };
+      editPoints = false;
+      render();
+      updateInspector();
+      return;
+    }
+    if (tool === "crossing") {
+      const c = [...crossings].sort((a, b) => dist(a.p, p) - dist(b.p, p))[0];
+      if (c && dist(c.p, p) < 16 / view.zoom) swapCrossing(c);
+      else toast("Click where two strings cross");
+      return;
+    }
+    if (tool === "fill") {
+      fillAt(p);
+      return;
+    }
+    if (tool === "text") {
+      startText(p);
+      return;
+    }
+    if (["polyline", "bezier"].includes(tool)) {
+      const starting = tool === "bezier" && !draft;
+      draftClick(p, e);
+      if (starting) interaction = { type: "bezier-chord", start: p };
+      render();
+      return;
+    }
+    if (tool === "region" && draft) {
+      draftClick(p, e);
+      render();
+      return;
+    }
+    if (tool === "line" && draft) {
+      draftClick(p, e);
+      render();
+      return;
+    }
+    beginDraft(tool, p, e.shiftKey);
+    interaction = { type: "draw", start: p, points: [p] };
+    render();
+  }
+  function pointerMove(e) {
+    cursor = toWorld(
+      e,
+      interaction?.type !== "pan" && tool !== "freehand" && tool !== "lasso",
+    );
+    $("coordinates").textContent =
+      `${Math.round(cursor.x)}, ${Math.round(cursor.y)}`;
+    if (draft) {
+      draft.preview = cursor;
+      draft.end = cursor;
+    }
+    if (!interaction) {
+      if (["select", "lasso"].includes(tool))
+        canvas.style.cursor = handleHit(cursor)
+          ? "crosshair"
+          : hitTest(cursor)
+            ? "move"
+            : "default";
+      if (draft) requestRender();
+      return;
+    }
+    const d = interaction;
+    if (d.type === "pan") {
+      view.x = d.view.x - (e.clientX - d.start.x) / view.zoom;
+      view.y = d.view.y - (e.clientY - d.start.y) / view.zoom;
+      requestRender();
+      return;
+    }
+    if (d.type === "move") {
+      const delta = sub(cursor, d.start);
+      for (const original of d.original) {
+        const o = model.objects.find((n) => n.id === original.id);
+        Object.assign(o, clone(original));
+        moveObject(o, delta.x, delta.y);
+      }
+      requestRender();
+      return;
+    }
+    if (d.type === "handle") {
+      const o = model.objects.find((n) => n.id === d.id);
+      if (d.key === "c1" || d.key === "c2") o[d.key] = { ...cursor };
+      else if (d.key === "start") o.points[0] = { ...cursor };
+      else if (d.key === "end") o.points[1] = { ...cursor };
+      else if (d.key === "rx") o.rx = Math.max(2, Math.abs(cursor.x - o.x));
+      else if (d.key === "ry") o.ry = Math.max(2, Math.abs(cursor.y - o.y));
+      else o.points[d.key] = { ...cursor };
+      requestRender();
+      return;
+    }
+    if (d.type === "lasso") {
+      if (dist(d.points.at(-1), cursor) > 2 / view.zoom)
+        d.points.push({ ...cursor });
+      requestRender();
+      return;
+    }
+    if (d.type === "draw" && draft) {
+      if (
+        ["freehand", "region"].includes(draft.tool) &&
+        dist(draft.points.at(-1), cursor) > 1.5 / view.zoom
+      ) {
+        draft.points.push({ ...cursor });
+        draft.free = true;
+      }
+      requestRender();
+      return;
+    }
+    requestRender();
+  }
+  function pointerUp(e) {
+    if (!interaction) return;
+    cursor = toWorld(
+      e,
+      $("snap").checked && tool !== "freehand" && tool !== "lasso",
+    );
+    const d = interaction;
+    interaction = null;
+    if (canvas.hasPointerCapture(e.pointerId))
+      canvas.releasePointerCapture(e.pointerId);
+    if (["move", "handle"].includes(d.type)) {
+      if (snapshot() !== d.before) {
+        pushHistory(d.before);
+        finishChange();
+      } else {
+        render();
+        updateInspector();
+      }
+      return;
+    }
+    if (d.type === "marquee") {
+      if (dist(d.start, cursor) > 3 / view.zoom)
+        selectionPolygon(rectanglePoints(d.start, cursor), d.append);
+      else {
+        render();
+        updateInspector();
+      }
+      return;
+    }
+    if (d.type === "lasso") {
+      if (d.points.length > 2) selectionPolygon(d.points, d.append);
+      else render();
+      return;
+    }
+    if (d.type === "bezier-chord") {
+      if (draft && dist(d.start, cursor) > 3 / view.zoom) {
+        draft.points.push({ ...cursor });
+        draft.stage = 2;
+        toast("Place the first control point");
+      }
+      render();
+      return;
+    }
+    if (d.type === "draw") {
+      if (!draft) return;
+      draft.end = cursor;
+      const moved = dist(d.start, cursor) > 3 / view.zoom;
+      if (tool === "region" && !moved && !draft.free) {
+        draft.points = [d.start];
+        draft.free = false;
+        render();
+        return;
+      }
+      if (tool === "line" && !moved) {
+        render();
+        return;
+      }
+      finishDraft();
+      return;
+    }
+    if (d.type === "pan") {
+      canvas.style.cursor = space ? "grab" : "default";
+      render();
+    }
+  }
+  function doubleClick(e) {
+    e.preventDefault();
+    if (["polyline", "region"].includes(tool) && draft) {
+      finishDraft();
+      return;
+    }
+    if (!["select", "lasso"].includes(tool)) return;
+    const hit = hitTest(toWorld(e));
+    if (!hit) return;
+    selected = new Set([hit.id]);
+    if (["text", "ellipse"].includes(hit.kind))
+      startText({ x: hit.x, y: hit.y }, hit);
+    else {
+      editPoints = true;
+      render();
+      updateInspector();
+      toast("Drag the points to reshape");
+    }
+  }
+  function startText(p, object = null) {
+    const editor = $("text-editor");
+    textTarget = { p, object };
+    const screen = toScreen(p);
+    editor.style.left = `${Math.max(0, Math.min(dimensions.w - 180, screen.x))}px`;
+    editor.style.top = `${Math.max(0, Math.min(dimensions.h - 40, screen.y - 15))}px`;
+    editor.value = object?.text || "";
+    editor.hidden = false;
+    editor.focus();
+    editor.select();
+  }
+  function finishText(cancel = false) {
+    if (!textTarget) return;
+    const target = textTarget,
+      value = $("text-editor").value;
+    textTarget = null;
+    $("text-editor").hidden = true;
+    if (cancel) return;
+    if (target.object) {
+      if (value !== target.object.text)
+        change(() => (target.object.text = value));
+    } else if (value.trim())
+      addObject(
+        makeObject("text", {
+          x: target.p.x,
+          y: target.p.y,
+          text: value,
+          fontSize: 18,
+        }),
+      );
+  }
+
+  // Build a planar graph of string segments and walk bounded faces for the fill bucket.
+  // These polygons live behind strings; crossing masks never touch their textures.
+  function enclosedFace(p) {
+    const segments = [];
+    for (const o of model.objects.filter((o) => o.kind === "line")) {
+      const pts = simplify(sampleBase(o), 0.5);
+      for (let i = 1; i < pts.length; i++)
+        if (dist(pts[i - 1], pts[i]) > 0.5)
+          segments.push({ a: pts[i - 1], b: pts[i], cuts: [0, 1] });
+      if (pts.length > 3 && dist(pts[0], pts.at(-1)) < 10)
+        segments.push({ a: pts.at(-1), b: pts[0], cuts: [0, 1] });
+    }
+    if (segments.length > 2200) {
+      toast("This drawing is large; use the filled-region tool to shade it");
+      return null;
+    }
+    for (let i = 0; i < segments.length; i++)
+      for (let j = i + 1; j < segments.length; j++) {
+        const a = segments[i],
+          b = segments[j],
+          h = segmentIntersection(a.a, a.b, b.a, b.b);
+        if (h) {
+          a.cuts.push(h.t);
+          b.cuts.push(h.u);
+        }
+      }
+    const nodes = [],
+      nodeMap = new Map(),
+      edges = new Set();
+    const node = (p) => {
+      const key = `${Math.round(p.x * 2)},${Math.round(p.y * 2)}`;
+      if (!nodeMap.has(key)) {
+        nodeMap.set(key, nodes.length);
+        nodes.push({ p, neighbors: [] });
+      }
+      return nodeMap.get(key);
+    };
+    for (const seg of segments) {
+      const ts = [
+        ...new Set(seg.cuts.map((t) => Math.round(t * 1e8) / 1e8)),
+      ].sort((a, b) => a - b);
+      for (let i = 1; i < ts.length; i++) {
+        const a = node(lerp(seg.a, seg.b, ts[i - 1])),
+          b = node(lerp(seg.a, seg.b, ts[i]));
+        if (a === b) continue;
+        const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+        if (edges.has(key)) continue;
+        edges.add(key);
+        nodes[a].neighbors.push(b);
+        nodes[b].neighbors.push(a);
+      }
+    }
+    nodes.forEach((n) =>
+      n.neighbors.sort(
+        (a, b) =>
+          Math.atan2(nodes[a].p.y - n.p.y, nodes[a].p.x - n.p.x) -
+          Math.atan2(nodes[b].p.y - n.p.y, nodes[b].p.x - n.p.x),
+      ),
+    );
+    const visited = new Set(),
+      faces = [];
+    for (let start = 0; start < nodes.length; start++)
+      for (const neighbor of nodes[start].neighbors) {
+        if (visited.has(`${start}:${neighbor}`)) continue;
+        let a = start,
+          b = neighbor,
+          poly = [],
+          closed = false;
+        for (let step = 0; step < edges.size * 2 + 1; step++) {
+          const key = `${a}:${b}`;
+          if (visited.has(key)) {
+            closed = a === start && b === neighbor;
+            break;
+          }
+          visited.add(key);
+          poly.push(nodes[a].p);
+          const ns = nodes[b].neighbors,
+            index = ns.indexOf(a),
+            next = ns[(index + ns.length - 1) % ns.length];
+          a = b;
+          b = next;
+        }
+        if (!closed || poly.length < 3) continue;
+        const area =
+          poly.reduce(
+            (sum, a, i) => sum + cross(a, poly[(i + 1) % poly.length]),
+            0,
+          ) / 2;
+        if (area > 4 && pointInPolygon(p, poly)) faces.push({ poly, area });
+      }
+    faces.sort((a, b) => a.area - b.area);
+    return faces[0]?.poly || null;
+  }
+  function fillAt(p) {
+    const existing = [...model.objects]
+      .filter((o) => o.kind === "region" || o.kind === "ellipse")
+      .sort((a, b) => b.z - a.z)
+      .find((o) =>
+        o.kind === "region"
+          ? pointInPolygon(p, o.points)
+          : ((p.x - o.x) / o.rx) ** 2 + ((p.y - o.y) / o.ry) ** 2 <= 1,
+      );
+    if (existing) {
+      change(() => {
+        existing.pattern = defaults.pattern;
+        existing.fillColor = defaults.fillColor;
+        existing.opacity = defaults.opacity;
+        selected = new Set([existing.id]);
+      });
+      return;
+    }
+    const face = enclosedFace(p);
+    if (!face) {
+      toast("No closed area here. Close the outline or draw a filled region.");
+      return;
+    }
+    addObject(makeObject("region", { points: face, width: 0 }));
+    toast("Enclosed area filled");
+  }
+  const templateNames = {
+    cup: "Cup",
+    cap: "Cap",
+    crossing: "Crossing",
+    braid: "Braid",
+    sheet: "2D surface",
+    box: "3D block",
+    identity: "Identity",
+    merge: "Merge",
+    split: "Split",
+    loop: "Loop",
+    node: "Node",
+    sheetSide: "Side surface",
+  };
+  function templateObjects(type) {
+    const line = (points, extra = {}) => ({
+      kind: "line",
+      points,
+      curve: "polyline",
+      pattern: "none",
+      ...extra,
+    });
+    const curve = (a, b, c1, c2) => line([a, b], { curve: "bezier", c1, c2 });
+    const region = (points, extra = {}) => ({
+      kind: "region",
+      points,
+      pattern: "hatch",
+      color: "#7c9885",
+      opacity: 0.5,
+      width: 1.4,
+      ...extra,
+    });
+    const p = (x, y) => ({ x, y });
+    switch (type) {
+      case "cup":
+        return [curve(p(-55, -35), p(55, -35), p(-55, 65), p(55, 65))];
+      case "cap":
+        return [curve(p(-55, 35), p(55, 35), p(-55, -65), p(55, -65))];
+      case "identity":
+        return [line([p(-30, -55), p(-30, 55)]), line([p(30, -55), p(30, 55)])];
+      case "crossing":
+        return [line([p(-50, -50), p(50, 50)]), line([p(50, -50), p(-50, 50)])];
+      case "braid":
+        return [
+          curve(p(-40, -65), p(40, 65), p(80, -20), p(-80, 20)),
+          curve(p(40, -65), p(-40, 65), p(-80, -20), p(80, 20)),
+        ];
+      case "sheet":
+        return [region([p(-65, -20), p(25, -50), p(65, 20), p(-25, 50)])];
+      case "sheetSide":
+        return [
+          region([p(-65, 0), p(35, -35), p(65, 0), p(-35, 35)]),
+          line([p(-65, 0), p(-65, 12), p(-35, 47), p(65, 12), p(65, 0)], {
+            width: 1.3,
+            color: "#7c9885",
+          }),
+          line([p(-35, 35), p(-35, 47)], { width: 1.3, color: "#7c9885" }),
+        ];
+      case "box":
+        return [
+          region([p(-50, -25), p(15, -50), p(55, -20), p(-10, 5)], {
+            opacity: 0.3,
+          }),
+          region([p(-50, -25), p(-10, 5), p(-10, 55), p(-50, 25)], {
+            pattern: "backhatch",
+            opacity: 0.6,
+          }),
+          region([p(-10, 5), p(55, -20), p(55, 30), p(-10, 55)], {
+            opacity: 0.5,
+          }),
+        ];
+      case "merge":
+        return [
+          curve(p(-45, -55), p(0, 0), p(-45, -20), p(0, -30)),
+          curve(p(45, -55), p(0, 0), p(45, -20), p(0, -30)),
+          line([p(0, 0), p(0, 55)]),
+          {
+            kind: "ellipse",
+            x: 0,
+            y: 0,
+            rx: 4,
+            ry: 4,
+            width: 0,
+            pattern: "solid",
+            opacity: 1,
+          },
+        ];
+      case "split":
+        return [
+          curve(p(0, 0), p(-45, 55), p(0, 30), p(-45, 20)),
+          curve(p(0, 0), p(45, 55), p(0, 30), p(45, 20)),
+          line([p(0, -55), p(0, 0)]),
+          {
+            kind: "ellipse",
+            x: 0,
+            y: 0,
+            rx: 4,
+            ry: 4,
+            width: 0,
+            pattern: "solid",
+            opacity: 1,
+          },
+        ];
+      case "loop":
+        return [
+          curve(p(0, -45), p(0, 45), p(-85, -45), p(-85, 45)),
+          curve(p(0, 45), p(0, -45), p(85, 45), p(85, -45)),
+        ];
+      case "node":
+        return [
+          line([p(0, -60), p(0, -24)]),
+          line([p(0, 24), p(0, 60)]),
+          {
+            kind: "ellipse",
+            x: 0,
+            y: 0,
+            rx: 30,
+            ry: 24,
+            pattern: "solid",
+            opacity: 0.12,
+            text: "f",
+            fontSize: 22,
+            color: "#7c9885",
+          },
+        ];
+      default:
+        return [];
+    }
+  }
+  function placeTemplate(type, p) {
+    change(() => {
+      const group = templateObjects(type).map((item) => {
+        const o = makeObject(item.kind, { ...item, name: templateNames[type] });
+        moveObject(o, p.x, p.y);
+        model.objects.push(o);
+        return o;
+      });
+      selected = new Set(group.map((o) => o.id));
+    });
+    setTool("select");
+    toast(`${templateNames[type]} added · drag to move`);
+  }
+  function buildTemplates() {
+    for (const [type, name] of Object.entries(templateNames)) {
+      const button = document.createElement("button");
+      button.className = "template-card";
+      button.draggable = true;
+      button.title = `Drag ${name} onto the canvas, or click to insert`;
+      const thumb = svg("svg", {
+        viewBox: "-80 -80 160 160",
+        "aria-hidden": "true",
+      });
+      const defs = svg("defs", {}, thumb);
+      templateObjects(type).forEach((item, i) =>
+        renderObject(
+          { id: `thumb-${type}-${i}`, ...clone(defaults), ...item },
+          thumb,
+          defs,
+          false,
+        ),
+      );
+      const label = document.createElement("span");
+      label.textContent = name;
+      button.append(thumb, label);
+      button.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("application/x-string-template", type);
+        e.dataTransfer.setData("text/plain", type);
+        e.dataTransfer.effectAllowed = "copy";
+      });
+      button.addEventListener("click", () =>
+        placeTemplate(type, {
+          x: view.x + dimensions.w / view.zoom / 2,
+          y: view.y + dimensions.h / view.zoom / 2,
+        }),
+      );
+      $("templates").append(button);
+    }
+  }
+  function loadDemo() {
+    cancelDrawing();
+    change(() => {
+      model.objects = [];
+      model.overrides = {};
+      const add = (kind, extra) => {
+        const o = makeObject(kind, {
+          color: INK,
+          fillColor: "#7c9885",
+          width: 2,
+          style: "solid",
+          arrows: "none",
+          gap: 7,
+          pattern: "none",
+          opacity: 0.45,
+          ...extra,
+        });
+        model.objects.push(o);
+        return o;
+      };
+      add("region", {
+        points: [
+          { x: 290, y: 245 },
+          { x: 540, y: 160 },
+          { x: 705, y: 350 },
+          { x: 455, y: 435 },
+        ],
+        pattern: "hatch",
+        color: "#7c9885",
+        width: 1.3,
+        opacity: 0.5,
+        name: "Shaded surface",
+      });
+      add("line", {
+        points: [
+          { x: 360, y: 105 },
+          { x: 630, y: 515 },
+        ],
+        curve: "bezier",
+        c1: { x: 330, y: 320 },
+        c2: { x: 680, y: 290 },
+        name: "String A",
+        width: 2.5,
+      });
+      add("line", {
+        points: [
+          { x: 640, y: 95 },
+          { x: 350, y: 515 },
+        ],
+        curve: "bezier",
+        c1: { x: 665, y: 335 },
+        c2: { x: 340, y: 275 },
+        name: "String B",
+        color: "#526f5c",
+        width: 2.5,
+        arrows: "middle",
+      });
+      add("text", { x: 318, y: 93, text: "A", fontSize: 20, name: "Label A" });
+      add("text", { x: 682, y: 87, text: "B", fontSize: 20, name: "Label B" });
+      selected.clear();
+    });
+    setTool("select");
+    fit();
+  }
+
+  function exportSVG() {
+    const root = svg("svg", { xmlns: NS }),
+      defs = svg("defs", {}, root);
+    const b = bounds(),
+      pad = Math.max(25, ...model.objects.map((o) => o.width + o.gap));
+    root.setAttribute(
+      "viewBox",
+      `${b.x - pad} ${b.y - pad} ${b.w + pad * 2} ${b.h + pad * 2}`,
+    );
+    root.setAttribute("width", Math.ceil(b.w + pad * 2));
+    root.setAttribute("height", Math.ceil(b.h + pad * 2));
+    for (const kind of ["region", "line", "ellipse", "text"])
+      for (const o of model.objects
+        .filter((o) => o.kind === kind)
+        .sort((a, b) => a.z - b.z))
+        renderObject(o, root, defs);
+    return new XMLSerializer().serializeToString(root);
+  }
+  function download(data, type, name) {
+    const blob = data instanceof Blob ? data : new Blob([data], { type });
+    const url = URL.createObjectURL(blob),
+      link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  async function exportFile(format) {
+    $("export-dialog").close();
+    if (format === "json") {
+      download(
+        JSON.stringify(model, null, 2),
+        "application/json",
+        "string-diagram.json",
+      );
+      toast("Project saved");
+      return;
+    }
+    if (format === "tikz") {
+      download(generateTikZ(), "text/plain", "string-diagram.tex");
+      return;
+    }
+    const source = exportSVG();
+    if (format === "svg") {
+      download(source, "image/svg+xml", "string-diagram.svg");
+      return;
+    }
+    const url = URL.createObjectURL(
+      new Blob([source], { type: "image/svg+xml" }),
+    );
+    try {
+      const image = new Image();
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = url;
+      });
+      const output = document.createElement("canvas"),
+        scale = Math.min(2, 4096 / Math.max(image.width, image.height));
+      output.width = Math.max(1, Math.ceil(image.width * scale));
+      output.height = Math.max(1, Math.ceil(image.height * scale));
+      output
+        .getContext("2d")
+        .drawImage(image, 0, 0, output.width, output.height);
+      const blob = await new Promise((resolve) =>
+        output.toBlob(resolve, "image/png"),
+      );
+      if (!blob) throw new Error("PNG encoding failed");
+      download(blob, "image/png", "string-diagram.png");
+    } catch {
+      toast("PNG export failed. Try SVG instead.");
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+  const tikzCoord = (p) => `(${fmt(p.x * 0.75)},${fmt(p.y * 0.75)})`;
+  function tikzPath(o) {
+    if (o.curve === "bezier" && o.style !== "squiggly")
+      return `${tikzCoord(o.points[0])} .. controls ${tikzCoord(o.c1)} and ${tikzCoord(o.c2)} .. ${tikzCoord(o.points[1])}`;
+    const pts =
+      o.kind === "line"
+        ? (geometry.get(o.id) || lineGeometry(o)).points
+        : o.points;
+    return pts.map(tikzCoord).join(" -- ");
+  }
+  function texLabel(text) {
+    if (text.includes("$") || /\\[a-zA-Z]/.test(text)) return text;
+    return text.replace(
+      /[\\{}%&#_^~]/g,
+      (c) =>
+        ({
+          "\\": "\\textbackslash{}",
+          "{": "\\{",
+          "}": "\\}",
+          "%": "\\%",
+          "&": "\\&",
+          "#": "\\#",
+          _: "\\_",
+          "^": "\\textasciicircum{}",
+          "~": "\\textasciitilde{}",
+        })[c],
+    );
+  }
+  function generateTikZ() {
+    const codes = [
+      "% String diagram · add \\usetikzlibrary{patterns,arrows.meta} to your preamble.",
+    ];
+    for (const o of model.objects)
+      codes.push(
+        `\\definecolor{string${o.id}}{HTML}{${o.color.slice(1).toUpperCase()}}`,
+        `\\definecolor{stringfill${o.id}}{HTML}{${(o.fillColor || o.color).slice(1).toUpperCase()}}`,
+      );
+    codes.push("\\begin{tikzpicture}[x=1pt,y=-1pt]");
+    const patterns = {
+      hatch: "north east lines",
+      backhatch: "north west lines",
+      crosshatch: "crosshatch",
+      dots: "dots",
+      horizontal: "horizontal lines",
+    };
+    const b = bounds(),
+      pad = 100;
+    for (const kind of ["region", "line", "ellipse", "text"])
+      for (const o of model.objects
+        .filter((o) => o.kind === kind)
+        .sort((a, b) => a.z - b.z)) {
+        codes.push(`% string-id: ${o.id}; name: ${encodeURIComponent(o.name)}`);
+        if (o.kind === "line") {
+          const holes = crossings.filter(
+            (c) => c.lower === o.id && c.r > o.width / 2,
+          );
+          if (holes.length) {
+            codes.push("\\begin{scope}[even odd rule]");
+            // Intersect separate complements so overlapping gaps stay clipped.
+            for (const c of holes)
+              codes.push(
+                `\\clip ${tikzCoord({ x: b.x - pad, y: b.y - pad })} rectangle ${tikzCoord({ x: b.x + b.w + pad, y: b.y + b.h + pad })} ${tikzCoord(c.p)} circle (${fmt(c.r * 0.75)}pt);`,
+              );
+          }
+          const opts = [
+            `draw=string${o.id}`,
+            `line width=${fmt(o.width * 0.75)}pt`,
+            "line cap=round",
+            "line join=round",
+          ];
+          if (o.style === "dashed")
+            opts.push(
+              `dash pattern=on ${fmt((o.width * 4 + 4) * 0.75)}pt off ${fmt((o.width * 2 + 3) * 0.75)}pt`,
+            );
+          if (o.style === "dotted")
+            opts.push(
+              `dash pattern=on 0.01pt off ${fmt((o.width * 2 + 4) * 0.75)}pt`,
+            );
+          if (o.arrows === "end") opts.push("-{Stealth}");
+          if (o.arrows === "start") opts.push("{Stealth}-");
+          if (o.arrows === "both") opts.push("{Stealth}-{Stealth}");
+          codes.push(`\\draw[${opts.join(", ")}] ${tikzPath(o)};`);
+          if (o.arrows === "middle") {
+            const { p, x, y } = arrowPath(
+              (geometry.get(o.id) || lineGeometry(o)).points,
+              "middle",
+            );
+            const size = Math.max(7, o.width * 3);
+            codes.push(
+              `% string-arrow\n\\draw[draw=string${o.id}, line width=${fmt(o.width * 0.75)}pt, line cap=round, line join=round] ${tikzCoord({ x: p.x - x * size - y * size * 0.45, y: p.y - y * size + x * size * 0.45 })} -- ${tikzCoord(p)} -- ${tikzCoord({ x: p.x - x * size + y * size * 0.45, y: p.y - y * size - x * size * 0.45 })};`,
+            );
+          }
+          if (holes.length) codes.push("\\end{scope}");
+        } else if (o.kind === "text") {
+          codes.push(
+            `\\node[text=string${o.id}, font=\\fontsize{${fmt(o.fontSize * 0.75)}pt}{${fmt(o.fontSize * 0.9)}pt}\\selectfont] at ${tikzCoord(o)} {${texLabel(o.text)}};`,
+          );
+        } else {
+          const opts = [
+            `draw=string${o.id}`,
+            `line width=${fmt(o.width * 0.75)}pt`,
+            "even odd rule",
+          ];
+          if (o.width === 0) opts[0] = "draw=none";
+          if (o.pattern === "solid")
+            opts.push(`fill=stringfill${o.id}`, `fill opacity=${o.opacity}`);
+          else if (o.pattern !== "none")
+            opts.push(
+              `pattern=${patterns[o.pattern]}`,
+              `pattern color=stringfill${o.id}`,
+              `fill opacity=${o.opacity}`,
+            );
+          codes.push(
+            `\\path[${opts.join(", ")}] ${o.kind === "region" ? tikzPath(o) + " -- cycle" : `${tikzCoord(o)} ellipse (${fmt(o.rx * 0.75)}pt and ${fmt(o.ry * 0.75)}pt)`};`,
+          );
+          if (o.kind === "ellipse" && o.text)
+            codes.push(
+              `% string-node-label\n\\node[text=string${o.id}, font=\\fontsize{${fmt((o.fontSize || 18) * 0.75)}pt}{18pt}\\selectfont] at ${tikzCoord(o)} {${texLabel(o.text)}};`,
+            );
+        }
+      }
+    codes.push(
+      "% Crossing order and per-string settings for round-trip editing.",
+    );
+    for (const o of model.objects)
+      codes.push(
+        `% string-settings: ${o.id} ${JSON.stringify({ gap: o.gap, z: o.z, style: o.style, arrows: o.arrows, pattern: o.pattern, opacity: o.opacity })}`,
+      );
+    codes.push(`% string-overrides: ${JSON.stringify(model.overrides)}`);
+    codes.push("\\end{tikzpicture}");
+    return codes.join("\n");
+  }
+  function updateCode() {
+    if (!codeDirty) $("tikz").value = generateTikZ();
+  }
+
+  // Accept the editor's output and the original editor's ordinary TikZ paths.
+  // Unrecognised commands are reported; no commands are evaluated as code.
+  function parseTikZ(code) {
+    const colors = {
+      black: INK,
+      white: "#ffffff",
+      red: "#b95650",
+      blue: "#587c9b",
+      green: "#7c9885",
+      gray: "#837c73",
+      grey: "#837c73",
+    };
+    for (const match of code.matchAll(
+      /\\definecolor\{([^}]+)\}\{HTML\}\{([\da-f]{6})\}/gi,
+    ))
+      colors[match[1]] = "#" + match[2].toLowerCase();
+    const own = /\\begin\{tikzpicture\}\[x=1pt,y=-1pt\]/.test(code);
+    const factor = own ? 1 / 0.75 : 50,
+      flip = own ? 1 : -1;
+    const point = (x, y) => ({
+      x: Number(x) * factor,
+      y: Number(y) * factor * flip,
+    });
+    const color = (value) => {
+      const v = (value || "black").trim();
+      if (colors[v]) return colors[v];
+      if (/^#[\da-f]{6}$/i.test(v)) return v;
+      const mix = v.match(/^(\w+)!(\d+)$/);
+      if (mix && colors[mix[1]]) {
+        const rgb = colors[mix[1]]
+          .slice(1)
+          .match(/../g)
+          .map((h) =>
+            Math.round(
+              (parseInt(h, 16) * Number(mix[2])) / 100 +
+                255 * (1 - Number(mix[2]) / 100),
+            ),
+          );
+        return "#" + rgb.map((n) => n.toString(16).padStart(2, "0")).join("");
+      }
+      return INK;
+    };
+    const result = { version: 2, objects: [], overrides: {}, nextId: 1 },
+      dropped = [];
+    const settings = new Map();
+    for (const m of code.matchAll(/^% string-settings: (\d+) (.+)$/gm)) {
+      try {
+        settings.set(+m[1], JSON.parse(m[2]));
+      } catch {}
+    }
+    const override = code.match(/^% string-overrides: (.+)$/m);
+    if (override) {
+      try {
+        result.overrides = JSON.parse(override[1]);
+      } catch {}
+    }
+    let idHint = null,
+      nameHint = null,
+      labelNext = false,
+      skipNext = false;
+    let buffer = "";
+    const commands = [];
+    for (const raw of code.split("\n")) {
+      const line = raw.trim();
+      if (line.startsWith("%")) {
+        commands.push(line);
+        continue;
+      }
+      if (!line) continue;
+      if (/^\\(?:begin|end|definecolor|usetikzlibrary)/.test(line)) {
+        continue;
+      }
+      buffer += " " + line;
+      while (buffer.includes(";")) {
+        const index = buffer.indexOf(";");
+        commands.push(buffer.slice(0, index).trim());
+        buffer = buffer.slice(index + 1);
+      }
+    }
+    if (buffer.trim()) dropped.push(buffer.trim());
+    for (const command of commands) {
+      if (command.startsWith("% string-id:")) {
+        const m = command.match(/string-id: (\d+); name: (.*)/);
+        if (m) {
+          idHint = +m[1];
+          try {
+            nameHint = decodeURIComponent(m[2]);
+          } catch {
+            nameHint = m[2];
+          }
+        }
+        continue;
+      }
+      if (command === "% string-node-label") {
+        labelNext = true;
+        continue;
+      }
+      if (command === "% string-arrow") {
+        skipNext = true;
+        continue;
+      }
+      if (command.startsWith("%")) continue;
+      if (skipNext) {
+        skipNext = false;
+        continue;
+      }
+      if (command.startsWith("\\clip")) continue;
+      const header = command.match(
+        /^\\(draw|path|filldraw|fill|node)\s*(?:\[([^\]]*)\])?\s*(.*)$/s,
+      );
+      if (!header) {
+        dropped.push(command);
+        continue;
+      }
+      const [, verb, opts = "", body] = header;
+      const numberOpt = (name, fallback) => {
+        const m = opts.match(new RegExp(name + "\\s*=\\s*([\\d.]+)"));
+        return m ? +m[1] : fallback;
+      };
+      const getOpt = (name) =>
+        opts.match(new RegExp("(?:^|,\\s*)" + name + "\\s*=\\s*([^,]+)"))?.[1];
+      const stroke = color(
+        getOpt("draw") || getOpt("text") || opts.split(",")[0],
+      );
+      const width = numberOpt("line\\s*width", 0.8) / 0.75;
+      const patternName = getOpt("pattern");
+      const pattern =
+        {
+          "north east lines": "hatch",
+          "north west lines": "backhatch",
+          crosshatch: "crosshatch",
+          "crosshatch dots": "dots",
+          dots: "dots",
+          "horizontal lines": "horizontal",
+        }[patternName] ||
+        (getOpt("fill") || verb === "fill" ? "solid" : "none");
+      const opacity = numberOpt("fill\\s*opacity", 1);
+      const id = idHint || result.nextId;
+      idHint = null;
+      result.nextId = Math.max(result.nextId, id + 1);
+      const base = {
+        id,
+        name: nameHint || `Object ${id}`,
+        ...clone(defaults),
+        color: stroke,
+        fillColor: color(getOpt("pattern color") || getOpt("fill") || stroke),
+        width: getOpt("draw") === "none" ? 0 : width,
+        pattern,
+        opacity,
+        z: result.objects.length + 1,
+      };
+      nameHint = null;
+      const coords = [
+        ...body.matchAll(/\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/g),
+      ].map((m) => point(m[1], m[2]));
+      if (!coords.length) {
+        dropped.push(command);
+        continue;
+      }
+      let o;
+      if (verb === "node") {
+        const text = body.match(/\{(.*)\}\s*$/s)?.[1] ?? "",
+          fontSize = numberOpt("unlikely", 18);
+        const fs = opts.match(/fontsize\{([\d.]+)pt\}/);
+        if (labelNext) {
+          const last = result.objects.at(-1);
+          if (last?.kind === "ellipse") {
+            last.text = text;
+            last.fontSize = fs ? +fs[1] / 0.75 : 18;
+          }
+          labelNext = false;
+          continue;
+        }
+        if (
+          /(?:circle|ellipse|rectangle)/.test(opts) &&
+          /\bdraw\b/.test(opts)
+        ) {
+          o = {
+            ...base,
+            kind: "ellipse",
+            x: coords[0].x,
+            y: coords[0].y,
+            rx: Math.max(18, text.length * 7),
+            ry: 18,
+            text,
+            fontSize: fs ? +fs[1] / 0.75 : fontSize,
+          };
+          if (/rectangle/.test(opts)) {
+            o.kind = "region";
+            o.points = rectanglePoints(
+              { x: o.x - o.rx, y: o.y - o.ry },
+              { x: o.x + o.rx, y: o.y + o.ry },
+            );
+            const label = {
+              ...base,
+              id: result.nextId++,
+              kind: "text",
+              x: o.x,
+              y: o.y,
+              text,
+              fontSize: fs ? +fs[1] / 0.75 : 18,
+              name: "Node label",
+            };
+            result.objects.push(label);
+          }
+        } else
+          o = {
+            ...base,
+            kind: "text",
+            x: coords[0].x,
+            y: coords[0].y,
+            text: text.replace(/\\([%&#_{}])/g, "$1"),
+            fontSize: fs ? +fs[1] / 0.75 : fontSize,
+          };
+      } else if (/\b(?:ellipse|circle)\b/.test(body)) {
+        const ellipse = body.match(
+          /ellipse\s*\(([\d.]+)(pt|cm)?\s+and\s+([\d.]+)(pt|cm)?\)/,
+        );
+        const circle = body.match(/circle\s*\(([\d.]+)(pt|cm)?\)/);
+        if (!ellipse && !circle) {
+          dropped.push(command);
+          continue;
+        }
+        const unit = (value, suffix) =>
+          +value * (suffix === "pt" ? 1 / 0.75 : 50);
+        o = {
+          ...base,
+          kind: "ellipse",
+          x: coords[0].x,
+          y: coords[0].y,
+          rx: ellipse
+            ? unit(ellipse[1], ellipse[2])
+            : unit(circle[1], circle[2]),
+          ry: ellipse
+            ? unit(ellipse[3], ellipse[4])
+            : unit(circle[1], circle[2]),
+        };
+        if (verb === "fill") {
+          o.width = 0;
+          o.pattern = "solid";
+        }
+      } else if (
+        /\bcycle\b/.test(body) ||
+        verb === "fill" ||
+        verb === "filldraw"
+      ) {
+        if (coords.length < 3) {
+          dropped.push(command);
+          continue;
+        }
+        o = { ...base, kind: "region", points: coords };
+        if (verb === "fill") o.width = 0;
+      } else if (coords.length >= 2) {
+        if (/\bwhite\b/.test(opts)) continue;
+        o = {
+          ...base,
+          kind: "line",
+          points: coords,
+          curve: "polyline",
+          style: /snake|decorate/.test(opts)
+            ? "squiggly"
+            : /dashed|dash pattern/.test(opts)
+              ? "dashed"
+              : "solid",
+          arrows: /Stealth\}-\{Stealth|<->/.test(opts)
+            ? "both"
+            : /-\{|->/.test(opts)
+              ? "end"
+              : /\}-|<-/.test(opts)
+                ? "start"
+                : "none",
+        };
+        if (/controls/.test(body) && coords.length === 4) {
+          o.points = [coords[0], coords[3]];
+          o.c1 = coords[1];
+          o.c2 = coords[2];
+          o.curve = "bezier";
+        } else if (/to\s*\[/.test(body) && coords.length === 2) {
+          const angles = body.match(/to\s*\[([^\]]*)\]/)[1];
+          const direction = Math.atan2(
+            coords[1].y - coords[0].y,
+            coords[1].x - coords[0].x,
+          );
+          const out = angles.match(/out\s*=\s*(-?[\d.]+)/),
+            input = angles.match(/in\s*=\s*(-?[\d.]+)/);
+          const a = out ? ((+out[1] * Math.PI) / 180) * flip : direction,
+            b = input
+              ? ((+input[1] * Math.PI) / 180) * flip
+              : direction + Math.PI,
+            len = dist(coords[0], coords[1]) / 3;
+          o.c1 = {
+            x: coords[0].x + Math.cos(a) * len,
+            y: coords[0].y + Math.sin(a) * len,
+          };
+          o.c2 = {
+            x: coords[1].x + Math.cos(b) * len,
+            y: coords[1].y + Math.sin(b) * len,
+          };
+          o.curve = "bezier";
+        }
+      } else {
+        dropped.push(command);
+        continue;
+      }
+      if (settings.has(o.id)) {
+        const metadata = settings.get(o.id);
+        for (const key of ["gap", "z"])
+          if (Number.isFinite(metadata[key])) o[key] = metadata[key];
+        if (
+          ["none", "start", "end", "both", "middle"].includes(metadata.arrows)
+        )
+          o.arrows = metadata.arrows;
+        if (o.kind === "line" && own)
+          o.style =
+            metadata.style === "squiggly"
+              ? "solid"
+              : ["solid", "dashed", "dotted"].includes(metadata.style)
+                ? metadata.style
+                : o.style;
+      }
+      result.objects.push(o);
+    }
+    return { model: result, dropped };
+  }
+
+  function validateProject(value) {
+    if (
+      !value ||
+      value.version !== 2 ||
+      !Array.isArray(value.objects) ||
+      value.objects.length > 5000
+    )
+      throw new Error("Choose a String Studio project (.json)");
+    const ids = new Set();
+    for (const o of value.objects) {
+      if (
+        !Number.isInteger(o.id) ||
+        ids.has(o.id) ||
+        !["line", "region", "ellipse", "text"].includes(o.kind)
+      )
+        throw new Error("Invalid object in project");
+      ids.add(o.id);
+      o.fillColor ??= o.color;
+      if (
+        !/^#[\da-f]{6}$/i.test(o.color) ||
+        !/^#[\da-f]{6}$/i.test(o.fillColor) ||
+        !Number.isFinite(o.width) ||
+        o.width < 0 ||
+        o.width > 100 ||
+        !Number.isFinite(o.gap) ||
+        o.gap < 0 ||
+        o.gap > 100 ||
+        !Number.isFinite(o.z) ||
+        !Number.isFinite(o.opacity) ||
+        o.opacity < 0 ||
+        o.opacity > 1 ||
+        ![
+          "none",
+          "solid",
+          "hatch",
+          "backhatch",
+          "crosshatch",
+          "dots",
+          "horizontal",
+        ].includes(o.pattern) ||
+        !["solid", "squiggly", "dashed", "dotted"].includes(o.style) ||
+        !["none", "end", "start", "both", "middle"].includes(o.arrows) ||
+        typeof o.name !== "string"
+      )
+        throw new Error("Invalid drawing settings");
+      const validPoint = (p) =>
+        p &&
+        Number.isFinite(p.x) &&
+        Number.isFinite(p.y) &&
+        Math.abs(p.x) < 100000 &&
+        Math.abs(p.y) < 100000;
+      if (
+        o.points &&
+        (!Array.isArray(o.points) ||
+          o.points.length > 20000 ||
+          !o.points.every(validPoint))
+      )
+        throw new Error("Invalid path points");
+      if (
+        o.kind === "line" &&
+        (!o.points ||
+          o.points.length < 2 ||
+          !["polyline", "bezier"].includes(o.curve))
+      )
+        throw new Error("Invalid string");
+      if (
+        o.kind === "line" &&
+        o.curve === "bezier" &&
+        (o.points.length !== 2 || !validPoint(o.c1) || !validPoint(o.c2))
+      )
+        throw new Error("Invalid curve");
+      if (o.kind === "region" && (!o.points || o.points.length < 3))
+        throw new Error("Invalid region");
+      if (["ellipse", "text"].includes(o.kind) && !validPoint(o))
+        throw new Error("Invalid position");
+      if (
+        o.kind === "ellipse" &&
+        (!Number.isFinite(o.rx) ||
+          !Number.isFinite(o.ry) ||
+          o.rx <= 0 ||
+          o.ry <= 0 ||
+          o.rx > 100000 ||
+          o.ry > 100000)
+      )
+        throw new Error("Invalid ellipse");
+      if (
+        o.kind === "text" &&
+        (typeof o.text !== "string" ||
+          !Number.isFinite(o.fontSize) ||
+          o.fontSize < 1 ||
+          o.fontSize > 1000)
+      )
+        throw new Error("Invalid label");
+    }
+    if (
+      !value.overrides ||
+      typeof value.overrides !== "object" ||
+      Array.isArray(value.overrides)
+    )
+      throw new Error("Invalid crossings");
+    for (const [key, upper] of Object.entries(value.overrides)) {
+      if (
+        !/^\d+:\d+:\d+$/.test(key) ||
+        !ids.has(upper) ||
+        !key
+          .split(":")
+          .slice(0, 2)
+          .every((id) => ids.has(+id))
+      )
+        throw new Error("Invalid crossing relationship");
+    }
+    value.nextId = Math.max(0, ...ids) + 1;
+    return value;
+  }
+  function applyTikZ(code) {
+    try {
+      const parsed = parseTikZ(code);
+      validateProject(parsed.model);
+      if (!parsed.model.objects.length) {
+        toast("No supported diagram commands found");
+        $("import-report").hidden = false;
+        $("import-report").textContent = parsed.dropped.join("\n");
+        return;
+      }
+      change(() => {
+        model = parsed.model;
+        selected.clear();
+      });
+      fit();
+      $("import-report").hidden = !parsed.dropped.length;
+      $("import-report").textContent =
+        `Skipped ${parsed.dropped.length} unsupported command(s):\n${parsed.dropped.join("\n")}`;
+      toast(
+        `Imported ${model.objects.length} objects${parsed.dropped.length ? " · see skipped commands" : ""}`,
+      );
+    } catch (error) {
+      toast(error.message);
+    }
+  }
+  function bind() {
+    for (const [id, label, key, path] of tools) {
+      const button = document.createElement("button");
+      button.className = "tool-button";
+      button.dataset.tool = id;
+      button.title = `${label} (${key})`;
+      button.setAttribute("aria-label", label);
+      button.setAttribute("aria-pressed", "false");
+      const icon = svg("svg", { viewBox: "0 0 22 22", "aria-hidden": "true" });
+      svg("path", { d: path }, icon);
+      button.append(icon);
+      button.addEventListener("click", () => setTool(id));
+      $("tools").append(button);
+    }
+    const colours = [
+      INK,
+      "#7c9885",
+      "#b95650",
+      "#587c9b",
+      "#c49a5c",
+      "#9979a3",
+      "#837c73",
+      "#ffffff",
+    ];
+    for (const color of colours) {
+      const button = document.createElement("button");
+      button.className = "swatch";
+      button.style.background = color;
+      button.dataset.color = color;
+      button.title = `Use ${color}`;
+      button.setAttribute("aria-label", `Colour ${color}`);
+      button.addEventListener("click", () => {
+        $("color").value = color;
+        applyProperty("color", color);
+      });
+      $("swatches").append(button);
+    }
+    for (const key of ["style", "arrows", "pattern", "color"])
+      $(key).addEventListener("change", () => applyProperty(key, $(key).value));
+    $("fill-color").addEventListener("change", () =>
+      applyProperty("fillColor", $("fill-color").value),
+    );
+    for (const key of ["width", "gap", "opacity"])
+      $(key).addEventListener("change", () => {
+        let n = Number($(key).value);
+        const min = key === "width" ? 0.5 : key === "opacity" ? 5 : 0,
+          max = key === "width" ? 30 : key === "opacity" ? 100 : 40;
+        if (!Number.isFinite(n))
+          n = key === "width" ? 2 : key === "opacity" ? 45 : 7;
+        n = Math.max(min, Math.min(max, n));
+        $(key).value = n;
+        applyProperty(key, key === "opacity" ? n / 100 : n);
+      });
+    $("highlight").addEventListener("change", render);
+    const actions = {
+      "inspector-toggle": () =>
+        document.querySelector(".workspace").classList.toggle("show-inspector"),
+      undo,
+      redo,
+      copy: copySelection,
+      cut: cutSelection,
+      paste: pasteSelection,
+      delete: removeSelected,
+      duplicate,
+      back: () => reorder(false),
+      front: () => reorder(true),
+      "flip-x": flipSelection,
+      fit,
+      demo: loadDemo,
+      "empty-demo": loadDemo,
+      "zoom-in": () => zoomBy(1.2),
+      "zoom-out": () => zoomBy(1 / 1.2),
+      "zoom-reset": () => zoomBy(1 / view.zoom),
+      save: () => exportFile("json"),
+      export: () => $("export-dialog").showModal(),
+      open: () => $("file-input").click(),
+      new: () => {
+        cancelDrawing();
+        change(() => {
+          model = { version: 2, objects: [], overrides: {}, nextId: 1 };
+          selected.clear();
+        });
+        setTool("select");
+        toast("Empty canvas · Undo restores your previous drawing");
+      },
+      "copy-code": async () => {
+        try {
+          await navigator.clipboard.writeText($("tikz").value);
+          toast("TikZ copied");
+        } catch {
+          $("tikz").focus();
+          $("tikz").select();
+          toast("Code selected · press Ctrl/⌘ C to copy");
+        }
+      },
+      "apply-code": () => applyTikZ($("tikz").value),
+    };
+    for (const [id, fn] of Object.entries(actions))
+      $(id).addEventListener("click", fn);
+    document
+      .querySelectorAll("[data-export]")
+      .forEach((button) =>
+        button.addEventListener("click", () =>
+          exportFile(button.dataset.export),
+        ),
+      );
+    $("grid").addEventListener("change", render);
+    $("object-name").addEventListener("change", () => {
+      const o = selectedObjects()[0];
+      if (o && selected.size === 1)
+        change(
+          () => (o.name = $("object-name").value.trim() || `Object ${o.id}`),
+        );
+    });
+    $("object-text").addEventListener("change", () => {
+      const o = selectedObjects()[0];
+      if (o) change(() => (o.text = $("object-text").value));
+    });
+    $("font-size").addEventListener("change", () => {
+      const o = selectedObjects()[0];
+      if (o)
+        change(
+          () =>
+            (o.fontSize = Math.min(
+              120,
+              Math.max(6, Number($("font-size").value) || 18),
+            )),
+        );
+    });
+    $("tikz").addEventListener("input", () => (codeDirty = true));
+    for (const tab of ["properties", "code"])
+      $(tab + "-tab").addEventListener("click", () => {
+        for (const name of ["properties", "code"]) {
+          $(name + "-tab").classList.toggle("active", name === tab);
+          $(name + "-tab").setAttribute("aria-selected", name === tab);
+          $(name + "-panel").hidden = name !== tab;
+        }
+        if (tab === "code" && !codeDirty) updateCode();
+      });
+    $("file-input").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      if (file.size > 15 * 1024 * 1024) {
+        toast("Project too large (15 MB maximum)");
+        return;
+      }
+      try {
+        const text = await file.text();
+        if (file.name.endsWith(".json")) {
+          const project = validateProject(JSON.parse(text));
+          cancelDrawing();
+          change(() => {
+            model = project;
+            selected.clear();
+          });
+          fit();
+          toast("Project opened");
+        } else applyTikZ(text);
+      } catch (error) {
+        toast(`Could not open file: ${error.message}`);
+      }
+    });
+    canvas.addEventListener("pointerdown", pointerDown);
+    canvas.addEventListener("pointermove", pointerMove);
+    canvas.addEventListener("pointerup", pointerUp);
+    canvas.addEventListener("pointercancel", () => cancelDrawing());
+    canvas.addEventListener("dblclick", doubleClick);
+    canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      if (draft && ["polyline", "region"].includes(tool)) finishDraft();
+    });
+    canvas.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomBy(Math.exp(-e.deltaY * 0.0015), toWorld(e));
+      },
+      { passive: false },
+    );
+    viewport.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    });
+    viewport.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const type =
+        e.dataTransfer.getData("application/x-string-template") ||
+        e.dataTransfer.getData("text/plain");
+      if (templateNames[type]) placeTemplate(type, toWorld(e, true));
+    });
+    $("text-editor").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        finishText();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        finishText(true);
+      }
+      e.stopPropagation();
+    });
+    $("text-editor").addEventListener("blur", () => finishText());
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Shift") {
+        shift = true;
+        $("under-indicator").hidden = false;
+      }
+      const typing =
+        /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) ||
+        e.target.isContentEditable;
+      if (typing || $("export-dialog").open) return;
+      const cmd = e.metaKey || e.ctrlKey,
+        key = e.key.toLowerCase();
+      if (cmd) {
+        const shortcuts = {
+          z: e.shiftKey ? redo : undo,
+          y: redo,
+          c: copySelection,
+          x: cutSelection,
+          v: pasteSelection,
+          a: () => {
+            selected = new Set(model.objects.map((o) => o.id));
+            render();
+            updateInspector();
+          },
+          s: () => exportFile("json"),
+          d: duplicate,
+        };
+        if (shortcuts[key]) {
+          e.preventDefault();
+          shortcuts[key]();
+        }
+        return;
+      }
+      if (e.key === " ") {
+        e.preventDefault();
+        space = true;
+        canvas.style.cursor = "grab";
+        return;
+      }
+      if (key === "escape") {
+        cancelDrawing();
+        selected.clear();
+        render();
+        updateInspector();
+        return;
+      }
+      if (key === "enter") {
+        if (draft && ["polyline", "region"].includes(tool)) finishDraft();
+        return;
+      }
+      if (key === "delete" || key === "backspace") {
+        e.preventDefault();
+        removeSelected();
+        return;
+      }
+      if (
+        ["arrowleft", "arrowright", "arrowup", "arrowdown"].includes(key) &&
+        selected.size
+      ) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        change(() =>
+          selectedObjects().forEach((o) =>
+            moveObject(
+              o,
+              key === "arrowleft" ? -step : key === "arrowright" ? step : 0,
+              key === "arrowup" ? -step : key === "arrowdown" ? step : 0,
+            ),
+          ),
+        );
+        return;
+      }
+      if (key === "i") {
+        document.querySelector(".workspace").classList.toggle("show-inspector");
+        return;
+      }
+      const next = tools.find((t) => t[2].toLowerCase() === key);
+      if (next) setTool(next[0]);
+    });
+    window.addEventListener("keyup", (e) => {
+      if (e.key === "Shift") {
+        shift = false;
+        $("under-indicator").hidden = true;
+      }
+      if (e.key === " ") {
+        space = false;
+        canvas.style.cursor = ["select", "lasso"].includes(tool)
+          ? "default"
+          : "crosshair";
+      }
+    });
+    window.addEventListener("blur", () => {
+      shift = false;
+      space = false;
+      $("under-indicator").hidden = true;
+      if (interaction) cancelDrawing();
+    });
+    new ResizeObserver(resize).observe(viewport);
+  }
+  try {
+    const saved = localStorage.getItem(STORAGE);
+    if (saved) model = validateProject(JSON.parse(saved));
+  } catch {
+    $("save-state").textContent = "Start fresh or open a saved project";
+  }
+  bind();
+  buildTemplates();
+  syncDefaultControls();
+  setTool("select");
+  resize();
+  if (model.objects.length) fit();
+  updateCode();
+  // A small API also makes geometry and file compatibility independently verifiable.
+  window.StringStudio = {
+    get project() {
+      return clone(model);
+    },
+    get crossings() {
+      return clone(crossings);
+    },
+    get selection() {
+      return [...selected];
+    },
+    get view() {
+      return { ...view };
+    },
+    setTool,
+    fit,
+    undo,
+    redo,
+    parseTikZ,
+    validateProject,
+    exportSVG,
+    generateTikZ,
+    enclosedFace,
+    loadDemo,
+    placeTemplate,
+    load(project) {
+      const valid = validateProject(clone(project));
+      cancelDrawing();
+      change(() => {
+        model = valid;
+        selected.clear();
+      });
+      fit();
+    },
+  };
+})();
+
+</script>
+</body>
+</html>

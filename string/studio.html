@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3f3f3" />
+    <title>Diagram editor</title>
+    <link rel="stylesheet" href="studio.css" />
+    <script src="studio.js" defer></script>
+  </head>
+  <body>
+    <header
+      id="filebar"
+      class="filebar"
+      role="toolbar"
+      aria-label="File and help"
+    >
+      <div id="file-actions" class="file-commands"></div>
+      <div id="document-actions" class="file-commands"></div>
+      <span id="tool-tip" class="tool-tip" role="status"></span>
+    </header>
+    <div
+      id="toolbar"
+      class="toolbar"
+      role="toolbar"
+      aria-label="Drawing controls"
+    >
+      <div class="toolbar-group" id="history-actions"></div>
+      <div class="toolbar-group" id="line-controls"></div>
+      <div class="toolbar-group colours" aria-label="Colours">
+        <div class="current-colours">
+          <button
+            class="colour-well stroke-well"
+            title="Line colour"
+            aria-label="Line colour"
+            data-colour-target="color"
+          >
+            <span class="colour-chip" id="stroke-chip"></span><span>Line</span>
+          </button>
+          <button
+            class="colour-well fill-well"
+            title="Fill colour"
+            aria-label="Fill colour"
+            data-colour-target="fillColor"
+          >
+            <span class="colour-chip" id="fill-chip"></span><span>Fill</span>
+          </button>
+          <input
+            type="color"
+            id="color"
+            value="#000000"
+            aria-label="Custom line colour"
+            hidden
+          />
+          <input
+            type="color"
+            id="fill-color"
+            value="#008080"
+            aria-label="Custom fill colour"
+            hidden
+          />
+        </div>
+        <div id="swatches" class="swatches" aria-label="Colour palette"></div>
+        <button
+          id="custom-colour"
+          class="custom-colour"
+          title="Edit colours"
+          aria-label="Edit colours"
+        ></button>
+        <div id="fill-controls" class="fill-controls"></div>
+      </div>
+      <div class="toolbar-group" id="view-actions"></div>
+    </div>
+    <div id="template-strip" class="template-strip" hidden>
+      <button
+        id="templates-prev"
+        class="icon-button template-scroll"
+        title="Previous templates (<)"
+        aria-label="Previous templates"
+        hidden
+      >
+        ‹
+      </button>
+      <div id="templates" role="toolbar" aria-label="Templates"></div>
+      <button
+        id="templates-next"
+        class="icon-button template-scroll"
+        title="More templates (>)"
+        aria-label="More templates"
+        hidden
+      >
+        ›
+      </button>
+      <button
+        id="close-templates"
+        class="icon-button"
+        title="Close templates"
+        aria-label="Close templates"
+      ></button>
+    </div>
+    <div
+      id="drawing-strip"
+      class="drawing-strip"
+      aria-label="Saved drawings"
+      hidden
+    >
+      <button
+        id="drawings-prev"
+        class="icon-button template-scroll"
+        title="Previous drawings (<)"
+        aria-label="Previous drawings"
+        hidden
+      >
+        ‹
+      </button>
+      <span id="drawings-empty">No saved drawings yet.</span>
+      <div id="drawings" aria-label="Recent drawings"></div>
+      <button
+        id="drawings-next"
+        class="icon-button template-scroll"
+        title="More drawings (>)"
+        aria-label="More drawings"
+        hidden
+      >
+        ›
+      </button>
+      <span class="history-note">Last 20 · this browser</span>
+      <button
+        id="close-drawings"
+        class="icon-button"
+        title="Close saved drawings"
+        aria-label="Close saved drawings"
+      ></button>
+    </div>
+    <main class="workspace">
+      <aside class="toolbox" aria-label="Tools and selection actions">
+        <nav id="tools" aria-label="Drawing tools"></nav>
+        <section class="selection-section" aria-label="Edit selection">
+          <div id="clipboard-actions" class="side-actions"></div>
+        </section>
+        <section class="selection-section" aria-label="Arrange selection">
+          <div id="arrange-actions" class="side-actions"></div>
+          <div
+            id="layer-control"
+            class="layer-control inactive"
+            aria-label="Line layer order"
+          >
+            <div class="layer-labels"><span>Back</span><span>Front</span></div>
+            <input
+              id="layer-order"
+              type="range"
+              min="0"
+              max="0"
+              value="0"
+              step="1"
+              aria-label="Line layer order, back to front"
+              disabled
+            /><output id="layer-position" for="layer-order">—</output>
+          </div>
+        </section>
+      </aside>
+      <section class="drawing-area" aria-label="Drawing area">
+        <div id="viewport" class="viewport">
+          <svg
+            id="canvas"
+            xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-label="Diagram canvas"
+            tabindex="0"
+          >
+            <defs id="defs"></defs>
+            <g id="grid-layer"></g>
+            <g id="region-layer"></g>
+            <g id="line-layer"></g>
+            <g id="node-layer"></g>
+            <g id="overlay-layer"></g>
+          </svg>
+          <input
+            id="text-editor"
+            aria-label="Diagram text"
+            class="text-editor"
+            hidden
+          />
+        </div>
+      </section>
+      <aside id="sidebar" class="sidebar" aria-label="TikZ and help">
+        <section id="code-panel" class="code-panel">
+          <div class="preamble-panel">
+            <div class="sidebar-toolbar">
+              <span>Preamble</span
+              ><button
+                id="copy-preamble"
+                class="icon-button"
+                title="Copy preamble"
+                aria-label="Copy preamble"
+              ></button>
+            </div>
+            <textarea
+              id="tikz-preamble"
+              spellcheck="false"
+              aria-label="TikZ preamble"
+              readonly
+            ></textarea>
+          </div>
+          <div class="sidebar-toolbar">
+            <span class="code-symbol" title="TikZ" aria-label="TikZ"
+              >〈/〉</span
+            >
+            <div>
+              <button
+                id="copy-code"
+                class="icon-button"
+                title="Copy TikZ"
+                aria-label="Copy TikZ"
+              ></button
+              ><button
+                id="apply-code"
+                class="icon-button apply-code"
+                title="Apply TikZ edits (Ctrl/⌘ Enter)"
+                aria-label="Apply TikZ edits"
+              ></button>
+            </div>
+          </div>
+          <textarea
+            id="tikz"
+            spellcheck="false"
+            aria-label="TikZ code"
+          ></textarea>
+          <div id="import-report" class="import-report" hidden></div>
+          <div class="sidebar-bottom">
+            <button
+              id="help"
+              class="icon-button"
+              title="Help"
+              aria-label="Help"
+            >
+              ?
+            </button>
+          </div>
+        </section>
+        <section id="help-panel" class="help-panel" hidden>
+          <div class="sidebar-toolbar">
+            <span>Help</span
+            ><button
+              id="close-help"
+              class="icon-button"
+              title="Close help"
+              aria-label="Close help"
+            ></button>
+          </div>
+          <div class="help-content">
+            <h2>Draw</h2>
+            <p>
+              Drag for a straight line or freehand stroke. For a path or curve,
+              click successive points. Double-click the last point, press
+              Escape, or press Enter to finish.
+            </p>
+            <p>
+              Curves pass smoothly through the points. Use the white arrow to
+              drag points and tangent handles; the black arrow moves whole
+              objects. Hold Ctrl/⌘ while dragging a tangent to adjust one side
+              independently.
+            </p>
+            <h2>Select</h2>
+            <p>
+              Click an object, drag a selection rectangle, or use the lasso.
+              Shift-click adds or removes objects. Drag a selected object to
+              move the selection. A drawn path is one object; template pieces
+              are separate objects.
+            </p>
+            <h2>Templates & groups</h2>
+            <p>
+              Choose a template, then click the canvas to place it. Escape
+              cancels; Shift places it underneath. Dragging from the strip also
+              works. Colours and stroke settings update the previews and new
+              pieces. Use ‹ / › or the &lt; / &gt; keys to scroll the strip.
+            </p>
+            <p>
+              Select pieces and press Ctrl/⌘ G to move them together. Ctrl/⌘
+              Shift G ungroups them. The white arrow edits individual points
+              inside a group. Groups are saved in project files.
+            </p>
+            <p>
+              The Back–Front slider under Arrange changes the stack position of
+              selected lines. Region fills remain behind the strings. Changing a
+              line's order resets its individual crossing overrides.
+            </p>
+            <h2>Regions & dots</h2>
+            <p>
+              For a curved region, click boundary points and finish with Escape,
+              Enter, or a double-click. Drag the handles to reshape it. Click
+              the dot tool to place a 2pt dot; drag its radius handle to resize
+              it.
+            </p>
+            <h2>Snapping</h2>
+            <p>
+              The grid − / + buttons beside zoom set the spacing in centimetres.
+              Click the spacing readout to return to 1 cm. The grid magnet snaps
+              to grid points. The node magnet snaps to path anchors and dot
+              centres; a blue ring marks the target. Node snapping takes
+              priority when both are on.
+            </p>
+            <h2>Crossings</h2>
+            <p>
+              Shift starts a line underneath existing lines. Select a line to
+              show crossing-related lines in red. Use the crossing tool to swap
+              an individual overpass. The gap menu sets clearance; shallow
+              intersections and region textures remain intact.
+            </p>
+            <h2>Fill & colour</h2>
+            <p>
+              The bucket fills closed outlines or existing regions. Choose a
+              pattern and fill colour in the top bar. Click the Line or Fill
+              colour chip to choose which colour the palette changes.
+              Right-click a swatch to set the fill colour.
+            </p>
+            <h2>Shortcuts</h2>
+            <dl>
+              <dt>Select / edit points / lasso</dt>
+              <dd>V / A / Q</dd>
+              <dt>Freehand / straight</dt>
+              <dd>B / L</dd>
+              <dt>Path / curve</dt>
+              <dd>P / C</dd>
+              <dt>Fill / region</dt>
+              <dd>F / R</dd>
+              <dt>Curved region / dot</dt>
+              <dd>G / D</dd>
+              <dt>Rectangle / ellipse</dt>
+              <dd>U / O</dd>
+              <dt>Text / crossing</dt>
+              <dd>T / X</dd>
+              <dt>Finish path</dt>
+              <dd>Esc / Enter</dd>
+              <dt>Delete</dt>
+              <dd>Delete / Backspace</dd>
+              <dt>Copy / cut / paste</dt>
+              <dd>Ctrl/⌘ C / X / V</dd>
+              <dt>Group / ungroup</dt>
+              <dd>Ctrl/⌘ G / Shift G</dd>
+              <dt>Select all</dt>
+              <dd>Ctrl/⌘ A</dd>
+              <dt>Undo / redo</dt>
+              <dd>Ctrl/⌘ Z / Shift Z</dd>
+              <dt>Save project</dt>
+              <dd>Ctrl/⌘ S</dd>
+              <dt>Pan</dt>
+              <dd>Space + drag</dd>
+              <dt>Zoom</dt>
+              <dd>Scroll</dd>
+              <dt>Nudge / large nudge</dt>
+              <dd>Arrows / Shift + arrows</dd>
+            </dl>
+            <h2>Files & TikZ</h2>
+            <p>
+              Each visit starts blank. Load shows previews of the last 20
+              nonempty drawings saved in this browser. New and Open keep the
+              current drawing there before switching. Save downloads a project
+              for keeping elsewhere.
+            </p>
+            <p>
+              Save a project to keep editable curves and crossing settings. SVG
+              and PNG export with transparency. Copy the Preamble box into your
+              LaTeX preamble and the diagram into the document. Coordinates use
+              centimetres; weights and text sizes use points. Standard colours
+              use TikZ names. Enter LaTeX labels as text; they render in LaTeX
+              output.
+            </p>
+            <p>
+              Edit the diagram code, then click Apply or press Ctrl/⌘ Enter to
+              update the canvas. Undo reverses the edit. The editor supports its
+              exported TikZ commands and reports unsupported commands; it does
+              not run a full LaTeX compiler.
+            </p>
+            <a href="index-legacy.html" target="_blank" rel="noopener"
+              >Original editor</a
+            >
+          </div>
+        </section>
+      </aside>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <span id="save-state" class="sr-only" aria-live="polite"></span>
+    <input type="file" id="file-input" accept=".json,.tikz,.tex" hidden />
+    <!-- Value storage for the graphical menus. -->
+    <div hidden>
+      <input id="style" value="solid" /><input id="width" value="2" /><input
+        id="arrows"
+        value="none"
+      /><input id="pattern" value="hatch" /><input
+        id="opacity"
+        value="45"
+      /><input id="gap" value="7" /><input id="font-size" value="18" /><input
+        type="checkbox"
+        id="grid"
+        checked
+      /><input type="checkbox" id="snap" /><input
+        type="checkbox"
+        id="node-snap"
+      />
+    </div>
+  </body>
+</html>

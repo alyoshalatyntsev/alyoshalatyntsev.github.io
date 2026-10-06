@@ -1,0 +1,4088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikZ String Diagram Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #FAF8F5;
+            --panel-bg: #FFFFFF;
+            --border-color: #E8E4DF;
+            --text-primary: #2D2A26;
+            --text-secondary: #6B6660;
+            --accent: #7C9885;
+            --accent-hover: #6B8874;
+            --grid-color: #D4CFC8;
+            --selection-glow: rgba(124, 152, 133, 0.4);
+            --white-line: #FFFFFF;
+            --black-line: #2D2A26;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+            margin: 0 8px;
+        }
+
+        .btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--panel-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .btn.active:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Shift-armed (chain mode) ring on the mode indicator pill */
+        .mode-indicator.chaining {
+            box-shadow: 0 0 0 3px var(--selection-glow);
+            border-color: var(--accent);
+        }
+
+        .btn-icon {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .grid-control input, .property-select {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 5px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            width: 58px;
+        }
+
+        .grid-control input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .property-select {
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .property-select.wide {
+            min-width: 70px;
+        }
+
+        .shape-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .shape-btn {
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .shape-btn:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .shape-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .shape-btn svg {
+            stroke: var(--text-primary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .shape-btn.active svg {
+            stroke: white;
+        }
+
+        /* Toggle buttons for mode indicator */
+        .mode-toggles {
+            position: absolute;
+            top: 20px;
+            left: 240px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .mode-toggles.visible {
+            display: flex;
+        }
+
+        .region-toggles {
+            position: absolute;
+            top: 20px;
+            left: 160px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .region-toggles.visible {
+            display: flex;
+        }
+
+        .text-toggles {
+            position: absolute;
+            top: 20px;
+            left: 160px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .text-toggles.visible {
+            display: flex;
+        }
+
+        /* Boundary toggle - dashed when OFF */
+        .toggle-btn-wide .boundary-rect.off {
+            stroke-dasharray: 3 2;
+        }
+
+        .select-actions {
+            position: absolute;
+            top: 20px;
+            left: 140px;
+            display: none;
+            gap: 6px;
+            pointer-events: auto;
+        }
+
+        .select-actions.visible {
+            display: flex;
+        }
+
+        .action-btn {
+            height: 28px;
+            padding: 0 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--panel-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.15s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .action-btn:disabled:hover {
+            background: var(--panel-bg);
+            border-color: var(--border-color);
+        }
+
+        .action-btn.delete-action {
+            background: #F5E6E6;
+            border-color: #E8D4D4;
+            color: #8B5A5A;
+        }
+
+        .action-btn.delete-action:hover:not(:disabled) {
+            background: #EED9D9;
+            border-color: #D4C0C0;
+        }
+
+        .action-btn .hint {
+            font-size: 10px;
+            padding: 1px 4px;
+            background: rgba(0,0,0,0.08);
+            border-radius: 3px;
+            color: var(--text-secondary);
+        }
+
+        .action-btn.delete-action .hint {
+            background: rgba(139, 90, 90, 0.15);
+            color: #8B5A5A;
+        }
+
+        .toggle-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-right: 4px;
+        }
+
+        .toggle-btn {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--panel-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .toggle-btn-wide {
+            height: 28px;
+            padding: 3px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--panel-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+        }
+
+        .toggle-btn-wide:hover {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .toggle-text {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Thickness toggle - just thick black line when active */
+        .toggle-btn-wide.active .thick-line-bg {
+            stroke: #2D2A26;
+        }
+        .toggle-btn-wide.active .thick-line-fg {
+            display: none;
+        }
+
+        /* Pass over toggle - solid rectangle when active */
+        .toggle-btn-wide.active .passover-rect {
+            stroke-dasharray: none;
+            stroke: #2D2A26;
+        }
+
+        .toggle-btn:hover {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+        }
+
+        .toggle-btn.active {
+            background: #6B8874;
+            border-color: #6B8874;
+        }
+
+        .toggle-btn svg {
+            stroke: var(--text-primary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .toggle-btn.active svg {
+            stroke: white;
+        }
+
+        /* Inline text editor overlay */
+        .inline-editor {
+            position: absolute;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            padding: 4px 8px;
+            border: 2px solid var(--accent);
+            border-radius: 4px;
+            background: white;
+            color: var(--text-primary);
+            text-align: center;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Main layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Canvas wrapper - contains canvas and property bar */
+        .canvas-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Canvas container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-color);
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Scale indicator */
+        .scale-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .scale-bar {
+            height: 2px;
+            background: var(--text-secondary);
+            border-radius: 1px;
+        }
+
+        /* Mode indicator */
+        .mode-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 6px 12px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .mode-indicator.add-mode {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Pending point indicator */
+        .pending-indicator {
+            position: absolute;
+            top: 20px;
+            left: 450px;
+            padding: 6px 12px;
+            background: #E8F0EA;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+            pointer-events: none;
+            display: none;
+        }
+
+        .pending-indicator.visible {
+            display: block;
+        }
+
+        /* Property bar at bottom */
+        .property-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 20px;
+            background: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+            min-height: 52px;
+            flex-wrap: wrap;
+        }
+
+        .property-bar.hidden {
+            display: none;
+        }
+
+        .property-bar-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding-right: 8px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .property-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .property-group-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .property-input {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 5px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            width: 55px;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .property-input.narrow {
+            width: 58px;
+        }
+
+        .property-input.text-input {
+            width: 120px;
+        }
+
+        .coord-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background: #F5E6E6;
+            border: 1px solid #E8D4D4;
+            color: #8B5A5A;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            margin-left: auto;
+        }
+
+        .delete-btn:hover {
+            background: #EED9D9;
+            border-color: #D4C0C0;
+        }
+
+        /* Code panel */
+        .code-panel {
+            width: 360px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.2s ease;
+        }
+
+        .code-panel.collapsed {
+            width: 40px;
+        }
+
+        .code-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-panel-header h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .code-panel.collapsed .code-panel-header h3 {
+            display: none;
+        }
+
+        .code-panel.collapsed .code-panel-header {
+            justify-content: center;
+            padding: 12px 8px;
+        }
+
+        .code-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+
+        .code-panel.collapsed .code-content {
+            display: none;
+        }
+
+        #tikz-output {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            width: 100%;
+            min-height: 350px;
+            resize: vertical;
+        }
+
+        .library-notice {
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: #FFF8E6;
+            border: 1px solid #E8DCC0;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #6B5A3A;
+            display: none;
+        }
+
+        .library-notice.visible {
+            display: block;
+        }
+
+        .library-notice-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #5A4A2A;
+        }
+
+        .library-notice code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0,0,0,0.05);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .copy-btn {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        .textarea-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        /* Keyboard hints */
+        .keyboard-hint {
+            font-size: 10px;
+            padding: 2px 5px;
+            background: var(--bg-color);
+            border-radius: 3px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .btn.active .keyboard-hint {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .delete-btn .keyboard-hint {
+            background: rgba(139, 90, 90, 0.15);
+            color: #8B5A5A;
+        }
+
+        /* LaTeX warning */
+        .latex-warning {
+            font-style: italic;
+            font-size: 11px;
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease, color 3s ease;
+            color: #C44;
+        }
+
+        .latex-warning.visible {
+            opacity: 1;
+        }
+
+        .latex-warning.fading {
+            color: var(--text-primary);
+        }
+
+        /* Submit button */
+        .submit-btn {
+            background: #E8F0EA;
+            border-color: #C8D8CC;
+            color: var(--accent);
+        }
+
+        .submit-btn:hover {
+            background: #D8E8DC;
+            border-color: var(--accent);
+        }
+
+        /* Error log section */
+        .error-log-section {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .error-log-section.visible {
+            display: block;
+        }
+
+        .error-log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .error-log-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8B5A5A;
+        }
+
+        .clear-log-btn {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: #F5E6E6;
+            border-color: #E8D4D4;
+            color: #8B5A5A;
+        }
+
+        .clear-log-btn:hover {
+            background: #EED9D9;
+            border-color: #D4C0C0;
+        }
+
+        #error-log {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #8B5A5A;
+            background: #FDF5F5;
+            border: 1px solid #E8D4D4;
+            border-radius: 6px;
+            padding: 10px;
+            width: 100%;
+            min-height: 80px;
+            max-height: 150px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <button id="select-mode-btn" class="btn active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+                </svg>
+                Select
+                <span class="keyboard-hint">S</span>
+            </button>
+            <button id="add-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Line
+                <span class="keyboard-hint">A</span>
+            </button>
+            <button id="text-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 7 4 4 20 4 20 7"/>
+                    <line x1="9" y1="20" x2="15" y2="20"/>
+                    <line x1="12" y1="4" x2="12" y2="20"/>
+                </svg>
+                Text
+                <span class="keyboard-hint">T</span>
+            </button>
+            <button id="node-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="8"/>
+                </svg>
+                Node
+                <span class="keyboard-hint">N</span>
+            </button>
+            <button id="region-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12,2 22,8 22,16 12,22 2,16 2,8"/>
+                </svg>
+                Region
+                <span class="keyboard-hint">R</span>
+            </button>
+            <button id="circle-mode-btn" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                </svg>
+                Circle
+                <span class="keyboard-hint">O</span>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-group">
+            <button id="undo-btn" class="btn btn-icon" title="Undo (Z)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 7v6h6"/>
+                    <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6.36 2.64L3 13"/>
+                </svg>
+            </button>
+            <button id="redo-btn" class="btn btn-icon" title="Redo (Y)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 7v6h-6"/>
+                    <path d="M3 17a9 9 0 019-9 9 9 0 016.36 2.64L21 13"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="grid-control">
+            <span>Grid:</span>
+            <input type="number" id="grid-size" value="0.5" step="0.125" min="0.0625">
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="canvas-wrapper">
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+                <div class="mode-indicator" id="mode-indicator">Select Mode</div>
+                <div class="select-actions" id="select-actions">
+                    <button id="copy-action" class="action-btn" title="Copy selected element">Copy <span class="hint">C</span></button>
+                    <button id="paste-action" class="action-btn" title="Paste at mouse position">Paste <span class="hint">V</span></button>
+                    <button id="delete-action" class="action-btn delete-action" title="Delete selected element">Delete <span class="hint">D</span></button>
+                </div>
+                <div class="mode-toggles" id="mode-toggles">
+                    <span class="toggle-label">Toggle:</span>
+                    <button id="thickness-toggle" class="toggle-btn-wide" title="Line thickness (0.8pt / 1.6pt)">
+                        <svg width="36" height="16" viewBox="0 0 36 16" fill="none">
+                            <line class="thick-line-bg" x1="3" y1="8" x2="33" y2="8" stroke="#D4CFC8" stroke-width="5" stroke-linecap="round"/>
+                            <line class="thick-line-fg" x1="3" y1="8" x2="33" y2="8" stroke="#2D2A26" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span class="toggle-text" id="thickness-text">Thin</span>
+                    </button>
+                    <button id="white-toggle" class="toggle-btn-wide" title="White backing (0pt / 6pt)">
+                        <svg width="36" height="16" viewBox="0 0 36 16" fill="none">
+                            <rect class="passover-rect" x="3" y="3" width="30" height="10" stroke="#D4CFC8" stroke-width="1.5" stroke-dasharray="3 2" fill="none" rx="2"/>
+                            <line class="passover-line" x1="3" y1="8" x2="33" y2="8" stroke="#2D2A26" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span class="toggle-text" id="passover-text">Pass over OFF</span>
+                    </button>
+                </div>
+                <div class="region-toggles" id="region-toggles">
+                    <span class="toggle-label">Toggle:</span>
+                    <button id="pattern-toggle" class="toggle-btn-wide" title="Cycle pattern">
+                        <svg width="24" height="16" viewBox="0 0 24 16" fill="none">
+                            <line x1="2" y1="14" x2="10" y2="2" stroke="#2D2A26" stroke-width="1"/>
+                            <line x1="8" y1="14" x2="16" y2="2" stroke="#2D2A26" stroke-width="1"/>
+                            <line x1="14" y1="14" x2="22" y2="2" stroke="#2D2A26" stroke-width="1"/>
+                        </svg>
+                        <span class="toggle-text" id="pattern-text">NW lines</span>
+                    </button>
+                    <button id="boundary-toggle" class="toggle-btn-wide" title="Region boundary (0pt / 0.8pt)">
+                        <svg width="28" height="16" viewBox="0 0 28 16" fill="none">
+                            <rect class="boundary-rect" x="2" y="2" width="24" height="12" stroke="#2D2A26" stroke-width="1.5" fill="none" rx="2"/>
+                        </svg>
+                        <span class="toggle-text" id="boundary-text">Boundary ON</span>
+                    </button>
+                </div>
+                <div class="text-toggles" id="text-toggles">
+                    <span class="toggle-label">Toggle:</span>
+                    <button id="text-position-toggle" class="toggle-btn-wide" title="Cycle text position">
+                        <svg width="24" height="16" viewBox="0 0 24 16" fill="none">
+                            <text x="12" y="12" font-size="10" text-anchor="middle" fill="#2D2A26" font-family="monospace">T</text>
+                        </svg>
+                        <span class="toggle-text" id="text-position-text">None</span>
+                    </button>
+                </div>
+                <div class="pending-indicator" id="pending-indicator">Click to place end point</div>
+                <div class="scale-indicator">
+                    <div class="scale-bar" id="scale-bar"></div>
+                    <span id="scale-label">1 unit</span>
+                </div>
+            </div>
+
+            <!-- Property bar at bottom - content changes based on selection -->
+            <div class="property-bar hidden" id="property-bar"></div>
+        </div>
+
+        <div class="code-panel" id="code-panel">
+            <div class="code-panel-header">
+                <h3>Editable TikZ Output (you can paste your code in!)</h3>
+            </div>
+            <div class="code-content">
+                <textarea id="tikz-output"></textarea>
+                <div class="textarea-actions">
+                    <button class="btn copy-btn" id="copy-btn" title="Copy (C)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                        Copy
+                        <span class="keyboard-hint">C</span>
+                    </button>
+                    <button class="btn submit-btn" id="submit-btn" title="Submit edits to update diagram">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Submit Edits
+                    </button>
+                </div>
+                <div class="library-notice" id="library-notice">
+                    <div class="library-notice-title">Required TikZ Libraries</div>
+                    <div id="library-list"></div>
+                </div>
+                <div class="latex-warning" id="latex-warning">LaTeX equations won't render here, but don't worry — they will in the tikzpicture!</div>
+                <div class="error-log-section" id="error-log-section">
+                    <div class="error-log-header">
+                        <span class="error-log-title">Dropped Lines</span>
+                    </div>
+                    <textarea id="error-log" readonly></textarea>
+                    <div class="textarea-actions">
+                        <button class="btn clear-log-btn" id="clear-log-btn">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============== STATE ==============
+        const state = {
+            lines: [],
+            textNodes: [],
+            shapeNodes: [],
+            regions: [],
+            circles: [],
+
+            // Selection - track type and id
+            selection: null, // { type: 'line'|'text'|'shape'|'region'|'circle', id: number }
+
+            mode: 'select', // 'select', 'add', 'text', 'node', 'region', 'circle'
+
+            // Canvas transform
+            panX: 0,
+            panY: 0,
+            zoom: 50,
+
+            // Grid
+            gridSize: 0.5,
+
+            // Default line settings
+            defaultLineWidth: 0.8, // 0.8 or 1.6
+            defaultWhiteWidth: 0, // 0 or 6
+
+            // Default region settings
+            defaultRegionLineWidth: 0.8,
+            defaultRegionPattern: 'north west lines',
+            defaultRegionPatternColor: 'black!30',
+
+            // Default circle settings
+            defaultCircleLineWidth: 2,
+            defaultCircleColor: 'black',
+
+            // Default text settings
+            defaultTextPosition: 'none',
+
+            // Interaction state
+            isDragging: false,
+            dragType: null,
+            dragItemId: null,
+            dragPointIndex: null,
+            dragHandleType: null,
+            dragStartScreen: { x: 0, y: 0 },
+            dragStartWorld: { x: 0, y: 0 },
+            newLineStart: null,
+            pendingLineStart: null,
+            previewEnd: null,
+            pendingRegionPoints: [],
+            previewRegionEnd: null,
+
+            // Undo/redo
+            undoStack: [],
+            redoStack: [],
+
+            // Clipboard for copy/paste
+            clipboard: null, // { type: string, data: object }
+
+            // Last known mouse position in world coordinates
+            lastMouseWorld: { x: 0, y: 0 },
+
+            // ID counters
+            nextLineId: 1,
+            nextTextId: 1,
+            nextShapeId: 1,
+            nextRegionId: 1,
+            nextCircleId: 1
+        };
+
+        // ============== DOM ELEMENTS ==============
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const canvasContainer = document.querySelector('.canvas-container');
+        const modeIndicator = document.getElementById('mode-indicator');
+        const modeToggles = document.getElementById('mode-toggles');
+        const regionToggles = document.getElementById('region-toggles');
+        const textToggles = document.getElementById('text-toggles');
+        const selectActions = document.getElementById('select-actions');
+        const copyActionBtn = document.getElementById('copy-action');
+        const pasteActionBtn = document.getElementById('paste-action');
+        const deleteActionBtn = document.getElementById('delete-action');
+        const pendingIndicator = document.getElementById('pending-indicator');
+        const scaleBar = document.getElementById('scale-bar');
+        const scaleLabel = document.getElementById('scale-label');
+        const propertyBar = document.getElementById('property-bar');
+        const tikzOutput = document.getElementById('tikz-output');
+        const latexWarning = document.getElementById('latex-warning');
+
+        // ============== LATEX WARNING ==============
+        let latexWarningTimeout = null;
+        let latexWarningFadeTimeout = null;
+
+        function showLatexWarning() {
+            // Clear any existing timeouts
+            if (latexWarningTimeout) clearTimeout(latexWarningTimeout);
+            if (latexWarningFadeTimeout) clearTimeout(latexWarningFadeTimeout);
+
+            // Reset to red and show
+            latexWarning.classList.remove('fading');
+            latexWarning.classList.add('visible');
+
+            // After 2 seconds, start fading to black
+            latexWarningFadeTimeout = setTimeout(() => {
+                latexWarning.classList.add('fading');
+            }, 2000);
+        }
+
+        function checkForLatex(text) {
+            // Check for $ or \ followed by common LaTeX commands
+            if (text.includes('$') || /\\[a-zA-Z]/.test(text)) {
+                showLatexWarning();
+            }
+        }
+
+        // ============== HELPERS ==============
+        function screenToWorld(screenX, screenY) {
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = screenX - rect.left;
+            const canvasY = screenY - rect.top;
+            const worldX = (canvasX - state.panX) / state.zoom;
+            const worldY = -(canvasY - state.panY) / state.zoom;
+            return { x: worldX, y: worldY };
+        }
+
+        function worldToScreen(worldX, worldY) {
+            const screenX = worldX * state.zoom + state.panX;
+            const screenY = -worldY * state.zoom + state.panY;
+            return { x: screenX, y: screenY };
+        }
+
+        function snapToGrid(value) {
+            return Math.round(value / state.gridSize) * state.gridSize;
+        }
+
+        function computeStraightLineAngles(startX, startY, endX, endY) {
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            return { outAngle: angle, inAngle: (angle + 180) % 360 };
+        }
+
+        function getMaxOrdering() {
+            if (state.lines.length === 0) return 0;
+            return Math.max(...state.lines.map(l => l.ordering));
+        }
+
+        function createLine(startX, startY, endX, endY) {
+            const angles = computeStraightLineAngles(startX, startY, endX, endY);
+            return {
+                id: state.nextLineId++,
+                startX: snapToGrid(startX),
+                startY: snapToGrid(startY),
+                endX: snapToGrid(endX),
+                endY: snapToGrid(endY),
+                outAngle: angles.outAngle,
+                inAngle: angles.inAngle,
+                lineWidth: state.defaultLineWidth,
+                whiteWidth: state.defaultWhiteWidth,
+                ordering: Math.floor(getMaxOrdering()) + 1,
+                arrowStyle: 'none',  // 'none' or 'arrow'
+                lineStyle: 'straight'  // 'straight' or 'squiggly'
+            };
+        }
+
+        function createTextNode(x, y) {
+            return {
+                id: state.nextTextId++,
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                text: 'text',
+                position: state.defaultTextPosition, // 'none', 'above', 'below', 'left', 'right'
+                fontSize: 12
+            };
+        }
+
+        function createShapeNode(x, y) {
+            return {
+                id: state.nextShapeId++,
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                text: 'node',
+                shape: 'circle', // 'circle', 'rectangle', 'ellipse'
+                outlineWidth: 0.8,
+                paddingX: 4,
+                paddingY: 3,
+                fontSize: 12
+            };
+        }
+
+        function getMaxRegionOrdering() {
+            if (state.regions.length === 0) return 0;
+            return Math.max(...state.regions.map(r => r.ordering));
+        }
+
+        function createRegion(points) {
+            // Compute angles for each point based on neighboring points
+            const regionPoints = points.map((p, i) => {
+                const prev = points[(i - 1 + points.length) % points.length];
+                const next = points[(i + 1) % points.length];
+                // outAngle: angle from this point toward next point
+                const outAngle = Math.atan2(next.y - p.y, next.x - p.x) * 180 / Math.PI;
+                // inAngle: angle from this point toward previous point
+                const inAngle = Math.atan2(prev.y - p.y, prev.x - p.x) * 180 / Math.PI;
+                return {
+                    x: snapToGrid(p.x),
+                    y: snapToGrid(p.y),
+                    outAngle: outAngle,
+                    inAngle: inAngle
+                };
+            });
+            return {
+                id: state.nextRegionId++,
+                points: regionPoints,
+                lineWidth: state.defaultRegionLineWidth,
+                pattern: state.defaultRegionPattern,
+                patternColor: state.defaultRegionPatternColor,
+                ordering: Math.floor(getMaxRegionOrdering()) + 1
+            };
+        }
+
+        function createCircle(x, y) {
+            return {
+                id: state.nextCircleId++,
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                lineWidth: state.defaultCircleLineWidth,
+                color: state.defaultCircleColor
+            };
+        }
+
+        // ============== UNDO/REDO ==============
+        function saveState() {
+            state.undoStack.push(JSON.stringify({
+                lines: state.lines,
+                textNodes: state.textNodes,
+                shapeNodes: state.shapeNodes,
+                regions: state.regions,
+                circles: state.circles
+            }));
+            state.redoStack = [];
+            if (state.undoStack.length > 100) state.undoStack.shift();
+        }
+
+        function undo() {
+            if (state.undoStack.length === 0) return;
+            state.redoStack.push(JSON.stringify({
+                lines: state.lines,
+                textNodes: state.textNodes,
+                shapeNodes: state.shapeNodes,
+                regions: state.regions,
+                circles: state.circles
+            }));
+            const saved = JSON.parse(state.undoStack.pop());
+            state.lines = saved.lines;
+            state.textNodes = saved.textNodes;
+            state.shapeNodes = saved.shapeNodes;
+            state.regions = saved.regions || [];
+            state.circles = saved.circles || [];
+            state.selection = null;
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        function redo() {
+            if (state.redoStack.length === 0) return;
+            state.undoStack.push(JSON.stringify({
+                lines: state.lines,
+                textNodes: state.textNodes,
+                shapeNodes: state.shapeNodes,
+                regions: state.regions,
+                circles: state.circles
+            }));
+            const saved = JSON.parse(state.redoStack.pop());
+            state.lines = saved.lines;
+            state.textNodes = saved.textNodes;
+            state.shapeNodes = saved.shapeNodes;
+            state.regions = saved.regions || [];
+            state.circles = saved.circles || [];
+            state.selection = null;
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        // ============== RENDERING ==============
+        function resizeCanvas() {
+            const rect = canvasContainer.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            if (state.panX === 0 && state.panY === 0) {
+                state.panX = rect.width / 2;
+                state.panY = rect.height / 2;
+            }
+            render();
+        }
+
+        function drawGrid() {
+            const rect = canvasContainer.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            ctx.fillStyle = '#D4CFC8';
+            const topLeft = screenToWorld(0, 0);
+            const bottomRight = screenToWorld(width, height);
+            const startX = Math.floor(topLeft.x / state.gridSize) * state.gridSize;
+            const endX = Math.ceil(bottomRight.x / state.gridSize) * state.gridSize;
+            const startY = Math.floor(bottomRight.y / state.gridSize) * state.gridSize;
+            const endY = Math.ceil(topLeft.y / state.gridSize) * state.gridSize;
+            const dotSize = Math.max(1, state.zoom / 50);
+            for (let x = startX; x <= endX; x += state.gridSize) {
+                for (let y = startY; y <= endY; y += state.gridSize) {
+                    const screen = worldToScreen(x, y);
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, dotSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            // Origin marker
+            const origin = worldToScreen(0, 0);
+            ctx.strokeStyle = '#B0A99F';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x + 20, origin.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x, origin.y - 20);
+            ctx.stroke();
+            ctx.fillStyle = '#8B8580';
+            ctx.beginPath();
+            ctx.arc(origin.x, origin.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function computeBezierControlPoints(line) {
+            const startScreen = worldToScreen(line.startX, line.startY);
+            const endScreen = worldToScreen(line.endX, line.endY);
+            const dx = endScreen.x - startScreen.x;
+            const dy = endScreen.y - startScreen.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const looseness = dist / 3;
+            const outRad = line.outAngle * Math.PI / 180;
+            const cp1x = startScreen.x + Math.cos(outRad) * looseness;
+            const cp1y = startScreen.y - Math.sin(outRad) * looseness;
+            const inRad = line.inAngle * Math.PI / 180;
+            const cp2x = endScreen.x + Math.cos(inRad) * looseness;
+            const cp2y = endScreen.y - Math.sin(inRad) * looseness;
+            return {
+                start: startScreen,
+                end: endScreen,
+                cp1: { x: cp1x, y: cp1y },
+                cp2: { x: cp2x, y: cp2y }
+            };
+        }
+
+        // Helper to sample bezier curve points
+        function sampleBezier(points, numSamples) {
+            const samples = [];
+            for (let i = 0; i <= numSamples; i++) {
+                const t = i / numSamples;
+                const x = Math.pow(1-t, 3) * points.start.x + 3 * Math.pow(1-t, 2) * t * points.cp1.x +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.x + Math.pow(t, 3) * points.end.x;
+                const y = Math.pow(1-t, 3) * points.start.y + 3 * Math.pow(1-t, 2) * t * points.cp1.y +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.y + Math.pow(t, 3) * points.end.y;
+                samples.push({x, y});
+            }
+            return samples;
+        }
+
+        // Draw a squiggly path along sampled points
+        function drawSquigglyPath(samples, amplitude) {
+            if (samples.length < 2) return;
+            ctx.beginPath();
+            ctx.moveTo(samples[0].x, samples[0].y);
+            for (let i = 1; i < samples.length; i++) {
+                const prev = samples[i-1];
+                const curr = samples[i];
+                const dx = curr.x - prev.x;
+                const dy = curr.y - prev.y;
+                const len = Math.sqrt(dx*dx + dy*dy);
+                if (len === 0) continue;
+                // Perpendicular direction
+                const px = -dy / len;
+                const py = dx / len;
+                // Alternate offset
+                const offset = (i % 2 === 0 ? 1 : -1) * amplitude;
+                const midX = (prev.x + curr.x) / 2 + px * offset;
+                const midY = (prev.y + curr.y) / 2 + py * offset;
+                ctx.quadraticCurveTo(midX, midY, curr.x, curr.y);
+            }
+            ctx.stroke();
+        }
+
+        function drawLine(line, isSelected) {
+            const points = computeBezierControlPoints(line);
+            const lineStyle = line.lineStyle || 'straight';
+            const isDashed = lineStyle === 'dashed';
+            const isSquiggly = lineStyle === 'squiggly';
+
+            // Set line dash for dashed style
+            if (isDashed) {
+                ctx.setLineDash([8 * state.zoom / 50, 4 * state.zoom / 50]);
+            } else {
+                ctx.setLineDash([]);
+            }
+
+            if (line.whiteWidth > 0) {
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = line.whiteWidth * state.zoom / 50;
+                ctx.lineCap = 'round';
+                if (isSquiggly) {
+                    const samples = sampleBezier(points, 40);
+                    drawSquigglyPath(samples, 3 * state.zoom / 50);
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(points.start.x, points.start.y);
+                    ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+                    ctx.stroke();
+                }
+            }
+            ctx.strokeStyle = '#2D2A26';
+            ctx.lineWidth = line.lineWidth * state.zoom / 50;
+            ctx.lineCap = 'round';
+            if (isSquiggly) {
+                const samples = sampleBezier(points, 40);
+                drawSquigglyPath(samples, 3 * state.zoom / 50);
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+                ctx.stroke();
+            }
+
+            // Reset line dash
+            ctx.setLineDash([]);
+
+            // Draw arrowhead if arrow style
+            if (line.arrowStyle === 'arrow') {
+                // Get tangent direction at end of curve by sampling near the end
+                const t = 0.98;
+                const t1 = 1.0;
+                const x0 = Math.pow(1-t, 3) * points.start.x + 3 * Math.pow(1-t, 2) * t * points.cp1.x +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.x + Math.pow(t, 3) * points.end.x;
+                const y0 = Math.pow(1-t, 3) * points.start.y + 3 * Math.pow(1-t, 2) * t * points.cp1.y +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.y + Math.pow(t, 3) * points.end.y;
+                const x1 = points.end.x;
+                const y1 = points.end.y;
+                const arrowAngle = Math.atan2(y1 - y0, x1 - x0);
+                const arrowLength = 10 * state.zoom / 50;
+                ctx.fillStyle = '#2D2A26';
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(
+                    x1 - arrowLength * Math.cos(arrowAngle - 0.4),
+                    y1 - arrowLength * Math.sin(arrowAngle - 0.4)
+                );
+                ctx.lineTo(
+                    x1 - arrowLength * Math.cos(arrowAngle + 0.4),
+                    y1 - arrowLength * Math.sin(arrowAngle + 0.4)
+                );
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            if (isSelected) {
+                ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.lineWidth = (line.lineWidth + 4) * state.zoom / 50;
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+                ctx.stroke();
+                ctx.strokeStyle = '#2D2A26';
+                ctx.lineWidth = line.lineWidth * state.zoom / 50;
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.bezierCurveTo(points.cp1.x, points.cp1.y, points.cp2.x, points.cp2.y, points.end.x, points.end.y);
+                ctx.stroke();
+
+                const handleRadius = 6;
+                ctx.fillStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.arc(points.start.x, points.start.y, handleRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(points.end.x, points.end.y, handleRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                const tangentLength = 75;
+                const outRad = line.outAngle * Math.PI / 180;
+                const outHandleX = points.start.x + Math.cos(outRad) * tangentLength;
+                const outHandleY = points.start.y - Math.sin(outRad) * tangentLength;
+                ctx.strokeStyle = '#7C9885';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(points.start.x, points.start.y);
+                ctx.lineTo(outHandleX, outHandleY);
+                ctx.stroke();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(outHandleX, outHandleY, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                const inRad = line.inAngle * Math.PI / 180;
+                const inHandleX = points.end.x + Math.cos(inRad) * tangentLength;
+                const inHandleY = points.end.y - Math.sin(inRad) * tangentLength;
+                ctx.strokeStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.moveTo(points.end.x, points.end.y);
+                ctx.lineTo(inHandleX, inHandleY);
+                ctx.stroke();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(inHandleX, inHandleY, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function drawTextNode(node, isSelected) {
+            const screen = worldToScreen(node.x, node.y);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Calculate text position based on position property
+            let textX = screen.x;
+            let textY = screen.y;
+            const offset = 12 * state.zoom / 50;
+            if (node.position === 'above') textY -= offset;
+            else if (node.position === 'below') textY += offset;
+            else if (node.position === 'left') textX -= offset;
+            else if (node.position === 'right') textX += offset;
+
+            if (isSelected) {
+                const metrics = ctx.measureText(node.text);
+                const padding = 4;
+                ctx.fillStyle = 'rgba(124, 152, 133, 0.2)';
+                ctx.fillRect(
+                    textX - metrics.width / 2 - padding,
+                    textY - fontSize / 2 - padding,
+                    metrics.width + padding * 2,
+                    fontSize + padding * 2
+                );
+            }
+
+            ctx.fillStyle = '#2D2A26';
+            ctx.fillText(node.text, textX, textY);
+
+            // Draw position marker at actual coordinates
+            if (isSelected && node.position !== 'none') {
+                ctx.fillStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawShapeNode(node, isSelected) {
+            const screen = worldToScreen(node.x, node.y);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            const metrics = ctx.measureText(node.text);
+            const textWidth = metrics.width;
+            const textHeight = fontSize;
+
+            const paddingX = node.paddingX * state.zoom / 50;
+            const paddingY = node.paddingY * state.zoom / 50;
+
+            // Shape nodes are always centered at their coordinates
+            const textX = screen.x;
+            const textY = screen.y;
+
+            // Draw shape
+            ctx.fillStyle = '#FFFFFF';
+            ctx.strokeStyle = '#2D2A26';
+            ctx.lineWidth = node.outlineWidth * state.zoom / 50;
+
+            if (node.shape === 'circle') {
+                const radius = Math.max(textWidth / 2, textHeight / 2) + paddingX;
+                ctx.beginPath();
+                ctx.arc(textX, textY, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else if (node.shape === 'rectangle') {
+                const width = textWidth + paddingX * 2;
+                const height = textHeight + paddingY * 2;
+                ctx.beginPath();
+                ctx.rect(textX - width / 2, textY - height / 2, width, height);
+                ctx.fill();
+                ctx.stroke();
+            } else if (node.shape === 'ellipse') {
+                const rx = textWidth / 2 + paddingX;
+                const ry = textHeight / 2 + paddingY;
+                ctx.beginPath();
+                ctx.ellipse(textX, textY, rx, ry, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // Draw selection highlight
+            if (isSelected) {
+                ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.lineWidth = (node.outlineWidth + 3) * state.zoom / 50;
+                if (node.shape === 'circle') {
+                    const radius = Math.max(textWidth / 2, textHeight / 2) + paddingX;
+                    ctx.beginPath();
+                    ctx.arc(textX, textY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (node.shape === 'rectangle') {
+                    const width = textWidth + paddingX * 2;
+                    const height = textHeight + paddingY * 2;
+                    ctx.beginPath();
+                    ctx.rect(textX - width / 2, textY - height / 2, width, height);
+                    ctx.stroke();
+                } else if (node.shape === 'ellipse') {
+                    const rx = textWidth / 2 + paddingX;
+                    const ry = textHeight / 2 + paddingY;
+                    ctx.beginPath();
+                    ctx.ellipse(textX, textY, rx, ry, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw text
+            ctx.fillStyle = '#2D2A26';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.text, textX, textY);
+        }
+
+        function drawCircle(circle, isSelected) {
+            const screen = worldToScreen(circle.x, circle.y);
+            const radius = 3 * state.zoom / 50; // Small fixed radius
+            const lineWidth = circle.lineWidth * state.zoom / 50;
+
+            // Parse color for display (convert TikZ color to CSS)
+            let displayColor = '#2D2A26'; // default black
+            if (circle.color === 'black') displayColor = '#2D2A26';
+            else if (circle.color === 'white') displayColor = '#FFFFFF';
+            else if (circle.color === 'red') displayColor = '#CC0000';
+            else if (circle.color === 'blue') displayColor = '#0000CC';
+            else if (circle.color === 'green') displayColor = '#00CC00';
+            else if (circle.color.includes('!')) {
+                // Handle color mixing like black!50
+                displayColor = 'rgba(45, 42, 38, 0.5)';
+            }
+
+            // Draw selection highlight first (behind)
+            if (isSelected) {
+                ctx.fillStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, radius + lineWidth / 2 + 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw filled circle
+            ctx.fillStyle = displayColor;
+            ctx.beginPath();
+            ctx.arc(screen.x, screen.y, radius + lineWidth / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function createPattern(patternType) {
+            const patternCanvas = document.createElement('canvas');
+            const patternSize = 8;
+            patternCanvas.width = patternSize;
+            patternCanvas.height = patternSize;
+            const pctx = patternCanvas.getContext('2d');
+            pctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            pctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            pctx.lineWidth = 1;
+
+            if (patternType === 'north west lines') {
+                pctx.beginPath();
+                pctx.moveTo(0, patternSize);
+                pctx.lineTo(patternSize, 0);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, -patternSize/2);
+                pctx.moveTo(patternSize/2, patternSize + patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                pctx.stroke();
+            } else if (patternType === 'north east lines') {
+                pctx.beginPath();
+                pctx.moveTo(0, 0);
+                pctx.lineTo(patternSize, patternSize);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, patternSize + patternSize/2);
+                pctx.moveTo(patternSize/2, -patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                pctx.stroke();
+            } else if (patternType === 'crosshatch') {
+                pctx.beginPath();
+                // NW lines
+                pctx.moveTo(0, patternSize);
+                pctx.lineTo(patternSize, 0);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, -patternSize/2);
+                pctx.moveTo(patternSize/2, patternSize + patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                // NE lines
+                pctx.moveTo(0, 0);
+                pctx.lineTo(patternSize, patternSize);
+                pctx.moveTo(-patternSize/2, patternSize/2);
+                pctx.lineTo(patternSize/2, patternSize + patternSize/2);
+                pctx.moveTo(patternSize/2, -patternSize/2);
+                pctx.lineTo(patternSize + patternSize/2, patternSize/2);
+                pctx.stroke();
+            } else if (patternType === 'crosshatch dots') {
+                const dotRadius = 1;
+                pctx.beginPath();
+                pctx.arc(patternSize/2, patternSize/2, dotRadius, 0, Math.PI * 2);
+                pctx.fill();
+            } else {
+                // Default to north west lines
+                pctx.beginPath();
+                pctx.moveTo(0, patternSize);
+                pctx.lineTo(patternSize, 0);
+                pctx.stroke();
+            }
+
+            return ctx.createPattern(patternCanvas, 'repeat');
+        }
+
+        function computeRegionBezierPoints(region, pointIndex) {
+            const points = region.points;
+            const p = points[pointIndex];
+            const nextIndex = (pointIndex + 1) % points.length;
+            const nextP = points[nextIndex];
+
+            const startScreen = worldToScreen(p.x, p.y);
+            const endScreen = worldToScreen(nextP.x, nextP.y);
+
+            const dx = endScreen.x - startScreen.x;
+            const dy = endScreen.y - startScreen.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const looseness = dist / 3;
+
+            const outRad = p.outAngle * Math.PI / 180;
+            const cp1x = startScreen.x + Math.cos(outRad) * looseness;
+            const cp1y = startScreen.y - Math.sin(outRad) * looseness;
+
+            const inRad = nextP.inAngle * Math.PI / 180;
+            const cp2x = endScreen.x + Math.cos(inRad) * looseness;
+            const cp2y = endScreen.y - Math.sin(inRad) * looseness;
+
+            return {
+                start: startScreen,
+                end: endScreen,
+                cp1: { x: cp1x, y: cp1y },
+                cp2: { x: cp2x, y: cp2y }
+            };
+        }
+
+        function drawRegion(region, isSelected) {
+            if (region.points.length < 3) return;
+
+            // Create the path for the region
+            ctx.beginPath();
+            const firstScreen = worldToScreen(region.points[0].x, region.points[0].y);
+            ctx.moveTo(firstScreen.x, firstScreen.y);
+
+            for (let i = 0; i < region.points.length; i++) {
+                const bezier = computeRegionBezierPoints(region, i);
+                ctx.bezierCurveTo(bezier.cp1.x, bezier.cp1.y, bezier.cp2.x, bezier.cp2.y, bezier.end.x, bezier.end.y);
+            }
+            ctx.closePath();
+
+            // Fill with pattern based on region.pattern
+            const pattern = createPattern(region.pattern || 'north west lines');
+            ctx.fillStyle = pattern;
+            ctx.fill();
+
+            // Draw outline (only if lineWidth > 0)
+            if (region.lineWidth > 0) {
+                ctx.strokeStyle = '#2D2A26';
+                ctx.lineWidth = region.lineWidth * state.zoom / 50;
+                ctx.stroke();
+            }
+
+            // Draw selection handles
+            if (isSelected) {
+                // Draw selection highlight
+                ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.lineWidth = (region.lineWidth + 4) * state.zoom / 50;
+                ctx.beginPath();
+                ctx.moveTo(firstScreen.x, firstScreen.y);
+                for (let i = 0; i < region.points.length; i++) {
+                    const bezier = computeRegionBezierPoints(region, i);
+                    ctx.bezierCurveTo(bezier.cp1.x, bezier.cp1.y, bezier.cp2.x, bezier.cp2.y, bezier.end.x, bezier.end.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+
+                // Redraw outline on top (only if lineWidth > 0)
+                if (region.lineWidth > 0) {
+                    ctx.strokeStyle = '#2D2A26';
+                    ctx.lineWidth = region.lineWidth * state.zoom / 50;
+                    ctx.beginPath();
+                    ctx.moveTo(firstScreen.x, firstScreen.y);
+                    for (let i = 0; i < region.points.length; i++) {
+                        const bezier = computeRegionBezierPoints(region, i);
+                        ctx.bezierCurveTo(bezier.cp1.x, bezier.cp1.y, bezier.cp2.x, bezier.cp2.y, bezier.end.x, bezier.end.y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+
+                // Draw point handles and angle handles for each vertex
+                const handleRadius = 6;
+                const tangentLength = 75;
+
+                for (let i = 0; i < region.points.length; i++) {
+                    const p = region.points[i];
+                    const screen = worldToScreen(p.x, p.y);
+
+                    // Draw point handle
+                    ctx.fillStyle = '#7C9885';
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, handleRadius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Draw out angle handle
+                    const outRad = p.outAngle * Math.PI / 180;
+                    const outHandleX = screen.x + Math.cos(outRad) * tangentLength;
+                    const outHandleY = screen.y - Math.sin(outRad) * tangentLength;
+                    ctx.strokeStyle = '#7C9885';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(screen.x, screen.y);
+                    ctx.lineTo(outHandleX, outHandleY);
+                    ctx.stroke();
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(outHandleX, outHandleY, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Draw in angle handle
+                    const inRad = p.inAngle * Math.PI / 180;
+                    const inHandleX = screen.x + Math.cos(inRad) * tangentLength;
+                    const inHandleY = screen.y - Math.sin(inRad) * tangentLength;
+                    ctx.strokeStyle = '#7C9885';
+                    ctx.beginPath();
+                    ctx.moveTo(screen.x, screen.y);
+                    ctx.lineTo(inHandleX, inHandleY);
+                    ctx.stroke();
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(inHandleX, inHandleY, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawPendingRegion() {
+            if (state.pendingRegionPoints.length === 0) return;
+
+            // Draw placed points
+            for (let i = 0; i < state.pendingRegionPoints.length; i++) {
+                const p = state.pendingRegionPoints[i];
+                const screen = worldToScreen(p.x, p.y);
+
+                ctx.fillStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw line to next point
+                if (i < state.pendingRegionPoints.length - 1) {
+                    const nextP = state.pendingRegionPoints[i + 1];
+                    const nextScreen = worldToScreen(nextP.x, nextP.y);
+                    ctx.strokeStyle = 'rgba(124, 152, 133, 0.8)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(screen.x, screen.y);
+                    ctx.lineTo(nextScreen.x, nextScreen.y);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw preview line to cursor
+            if (state.previewRegionEnd && state.pendingRegionPoints.length > 0) {
+                const lastP = state.pendingRegionPoints[state.pendingRegionPoints.length - 1];
+                const lastScreen = worldToScreen(lastP.x, lastP.y);
+                const endScreen = worldToScreen(state.previewRegionEnd.x, state.previewRegionEnd.y);
+
+                ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(lastScreen.x, lastScreen.y);
+                ctx.lineTo(endScreen.x, endScreen.y);
+                ctx.stroke();
+
+                // Also draw closing line to first point if we have enough points
+                if (state.pendingRegionPoints.length >= 2) {
+                    const firstP = state.pendingRegionPoints[0];
+                    const firstScreen = worldToScreen(firstP.x, firstP.y);
+                    ctx.beginPath();
+                    ctx.moveTo(endScreen.x, endScreen.y);
+                    ctx.lineTo(firstScreen.x, firstScreen.y);
+                    ctx.stroke();
+                }
+
+                ctx.setLineDash([]);
+            }
+        }
+
+        function render() {
+            const rect = canvasContainer.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+            drawGrid();
+
+            // Draw regions sorted by ordering (behind lines)
+            const sortedRegions = [...state.regions].sort((a, b) => a.ordering - b.ordering);
+            for (const region of sortedRegions) {
+                const isSelected = state.selection?.type === 'region' && state.selection.id === region.id;
+                if (!isSelected) drawRegion(region, false);
+            }
+            // Draw selected region on top of other regions
+            if (state.selection?.type === 'region') {
+                const region = state.regions.find(r => r.id === state.selection.id);
+                if (region) drawRegion(region, true);
+            }
+
+            // Draw lines sorted by ordering
+            const sortedLines = [...state.lines].sort((a, b) => a.ordering - b.ordering);
+            for (const line of sortedLines) {
+                const isSelected = state.selection?.type === 'line' && state.selection.id === line.id;
+                if (!isSelected) drawLine(line, false);
+            }
+            // Draw selected line on top
+            if (state.selection?.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (line) drawLine(line, true);
+            }
+
+            // Draw text nodes
+            for (const node of state.textNodes) {
+                const isSelected = state.selection?.type === 'text' && state.selection.id === node.id;
+                drawTextNode(node, isSelected);
+            }
+
+            // Draw shape nodes
+            for (const node of state.shapeNodes) {
+                const isSelected = state.selection?.type === 'shape' && state.selection.id === node.id;
+                drawShapeNode(node, isSelected);
+            }
+
+            // Draw circles
+            for (const circle of state.circles) {
+                const isSelected = state.selection?.type === 'circle' && state.selection.id === circle.id;
+                drawCircle(circle, isSelected);
+            }
+
+            // Draw pending line start
+            if (state.pendingLineStart) {
+                const screen = worldToScreen(state.pendingLineStart.x, state.pendingLineStart.y);
+                ctx.fillStyle = '#7C9885';
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+                if (state.previewEnd) {
+                    const endScreen = worldToScreen(state.previewEnd.x, state.previewEnd.y);
+                    ctx.strokeStyle = 'rgba(124, 152, 133, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(screen.x, screen.y);
+                    ctx.lineTo(endScreen.x, endScreen.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            // Draw new line being dragged
+            if (state.dragType === 'new-line' && state.newLineStart) {
+                const tempLine = createLine(
+                    state.newLineStart.x, state.newLineStart.y,
+                    state.dragStartWorld.x, state.dragStartWorld.y
+                );
+                state.nextLineId--;
+                drawLine(tempLine, false);
+            }
+
+            // Draw pending region points
+            drawPendingRegion();
+
+            updateScaleIndicator();
+        }
+
+        function updateScaleIndicator() {
+            scaleBar.style.width = state.zoom + 'px';
+            scaleLabel.textContent = '1 unit';
+        }
+
+        // ============== TIKZ OUTPUT ==============
+        function updateTikzOutput() {
+            let code = '\\begin{center}\n\\begin{tikzpicture}\n';
+
+            // Regions (drawn first, behind everything)
+            const sortedRegions = [...state.regions].sort((a, b) => a.ordering - b.ordering);
+            for (const region of sortedRegions) {
+                if (region.points.length < 3) continue;
+                const options = [
+                    `pattern=${region.pattern || 'north west lines'}`,
+                    `pattern color=${region.patternColor}`
+                ];
+                // Only add line width and use \filldraw if lineWidth > 0
+                const useFilldraw = region.lineWidth > 0;
+                if (useFilldraw) {
+                    options.push(`line width=${region.lineWidth.toFixed(1)}pt`);
+                }
+                let path = '';
+                for (let i = 0; i < region.points.length; i++) {
+                    const p = region.points[i];
+                    const nextP = region.points[(i + 1) % region.points.length];
+                    const px = p.x.toFixed(2);
+                    const py = p.y.toFixed(2);
+                    const outA = Math.round(p.outAngle);
+                    const inA = Math.round(nextP.inAngle);
+                    if (i === 0) {
+                        path += `(${px},${py})`;
+                    }
+                    const nextX = nextP.x.toFixed(2);
+                    const nextY = nextP.y.toFixed(2);
+                    path += ` to[out=${outA}, in=${inA}] (${nextX},${nextY})`;
+                }
+                const cmd = useFilldraw ? '\\filldraw' : '\\fill';
+                code += `${cmd}[${options.join(', ')}]\n  ${path};\n`;
+            }
+
+            // Lines
+            const sortedLines = [...state.lines].sort((a, b) => a.ordering - b.ordering);
+            for (const line of sortedLines) {
+                const sx = line.startX.toFixed(2);
+                const sy = line.startY.toFixed(2);
+                const ex = line.endX.toFixed(2);
+                const ey = line.endY.toFixed(2);
+                const outA = Math.round(line.outAngle);
+                const inA = Math.round(line.inAngle);
+                const arrowStyle = line.arrowStyle === 'arrow' ? '->' : '-';
+                const lineStyle = line.lineStyle || 'straight';
+                let styleOpts = '';
+                if (lineStyle === 'squiggly') {
+                    styleOpts = 'decorate, decoration={snake, amplitude=.4mm, segment length=2mm, post length=1mm}, ';
+                } else if (lineStyle === 'dashed') {
+                    styleOpts = 'dashed, ';
+                }
+                if (line.whiteWidth > 0) {
+                    code += `\\draw[${styleOpts}${arrowStyle}, line width=${line.whiteWidth.toFixed(1)}pt, white] (${sx},${sy}) to[out=${outA}, in=${inA}] (${ex},${ey});\n`;
+                }
+                code += `\\draw[${styleOpts}${arrowStyle}, line width=${line.lineWidth.toFixed(1)}pt] (${sx},${sy}) to[out=${outA}, in=${inA}] (${ex},${ey});\n`;
+            }
+
+            // Text nodes
+            for (const node of state.textNodes) {
+                const x = node.x.toFixed(2);
+                const y = node.y.toFixed(2);
+                let options = [];
+                if (node.position !== 'none') options.push(node.position);
+                const fontSize = node.fontSize || 12;
+                if (fontSize !== 12) options.push(`font=\\fontsize{${fontSize}pt}{${fontSize}pt}\\selectfont`);
+                const optStr = options.length > 0 ? `[${options.join(', ')}]` : '';
+                code += `\\node${optStr} at (${x},${y}) {${node.text}};\n`;
+            }
+
+            // Shape nodes
+            for (const node of state.shapeNodes) {
+                const x = node.x.toFixed(2);
+                const y = node.y.toFixed(2);
+                let options = [`draw`, `fill=white`, `line width=${node.outlineWidth.toFixed(1)}pt`];
+                options.push(node.shape);
+                if (node.shape === 'circle') {
+                    options.push(`inner sep=${node.paddingX.toFixed(1)}pt`);
+                } else {
+                    options.push(`inner xsep=${node.paddingX.toFixed(1)}pt`);
+                    options.push(`inner ysep=${node.paddingY.toFixed(1)}pt`);
+                }
+                const fontSize = node.fontSize || 12;
+                if (fontSize !== 12) options.push(`font=\\fontsize{${fontSize}pt}{${fontSize}pt}\\selectfont`);
+                code += `\\node[${options.join(', ')}] at (${x},${y}) {${node.text}};\n`;
+            }
+
+            // Circles
+            for (const circle of state.circles) {
+                const x = circle.x.toFixed(2);
+                const y = circle.y.toFixed(2);
+                const color = circle.color || 'black';
+                const lineWidth = circle.lineWidth || 2;
+                code += `\\fill[${color}] (${x},${y}) circle (${lineWidth.toFixed(1)}pt);\n`;
+            }
+
+            code += '\\end{tikzpicture}\n\\end{center}';
+            tikzOutput.value = code;
+
+            // Update library notice
+            const hasSquiggly = state.lines.some(l => l.lineStyle === 'squiggly');
+            const libraryNotice = document.getElementById('library-notice');
+            const libraryList = document.getElementById('library-list');
+            if (hasSquiggly) {
+                libraryNotice.classList.add('visible');
+                libraryList.innerHTML = 'Add to your preamble: <code>\\usetikzlibrary{decorations.pathmorphing}</code>';
+            } else {
+                libraryNotice.classList.remove('visible');
+                libraryList.innerHTML = '';
+            }
+        }
+
+        function copyTikzToClipboard() {
+            navigator.clipboard.writeText(tikzOutput.value).then(() => {
+                const btn = document.getElementById('copy-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+                setTimeout(() => btn.innerHTML = originalHTML, 1500);
+            });
+        }
+
+        // ============== TIKZ PARSING ==============
+        function parseTikzCode(code) {
+            const result = {
+                lines: [],
+                textNodes: [],
+                shapeNodes: [],
+                regions: [],
+                circles: [],
+                droppedLines: []
+            };
+
+            // Strip wrappers (forgiving: handle with or without)
+            let content = code
+                .replace(/\\begin\{center\}/gi, '')
+                .replace(/\\end\{center\}/gi, '')
+                .replace(/\\begin\{tikzpicture\}(\[.*?\])?/gi, '')
+                .replace(/\\end\{tikzpicture\}/gi, '')
+                .trim();
+
+            // Split into lines, handling multi-line commands
+            // Join lines that don't end with ; and process
+            const rawLines = content.split('\n');
+            const commands = [];
+            let currentCmd = '';
+
+            for (const line of rawLines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+
+                currentCmd += (currentCmd ? ' ' : '') + trimmed;
+
+                // Check if command is complete (ends with ; or is a comment)
+                if (trimmed.endsWith(';') || trimmed.startsWith('%')) {
+                    commands.push(currentCmd);
+                    currentCmd = '';
+                }
+            }
+            // Add any remaining command (missing semicolon - forgiving)
+            if (currentCmd.trim()) {
+                commands.push(currentCmd.trim());
+            }
+
+            for (const cmd of commands) {
+                if (cmd.startsWith('%')) continue; // Skip comments
+
+                let parsed = false;
+
+                // Try parsing as \fill[...] (x,y) circle (...) or \fill (x,y) circle (...) - circles
+                if (!parsed) {
+                    // Match with or without [...]
+                    const circleMatch = cmd.match(/\\fill\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*circle\s*\(([^)]+)\)/i);
+                    if (circleMatch) {
+                        const opts = circleMatch[1] || '';
+                        const x = parseFloat(circleMatch[2]);
+                        const y = parseFloat(circleMatch[3]);
+                        const sizeStr = circleMatch[4].trim();
+                        // Parse size - could be "2pt" or just "2"
+                        const sizeMatch = sizeStr.match(/([\d.]+)/);
+                        const size = sizeMatch ? parseFloat(sizeMatch[1]) : 2;
+
+                        // Extract color from options (first option or 'black')
+                        const color = opts ? (opts.split(',')[0].trim() || 'black') : 'black';
+
+                        if (!isNaN(x) && !isNaN(y)) {
+                            result.circles.push({
+                                id: state.nextCircleId++,
+                                x: x,
+                                y: y,
+                                lineWidth: size,
+                                color: color
+                            });
+                            parsed = true;
+                        }
+                    }
+                }
+
+                // Try parsing as \draw[...] (x,y) to[...] (x2,y2) or \draw (x,y) -- (x2,y2) - lines
+                if (!parsed) {
+                    // First try: \draw[...] (x,y) to[...] (x2,y2) - with explicit angles
+                    let drawMatch = cmd.match(/\\draw\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*to\s*\[([^\]]*)\]\s*\(([^,]+),([^)]+)\)/i);
+                    let hasExplicitAngles = true;
+
+                    // Second try: \draw[...] (x,y) -- (x2,y2) or \draw (x,y) -- (x2,y2)
+                    if (!drawMatch) {
+                        drawMatch = cmd.match(/\\draw\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*--\s*\(([^,]+),([^)]+)\)/i);
+                        if (drawMatch) {
+                            // Remap to same structure: opts, startX, startY, (no toOpts), endX, endY
+                            drawMatch = [drawMatch[0], drawMatch[1] || '', drawMatch[2], drawMatch[3], '', drawMatch[4], drawMatch[5]];
+                            hasExplicitAngles = false;
+                        }
+                    }
+
+                    // Third try: \draw[...] (x,y) to (x2,y2) - no angles specified
+                    if (!drawMatch) {
+                        drawMatch = cmd.match(/\\draw\s*(?:\[(.*?)\])?\s*\(([^,]+),([^)]+)\)\s*to\s+\(([^,]+),([^)]+)\)/i);
+                        if (drawMatch) {
+                            drawMatch = [drawMatch[0], drawMatch[1] || '', drawMatch[2], drawMatch[3], '', drawMatch[4], drawMatch[5]];
+                            hasExplicitAngles = false;
+                        }
+                    }
+
+                    if (drawMatch) {
+                        const opts = drawMatch[1] || '';
+                        const startX = parseFloat(drawMatch[2]);
+                        const startY = parseFloat(drawMatch[3]);
+                        const toOpts = drawMatch[4] || '';
+                        const endX = parseFloat(drawMatch[5]);
+                        const endY = parseFloat(drawMatch[6]);
+
+                        // Compute angles - use explicit if provided, otherwise calculate from coordinates
+                        let outAngle, inAngle;
+                        if (hasExplicitAngles && toOpts) {
+                            const outMatch = toOpts.match(/out\s*=\s*([-\d.]+)/i);
+                            const inMatch = toOpts.match(/in\s*=\s*([-\d.]+)/i);
+                            // Calculate straight-line angle
+                            const straightAngle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                            outAngle = outMatch ? parseFloat(outMatch[1]) : straightAngle;
+                            inAngle = inMatch ? parseFloat(inMatch[1]) : (straightAngle + 180);
+                        } else {
+                            // Calculate angles automatically for -- syntax
+                            const straightAngle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+                            outAngle = straightAngle;
+                            inAngle = straightAngle + 180;
+                        }
+                        // Normalize inAngle to -180 to 180 range
+                        while (inAngle > 180) inAngle -= 360;
+                        while (inAngle < -180) inAngle += 360;
+
+                        // Parse draw options (default to 0.8pt line width, no arrow)
+                        const lineWidthMatch = opts.match(/line\s*width\s*=\s*([\d.]+)/i);
+                        const lineWidth = lineWidthMatch ? parseFloat(lineWidthMatch[1]) : 0.8;
+                        const hasArrow = opts.includes('->');
+                        const isWhite = opts.toLowerCase().includes('white');
+                        const isSquiggly = opts.includes('snake') || opts.includes('decorate');
+                        const isDashed = opts.includes('dashed');
+
+                        if (!isNaN(startX) && !isNaN(startY) && !isNaN(endX) && !isNaN(endY)) {
+                            // Skip white backing lines (they're paired with main lines)
+                            if (!isWhite) {
+                                // Check if there's a matching white line before this one
+                                let whiteWidth = 0;
+                                const cmdIndex = commands.indexOf(cmd);
+                                if (cmdIndex > 0) {
+                                    const prevCmd = commands[cmdIndex - 1];
+                                    if (prevCmd.toLowerCase().includes('white')) {
+                                        // Check if coordinates roughly match
+                                        const prevCoords = prevCmd.match(/\(([^,]+),([^)]+)\).*\(([^,]+),([^)]+)\)/);
+                                        if (prevCoords) {
+                                            const psx = parseFloat(prevCoords[1]);
+                                            const psy = parseFloat(prevCoords[2]);
+                                            const pex = parseFloat(prevCoords[3]);
+                                            const pey = parseFloat(prevCoords[4]);
+                                            if (Math.abs(psx - startX) < 0.01 && Math.abs(psy - startY) < 0.01 &&
+                                                Math.abs(pex - endX) < 0.01 && Math.abs(pey - endY) < 0.01) {
+                                                const whiteMatch = prevCmd.match(/line\s*width\s*=\s*([\d.]+)/i);
+                                                if (whiteMatch) whiteWidth = parseFloat(whiteMatch[1]);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                result.lines.push({
+                                    id: state.nextLineId++,
+                                    startX: startX,
+                                    startY: startY,
+                                    endX: endX,
+                                    endY: endY,
+                                    outAngle: outAngle,
+                                    inAngle: inAngle,
+                                    lineWidth: lineWidth,
+                                    whiteWidth: whiteWidth,
+                                    ordering: result.lines.length + 1,
+                                    arrowStyle: hasArrow ? 'arrow' : 'none',
+                                    lineStyle: isSquiggly ? 'squiggly' : (isDashed ? 'dashed' : 'straight')
+                                });
+                            }
+                            parsed = true;
+                        }
+                    }
+                }
+
+                // Try parsing as \node[...] at (x,y) {text} - text or shape nodes
+                if (!parsed) {
+                    const nodeMatch = cmd.match(/\\node\s*(\[[^\]]*\])?\s*at\s*\(([^,]+),([^)]+)\)\s*\{(.*)\}/i);
+                    if (nodeMatch) {
+                        const opts = nodeMatch[1] ? nodeMatch[1].slice(1, -1) : '';
+                        const x = parseFloat(nodeMatch[2]);
+                        const y = parseFloat(nodeMatch[3]);
+                        const text = nodeMatch[4];
+
+                        if (!isNaN(x) && !isNaN(y)) {
+                            // Determine if it's a shape node or text node
+                            const hasShape = opts.includes('circle') || opts.includes('rectangle') || opts.includes('ellipse');
+                            const hasDraw = opts.includes('draw');
+
+                            if (hasShape && hasDraw) {
+                                // Shape node
+                                let shape = 'circle';
+                                if (opts.includes('rectangle')) shape = 'rectangle';
+                                else if (opts.includes('ellipse')) shape = 'ellipse';
+
+                                const outlineMatch = opts.match(/line\s*width\s*=\s*([\d.]+)/i);
+                                const outlineWidth = outlineMatch ? parseFloat(outlineMatch[1]) : 0.8;
+
+                                const innerSepMatch = opts.match(/inner\s*sep\s*=\s*([\d.]+)/i);
+                                const innerXSepMatch = opts.match(/inner\s*xsep\s*=\s*([\d.]+)/i);
+                                const innerYSepMatch = opts.match(/inner\s*ysep\s*=\s*([\d.]+)/i);
+
+                                let paddingX = innerSepMatch ? parseFloat(innerSepMatch[1]) : 4;
+                                let paddingY = innerSepMatch ? parseFloat(innerSepMatch[1]) : 3;
+                                if (innerXSepMatch) paddingX = parseFloat(innerXSepMatch[1]);
+                                if (innerYSepMatch) paddingY = parseFloat(innerYSepMatch[1]);
+
+                                const fontMatch = opts.match(/font\s*=.*?fontsize\{(\d+)pt\}/i);
+                                const fontSize = fontMatch ? parseInt(fontMatch[1]) : 12;
+
+                                result.shapeNodes.push({
+                                    id: state.nextShapeId++,
+                                    x: x,
+                                    y: y,
+                                    text: text,
+                                    shape: shape,
+                                    outlineWidth: outlineWidth,
+                                    paddingX: paddingX,
+                                    paddingY: paddingY,
+                                    fontSize: fontSize
+                                });
+                            } else {
+                                // Text node
+                                let position = 'none';
+                                if (opts.includes('above')) position = 'above';
+                                else if (opts.includes('below')) position = 'below';
+                                else if (opts.includes('left')) position = 'left';
+                                else if (opts.includes('right')) position = 'right';
+
+                                const fontMatch = opts.match(/font\s*=.*?fontsize\{(\d+)pt\}/i);
+                                const fontSize = fontMatch ? parseInt(fontMatch[1]) : 12;
+
+                                result.textNodes.push({
+                                    id: state.nextTextId++,
+                                    x: x,
+                                    y: y,
+                                    text: text,
+                                    position: position,
+                                    fontSize: fontSize
+                                });
+                            }
+                            parsed = true;
+                        }
+                    }
+                }
+
+                // Try parsing as \filldraw[...] or \fill[pattern=...] for regions (polygons with pattern)
+                if (!parsed) {
+                    // Match \fill or \filldraw with or without [...] options
+                    const filldrawMatch = cmd.match(/\\(filldraw|fill)\b\s*(?:\[(.*?)\])?\s*([\s\S]*)/i);
+                    if (filldrawMatch && filldrawMatch[3]) {
+                        const cmdType = filldrawMatch[1].toLowerCase(); // 'fill' or 'filldraw'
+                        const opts = filldrawMatch[2] || '';
+                        const pathStr = filldrawMatch[3];
+
+                        // Parse pattern options
+                        const patternMatch = opts.match(/pattern\s*=\s*([^,\]]+)/i);
+                        const patternColorMatch = opts.match(/pattern\s*color\s*=\s*([^,\]]+)/i);
+                        const lineWidthMatch = opts.match(/line\s*width\s*=\s*([\d.]+)/i);
+
+                        // Only treat \fill as a region if it has a pattern (otherwise it's something else)
+                        // \filldraw is always treated as a region
+                        if (cmdType === 'fill' && !patternMatch) {
+                            // Skip - this is not a region (could be solid fill, etc.)
+                        } else {
+                            const pattern = patternMatch ? patternMatch[1].trim() : 'north west lines';
+                            const patternColor = patternColorMatch ? patternColorMatch[1].trim() : 'black!30';
+                            // If it's \fill (not \filldraw), default lineWidth to 0
+                            const defaultLineWidth = cmdType === 'fill' ? 0 : 0.8;
+                            const lineWidth = lineWidthMatch ? parseFloat(lineWidthMatch[1]) : defaultLineWidth;
+
+                        // Parse path points - handle both to[...] and -- syntax
+                        // Match (x,y) followed by optional to[...] or --
+                        const allMatches = [];
+                        // First, extract all coordinates
+                        const coordRegex = /\(([^,]+),([^)]+)\)/g;
+                        let coordMatch;
+                        const coords = [];
+                        while ((coordMatch = coordRegex.exec(pathStr)) !== null) {
+                            coords.push({
+                                x: parseFloat(coordMatch[1]),
+                                y: parseFloat(coordMatch[2]),
+                                index: coordMatch.index
+                            });
+                        }
+
+                        // Now find to[...] options between coordinates
+                        for (let i = 0; i < coords.length; i++) {
+                            const curr = coords[i];
+                            const next = coords[i + 1];
+                            let toOpts = '';
+
+                            if (next) {
+                                // Look for to[...] between this coord and next
+                                const between = pathStr.substring(curr.index, next.index);
+                                const toMatch = between.match(/to\s*\[([^\]]*)\]/i);
+                                if (toMatch) {
+                                    toOpts = toMatch[1];
+                                }
+                                // If we find --, no explicit angles
+                            }
+
+                            allMatches.push({
+                                x: curr.x,
+                                y: curr.y,
+                                toOpts: toOpts
+                            });
+                        }
+
+                        // Remove duplicate last point if it matches first (closed path)
+                        if (allMatches.length >= 2) {
+                            const first = allMatches[0];
+                            const last = allMatches[allMatches.length - 1];
+                            if (Math.abs(first.x - last.x) < 0.01 && Math.abs(first.y - last.y) < 0.01) {
+                                allMatches.pop();
+                            }
+                        }
+
+                        if (allMatches.length >= 3) {
+                            // Build region points with angles
+                            const points = [];
+                            for (let i = 0; i < allMatches.length; i++) {
+                                const curr = allMatches[i];
+                                const prev = allMatches[(i - 1 + allMatches.length) % allMatches.length];
+                                const next = allMatches[(i + 1) % allMatches.length];
+
+                                // Calculate default angles from geometry
+                                let outAngle = Math.atan2(next.y - curr.y, next.x - curr.x) * 180 / Math.PI;
+                                let inAngle = Math.atan2(prev.y - curr.y, prev.x - curr.x) * 180 / Math.PI;
+
+                                // Try to get explicit angles from to options
+                                if (curr.toOpts) {
+                                    const outMatch = curr.toOpts.match(/out\s*=\s*([-\d.]+)/i);
+                                    if (outMatch) outAngle = parseFloat(outMatch[1]);
+                                }
+                                if (prev.toOpts) {
+                                    const inMatch = prev.toOpts.match(/in\s*=\s*([-\d.]+)/i);
+                                    if (inMatch) inAngle = parseFloat(inMatch[1]);
+                                }
+
+                                if (!isNaN(curr.x) && !isNaN(curr.y)) {
+                                    points.push({
+                                        x: curr.x,
+                                        y: curr.y,
+                                        outAngle: outAngle,
+                                        inAngle: inAngle
+                                    });
+                                }
+                            }
+
+                            if (points.length >= 3) {
+                                result.regions.push({
+                                    id: state.nextRegionId++,
+                                    points: points,
+                                    lineWidth: lineWidth,
+                                    pattern: pattern,
+                                    patternColor: patternColor,
+                                    ordering: result.regions.length + 1
+                                });
+                                parsed = true;
+                            }
+                        }
+                        }
+                    }
+                }
+
+                // If not parsed and not a white backing line, add to dropped
+                if (!parsed && !cmd.toLowerCase().includes('white')) {
+                    const cleanCmd = cmd.replace(/;$/, '').trim();
+                    if (cleanCmd) {
+                        result.droppedLines.push(cleanCmd);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function submitTikzEdits() {
+            const code = tikzOutput.value;
+            const parsed = parseTikzCode(code);
+
+            // Save state for undo
+            saveState();
+
+            // Update state with parsed elements
+            state.lines = parsed.lines;
+            state.textNodes = parsed.textNodes;
+            state.shapeNodes = parsed.shapeNodes;
+            state.regions = parsed.regions;
+            state.circles = parsed.circles;
+
+            // Clear selection
+            state.selection = null;
+            updatePropertyBar();
+
+            // Add dropped lines to error log
+            const errorLog = document.getElementById('error-log');
+            const errorLogSection = document.getElementById('error-log-section');
+
+            if (parsed.droppedLines.length > 0) {
+                const timestamp = new Date().toLocaleTimeString();
+                const newErrors = `[${timestamp}] Dropped ${parsed.droppedLines.length} line(s):\n${parsed.droppedLines.join('\n')}\n\n`;
+                errorLog.value = newErrors + errorLog.value;
+                // Ensure visible class is added (force re-add in case of any issues)
+                errorLogSection.classList.remove('visible');
+                void errorLogSection.offsetWidth; // Force reflow
+                errorLogSection.classList.add('visible');
+            }
+
+            // Re-render and update output
+            render();
+            updateTikzOutput();
+
+            // Flash submit button to confirm
+            const btn = document.getElementById('submit-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done!';
+            setTimeout(() => btn.innerHTML = originalHTML, 1000);
+        }
+
+        function clearErrorLog() {
+            const errorLog = document.getElementById('error-log');
+            const errorLogSection = document.getElementById('error-log-section');
+            errorLog.value = '';
+            errorLogSection.classList.remove('visible');
+        }
+
+        // ============== HIT TESTING ==============
+        function hitTestLine(line, worldX, worldY) {
+            const points = computeBezierControlPoints(line);
+            const testScreen = worldToScreen(worldX, worldY);
+            const samples = 50;
+            const hitThreshold = 10;
+            for (let i = 0; i <= samples; i++) {
+                const t = i / samples;
+                const x = Math.pow(1-t, 3) * points.start.x + 3 * Math.pow(1-t, 2) * t * points.cp1.x +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.x + Math.pow(t, 3) * points.end.x;
+                const y = Math.pow(1-t, 3) * points.start.y + 3 * Math.pow(1-t, 2) * t * points.cp1.y +
+                          3 * (1-t) * Math.pow(t, 2) * points.cp2.y + Math.pow(t, 3) * points.end.y;
+                const dist = Math.sqrt(Math.pow(x - testScreen.x, 2) + Math.pow(y - testScreen.y, 2));
+                if (dist < hitThreshold) return true;
+            }
+            return false;
+        }
+
+        function hitTestEndpoint(line, worldX, worldY) {
+            const testScreen = worldToScreen(worldX, worldY);
+            const startScreen = worldToScreen(line.startX, line.startY);
+            const endScreen = worldToScreen(line.endX, line.endY);
+            const threshold = 12;
+            if (Math.sqrt(Math.pow(testScreen.x - startScreen.x, 2) + Math.pow(testScreen.y - startScreen.y, 2)) < threshold) return 'start';
+            if (Math.sqrt(Math.pow(testScreen.x - endScreen.x, 2) + Math.pow(testScreen.y - endScreen.y, 2)) < threshold) return 'end';
+            return null;
+        }
+
+        function hitTestHandle(line, worldX, worldY) {
+            const testScreen = worldToScreen(worldX, worldY);
+            const startScreen = worldToScreen(line.startX, line.startY);
+            const endScreen = worldToScreen(line.endX, line.endY);
+            const tangentLength = 75;
+            const threshold = 12;
+            const outRad = line.outAngle * Math.PI / 180;
+            const outHandleX = startScreen.x + Math.cos(outRad) * tangentLength;
+            const outHandleY = startScreen.y - Math.sin(outRad) * tangentLength;
+            if (Math.sqrt(Math.pow(testScreen.x - outHandleX, 2) + Math.pow(testScreen.y - outHandleY, 2)) < threshold) return 'out';
+            const inRad = line.inAngle * Math.PI / 180;
+            const inHandleX = endScreen.x + Math.cos(inRad) * tangentLength;
+            const inHandleY = endScreen.y - Math.sin(inRad) * tangentLength;
+            if (Math.sqrt(Math.pow(testScreen.x - inHandleX, 2) + Math.pow(testScreen.y - inHandleY, 2)) < threshold) return 'in';
+            return null;
+        }
+
+        function hitTestTextNode(node, worldX, worldY) {
+            const screen = worldToScreen(node.x, node.y);
+            const testScreen = worldToScreen(worldX, worldY);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            const metrics = ctx.measureText(node.text);
+            const width = metrics.width + 32;
+            const height = fontSize + 14;
+            let textX = screen.x;
+            let textY = screen.y;
+            const offset = 12 * state.zoom / 50;
+            if (node.position === 'above') textY -= offset;
+            else if (node.position === 'below') textY += offset;
+            else if (node.position === 'left') textX -= offset;
+            else if (node.position === 'right') textX += offset;
+            return Math.abs(testScreen.x - textX) < width / 2 && Math.abs(testScreen.y - textY) < height / 2;
+        }
+
+        function hitTestShapeNode(node, worldX, worldY) {
+            const screen = worldToScreen(node.x, node.y);
+            const testScreen = worldToScreen(worldX, worldY);
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            ctx.font = `${fontSize}px 'DM Sans', sans-serif`;
+            const metrics = ctx.measureText(node.text);
+            const paddingX = node.paddingX * state.zoom / 50;
+            const paddingY = node.paddingY * state.zoom / 50;
+            const textX = screen.x;
+            const textY = screen.y;
+
+            if (node.shape === 'circle') {
+                const radius = Math.max(metrics.width / 2, fontSize / 2) + paddingX;
+                return Math.sqrt(Math.pow(testScreen.x - textX, 2) + Math.pow(testScreen.y - textY, 2)) < radius;
+            } else {
+                const width = metrics.width + paddingX * 2;
+                const height = fontSize + paddingY * 2;
+                return Math.abs(testScreen.x - textX) < width / 2 && Math.abs(testScreen.y - textY) < height / 2;
+            }
+        }
+
+        function hitTestCircle(circle, worldX, worldY) {
+            const screen = worldToScreen(circle.x, circle.y);
+            const testScreen = worldToScreen(worldX, worldY);
+            const radius = 3 * state.zoom / 50;
+            const lineWidth = circle.lineWidth * state.zoom / 50;
+            const hitRadius = radius + lineWidth / 2 + 5; // Extra margin for easier clicking
+            return Math.sqrt(Math.pow(testScreen.x - screen.x, 2) + Math.pow(testScreen.y - screen.y, 2)) < hitRadius;
+        }
+
+        function hitTestRegion(region, worldX, worldY) {
+            if (region.points.length < 3) return false;
+            const testScreen = worldToScreen(worldX, worldY);
+
+            // Test if point is near any edge of the region (using bezier sampling)
+            const hitThreshold = 10;
+            for (let i = 0; i < region.points.length; i++) {
+                const bezier = computeRegionBezierPoints(region, i);
+                const samples = 30;
+                for (let j = 0; j <= samples; j++) {
+                    const t = j / samples;
+                    const x = Math.pow(1-t, 3) * bezier.start.x + 3 * Math.pow(1-t, 2) * t * bezier.cp1.x +
+                              3 * (1-t) * Math.pow(t, 2) * bezier.cp2.x + Math.pow(t, 3) * bezier.end.x;
+                    const y = Math.pow(1-t, 3) * bezier.start.y + 3 * Math.pow(1-t, 2) * t * bezier.cp1.y +
+                              3 * (1-t) * Math.pow(t, 2) * bezier.cp2.y + Math.pow(t, 3) * bezier.end.y;
+                    const dist = Math.sqrt(Math.pow(x - testScreen.x, 2) + Math.pow(y - testScreen.y, 2));
+                    if (dist < hitThreshold) return true;
+                }
+            }
+
+            // Also test if point is inside the region using ray casting
+            const screenPoints = region.points.map(p => worldToScreen(p.x, p.y));
+            let inside = false;
+            for (let i = 0, j = screenPoints.length - 1; i < screenPoints.length; j = i++) {
+                const xi = screenPoints[i].x, yi = screenPoints[i].y;
+                const xj = screenPoints[j].x, yj = screenPoints[j].y;
+                if (((yi > testScreen.y) !== (yj > testScreen.y)) &&
+                    (testScreen.x < (xj - xi) * (testScreen.y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+
+        function hitTestRegionPoint(region, worldX, worldY) {
+            const testScreen = worldToScreen(worldX, worldY);
+            const threshold = 12;
+            for (let i = 0; i < region.points.length; i++) {
+                const p = region.points[i];
+                const pScreen = worldToScreen(p.x, p.y);
+                if (Math.sqrt(Math.pow(testScreen.x - pScreen.x, 2) + Math.pow(testScreen.y - pScreen.y, 2)) < threshold) {
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        function hitTestRegionHandle(region, worldX, worldY) {
+            const testScreen = worldToScreen(worldX, worldY);
+            const tangentLength = 75;
+            const threshold = 12;
+
+            for (let i = 0; i < region.points.length; i++) {
+                const p = region.points[i];
+                const pScreen = worldToScreen(p.x, p.y);
+
+                // Check out handle
+                const outRad = p.outAngle * Math.PI / 180;
+                const outHandleX = pScreen.x + Math.cos(outRad) * tangentLength;
+                const outHandleY = pScreen.y - Math.sin(outRad) * tangentLength;
+                if (Math.sqrt(Math.pow(testScreen.x - outHandleX, 2) + Math.pow(testScreen.y - outHandleY, 2)) < threshold) {
+                    return { pointIndex: i, handleType: 'out' };
+                }
+
+                // Check in handle
+                const inRad = p.inAngle * Math.PI / 180;
+                const inHandleX = pScreen.x + Math.cos(inRad) * tangentLength;
+                const inHandleY = pScreen.y - Math.sin(inRad) * tangentLength;
+                if (Math.sqrt(Math.pow(testScreen.x - inHandleX, 2) + Math.pow(testScreen.y - inHandleY, 2)) < threshold) {
+                    return { pointIndex: i, handleType: 'in' };
+                }
+            }
+            return null;
+        }
+
+        function findItemAtPoint(worldX, worldY) {
+            // Check circles first (small, on top)
+            for (let i = state.circles.length - 1; i >= 0; i--) {
+                if (hitTestCircle(state.circles[i], worldX, worldY)) {
+                    return { type: 'circle', id: state.circles[i].id };
+                }
+            }
+            // Check shape nodes
+            for (let i = state.shapeNodes.length - 1; i >= 0; i--) {
+                if (hitTestShapeNode(state.shapeNodes[i], worldX, worldY)) {
+                    return { type: 'shape', id: state.shapeNodes[i].id };
+                }
+            }
+            // Check text nodes
+            for (let i = state.textNodes.length - 1; i >= 0; i--) {
+                if (hitTestTextNode(state.textNodes[i], worldX, worldY)) {
+                    return { type: 'text', id: state.textNodes[i].id };
+                }
+            }
+            // Check lines
+            const sortedLines = [...state.lines].sort((a, b) => b.ordering - a.ordering);
+            for (const line of sortedLines) {
+                if (hitTestLine(line, worldX, worldY)) {
+                    return { type: 'line', id: line.id };
+                }
+            }
+            // Check regions
+            const sortedRegions = [...state.regions].sort((a, b) => b.ordering - a.ordering);
+            for (const region of sortedRegions) {
+                if (hitTestRegion(region, worldX, worldY)) {
+                    return { type: 'region', id: region.id };
+                }
+            }
+            return null;
+        }
+
+        // ============== PROPERTY BAR ==============
+        function updatePropertyBar() {
+            updateSelectActionButtons();
+            if (!state.selection) {
+                propertyBar.classList.add('hidden');
+                propertyBar.innerHTML = '';
+                return;
+            }
+
+            propertyBar.classList.remove('hidden');
+
+            if (state.selection.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (!line) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Line #${line.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Start</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-start-x" value="${line.startX}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-start-y" value="${line.startY}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">End</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-end-x" value="${line.endX}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-end-y" value="${line.endY}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Out°</span>
+                        <input type="number" class="property-input narrow" id="prop-out-angle" value="${Math.round(line.outAngle)}" step="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">In°</span>
+                        <input type="number" class="property-input narrow" id="prop-in-angle" value="${Math.round(line.inAngle)}" step="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Width</span>
+                        <input type="number" class="property-input narrow" id="prop-line-width" value="${line.lineWidth}" step="0.1" min="0">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">White</span>
+                        <input type="number" class="property-input narrow" id="prop-white-width" value="${line.whiteWidth}" step="0.1" min="0">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Order</span>
+                        <input type="number" class="property-input narrow" id="prop-ordering" value="${line.ordering}" step="0.1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Arrow</span>
+                        <input type="text" class="property-input scrollable-select" id="prop-arrow-style" value="${line.arrowStyle || 'none'}" readonly data-options='["none","arrow"]' data-display='{"none":"–","arrow":"→"}' style="width: 40px; cursor: pointer; text-align: center;">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Style</span>
+                        <input type="text" class="property-input scrollable-select" id="prop-line-style" value="${line.lineStyle || 'straight'}" readonly data-options='["straight","dashed","squiggly"]' style="width: 75px; cursor: pointer;">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            } else if (state.selection.type === 'text') {
+                const node = state.textNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Text #${node.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Pos</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-x" value="${node.x}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-y" value="${node.y}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Anchor</span>
+                        <input type="text" class="property-input scrollable-select" id="prop-position" value="${node.position}" readonly data-options='["none","above","below","left","right"]' style="width: 60px; cursor: pointer;">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Size</span>
+                        <input type="number" class="property-input narrow" id="prop-font-size" value="${node.fontSize || 12}" step="1" min="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Text</span>
+                        <input type="text" class="property-input text-input" id="prop-text" value="${node.text}">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            } else if (state.selection.type === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Node #${node.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Pos</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-x" value="${node.x}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-y" value="${node.y}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Shape</span>
+                        <div class="shape-buttons">
+                            <button class="shape-btn ${node.shape === 'circle' ? 'active' : ''}" data-shape="circle" title="Circle">
+                                <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5"/></svg>
+                            </button>
+                            <button class="shape-btn ${node.shape === 'rectangle' ? 'active' : ''}" data-shape="rectangle" title="Rectangle">
+                                <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1.5" y="3" width="11" height="8" rx="0.5"/></svg>
+                            </button>
+                            <button class="shape-btn ${node.shape === 'ellipse' ? 'active' : ''}" data-shape="ellipse" title="Ellipse">
+                                <svg width="14" height="14" viewBox="0 0 14 14"><ellipse cx="7" cy="7" rx="6" ry="4"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Outline</span>
+                        <input type="number" class="property-input narrow" id="prop-outline" value="${node.outlineWidth}" step="0.1" min="0">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">${node.shape === 'circle' ? 'Pad' : 'Pad X'}</span>
+                        <input type="number" class="property-input narrow" id="prop-padding-x" value="${node.paddingX}" step="0.5" min="0">
+                    </div>
+                    ${node.shape !== 'circle' ? `<div class="property-group">
+                        <span class="property-group-label">Pad Y</span>
+                        <input type="number" class="property-input narrow" id="prop-padding-y" value="${node.paddingY}" step="0.5" min="0">
+                    </div>` : ''}
+                    <div class="property-group">
+                        <span class="property-group-label">Size</span>
+                        <input type="number" class="property-input narrow" id="prop-font-size" value="${node.fontSize || 12}" step="1" min="1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Text</span>
+                        <input type="text" class="property-input text-input" id="prop-text" value="${node.text}">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            } else if (state.selection.type === 'region') {
+                const region = state.regions.find(r => r.id === state.selection.id);
+                if (!region) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Region #${region.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Points</span>
+                        <span class="coord-display">${region.points.length}</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Width</span>
+                        <input type="number" class="property-input narrow" id="prop-line-width" value="${region.lineWidth}" step="0.1" min="0">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Pattern</span>
+                        <input type="text" class="property-input scrollable-select" id="prop-pattern" value="${region.pattern || 'north west lines'}" readonly data-options='["north west lines","north east lines","crosshatch","crosshatch dots"]' data-display='{"north west lines":"NW Lines","north east lines":"NE Lines","crosshatch":"Crosshatch","crosshatch dots":"Crosshatch dots"}' style="width: 105px; cursor: pointer;">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Color</span>
+                        <input type="text" class="property-input" id="prop-pattern-color" value="${region.patternColor}" style="width: 80px;">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Order</span>
+                        <input type="number" class="property-input narrow" id="prop-ordering" value="${region.ordering}" step="0.1">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            } else if (state.selection.type === 'circle') {
+                const circle = state.circles.find(c => c.id === state.selection.id);
+                if (!circle) return;
+                propertyBar.innerHTML = `
+                    <span class="property-bar-label">Circle #${circle.id}</span>
+                    <div class="property-group">
+                        <span class="property-group-label">Position</span>
+                        <span class="coord-display">(</span>
+                        <input type="number" class="property-input narrow" id="prop-x" value="${circle.x}" step="${state.gridSize}">
+                        <span class="coord-display">,</span>
+                        <input type="number" class="property-input narrow" id="prop-y" value="${circle.y}" step="${state.gridSize}">
+                        <span class="coord-display">)</span>
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Width</span>
+                        <input type="number" class="property-input narrow" id="prop-line-width" value="${circle.lineWidth}" step="0.1" min="0.1">
+                    </div>
+                    <div class="property-group">
+                        <span class="property-group-label">Color</span>
+                        <input type="text" class="property-input" id="prop-color" value="${circle.color}" style="width: 80px;">
+                    </div>
+                    <button class="delete-btn" id="delete-btn">Delete <span class="keyboard-hint">D</span></button>
+                `;
+            }
+
+            // Add event listeners
+            setupPropertyBarListeners();
+        }
+
+        function setupPropertyBarListeners() {
+            const inputs = propertyBar.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', updateFromPropertyBar);
+                if (input.type === 'number') {
+                    input.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        const inputId = input.id;
+                        let increment = 1;
+                        if (inputId.includes('x') || inputId.includes('y')) increment = state.gridSize;
+                        else if (inputId.includes('angle')) increment = 10;
+                        else if (inputId.includes('width') || inputId.includes('outline')) increment = 0.1;
+                        else if (inputId.includes('ordering')) increment = 0.3;
+                        else if (inputId.includes('padding')) increment = 0.5;
+                        const currentValue = parseFloat(input.value) || 0;
+                        const delta = e.deltaY > 0 ? -increment : increment;
+                        let newValue = Math.round((currentValue + delta) * 1000) / 1000;
+                        // Enforce min attribute
+                        const minAttr = input.getAttribute('min');
+                        if (minAttr !== null) {
+                            const minValue = parseFloat(minAttr);
+                            if (!isNaN(minValue) && newValue < minValue) {
+                                newValue = minValue;
+                            }
+                        }
+                        input.value = newValue;
+                        updateFromPropertyBar();
+                    }, { passive: false });
+                }
+
+                // Handle scrollable select inputs
+                if (input.classList.contains('scrollable-select')) {
+                    // Set initial display value
+                    const displayMap = input.dataset.display ? JSON.parse(input.dataset.display) : null;
+                    if (displayMap && displayMap[input.value]) {
+                        input.setAttribute('data-actual-value', input.value);
+                        input.value = displayMap[input.value];
+                    }
+
+                    input.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        const options = JSON.parse(input.dataset.options || '[]');
+                        if (options.length === 0) return;
+                        const actualValue = input.getAttribute('data-actual-value') || input.value;
+                        const currentIndex = options.indexOf(actualValue);
+                        const direction = e.deltaY > 0 ? 1 : -1;
+                        let newIndex = (currentIndex + direction + options.length) % options.length;
+                        const newValue = options[newIndex];
+
+                        // Store actual value and set display value
+                        input.setAttribute('data-actual-value', newValue);
+                        if (displayMap && displayMap[newValue]) {
+                            input.value = displayMap[newValue];
+                        } else {
+                            input.value = newValue;
+                        }
+
+                        updateFromPropertyBar();
+                    }, { passive: false });
+                }
+            });
+
+            // Shape button handlers
+            const shapeButtons = propertyBar.querySelectorAll('.shape-btn');
+            shapeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (!state.selection || state.selection.type !== 'shape') return;
+                    const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                    if (!node) return;
+                    saveState();
+                    node.shape = btn.dataset.shape;
+                    // Re-render property bar to show/hide Pad Y
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                });
+            });
+
+            const deleteBtn = document.getElementById('delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', deleteSelected);
+            }
+        }
+
+        function updateFromPropertyBar() {
+            if (!state.selection) return;
+            saveState();
+
+            if (state.selection.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (!line) return;
+                line.startX = parseFloat(document.getElementById('prop-start-x').value) || 0;
+                line.startY = parseFloat(document.getElementById('prop-start-y').value) || 0;
+                line.endX = parseFloat(document.getElementById('prop-end-x').value) || 0;
+                line.endY = parseFloat(document.getElementById('prop-end-y').value) || 0;
+                line.outAngle = parseFloat(document.getElementById('prop-out-angle').value) || 0;
+                line.inAngle = parseFloat(document.getElementById('prop-in-angle').value) || 0;
+                line.lineWidth = parseFloat(document.getElementById('prop-line-width').value) || 0.8;
+                line.whiteWidth = parseFloat(document.getElementById('prop-white-width').value) || 0;
+                line.ordering = parseFloat(document.getElementById('prop-ordering').value) || 1;
+                const arrowStyleEl = document.getElementById('prop-arrow-style');
+                line.arrowStyle = arrowStyleEl.getAttribute('data-actual-value') || arrowStyleEl.value || 'none';
+                const lineStyleEl = document.getElementById('prop-line-style');
+                line.lineStyle = lineStyleEl.getAttribute('data-actual-value') || lineStyleEl.value || 'straight';
+            } else if (state.selection.type === 'text') {
+                const node = state.textNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                node.x = parseFloat(document.getElementById('prop-x').value) || 0;
+                node.y = parseFloat(document.getElementById('prop-y').value) || 0;
+                const positionEl = document.getElementById('prop-position');
+                node.position = positionEl.getAttribute('data-actual-value') || positionEl.value;
+                node.fontSize = parseFloat(document.getElementById('prop-font-size').value) || 12;
+                node.text = document.getElementById('prop-text').value || 'text';
+            } else if (state.selection.type === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                if (!node) return;
+                node.x = parseFloat(document.getElementById('prop-x').value) || 0;
+                node.y = parseFloat(document.getElementById('prop-y').value) || 0;
+                // Shape is handled by button clicks, not here
+                node.outlineWidth = parseFloat(document.getElementById('prop-outline').value) || 0.8;
+                node.paddingX = parseFloat(document.getElementById('prop-padding-x').value) || 4;
+                const padYInput = document.getElementById('prop-padding-y');
+                if (padYInput) node.paddingY = parseFloat(padYInput.value) || 3;
+                node.fontSize = parseFloat(document.getElementById('prop-font-size').value) || 12;
+                node.text = document.getElementById('prop-text').value || 'node';
+            } else if (state.selection.type === 'region') {
+                const region = state.regions.find(r => r.id === state.selection.id);
+                if (!region) return;
+                const regionLineWidth = parseFloat(document.getElementById('prop-line-width').value);
+                region.lineWidth = isNaN(regionLineWidth) ? 0.8 : regionLineWidth;
+                const patternEl = document.getElementById('prop-pattern');
+                region.pattern = patternEl.getAttribute('data-actual-value') || patternEl.value || 'north west lines';
+                region.patternColor = document.getElementById('prop-pattern-color').value || 'black!30';
+                region.ordering = parseFloat(document.getElementById('prop-ordering').value) || 1;
+            } else if (state.selection.type === 'circle') {
+                const circle = state.circles.find(c => c.id === state.selection.id);
+                if (!circle) return;
+                circle.x = parseFloat(document.getElementById('prop-x').value) || 0;
+                circle.y = parseFloat(document.getElementById('prop-y').value) || 0;
+                circle.lineWidth = parseFloat(document.getElementById('prop-line-width').value) || 2;
+                circle.color = document.getElementById('prop-color').value || 'black';
+            }
+
+            render();
+            updateTikzOutput();
+        }
+
+        function deleteSelected() {
+            if (!state.selection) return;
+            saveState();
+            if (state.selection.type === 'line') {
+                state.lines = state.lines.filter(l => l.id !== state.selection.id);
+            } else if (state.selection.type === 'text') {
+                state.textNodes = state.textNodes.filter(n => n.id !== state.selection.id);
+            } else if (state.selection.type === 'shape') {
+                state.shapeNodes = state.shapeNodes.filter(n => n.id !== state.selection.id);
+            } else if (state.selection.type === 'region') {
+                state.regions = state.regions.filter(r => r.id !== state.selection.id);
+            } else if (state.selection.type === 'circle') {
+                state.circles = state.circles.filter(c => c.id !== state.selection.id);
+            }
+            state.selection = null;
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        function copySelected() {
+            if (!state.selection) return;
+
+            if (state.selection.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (line) {
+                    state.clipboard = {
+                        type: 'line',
+                        data: { ...line }
+                    };
+                }
+            } else if (state.selection.type === 'text') {
+                const node = state.textNodes.find(n => n.id === state.selection.id);
+                if (node) {
+                    state.clipboard = {
+                        type: 'text',
+                        data: { ...node }
+                    };
+                }
+            } else if (state.selection.type === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                if (node) {
+                    state.clipboard = {
+                        type: 'shape',
+                        data: { ...node }
+                    };
+                }
+            } else if (state.selection.type === 'region') {
+                const region = state.regions.find(r => r.id === state.selection.id);
+                if (region) {
+                    state.clipboard = {
+                        type: 'region',
+                        data: { ...region, points: region.points.map(p => ({ ...p })) }
+                    };
+                }
+            } else if (state.selection.type === 'circle') {
+                const circle = state.circles.find(c => c.id === state.selection.id);
+                if (circle) {
+                    state.clipboard = {
+                        type: 'circle',
+                        data: { ...circle }
+                    };
+                }
+            }
+            updateSelectActionButtons();
+        }
+
+        function pasteClipboard() {
+            if (!state.clipboard) return;
+            saveState();
+
+            const targetX = snapToGrid(state.lastMouseWorld.x);
+            const targetY = snapToGrid(state.lastMouseWorld.y);
+
+            if (state.clipboard.type === 'line') {
+                const orig = state.clipboard.data;
+                // Find bottom-left point of the line
+                const minX = Math.min(orig.startX, orig.endX);
+                const minY = Math.min(orig.startY, orig.endY);
+                const offsetX = targetX - minX;
+                const offsetY = targetY - minY;
+
+                const newLine = {
+                    ...orig,
+                    id: state.nextLineId++,
+                    startX: orig.startX + offsetX,
+                    startY: orig.startY + offsetY,
+                    endX: orig.endX + offsetX,
+                    endY: orig.endY + offsetY
+                };
+                state.lines.push(newLine);
+                state.selection = { type: 'line', id: newLine.id };
+            } else if (state.clipboard.type === 'text') {
+                const orig = state.clipboard.data;
+                const newNode = {
+                    ...orig,
+                    id: state.nextTextId++,
+                    x: targetX,
+                    y: targetY
+                };
+                state.textNodes.push(newNode);
+                state.selection = { type: 'text', id: newNode.id };
+            } else if (state.clipboard.type === 'shape') {
+                const orig = state.clipboard.data;
+                const newNode = {
+                    ...orig,
+                    id: state.nextShapeId++,
+                    x: targetX,
+                    y: targetY
+                };
+                state.shapeNodes.push(newNode);
+                state.selection = { type: 'shape', id: newNode.id };
+            } else if (state.clipboard.type === 'region') {
+                const orig = state.clipboard.data;
+                // Find bottom-left corner of the region
+                const minX = Math.min(...orig.points.map(p => p.x));
+                const minY = Math.min(...orig.points.map(p => p.y));
+                const offsetX = targetX - minX;
+                const offsetY = targetY - minY;
+
+                const newRegion = {
+                    ...orig,
+                    id: state.nextRegionId++,
+                    points: orig.points.map(p => ({
+                        x: p.x + offsetX,
+                        y: p.y + offsetY
+                    }))
+                };
+                state.regions.push(newRegion);
+                state.selection = { type: 'region', id: newRegion.id };
+            } else if (state.clipboard.type === 'circle') {
+                const orig = state.clipboard.data;
+                const newCircle = {
+                    ...orig,
+                    id: state.nextCircleId++,
+                    x: targetX,
+                    y: targetY
+                };
+                state.circles.push(newCircle);
+                state.selection = { type: 'circle', id: newCircle.id };
+            }
+
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        // ============== EVENT HANDLERS ==============
+        function finishRegion() {
+            if (state.pendingRegionPoints.length >= 3) {
+                saveState();
+                const region = createRegion(state.pendingRegionPoints);
+                state.regions.push(region);
+                updateTikzOutput();
+            }
+            state.pendingRegionPoints = [];
+            state.previewRegionEnd = null;
+            pendingIndicator.classList.remove('visible');
+            render();
+        }
+
+        function cancelRegion() {
+            state.pendingRegionPoints = [];
+            state.previewRegionEnd = null;
+            pendingIndicator.classList.remove('visible');
+            render();
+        }
+
+        function handleMouseDown(e) {
+            const screenX = e.clientX;
+            const screenY = e.clientY;
+            const world = screenToWorld(screenX, screenY);
+
+            if (e.button === 1) {
+                e.preventDefault();
+                state.isDragging = true;
+                state.dragType = 'pan';
+                state.dragStartScreen = { x: screenX, y: screenY };
+                return;
+            }
+
+            // Right-click to finish region
+            if (e.button === 2) {
+                if (state.mode === 'region' && state.pendingRegionPoints.length >= 3) {
+                    e.preventDefault();
+                    finishRegion();
+                }
+                return;
+            }
+
+            if (e.button !== 0) return;
+
+            // Add line mode
+            if (state.mode === 'add') {
+                if (state.pendingLineStart) {
+                    const endX = snapToGrid(world.x);
+                    const endY = snapToGrid(world.y);
+                    let lineDrawn = false;
+                    if (Math.abs(endX - state.pendingLineStart.x) > 0.01 || Math.abs(endY - state.pendingLineStart.y) > 0.01) {
+                        saveState();
+                        state.lines.push(createLine(state.pendingLineStart.x, state.pendingLineStart.y, endX, endY));
+                        updateTikzOutput();
+                        lineDrawn = true;
+                    }
+                    if (lineDrawn && e.shiftKey) {
+                        // Continuous chaining: next line starts where this one ended
+                        state.pendingLineStart = { x: endX, y: endY };
+                        state.previewEnd = null;
+                    } else {
+                        state.pendingLineStart = null;
+                        state.previewEnd = null;
+                        pendingIndicator.classList.remove('visible');
+                    }
+                    render();
+                    return;
+                }
+                state.isDragging = true;
+                state.dragType = 'new-line';
+                state.newLineStart = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                state.dragStartWorld = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                state.dragStartScreen = { x: screenX, y: screenY };
+                return;
+            }
+
+            // Text mode
+            if (state.mode === 'text') {
+                saveState();
+                const node = createTextNode(world.x, world.y);
+                state.textNodes.push(node);
+                state.selection = { type: 'text', id: node.id };
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            // Node mode
+            if (state.mode === 'node') {
+                saveState();
+                const node = createShapeNode(world.x, world.y);
+                state.shapeNodes.push(node);
+                state.selection = { type: 'shape', id: node.id };
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            // Circle mode
+            if (state.mode === 'circle') {
+                saveState();
+                const circle = createCircle(world.x, world.y);
+                state.circles.push(circle);
+                state.selection = { type: 'circle', id: circle.id };
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            // Region mode
+            if (state.mode === 'region') {
+                const newX = snapToGrid(world.x);
+                const newY = snapToGrid(world.y);
+
+                // Check if clicking on any existing point
+                for (const p of state.pendingRegionPoints) {
+                    const dist = Math.sqrt(Math.pow(newX - p.x, 2) + Math.pow(newY - p.y, 2));
+                    if (dist < state.gridSize * 0.5) {
+                        // If we have at least 3 points, close the region
+                        if (state.pendingRegionPoints.length >= 3) {
+                            finishRegion();
+                        }
+                        // Either way, don't add a duplicate point
+                        return;
+                    }
+                }
+
+                // Add new point
+                state.pendingRegionPoints.push({ x: newX, y: newY });
+                state.previewRegionEnd = null;
+                pendingIndicator.textContent = `${state.pendingRegionPoints.length} points - Right-click or Esc to finish`;
+                pendingIndicator.classList.add('visible');
+                render();
+                return;
+            }
+
+            // Select mode
+            if (state.selection?.type === 'line') {
+                const line = state.lines.find(l => l.id === state.selection.id);
+                if (line) {
+                    const handleHit = hitTestHandle(line, world.x, world.y);
+                    if (handleHit) {
+                        state.isDragging = true;
+                        state.dragType = 'handle-' + handleHit;
+                        state.dragItemId = line.id;
+                        saveState();
+                        return;
+                    }
+                    const endpointHit = hitTestEndpoint(line, world.x, world.y);
+                    if (endpointHit) {
+                        state.isDragging = true;
+                        state.dragType = 'endpoint-' + endpointHit;
+                        state.dragItemId = line.id;
+                        saveState();
+                        return;
+                    }
+                }
+            }
+
+            // Check for dragging text/shape nodes
+            if (state.selection?.type === 'text') {
+                const node = state.textNodes.find(n => n.id === state.selection.id);
+                if (node && hitTestTextNode(node, world.x, world.y)) {
+                    state.isDragging = true;
+                    state.dragType = 'move-node';
+                    state.dragItemId = node.id;
+                    state.dragStartWorld = { x: world.x - node.x, y: world.y - node.y };
+                    saveState();
+                    return;
+                }
+            }
+            if (state.selection?.type === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === state.selection.id);
+                if (node && hitTestShapeNode(node, world.x, world.y)) {
+                    state.isDragging = true;
+                    state.dragType = 'move-shape';
+                    state.dragItemId = node.id;
+                    state.dragStartWorld = { x: world.x - node.x, y: world.y - node.y };
+                    saveState();
+                    return;
+                }
+            }
+            if (state.selection?.type === 'circle') {
+                const circle = state.circles.find(c => c.id === state.selection.id);
+                if (circle && hitTestCircle(circle, world.x, world.y)) {
+                    state.isDragging = true;
+                    state.dragType = 'move-circle';
+                    state.dragItemId = circle.id;
+                    state.dragStartWorld = { x: world.x - circle.x, y: world.y - circle.y };
+                    saveState();
+                    return;
+                }
+            }
+
+            // Check for dragging region points or handles
+            if (state.selection?.type === 'region') {
+                const region = state.regions.find(r => r.id === state.selection.id);
+                if (region) {
+                    // Check for handle hit first
+                    const handleHit = hitTestRegionHandle(region, world.x, world.y);
+                    if (handleHit) {
+                        state.isDragging = true;
+                        state.dragType = 'region-handle';
+                        state.dragItemId = region.id;
+                        state.dragPointIndex = handleHit.pointIndex;
+                        state.dragHandleType = handleHit.handleType;
+                        saveState();
+                        return;
+                    }
+                    // Check for point hit
+                    const pointHit = hitTestRegionPoint(region, world.x, world.y);
+                    if (pointHit !== null) {
+                        state.isDragging = true;
+                        state.dragType = 'region-point';
+                        state.dragItemId = region.id;
+                        state.dragPointIndex = pointHit;
+                        saveState();
+                        return;
+                    }
+                }
+            }
+
+            const hit = findItemAtPoint(world.x, world.y);
+            if (hit) {
+                state.selection = hit;
+                updatePropertyBar();
+                render();
+                return;
+            }
+
+            state.selection = null;
+            updatePropertyBar();
+            render();
+        }
+
+        function handleMouseMove(e) {
+            const screenX = e.clientX;
+            const screenY = e.clientY;
+            const world = screenToWorld(screenX, screenY);
+
+            // Track mouse position for paste
+            state.lastMouseWorld = { x: world.x, y: world.y };
+
+            // Cursor updates
+            if (!state.isDragging) {
+                canvas.style.cursor = 'default';
+            }
+
+            if (state.pendingLineStart && state.mode === 'add') {
+                state.previewEnd = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                render();
+            }
+
+            // Region preview
+            if (state.pendingRegionPoints.length > 0 && state.mode === 'region') {
+                state.previewRegionEnd = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                render();
+            }
+
+            if (!state.isDragging) return;
+
+            canvas.style.cursor = 'grabbing';
+
+            if (state.dragType === 'pan') {
+                state.panX += screenX - state.dragStartScreen.x;
+                state.panY += screenY - state.dragStartScreen.y;
+                state.dragStartScreen = { x: screenX, y: screenY };
+                render();
+                return;
+            }
+
+            if (state.dragType === 'new-line') {
+                state.dragStartWorld = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                render();
+                return;
+            }
+
+            if (state.dragType === 'move-node') {
+                const node = state.textNodes.find(n => n.id === state.dragItemId);
+                if (node) {
+                    node.x = snapToGrid(world.x - state.dragStartWorld.x);
+                    node.y = snapToGrid(world.y - state.dragStartWorld.y);
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            if (state.dragType === 'move-shape') {
+                const node = state.shapeNodes.find(n => n.id === state.dragItemId);
+                if (node) {
+                    node.x = snapToGrid(world.x - state.dragStartWorld.x);
+                    node.y = snapToGrid(world.y - state.dragStartWorld.y);
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            if (state.dragType === 'move-circle') {
+                const circle = state.circles.find(c => c.id === state.dragItemId);
+                if (circle) {
+                    circle.x = snapToGrid(world.x - state.dragStartWorld.x);
+                    circle.y = snapToGrid(world.y - state.dragStartWorld.y);
+                    updatePropertyBar();
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            // Dragging region point
+            if (state.dragType === 'region-point') {
+                const region = state.regions.find(r => r.id === state.dragItemId);
+                if (region && state.dragPointIndex !== undefined) {
+                    region.points[state.dragPointIndex].x = snapToGrid(world.x);
+                    region.points[state.dragPointIndex].y = snapToGrid(world.y);
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            // Dragging region handle (angle control)
+            if (state.dragType === 'region-handle') {
+                const region = state.regions.find(r => r.id === state.dragItemId);
+                if (region && state.dragPointIndex !== undefined) {
+                    const p = region.points[state.dragPointIndex];
+                    const pScreen = worldToScreen(p.x, p.y);
+                    const rect = canvas.getBoundingClientRect();
+                    let canvasX = screenX - rect.left;
+                    let canvasY = screenY - rect.top;
+
+                    // Snap to nearby grid points
+                    const snappedWorld = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                    const snappedScreen = worldToScreen(snappedWorld.x, snappedWorld.y);
+                    const distToGrid = Math.sqrt(Math.pow(canvasX - snappedScreen.x, 2) + Math.pow(canvasY - snappedScreen.y, 2));
+                    if (distToGrid < 15) {
+                        canvasX = snappedScreen.x;
+                        canvasY = snappedScreen.y;
+                    }
+
+                    const dx = canvasX - pScreen.x;
+                    const dy = pScreen.y - canvasY;
+                    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+                    // Snap to cardinal angles
+                    const snapAngles = [0, 90, 180, -180, -90, 270];
+                    for (const snapAngle of snapAngles) {
+                        if (Math.abs(angle - snapAngle) < 5) {
+                            angle = snapAngle === -180 ? 180 : snapAngle;
+                            break;
+                        }
+                    }
+
+                    if (state.dragHandleType === 'out') {
+                        p.outAngle = angle;
+                    } else {
+                        p.inAngle = angle;
+                    }
+                    render();
+                    updateTikzOutput();
+                }
+                return;
+            }
+
+            const line = state.lines.find(l => l.id === state.dragItemId);
+            if (!line) return;
+
+            if (state.dragType === 'endpoint-start') {
+                line.startX = snapToGrid(world.x);
+                line.startY = snapToGrid(world.y);
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            if (state.dragType === 'endpoint-end') {
+                line.endX = snapToGrid(world.x);
+                line.endY = snapToGrid(world.y);
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+
+            if (state.dragType === 'handle-out' || state.dragType === 'handle-in') {
+                const rect = canvas.getBoundingClientRect();
+                let canvasX = screenX - rect.left;
+                let canvasY = screenY - rect.top;
+
+                // Snap to nearby grid points
+                const snappedWorld = { x: snapToGrid(world.x), y: snapToGrid(world.y) };
+                const snappedScreen = worldToScreen(snappedWorld.x, snappedWorld.y);
+                const distToGrid = Math.sqrt(Math.pow(canvasX - snappedScreen.x, 2) + Math.pow(canvasY - snappedScreen.y, 2));
+                if (distToGrid < 15) {
+                    canvasX = snappedScreen.x;
+                    canvasY = snappedScreen.y;
+                }
+
+                const endpoint = state.dragType === 'handle-out'
+                    ? worldToScreen(line.startX, line.startY)
+                    : worldToScreen(line.endX, line.endY);
+                const dx = canvasX - endpoint.x;
+                const dy = endpoint.y - canvasY;
+                let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                const snapAngles = [0, 90, 180, -180, -90, 270];
+                for (const snapAngle of snapAngles) {
+                    if (Math.abs(angle - snapAngle) < 5) {
+                        angle = snapAngle === -180 ? 180 : snapAngle;
+                        break;
+                    }
+                }
+                if (state.dragType === 'handle-out') line.outAngle = angle;
+                else line.inAngle = angle;
+                updatePropertyBar();
+                render();
+                updateTikzOutput();
+                return;
+            }
+        }
+
+        function handleMouseUp(e) {
+            if (state.dragType === 'new-line' && state.newLineStart) {
+                const world = screenToWorld(e.clientX, e.clientY);
+                const endX = snapToGrid(world.x);
+                const endY = snapToGrid(world.y);
+                const startScreen = worldToScreen(state.newLineStart.x, state.newLineStart.y);
+                const endScreen = worldToScreen(endX, endY);
+                const dragDistance = Math.sqrt(Math.pow(endScreen.x - startScreen.x, 2) + Math.pow(endScreen.y - startScreen.y, 2));
+
+                if (dragDistance < 5) {
+                    state.pendingLineStart = { x: state.newLineStart.x, y: state.newLineStart.y };
+                    pendingIndicator.classList.add('visible');
+                } else if (Math.abs(endX - state.newLineStart.x) > 0.01 || Math.abs(endY - state.newLineStart.y) > 0.01) {
+                    saveState();
+                    state.lines.push(createLine(state.newLineStart.x, state.newLineStart.y, endX, endY));
+                    updateTikzOutput();
+                    if (e.shiftKey) {
+                        // Continuous chaining: next line starts where this one ended
+                        state.pendingLineStart = { x: endX, y: endY };
+                        pendingIndicator.classList.add('visible');
+                    }
+                }
+            }
+
+            state.isDragging = false;
+            state.dragType = null;
+            state.dragItemId = null;
+            state.dragPointIndex = null;
+            state.dragHandleType = null;
+            state.newLineStart = null;
+
+            canvas.style.cursor = 'default';
+            render();
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            const worldBefore = screenToWorld(e.clientX, e.clientY);
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            state.zoom = Math.max(10, Math.min(500, state.zoom * zoomFactor));
+            const worldAfter = screenToWorld(e.clientX, e.clientY);
+            state.panX += (worldAfter.x - worldBefore.x) * state.zoom;
+            state.panY -= (worldAfter.y - worldBefore.y) * state.zoom;
+            render();
+        }
+
+        function handleKeyDown(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if ((e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+                if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); undo(); return; }
+                if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); return; }
+            }
+            if (e.key === 'y' || e.key === 'Y') {
+                if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); redo(); return; }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+                e.preventDefault(); redo(); return;
+            }
+            if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                // If in select mode with selection, copy the element; otherwise copy TikZ
+                if (state.mode === 'select' && state.selection) {
+                    copySelected();
+                } else {
+                    copyTikzToClipboard();
+                }
+                return;
+            }
+            if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                if (state.mode === 'select' && state.clipboard) {
+                    pasteClipboard();
+                }
+                return;
+            }
+            if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('select'); return;
+            }
+            if ((e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('add'); return;
+            }
+            if ((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('text'); return;
+            }
+            if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('node'); return;
+            }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('region'); return;
+            }
+            if ((e.key === 'o' || e.key === 'O') && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); setMode('circle'); return;
+            }
+            if (e.key === 'Escape') {
+                // Handle pending region - if we have 3+ points, complete; otherwise cancel
+                if (state.pendingRegionPoints.length >= 3) {
+                    finishRegion();
+                    return;
+                } else if (state.pendingRegionPoints.length > 0) {
+                    cancelRegion();
+                    return;
+                }
+                if (state.pendingLineStart) {
+                    state.pendingLineStart = null;
+                    state.previewEnd = null;
+                    pendingIndicator.classList.remove('visible');
+                    render();
+                    return;
+                }
+                setMode('select');
+                state.selection = null;
+                updatePropertyBar();
+                render();
+                return;
+            }
+            if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'd' || e.key === 'D') {
+                if (state.selection) {
+                    e.preventDefault();
+                    deleteSelected();
+                }
+                return;
+            }
+        }
+
+        // ============== INLINE TEXT EDITING ==============
+        let activeInlineEditor = null;
+
+        function startInlineEdit(node, nodeType) {
+            if (activeInlineEditor) {
+                finishInlineEdit();
+            }
+
+            const screen = worldToScreen(node.x, node.y);
+            const rect = canvas.getBoundingClientRect();
+
+            // Calculate text position with offset (only for text nodes)
+            let textX = screen.x;
+            let textY = screen.y;
+            if (nodeType === 'text' && node.position) {
+                const offset = 12 * state.zoom / 50;
+                if (node.position === 'above') textY -= offset;
+                else if (node.position === 'below') textY += offset;
+                else if (node.position === 'left') textX -= offset;
+                else if (node.position === 'right') textX += offset;
+            }
+
+            const fontSize = (node.fontSize || 12) * state.zoom / 50;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'inline-editor';
+            input.value = node.text;
+            input.style.left = (rect.left + textX) + 'px';
+            input.style.top = (rect.top + textY) + 'px';
+            input.style.fontSize = fontSize + 'px';
+
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+
+            activeInlineEditor = {
+                input: input,
+                nodeId: node.id,
+                nodeType: nodeType
+            };
+
+            input.addEventListener('blur', finishInlineEdit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    finishInlineEdit();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelInlineEdit();
+                }
+            });
+        }
+
+        function finishInlineEdit() {
+            if (!activeInlineEditor) return;
+
+            const { input, nodeId, nodeType } = activeInlineEditor;
+            const newText = input.value;
+
+            saveState();
+
+            if (nodeType === 'text') {
+                const node = state.textNodes.find(n => n.id === nodeId);
+                if (node) node.text = newText || 'text';
+            } else if (nodeType === 'shape') {
+                const node = state.shapeNodes.find(n => n.id === nodeId);
+                if (node) node.text = newText || 'node';
+            }
+
+            input.removeEventListener('blur', finishInlineEdit);
+            input.remove();
+            activeInlineEditor = null;
+
+            updatePropertyBar();
+            render();
+            updateTikzOutput();
+        }
+
+        function cancelInlineEdit() {
+            if (!activeInlineEditor) return;
+
+            const { input } = activeInlineEditor;
+            input.removeEventListener('blur', finishInlineEdit);
+            input.remove();
+            activeInlineEditor = null;
+        }
+
+        function handleDoubleClick(e) {
+            const world = screenToWorld(e.clientX, e.clientY);
+
+            // Handle double-click in region mode - finish region if clicking near any existing point
+            if (state.mode === 'region' && state.pendingRegionPoints.length >= 3) {
+                const clickX = snapToGrid(world.x);
+                const clickY = snapToGrid(world.y);
+                for (const p of state.pendingRegionPoints) {
+                    const dist = Math.sqrt(Math.pow(clickX - p.x, 2) + Math.pow(clickY - p.y, 2));
+                    if (dist < state.gridSize * 0.5) {
+                        finishRegion();
+                        return;
+                    }
+                }
+            }
+
+            if (state.mode !== 'select') return;
+
+            // Check shape nodes first
+            for (let i = state.shapeNodes.length - 1; i >= 0; i--) {
+                const node = state.shapeNodes[i];
+                if (hitTestShapeNode(node, world.x, world.y)) {
+                    state.selection = { type: 'shape', id: node.id };
+                    updatePropertyBar();
+                    render();
+                    startInlineEdit(node, 'shape');
+                    return;
+                }
+            }
+
+            // Check text nodes
+            for (let i = state.textNodes.length - 1; i >= 0; i--) {
+                const node = state.textNodes[i];
+                if (hitTestTextNode(node, world.x, world.y)) {
+                    state.selection = { type: 'text', id: node.id };
+                    updatePropertyBar();
+                    render();
+                    startInlineEdit(node, 'text');
+                    return;
+                }
+            }
+        }
+
+        // ============== MODE SWITCHING ==============
+        function setMode(mode) {
+            state.mode = mode;
+            state.pendingLineStart = null;
+            state.previewEnd = null;
+            state.pendingRegionPoints = [];
+            state.previewRegionEnd = null;
+            pendingIndicator.classList.remove('visible');
+            if (mode !== 'add') modeIndicator.classList.remove('chaining');
+
+            document.getElementById('select-mode-btn').classList.toggle('active', mode === 'select');
+            document.getElementById('add-mode-btn').classList.toggle('active', mode === 'add');
+            document.getElementById('text-mode-btn').classList.toggle('active', mode === 'text');
+            document.getElementById('node-mode-btn').classList.toggle('active', mode === 'node');
+            document.getElementById('region-mode-btn').classList.toggle('active', mode === 'region');
+            document.getElementById('circle-mode-btn').classList.toggle('active', mode === 'circle');
+
+            const modeNames = { select: 'Select Mode', add: 'Add Line Mode (SHIFT to chain)', text: 'Add Text Mode', node: 'Add Node Mode', region: 'Add Region Mode', circle: 'Add Circle Mode' };
+            modeIndicator.textContent = modeNames[mode] || 'Select Mode';
+            modeIndicator.classList.toggle('add-mode', mode !== 'select');
+
+            // Show/hide toggle buttons based on mode
+            modeToggles.classList.toggle('visible', mode === 'add');
+            regionToggles.classList.toggle('visible', mode === 'region');
+            textToggles.classList.toggle('visible', mode === 'text');
+            selectActions.classList.toggle('visible', mode === 'select');
+            updateSelectActionButtons();
+
+            if (mode !== 'select') {
+                state.selection = null;
+                updatePropertyBar();
+            }
+            canvas.style.cursor = 'default';
+            render();
+        }
+
+        function updateSelectActionButtons() {
+            copyActionBtn.disabled = !state.selection;
+            pasteActionBtn.disabled = !state.clipboard;
+            deleteActionBtn.disabled = !state.selection;
+        }
+
+        // ============== TOGGLE BUTTONS ==============
+        function toggleLineThickness() {
+            state.defaultLineWidth = state.defaultLineWidth === 0.8 ? 1.6 : 0.8;
+            updateToggleButtons();
+        }
+
+        function toggleWhiteWidth() {
+            state.defaultWhiteWidth = state.defaultWhiteWidth === 0 ? 6 : 0;
+            updateToggleButtons();
+        }
+
+        function toggleRegionPattern() {
+            const patterns = ['north west lines', 'north east lines', 'crosshatch', 'crosshatch dots'];
+            const currentIndex = patterns.indexOf(state.defaultRegionPattern);
+            state.defaultRegionPattern = patterns[(currentIndex + 1) % patterns.length];
+            updateToggleButtons();
+        }
+
+        function toggleRegionBoundary() {
+            state.defaultRegionLineWidth = state.defaultRegionLineWidth === 0 ? 0.8 : 0;
+            updateToggleButtons();
+        }
+
+        function toggleTextPosition() {
+            const positions = ['none', 'above', 'below', 'left', 'right'];
+            const currentIndex = positions.indexOf(state.defaultTextPosition);
+            state.defaultTextPosition = positions[(currentIndex + 1) % positions.length];
+            updateToggleButtons();
+        }
+
+        function updateToggleButtons() {
+            const thicknessBtn = document.getElementById('thickness-toggle');
+            const whiteBtn = document.getElementById('white-toggle');
+            const thicknessText = document.getElementById('thickness-text');
+            const passoverText = document.getElementById('passover-text');
+
+            // Update thickness button - active when thick (1.6pt)
+            const isThick = state.defaultLineWidth === 1.6;
+            thicknessBtn.classList.toggle('active', isThick);
+            thicknessText.textContent = isThick ? 'Thick' : 'Thin';
+
+            // Update white backing button - active when white backing is on (6pt)
+            const isPassover = state.defaultWhiteWidth === 6;
+            whiteBtn.classList.toggle('active', isPassover);
+            passoverText.textContent = isPassover ? 'Pass over ON' : 'Pass over OFF';
+
+            // Update region pattern button
+            const patternText = document.getElementById('pattern-text');
+            const patternNames = {
+                'north west lines': 'NW lines',
+                'north east lines': 'NE lines',
+                'crosshatch': 'Crosshatch',
+                'crosshatch dots': 'Crosshatch dots'
+            };
+            if (patternText) {
+                patternText.textContent = patternNames[state.defaultRegionPattern] || 'NW lines';
+            }
+
+            // Update region boundary button
+            const boundaryText = document.getElementById('boundary-text');
+            const boundaryRect = document.querySelector('.boundary-rect');
+            const hasBoundary = state.defaultRegionLineWidth > 0;
+            if (boundaryText) {
+                boundaryText.textContent = hasBoundary ? 'Boundary ON' : 'Boundary OFF';
+            }
+            if (boundaryRect) {
+                boundaryRect.classList.toggle('off', !hasBoundary);
+            }
+
+            // Update text position button
+            const textPositionText = document.getElementById('text-position-text');
+            const positionNames = {
+                'none': 'None',
+                'above': 'Above',
+                'below': 'Below',
+                'left': 'Left',
+                'right': 'Right'
+            };
+            if (textPositionText) {
+                textPositionText.textContent = positionNames[state.defaultTextPosition] || 'None';
+            }
+        }
+
+        // ============== INITIALIZATION ==============
+        function init() {
+            resizeCanvas();
+
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('dblclick', handleDoubleClick);
+            canvas.addEventListener('wheel', handleWheel, { passive: false });
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('keydown', handleKeyDown);
+
+            // Shift glow on mode indicator pill while in add mode
+            const updateChainGlow = (shiftDown) => {
+                modeIndicator.classList.toggle('chaining', shiftDown && state.mode === 'add');
+            };
+            window.addEventListener('keydown', (e) => { if (e.key === 'Shift') updateChainGlow(true); });
+            window.addEventListener('keyup', (e) => { if (e.key === 'Shift') updateChainGlow(false); });
+            window.addEventListener('blur', () => updateChainGlow(false));
+
+            document.getElementById('select-mode-btn').addEventListener('click', () => setMode('select'));
+            document.getElementById('add-mode-btn').addEventListener('click', () => setMode('add'));
+            document.getElementById('text-mode-btn').addEventListener('click', () => setMode('text'));
+            document.getElementById('node-mode-btn').addEventListener('click', () => setMode('node'));
+            document.getElementById('region-mode-btn').addEventListener('click', () => setMode('region'));
+            document.getElementById('circle-mode-btn').addEventListener('click', () => setMode('circle'));
+            document.getElementById('undo-btn').addEventListener('click', undo);
+            document.getElementById('redo-btn').addEventListener('click', redo);
+            document.getElementById('thickness-toggle').addEventListener('click', toggleLineThickness);
+            document.getElementById('white-toggle').addEventListener('click', toggleWhiteWidth);
+            document.getElementById('pattern-toggle').addEventListener('click', toggleRegionPattern);
+            document.getElementById('boundary-toggle').addEventListener('click', toggleRegionBoundary);
+            document.getElementById('text-position-toggle').addEventListener('click', toggleTextPosition);
+            copyActionBtn.addEventListener('click', copySelected);
+            pasteActionBtn.addEventListener('click', pasteClipboard);
+            deleteActionBtn.addEventListener('click', deleteSelected);
+            const gridInput = document.getElementById('grid-size');
+            const gridValues = [0.125, 0.25, 0.5, 1, 2, 4];
+            gridInput.addEventListener('change', (e) => {
+                let val = parseFloat(e.target.value) || 0.5;
+                // Snap to nearest valid value
+                let closest = gridValues.reduce((a, b) => Math.abs(b - val) < Math.abs(a - val) ? b : a);
+                gridInput.value = closest;
+                state.gridSize = closest;
+                render();
+            });
+            gridInput.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const currentValue = parseFloat(gridInput.value) || 0.5;
+                let currentIndex = gridValues.indexOf(currentValue);
+                if (currentIndex === -1) currentIndex = 2; // default to 0.5
+                const newIndex = e.deltaY > 0
+                    ? Math.max(0, currentIndex - 1)
+                    : Math.min(gridValues.length - 1, currentIndex + 1);
+                gridInput.value = gridValues[newIndex];
+                state.gridSize = gridValues[newIndex];
+                render();
+            }, { passive: false });
+            document.getElementById('copy-btn').addEventListener('click', copyTikzToClipboard);
+            document.getElementById('submit-btn').addEventListener('click', submitTikzEdits);
+            document.getElementById('clear-log-btn').addEventListener('click', clearErrorLog);
+
+            updateTikzOutput();
+            updateSelectActionButtons();
+            selectActions.classList.add('visible'); // Show by default since we start in select mode
+            render();
+        }
+
+        init();
+    </script>
+</body>
+</html>
