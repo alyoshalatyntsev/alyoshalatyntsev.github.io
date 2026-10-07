@@ -30,11 +30,13 @@
   .chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; background: #eee8dc; font-size: 14px; white-space: nowrap; }
   .chip.you { background: #ffd54f; font-weight: 700; cursor: pointer; }
   .chip.away { opacity: .5; }
+  .chip.poke { cursor: pointer; }
+  .chip.poked { filter: brightness(.7); }
   #watchers { font-size: 14px; color: #555; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   #boardwrap { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }
   svg { display: block; }
   #board { width: 100%; height: 100%; }
-  #estimate { text-align: center; font-size: 14px; color: #1565c0; min-height: 18px; margin-top: 4px; }
+  #estimate { text-align: center; font-size: 14px; color: #1565c0; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 4px; }
   #buttons { display: flex; gap: 8px; margin-top: 8px; }
   button { flex: 1; font-size: 18px; padding: 14px 4px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; font-family: inherit; }
   button:active { transform: translateY(1px); }
@@ -83,17 +85,17 @@
 </div>
 <div id="dialog"><div class="box"><p id="dmsg"></p><div class="row" id="dbtns"></div></div></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-firebase.initializeApp({
+const CONFIG = {
   apiKey: "AIzaSyDf2aZioehr3Owb9bf4gmRjgRii0i5Ctbc",
   authDomain: "project-0cbb7d36-56e5-441e-8fe.firebaseapp.com",
   databaseURL: "https://project-0cbb7d36-56e5-441e-8fe-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "project-0cbb7d36-56e5-441e-8fe",
   appId: "1:531740406755:web:fe0ee4c37001a9d4e966d6"
-});
-const DB = firebase.database(), R = DB.ref('go'), TS = firebase.database.ServerValue.TIMESTAMP;
+};
+// ask for the position over plain HTTP straight away: it arrives well before the live connection is up (see "quick start" at the end)
+const early = fetch(CONFIG.databaseURL + '/go.json').then(r => r.ok ? r.json() : null).catch(() => null);
+let DB, R, TS, presRef;   // set at the bottom of the page, once the Firebase scripts have loaded
 const ls = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -334,11 +336,14 @@ let jobId = 0, own = null, ownN = 0, ownTimer = null;
 worker.onmessage = e => { if (e.data.id !== jobId) return; own = e.data.own; ownN = e.data.n; render(); };
 
 // ---------- state ----------
-let D = null, G = null, S = null, first = true, lastSnap = null;
+let D = null, G = null, S = null, first = true, lastSnap = null, live = false, cached = null, online = false;
 let cloud = false, phantoms = [], hoverP = null, ghost = null;
 
-R.on('value', snap => {
+function onLive(snap) {
+  live = true;
   D = snap.val() || {}; D.games = D.games || {}; D.presence = D.presence || {};
+  const c = JSON.stringify({ games: D.games, current: D.current || null });
+  if (c !== cached) ls.set('goCache', cached = c);
   const sk = D.snap ? D.snap.g + ':' + D.snap.t : null;
   if (!first && sk && sk !== lastSnap && D.snap.by !== tab && D.games[D.snap.g]) {
     lastSnap = sk; switchTo(D.snap.g); flash(`${who(D.snap.by)} brought everyone to this game.`); return;
@@ -363,15 +368,20 @@ R.on('value', snap => {
       myColour = !taken.has('b') ? 'b' : !taken.has('w') ? 'w' : '';
       ls.set('goColour', myColour);
     }
-    DB.ref('.info/connected').on('value', s => { if (s.val()) { presRef.onDisconnect().remove(); writePresence(); } });
+    DB.ref('.info/connected').on('value', s => { online = !!s.val(); if (online) { presRef.onDisconnect().remove(); writePresence(); } });
   }
   const g = D.games[viewing], key = viewing + ':' + toArr(g.moves).length;
   G = g; S = replay(g);
+  for (const p of others()) if (p.poke && p.poke.to === tab && poked[p.k] !== p.poke.i) {
+    poked[p.k] = p.poke.i;
+    const loud = actx && actx.state === 'running', at = Date.now(), wake = loud ? null : soundReady();
+    if (loud) grunt(); else if (wake && wake.then) wake.then(() => { if (Date.now() - at < 1500) grunt(); }, () => {});
+    flash(`🐷 ${label(p)} poked you` + (!loud ? ' (tap for sound)' : myColour && !gameOver() && nextColour() === myColour ? ' – it’s your turn!' : '!'));
+  }
   if (key !== render.key) { render.key = key; ghost = null; if (cloud) requestOwn(); }
   render();
-});
+}
 
-const presRef = R.child('presence/' + tab);
 function writePresence() {
   if (first) return;
   presRef.set({ a: myAnimal, n: myName.slice(0, 20), c: myColour || '', g: viewing || '', d: coarse ? 'm' : 'd', t: TS });
@@ -382,6 +392,34 @@ function label(p) { const A = ANIMALS[p.a] || ANIMALS[0]; return A[0] + ' ' + es
 function who(k) { const p = D.presence[k]; return p ? label(p) : 'Someone'; }
 function sortedGames() { return Object.keys(D.games).sort((a, b) => (D.games[b].created || 0) - (D.games[a].created || 0)); }
 
+// ---------- poke: tap someone's name and their page grunts ----------
+// The poke rides in the poker's own presence entry ({to: their tab, i: an id}), so it goes away with them.
+const poked = {}, dark = {};
+let actx = null, gruntBuf = null;
+function poke(k) {
+  if (!live || !online || !D.presence[k] || Date.now() - (poke.t || 0) < 800) return;
+  poke.t = Date.now();
+  presRef.child('poke').set({ to: k, i: poke.t }).catch(() => {});
+  dark[k] = poke.t + 500; render(); setTimeout(render, 520);   // their name goes darker for a moment
+}
+// One pig snort, as an mp3 in base64 (cut from "Pig - Snort 5" by JarredGibb on freesound.org, public domain).
+const GRUNT = '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';
+// The grunt is decoded straight away, but browsers only let a page make sound once it has been tapped or typed in:
+// each tap or key press wakes the sound up, and a poke tries to as well (some browsers allow it).
+try {
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  const p = actx.decodeAudioData(Uint8Array.from(atob(GRUNT), ch => ch.charCodeAt(0)).buffer, buf => { gruntBuf = buf; }, () => {});
+  if (p && p.catch) p.catch(() => {});
+} catch (e) {}
+function soundReady() {
+  try { if (actx && actx.state !== 'running') { const p = actx.resume(); if (p && p.catch) p.catch(() => {}); return p; } } catch (e) {}
+}
+for (const ev of ['click', 'keydown', 'touchend']) addEventListener(ev, soundReady, true);
+function grunt() {
+  if (!actx || !gruntBuf) return;
+  const s = actx.createBufferSource(); s.buffer = gruntBuf; s.connect(actx.destination); s.start();
+}
+
 function switchTo(id) {
   viewing = id; ls.set('goGame', id);
   cloud = false; phantoms = []; hoverP = null; ghost = null; own = null;
@@ -390,6 +428,7 @@ function switchTo(id) {
 }
 
 function createGame(size) {
+  if (!live) return;
   const ref = R.child('games').push(), leaving = viewing;
   viewing = ref.key; ls.set('goGame', viewing);
   cloud = false; phantoms = []; hoverP = null; ghost = null; own = null;
@@ -415,6 +454,7 @@ function nextColour() { const m = lastMove(); return m ? other(m.c) : 'b'; }
 function gameOver() { const m = toArr(G.moves), n = m.length; return n >= 2 && m[n - 1].p < 0 && m[n - 2].p < 0; }
 
 function submit(mv) {
+  if (!live) return;
   const size = G.size;
   R.child(`games/${viewing}/moves`).transaction(cur => {
     const list = toArr(cur);
@@ -495,8 +535,8 @@ function render() {
   if (!flash.on) sub.textContent = '';
   if (cloud) {
     B.className = 'trial'; B.textContent = 'Analysis';
-    if (!flash.on) sub.textContent = `Tap to try moves (next: ${NAME[nextPhantom()]}). Only you see them. Press "Hide" to go back.`;
-  } else if (gameOver()) { B.className = 'alert'; B.textContent = 'Both passed'; if (!flash.on) sub.textContent = 'Count your territory, or press New game.'; }
+  } else if (!live) { B.className = 'wait'; B.textContent = 'Connecting…'; }
+  else if (gameOver()) { B.className = 'alert'; B.textContent = 'Both passed'; if (!flash.on) sub.textContent = 'Count your territory, or press New game.'; }
   else if (!myColour) { B.className = 'wait'; B.textContent = 'Tap Black or White to play'; }
   else if (nextColour() === myColour) {
     B.className = 'turn'; B.textContent = 'Your turn';
@@ -512,7 +552,7 @@ function render() {
     document.getElementById('chips' + c).innerHTML = all.filter(p => p.c === c).map(chip).join('');
   }
   const watchers = all.filter(p => !p.c);
-  document.getElementById('watchers').innerHTML = `<span>${all.length} online${watchers.length ? ' · watching:' : ''}</span>` + watchers.map(chip).join('');
+  document.getElementById('watchers').innerHTML = `<span>${live ? all.length + ' online' : '&nbsp;'}${watchers.length ? ' · watching:' : ''}</span>` + watchers.map(chip).join('');
 
   // notice about people on other games
   const away = others().filter(p => p.g && p.g !== viewing && D.games[p.g]);
@@ -527,18 +567,25 @@ function render() {
 
   let est = cloud ? 'Thinking…' : '';
   if (hasOwn) { let b = 0, w = 0; for (const v of own) { b += (1 + v) / 2; w += (1 - v) / 2; }
-    est = `Estimate: Black ≈ ${Math.round(b)}, White ≈ ${Math.round(w)} points (no komi) · ${ownN} simulations`; }
-  document.getElementById('estimate').textContent = est;
+    est = `Black ≈ ${Math.round(b)}, White ≈ ${Math.round(w)} (no komi) · ${ownN} simulations`; }
+  oneLine(document.getElementById('estimate'), est);
 
-  document.getElementById('pass').disabled = cloud || !myColour;
-  document.getElementById('undo').disabled = cloud ? !phantoms.length : !toArr(G.moves).length;
+  document.getElementById('pass').disabled = cloud || !live || !myColour;
+  document.getElementById('undo').disabled = cloud ? !phantoms.length : !live || !toArr(G.moves).length;
   const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Analysis'; cb.classList.toggle('on', cloud);
   renderGrid();
 }
+// keep a line of text on one line: shrink it until it fits
+function oneLine(e, text) {
+  if (e.textContent === text && e.clientWidth === oneLine.w) return;
+  e.textContent = text; e.style.fontSize = ''; oneLine.w = e.clientWidth;
+  for (let f = 13.5; f >= 8 && e.scrollWidth > e.clientWidth; f -= 0.5) e.style.fontSize = f + 'px';
+}
+addEventListener('resize', () => { const e = document.getElementById('estimate'); oneLine(e, e.textContent); });
 function chip(p) {
   const you = p.k === tab, away = p.g !== viewing;
-  const info = (p.d === 'm' ? 'On a phone' : 'On a computer') + (away ? ', looking at a different game' : '') + (you ? ' – tap to change your name' : '');
-  return `<span class="chip${you ? ' you' : ''}${away ? ' away' : ''}" title="${info}" ${you ? 'data-you="1"' : ''}>${label(p)}${you ? ' (you)' : ''} ${p.d === 'm' ? '📱' : '💻'}</span>`;
+  const info = (p.d === 'm' ? 'On a phone' : 'On a computer') + (away ? ', looking at a different game' : '') + (you ? ' – tap to change your name' : ' – tap to poke');
+  return `<span class="chip${you ? ' you' : ' poke'}${away ? ' away' : ''}${dark[p.k] > Date.now() ? ' poked' : ''}" title="${info}" ${you ? 'data-you="1"' : `data-poke="${esc(p.k)}"`}>${label(p)}${you ? ' (you)' : ''} ${p.d === 'm' ? '📱' : '💻'}</span>`;
 }
 function renderGrid() {
   const ids = sortedGames().filter(id => id !== viewing).slice(0, 9);
@@ -580,6 +627,7 @@ svg.addEventListener('click', ev => {
     }
     hoverP = null; render(); requestOwn(); return;
   }
+  if (!live) return;
   if (!myColour) { flash('First tap Black or White above the board to choose your colour.'); return; }
   if (!play(G.size, S.board, S.prev, myColour, p)) { ghost = null; render(); flash(play.why); return; }
   if (coarse && ghost !== p) { ghost = p; render(); return; }
@@ -603,7 +651,7 @@ svg.addEventListener('contextmenu', ev => {
     return;
   }
   const lm = lastMove();
-  if (!lm || lm.p !== p) return;
+  if (!live || !lm || lm.p !== p) return;
   ev.preventDefault();
   R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur), m = l[l.length - 1]; if (!m || m.p !== p) return undefined; l.pop(); return l; });
 });
@@ -626,6 +674,7 @@ function dialog(msg, buttons) {
 document.getElementById('pass').onclick = () => submit({ c: myColour, p: -1 });
 document.getElementById('undo').onclick = () => {
   if (cloud) { phantoms.pop(); render(); requestOwn(); return; }
+  if (!live) return;
   R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur); l.pop(); return l; });
 };
 document.getElementById('cloud').onclick = () => {
@@ -633,7 +682,7 @@ document.getElementById('cloud').onclick = () => {
   render(); requestOwn();
 };
 drawGrid(9, document.getElementById('newsvg'), 0.08); document.getElementById('newsvg').setAttribute('viewBox', '0 0 10 10');
-document.getElementById('newtile').onclick = () => dialog('Start a new game? This one is kept at the bottom of the page. Board size:', [
+document.getElementById('newtile').onclick = () => live && dialog('Start a new game? This one is kept at the bottom of the page. Board size:', [
   ['19×19', () => createGame(19), true], ['13×13', () => createGame(13)], ['9×9', () => createGame(9)], ['Cancel']]);
 document.querySelectorAll('.bowl').forEach(b => b.onclick = () => {
   const c = b.dataset.c;
@@ -648,10 +697,32 @@ document.getElementById('app').addEventListener('click', ev => {
     if (n !== null) { myName = n.trim().slice(0, 20); ls.set('goName', myName); writePresence(); }
     return;
   }
+  const pk = t.closest('[data-poke]');
+  if (pk) { ev.stopPropagation(); poke(pk.dataset.poke); return; }
   if (t.dataset.go) { switchTo(t.dataset.go); return; }
-  if (t.id === 'snap') { R.child('snap').set({ g: viewing, by: tab, t: TS }); return; }
+  if (t.id === 'snap') { if (live) R.child('snap').set({ g: viewing, by: tab, t: TS }); return; }
   const th = t.closest('.thumb'); if (th) { switchTo(th.dataset.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 }, true);
+
+// ---------- quick start ----------
+// While the live connection comes up, show the position this device saw last, then the one fetched over HTTP.
+// This is only a picture: nothing can be played, and nothing is written, until the live data arrives (`live`).
+function preview(d) {
+  if (live || !d || !d.games || !viewing) return;
+  const g = d.games[viewing]; if (!g || !g.size) return;
+  D = { games: d.games, presence: {}, current: d.current };
+  G = g; S = replay(g); render();
+}
+try { preview(JSON.parse(ls.get('goCache'))); } catch (e) {}
+early.then(preview).catch(() => {});
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp(CONFIG);
+DB = firebase.database(); R = DB.ref('go'); TS = firebase.database.ServerValue.TIMESTAMP;
+presRef = R.child('presence/' + tab);
+R.on('value', onLive);
 </script>
 </body>
 </html>
