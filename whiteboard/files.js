@@ -23,7 +23,7 @@
   async function read(file) {
     if (file.size > MAX_BYTES) throw new Error('Please use a board file smaller than 8 MB.');
     let data; try { data = JSON.parse(await file.text()); } catch { throw new Error('Please choose a saved .whiteboard file.'); }
-    if (data.format !== 'whiteboard' || data.version !== 1 || !Array.isArray(data.objects) || data.objects.length > MAX_OBJECTS) throw new Error('Please choose a saved .whiteboard file.');
+    if (!data || data.format !== 'whiteboard' || data.version !== 1 || !Array.isArray(data.objects) || data.objects.length > MAX_OBJECTS) throw new Error('Please choose a saved .whiteboard file.');
     const objects = data.objects.filter(obj => !obj?.hidden).map(clean);
     const view = data.view;
     return { objects, view: view && [view.x, view.y, view.zoom].every(Number.isFinite) && view.zoom >= 1e-9 && view.zoom <= 1e9 ? view : null };

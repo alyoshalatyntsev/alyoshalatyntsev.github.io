@@ -31,7 +31,7 @@
   let tool = 'pen', inkTool = 'pen', active = null, gesture = null, pointer = null, editing = null, space = false, pinch = null;
   let historyStack = [], redoStack = [], frame = 0, dirty = true, orderDirty = true, gridDirty = true, persistTimer = 0, viewTimer = 0, ordered = [];
   let screenW = 0, screenH = 0, dpr = 1;
-  let settingUndo = null;
+  let settingUndo = null, exporting = false;
   if (local) try { for (const [id, obj] of Object.entries(JSON.parse(localStorage.getItem(cacheKey) || '{}'))) objects.set(id, obj); } catch {}
   function persistNow() {
     clearTimeout(persistTimer); persistTimer = 0;
@@ -41,6 +41,7 @@
   function status() {
     $('status').textContent = local ? 'On this device' : failed ? 'Sharing unavailable' : !ready ? 'Connecting…' : !connected ? 'Offline · changes waiting' : pending ? 'Saving…' : 'Live · saved';
     for (const id of ['new-board', 'open-board', 'save-board']) $(id).disabled = !ready;
+    $('export-pdf').disabled = !ready || exporting;
     $('status').className = 'sr-only' + (failed ? ' error' : connected ? ' live' : '');
     if (ready && connected) $('message').hidden = true;
   }
@@ -543,7 +544,7 @@
   $('deselect').onclick = () => { selected.clear(); renderSoon(); };
   $('delete-selection').onclick = () => { if (ready) { commitText(); patchMany([...selected].map(id => [id, { hidden: true }])); selected.clear(); renderSoon(); persistNow(); } };
   function fileSnapshot() { finish(); commitText(); hideOptions(); return entries().map(([, obj]) => obj); }
-  function saveBoard() { BoardFiles.save(fileSnapshot(), { ...view }); }
+  function saveBoard() { if (!ready) { notice('The board is still loading.'); return; } BoardFiles.save(fileSnapshot(), { ...view }); }
   function notice(text) { $('message').textContent = text; $('message').hidden = false; setTimeout(() => { $('message').hidden = true; }, 5000); }
   function replaceSheet(content, camera = { x: 0, y: 0, zoom: 1 }) {
     const changes = [...objects.keys()].map(id => [id, { $object: null }]);
@@ -567,6 +568,8 @@
     } catch (error) { notice(error.message); }
   };
   $('export-pdf').onclick = async () => {
+    if (!ready || exporting) return;
+    exporting = true;
     const button = $('export-pdf'); button.disabled = true;
     try {
       fileSnapshot(); const all = entries();
@@ -581,7 +584,7 @@
       for (const highlight of [true, false]) for (const [, obj] of all) if ((obj.kind === 'highlight') === highlight) draw(out, obj, [obj.dx || 0, obj.dy || 0]);
       await BoardFiles.pdf(image, pw, ph);
     } catch (error) { notice(error.message); }
-    finally { button.disabled = false; }
+    finally { exporting = false; status(); }
   };
   addEventListener('hashchange', () => location.reload());
   addEventListener('keydown', e => {
