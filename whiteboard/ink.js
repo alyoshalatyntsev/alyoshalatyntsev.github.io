@@ -23,7 +23,7 @@
   }
   function settled(a, b, c, zoom) {
     const spacing = (distance(a, b) + distance(b, c)) * zoom / 2;
-    const weight = .25 * Math.max(0, Math.min(1, (6 - spacing) / 3.5));
+    const weight = .32 * Math.max(0, Math.min(1, (9 - spacing) / 6));
     return [0, 1].map(k => b[k] + weight * (a[k] - 2 * b[k] + c[k]));
   }
   class Stroke {
@@ -35,9 +35,9 @@
     }
     add(point) {
       this.tip = point;
-      const k = Math.max(.35, Math.min(1, distance(point, this.filtered) * this.zoom / 2));
+      const k = Math.max(.25, Math.min(1, distance(point, this.filtered) * this.zoom / 3.5));
       this.filtered = [0, 1].map(i => this.filtered[i] + k * (point[i] - this.filtered[i]));
-      if (distance(this.filtered, this.raw[this.raw.length - 1]) * this.zoom >= 1.25) this.append(this.filtered);
+      if (distance(this.filtered, this.raw[this.raw.length - 1]) * this.zoom >= 1.5) this.append(this.filtered);
       this.version++;
     }
     append(point) {

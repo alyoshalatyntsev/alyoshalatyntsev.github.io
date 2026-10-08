@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title> </title>
-  <link rel="stylesheet" href="board.css?v=20261009-2">
+  <link rel="stylesheet" href="board.css?v=20261009-3">
 </head>
 <body>
   <div id="paper">
@@ -15,13 +15,10 @@
       <textarea id="editor" aria-label="Text" maxlength="2000" spellcheck="false"></textarea>
       <div class="edit-edge" data-edge="t"></div><div class="edit-edge" data-edge="r"></div><div class="edit-edge" data-edge="b"></div><div class="edit-edge" data-edge="l"></div>
       <span class="text-handle" data-handle="tl"></span><span class="text-handle" data-handle="t"></span><span class="text-handle" data-handle="tr"></span><span class="text-handle" data-handle="l"></span><span class="text-handle" data-handle="r"></span><span class="text-handle" data-handle="bl"></span><span class="text-handle" data-handle="b"></span><span class="text-handle" data-handle="br"></span>
+      <span class="text-handle scale-handle" data-handle="scale" aria-label="Scale text" title="Scale text">↘</span>
     </div>
   </div>
   <div id="toolbar" role="toolbar" aria-label="Tools">
-    <button id="new-board" aria-label="New board" title="New board"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M5 3h8l4 4v14H5Z M13 3v5h4 M8 14h6 M11 11v6"/></svg></button>
-    <button id="open-board" aria-label="Open board file" title="Open board file"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M3 8V5h6l2 3h8v3 M3 8h6 M3 11h17l-3 9H3Z"/></svg></button>
-    <button id="save-board" aria-label="Save board file" title="Save board file · ⌘/Ctrl S"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M4 3h12l3 3v15H4Z M7 3v6h8V3 M7 21v-8h9v8"/></svg></button>
-    <span class="tool-divider" aria-hidden="true"></span>
     <button data-tool="select" aria-label="Select" aria-pressed="false" title="Select · V · middle-drag to lasso">
       <svg viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v14l3.6-3.4L12 19l2.2-1-2.4-5.2h4.7Z" fill="currentColor" stroke="none"/></svg>
     </button>
@@ -41,7 +38,6 @@
     <button id="export-pdf" aria-label="Export PDF" title="Export all drawings as PDF"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M5 3h8l4 4v5 M13 3v5h4 M4 17h14v4H4 M11 11v6 M8 14l3 3 3-3"/></svg></button>
     <span id="status" class="sr-only" role="status">Connecting</span>
   </div>
-  <input id="open-file" type="file" accept=".whiteboard,.json,application/json" hidden>
   <div id="options" role="dialog" aria-label="Tool options" hidden>
     <div id="colors" role="group" aria-label="Colour"></div>
     <label class="custom" title="Custom colour"><span>Custom colour</span><input id="custom-color" type="color" value="#111111" aria-label="Custom colour"></label>
@@ -50,9 +46,9 @@
     <div id="selection-actions" hidden><span id="selection-count" class="sr-only"></span><button id="delete-selection">Delete</button><button id="deselect">Deselect</button></div>
   </div>
   <p id="message" role="status" hidden></p>
-  <script src="ink.js?v=20261009-2"></script>
-  <script src="text.js?v=20261009-2"></script>
-  <script src="files.js?v=20261009-2"></script>
-  <script src="board.js?v=20261009-2"></script>
+  <script src="ink.js?v=20261009-3"></script>
+  <script src="text.js?v=20261009-3"></script>
+  <script src="files.js?v=20261009-3"></script>
+  <script src="board.js?v=20261009-3"></script>
 </body>
 </html>

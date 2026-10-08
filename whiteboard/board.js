@@ -17,7 +17,8 @@
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   if (!/^[a-f0-9]{32}$/.test(location.hash.slice(1))) history.replaceState(null, '', location.pathname + location.search + '#' + uid());
-  const room = location.hash.slice(1), cacheKey = 'whiteboard-local-' + room, viewKey = 'whiteboard-view-' + room;
+  const room = location.hash.slice(1), cacheKey = 'whiteboard-local-' + room, viewKey = 'whiteboard-view-' + room, historyKey = 'whiteboard-history-' + room;
+  const TTL = 12 * 60 * 60 * 1000;
   let sequence = 0;
   const objectId = () => local ? Date.now().toString(36).padStart(10, '0') + '-' + String(sequence++).padStart(6, '0') + '-' + uid().slice(0, 16) : ref.push().key;
   const settings = { pen: { color: palette[0], width: 4, opacity: 1 }, highlight: { color: palette[8], width: 28, opacity: .35 }, text: { color: palette[0], width: 30, opacity: 1 } };
@@ -31,16 +32,30 @@
   let tool = 'pen', inkTool = 'pen', active = null, gesture = null, pointer = null, editing = null, space = false, pinch = null;
   let historyStack = [], redoStack = [], frame = 0, dirty = true, orderDirty = true, gridDirty = true, persistTimer = 0, viewTimer = 0, ordered = [];
   let screenW = 0, screenH = 0, dpr = 1;
-  let settingUndo = null, exporting = false;
+  let settingUndo = null, exporting = false, historyInitialized = false;
+  try {
+    const saved = JSON.parse(localStorage.getItem(historyKey));
+    if (saved && Date.now() - saved.updated < TTL && Array.isArray(saved.undo) && Array.isArray(saved.redo)) { historyStack = saved.undo.slice(-50); redoStack = saved.redo.slice(-50); historyInitialized = true; }
+  } catch {}
+  function saveHistory() {
+    try {
+      const data = { updated: Date.now(), undo: historyStack.slice(-50), redo: redoStack.slice(-50) };
+      let json = JSON.stringify(data);
+      while (json.length > 1500000 && (data.undo.length || data.redo.length)) { if (data.undo.length) data.undo.shift(); else data.redo.shift(); json = JSON.stringify(data); }
+      localStorage.setItem(historyKey, json);
+    } catch {}
+  }
+  function seedHistory() {
+    if (!historyInitialized) { historyStack = entries().slice(-50).map(([id]) => [[id, { hidden: true }]]); historyInitialized = true; saveHistory(); }
+  }
   if (local) try { for (const [id, obj] of Object.entries(JSON.parse(localStorage.getItem(cacheKey) || '{}'))) objects.set(id, obj); } catch {}
   function persistNow() {
-    clearTimeout(persistTimer); persistTimer = 0;
+    clearTimeout(persistTimer); persistTimer = 0; saveHistory();
     if (local) try { localStorage.setItem(cacheKey, JSON.stringify(Object.fromEntries(objects))); } catch {}
   }
   function persist() { if (local && !persistTimer) persistTimer = setTimeout(persistNow, 400); }
   function status() {
     $('status').textContent = local ? 'On this device' : failed ? 'Sharing unavailable' : !ready ? 'Connecting…' : !connected ? 'Offline · changes waiting' : pending ? 'Saving…' : 'Live · saved';
-    for (const id of ['new-board', 'open-board', 'save-board']) $(id).disabled = !ready;
     $('export-pdf').disabled = !ready || exporting;
     $('status').className = 'sr-only' + (failed ? ' error' : connected ? ' live' : '');
     if (ready && connected) $('message').hidden = true;
@@ -183,8 +198,15 @@
     const text = selectedText();
     if (text && !editing) {
       overlay.setLineDash([]); overlay.fillStyle = '#fff';
-      for (const p of Object.values(Text.handles(boundsFor(...text)))) {
-        const r = 3.5 / view.zoom; overlay.fillRect(p[0] - r, p[1] - r, r * 2, r * 2); overlay.strokeRect(p[0] - r, p[1] - r, r * 2, r * 2);
+      const b = boundsFor(...text);
+      for (const [handle, p] of Object.entries(Text.handles(b, view.zoom))) {
+        if (handle === 'scale') {
+          overlay.beginPath(); overlay.moveTo(b[2] + 4 / view.zoom, b[3] + 4 / view.zoom); overlay.lineTo(p[0], p[1]); overlay.stroke();
+          overlay.beginPath(); overlay.arc(...p, 6 / view.zoom, 0, Math.PI * 2); overlay.fill(); overlay.stroke();
+          overlay.beginPath(); overlay.moveTo(p[0] - 2 / view.zoom, p[1] - 2 / view.zoom); overlay.lineTo(p[0] + 2 / view.zoom, p[1] + 2 / view.zoom); overlay.moveTo(p[0] + 2 / view.zoom, p[1] - 1 / view.zoom); overlay.lineTo(p[0] + 2 / view.zoom, p[1] + 2 / view.zoom); overlay.lineTo(p[0] - 1 / view.zoom, p[1] + 2 / view.zoom); overlay.stroke();
+        } else {
+          const r = 3.5 / view.zoom; overlay.fillRect(p[0] - r, p[1] - r, r * 2, r * 2); overlay.strokeRect(p[0] - r, p[1] - r, r * 2, r * 2);
+        }
       }
     }
     overlay.fillStyle = '#367acc12'; overlay.setLineDash([5 / view.zoom, 4 / view.zoom]);
@@ -194,7 +216,7 @@
       overlay.beginPath(); gesture.points.forEach((p, i) => i ? overlay.lineTo(...p) : overlay.moveTo(...p)); overlay.closePath(); overlay.fill(); overlay.stroke();
     }
   }
-  function remember(action) { historyStack.push(action); if (historyStack.length > 50) historyStack.shift(); redoStack = []; }
+  function remember(action) { historyStack.push(action); if (historyStack.length > 50) historyStack.shift(); redoStack = []; historyInitialized = true; saveHistory(); }
   function write(id, obj) { objects.set(id, obj); changed(); if (!local) track(ref.child(id).set(obj)); }
   function patchMany(updates, record = true) {
     const before = [], wire = {};
@@ -284,7 +306,7 @@
   }
   function handleAt(p, touch = false) {
     const text = selectedText(); if (!text) return null;
-    for (const [handle, q] of Object.entries(Text.handles(boundsFor(...text)))) if (Ink.distance(p, q) * view.zoom <= (touch ? 13 : 8)) return { id: text[0], handle };
+    for (const [handle, q] of Object.entries(Text.handles(boundsFor(...text), view.zoom))) if (Ink.distance(p, q) * view.zoom <= (touch ? 13 : 8)) return { id: text[0], handle };
     return null;
   }
   function eraseAt(p) {
@@ -306,18 +328,28 @@
     return u * v <= 0 && s * t <= 0;
   }
   function completeSelection() {
-    const polygon = gesture.kind === 'rect' ? (() => { const b = pointBounds([gesture.start, gesture.end]); return [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]]; })() : gesture.points;
-    if (polygon.length < 3) return;
-    const area = pointBounds(polygon);
+    const rectangle = gesture.kind === 'rect', area = pointBounds(rectangle ? [gesture.start, gesture.end] : gesture.points);
+    const polygon = rectangle ? null : gesture.points;
+    if (!rectangle && polygon.length < 3) { tool = 'select'; updateToolUI(); return; }
+    const contains = p => pointInPolygon(p, polygon) || polygon.some((q, i) => segmentDistance(p, q, polygon[(i + 1) % polygon.length]) < .001 / view.zoom);
     for (const [id, obj] of entries()) {
-      const b = boundsFor(id, obj); if (b[2] < area[0] || b[0] > area[2] || b[3] < area[1] || b[1] > area[3]) continue;
-      const [dx, dy] = offset(id, obj), pts = obj.kind === 'text' ? [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]], [b[0], b[1]]] : geometry(obj).pts.map(([x, y]) => [x + dx, y + dy]);
-      if (pts.some(p => pointInPolygon(p, polygon)) || obj.kind === 'text' && polygon.some(p => inside(p, b)) || pts.some((p, i) => i && polygon.some((q, j) => crosses(pts[i - 1], p, q, polygon[(j + 1) % polygon.length])))) selected.add(id);
+      const b = boundsFor(id, obj);
+      if (b[0] < area[0] || b[1] < area[1] || b[2] > area[2] || b[3] > area[3]) continue;
+      if (rectangle) { selected.add(id); continue; }
+      const [dx, dy] = offset(id, obj);
+      const pts = obj.kind === 'text' ? [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]], [b[0], b[1]]] : geometry(obj).pts.map(([x, y]) => [x + dx, y + dy]);
+      if (!pts.every(contains)) continue;
+      const edges = pts.slice(1).map((p, i) => [pts[i], p]);
+      const crossing = edges.some(([a, b]) => polygon.some((c, j) => crosses(a, b, c, polygon[(j + 1) % polygon.length])));
+      if (crossing) continue;
+      const radius = obj.kind === 'text' ? 0 : obj.width / 2;
+      if (radius && !pts.every(p => [[radius, 0], [-radius, 0], [0, radius], [0, -radius]].every(d => contains([p[0] + d[0], p[1] + d[1]])))) continue;
+      selected.add(id);
     }
-    if (selected.size) { tool = 'select'; updateToolUI(); }
+    tool = 'select'; updateToolUI();
   }
   function beginText(id, obj) {
-    editing = { id, original: obj, obj: { ...obj } }; selected.clear(); if (id) selected.add(id);
+    editing = { id, original: obj, obj: { ...obj }, autoWidth: obj.boxW == null, displayWidth: obj.boxW || 0 }; selected.clear(); if (id) selected.add(id);
     $('text-edit').hidden = false; $('editor').value = obj.text; dirty = true; layoutEditor(); renderSoon();
     $('editor').focus({ preventScroll: true }); $('editor').setSelectionRange(obj.text.length, obj.text.length);
   }
@@ -325,15 +357,17 @@
     if (!editing) return;
     const obj = editing.obj, g = Text.layout(obj, ctx), p = screen([obj.x + (obj.dx || 0), obj.y + (obj.dy || 0)]);
     const frame = $('text-edit'), editor = $('editor');
-    frame.style.left = p[0] + 'px'; frame.style.top = p[1] + 'px'; frame.style.width = g.width * view.zoom + 'px'; frame.style.height = g.height * view.zoom + 'px';
+    editing.displayWidth = editing.autoWidth ? Math.max(editing.displayWidth, 160 / view.zoom, (Math.ceil(g.width * view.zoom) + 12) / view.zoom) : g.width;
+    frame.style.left = p[0] + 'px'; frame.style.top = p[1] + 'px'; frame.style.width = editing.displayWidth * view.zoom + 'px'; frame.style.height = g.height * view.zoom + 'px';
     editor.style.fontSize = obj.width * view.zoom + 'px'; editor.style.color = obj.color; editor.style.opacity = obj.opacity;
-    editor.style.padding = Text.padding(obj) * view.zoom + 'px'; editor.style.whiteSpace = obj.boxW == null ? 'pre' : 'pre-wrap';
+    editor.style.padding = Text.padding(obj) * view.zoom + 'px'; editor.style.whiteSpace = editing.autoWidth ? 'pre' : 'pre-wrap';
+    editor.scrollLeft = 0;
   }
   function commitText(cancel = false) {
     if (!editing) return;
     const edit = editing; editing = null; $('text-edit').hidden = true; $('editor').blur();
     if (!cancel && ready) {
-      const obj = { ...edit.obj, text: $('editor').value };
+      const obj = { ...edit.obj, text: $('editor').value, ...(edit.autoWidth ? { boxW: edit.displayWidth } : {}) };
       if (edit.id) {
         if (!obj.text.trim()) { patchMany([[edit.id, { hidden: true }]]); selected.clear(); }
         else {
@@ -347,20 +381,22 @@
     dirty = true; persistNow(); renderSoon();
   }
   $('editor').addEventListener('input', () => { if (editing) { editing.obj = { ...editing.obj, text: $('editor').value }; layoutEditor(); } });
+  $('editor').addEventListener('scroll', () => { if ($('editor').scrollLeft) $('editor').scrollLeft = 0; });
   $('editor').addEventListener('blur', () => { queueMicrotask(() => { if (editing && !gesture?.kind.startsWith('edit') && !document.activeElement.closest('#text-edit, #options, #toolbar')) commitText(); }); });
   $('text-edit').addEventListener('pointerdown', e => {
-    const handle = e.target.dataset.handle, edge = e.target.dataset.edge;
-    if (!editing || e.button !== 0 || (!handle && !edge)) return;
+    const handle = e.target.dataset.handle || e.target.dataset.edge;
+    if (!editing || e.button !== 0 || !handle) return;
     e.preventDefault(); e.stopPropagation(); hideOptions(); pointer = e.pointerId; e.target.setPointerCapture(pointer);
+    if (editing.autoWidth) { editing.obj = { ...editing.obj, boxW: editing.displayWidth }; editing.autoWidth = false; }
     const obj = editing.obj, b = Text.layout(obj, ctx).bounds.map((v, i) => v + (i % 2 ? obj.dy || 0 : obj.dx || 0));
-    gesture = { kind: handle ? 'editResize' : 'editMove', handle, start: world(e), anchor: handle ? Text.handles(b)[handle] : null, original: { ...obj } };
+    gesture = { kind: 'editResize', handle, start: world(e), anchor: Text.handles(b, view.zoom)[handle], original: { ...obj } };
   });
   function startMove(p) {
     const origins = new Map([...selected].map(id => { const obj = objects.get(id); return [id, { dx: obj.dx || 0, dy: obj.dy || 0 }]; }));
     gesture = { kind: 'move', start: p, delta: [0, 0], origins, timer: setInterval(sendGesture, 100) }; dirty = true;
   }
   function startResize(id, handle, p) {
-    const original = objects.get(id); gesture = { kind: 'resize', id, handle, start: p, anchor: Text.handles(boundsFor(id, original))[handle], original, preview: original, timer: setInterval(sendGesture, 100) }; dirty = true;
+    const original = objects.get(id); gesture = { kind: 'resize', id, handle, start: p, anchor: Text.handles(boundsFor(id, original), view.zoom)[handle], original, preview: original, timer: setInterval(sendGesture, 100) }; dirty = true;
   }
   function touchState() {
     const p = [...touches.values()].slice(0, 2); return { centre: [(p[0][0] + p[1][0]) / 2, (p[0][1] + p[1][1]) / 2], distance: Math.max(1, Ink.distance(...p)) };
@@ -380,6 +416,7 @@
     if (space) { gesture = { kind: 'pan', start: [e.clientX, e.clientY], view: { ...view } }; setHint(); return; }
     if (!ready) { pointer = null; $('message').textContent = 'Connecting…'; $('message').hidden = false; return; }
     const freehand = e.button === 1 || tool === 'lasso', selecting = freehand || tool === 'select';
+    if (e.button === 1) { tool = 'select'; updateToolUI(); }
     const handle = !freehand && ['select', 'text'].includes(tool) ? handleAt(p, e.pointerType === 'touch') : null;
     if (handle) { startResize(handle.id, handle.handle, p); renderSoon(); return; }
     if (tool === 'text' && !freehand) {
@@ -532,41 +569,19 @@
     button.onclick = () => { if (held) { held = false; return; } hideOptions(); selectTool(button.dataset.tool); button.blur(); };
     button.ondblclick = () => openOptions(button.dataset.tool, true);
     button.oncontextmenu = e => { e.preventDefault(); openOptions(button.dataset.tool); };
-    button.onpointerdown = e => { held = false; start = [e.clientX, e.clientY]; if (e.button === 0 && settings[button.dataset.tool]) timer = setTimeout(() => { held = true; openOptions(button.dataset.tool); }, 450); };
+    button.onpointerdown = e => { held = false; start = [e.clientX, e.clientY]; if (e.button === 0) { e.preventDefault(); button.setPointerCapture(e.pointerId); } if (e.button === 0 && settings[button.dataset.tool]) timer = setTimeout(() => { held = true; openOptions(button.dataset.tool); }, 450); };
     button.onpointermove = e => { if (start && Ink.distance(start, [e.clientX, e.clientY]) > 6) stop(); };
-    button.onpointerup = button.onpointercancel = button.onpointerleave = stop;
+    button.onpointerup = button.onpointercancel = button.onlostpointercapture = stop;
   });
   function undo(redo = false) {
     if (!ready) return; finishSetting(); finish(); commitText();
     const from = redo ? redoStack : historyStack, to = redo ? historyStack : redoStack, action = from.pop();
-    if (action) to.push(patchMany(action, false)); renderSoon(); persistNow();
+    if (action) { const inverse = patchMany(action, false); if (inverse.length) to.push(inverse); } renderSoon(); persistNow();
   }
   $('deselect').onclick = () => { selected.clear(); renderSoon(); };
   $('delete-selection').onclick = () => { if (ready) { commitText(); patchMany([...selected].map(id => [id, { hidden: true }])); selected.clear(); renderSoon(); persistNow(); } };
   function fileSnapshot() { finish(); commitText(); hideOptions(); return entries().map(([, obj]) => obj); }
-  function saveBoard() { if (!ready) { notice('The board is still loading.'); return; } BoardFiles.save(fileSnapshot(), { ...view }); }
   function notice(text) { $('message').textContent = text; $('message').hidden = false; setTimeout(() => { $('message').hidden = true; }, 5000); }
-  function replaceSheet(content, camera = { x: 0, y: 0, zoom: 1 }) {
-    const changes = [...objects.keys()].map(id => [id, { $object: null }]);
-    for (const obj of content) changes.push([objectId(), { $object: obj }]);
-    patchMany(changes); selected.clear(); tool = 'pen'; updateToolUI();
-    Object.assign(view, camera); cameraChanged(); persistNow();
-  }
-  $('save-board').onclick = () => { try { saveBoard(); } catch (error) { notice(error.message); } };
-  $('new-board').onclick = () => {
-    fileSnapshot();
-    if (entries().length && !confirm('Start a blank board at this link? Other viewers will see it too. You can undo this.')) return;
-    replaceSheet([]);
-  };
-  $('open-board').onclick = () => $('open-file').click();
-  $('open-file').onchange = async e => {
-    const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-    try {
-      const data = await BoardFiles.read(file); fileSnapshot();
-      if (entries().length && !confirm('Replace this board with the saved file? Other viewers will see it too. You can undo this.')) return;
-      replaceSheet(data.objects, data.view || undefined);
-    } catch (error) { notice(error.message); }
-  };
   $('export-pdf').onclick = async () => {
     if (!ready || exporting) return;
     exporting = true;
@@ -593,8 +608,8 @@
       if (!gesture && !active) { if (e.key === '0') fit(); else zoomAt(e.key === '-' ? 1 / 1.25 : 1.25); }
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveBoard(); return; }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') { e.preventDefault(); $('open-board').click(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); finish(); commitText(); persistNow(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); finish(true); commitText(); selected.clear(); hideOptions(); tool = 'select'; updateToolUI(); renderSoon(); return; }
     if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) {
       if (e.target === $('editor') && (e.key === 'Escape' || e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); commitText(); hideOptions(); }
       else if (e.key === 'Escape') { hideOptions(); e.target.blur(); }
@@ -603,7 +618,6 @@
     const cmd = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
     if (cmd && key === 'z') { e.preventDefault(); undo(e.shiftKey); }
     else if (cmd && key === 'y') { e.preventDefault(); undo(true); }
-    else if (cmd && key === 's') { e.preventDefault(); saveBoard(); }
     else if (cmd && key === 'a') { e.preventDefault(); finish(); commitText(); selected.clear(); for (const [id] of entries()) selected.add(id); tool = 'select'; updateToolUI(); renderSoon(); }
     else if (['=', '+', '-'].includes(key)) { e.preventDefault(); if (!gesture && !active) zoomAt(key === '-' ? 1 / 1.25 : 1.25); }
     else if (cmd && key === '0') { e.preventDefault(); finish(); fit(); }
@@ -631,8 +645,8 @@
     await ref.once('value'); ready = true;
     const stale = [...objects].filter(([, obj]) => obj?.hidden).map(([id]) => [id, { hidden: true }]);
     if (stale.length) patchMany(stale, false);
-    status(); db.ref('.info/connected').on('value', snapshot => { connected = snapshot.val() === true; status(); });
+    seedHistory(); status(); db.ref('.info/connected').on('value', snapshot => { connected = snapshot.val() === true; status(); });
   }
   updateSettingsUI(); updateToolUI(); sizeCanvases();
-  if (local) status(); else connect().catch(fail);
+  if (local) { seedHistory(); status(); } else connect().catch(fail);
 })();
