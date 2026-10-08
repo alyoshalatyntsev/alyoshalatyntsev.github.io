@@ -78,10 +78,10 @@
     },
     "whiteboards": {
       "$room": {
-        ".read": "$room.matches(/^[a-f0-9]{32}$/)",
+        ".read": "$room.matches(/^[a-f0-9]{32}$/) && (!data.hasChild('lastActive') || data.child('lastActive').val() > now - 43200000)",
         "objects": {
           "$id": {
-            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $id.length <= 40",
+            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $id.length <= 40 && (!newData.parent().parent().hasChild('lastActive') || newData.parent().parent().child('lastActive').val() > now - 43200000)",
             ".validate": "newData.hasChildren(['kind', 'color', 'width', 'opacity']) && (newData.child('kind').val() === 'text' ? newData.hasChildren(['text', 'x', 'y']) : newData.hasChild('chunks'))",
             "kind": {
               ".validate": "newData.val() === 'pen' || newData.val() === 'highlight' || newData.val() === 'text'"
@@ -131,7 +131,21 @@
         },
         "$other": {
           ".validate": false
+        },
+        ".write": "$room.matches(/^[a-f0-9]{32}$/) && !newData.exists() && ((data.child('lastActive').isNumber() && data.child('lastActive').val() <= now - 43200000) || (!data.exists() && root.child('whiteboardExpiry').child($room).isNumber() && root.child('whiteboardExpiry').child($room).val() <= now - 43200000))",
+        "lastActive": {
+          ".write": "$room.matches(/^[a-f0-9]{32}$/) && newData.isNumber() && newData.val() === now && (!data.exists() || data.val() > now - 43200000)",
+          ".validate": "newData.isNumber() && newData.val() === now && newData.parent().parent().parent().child('whiteboardExpiry').child($room).val() === newData.val()"
         }
+      }
+    },
+    "whiteboardExpiry": {
+      ".indexOn": ".value",
+      ".read": "query.orderByValue && query.endAt != null && query.endAt <= now - 43200000 && query.limitToFirst != null && query.limitToFirst > 0 && query.limitToFirst <= 100",
+      "$room": {
+        ".read": "$room.matches(/^[a-f0-9]{32}$/)",
+        ".write": "$room.matches(/^[a-f0-9]{32}$/) && ((!newData.exists() && data.isNumber() && data.val() <= now - 43200000) || (newData.isNumber() && newData.val() === now && newData.parent().parent().child('whiteboards').child($room).child('lastActive').val() === newData.val()))",
+        ".validate": "newData.isNumber() && newData.val() === now"
       }
     }
   }

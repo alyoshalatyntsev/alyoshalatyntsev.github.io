@@ -28,7 +28,7 @@
     if (saved && [saved.x, saved.y, saved.zoom].every(Number.isFinite) && saved.zoom >= 1e-9 && saved.zoom <= 1e9) Object.assign(view, saved);
   } catch {}
   const objects = new Map(), decoded = new WeakMap(), selected = new Set(), touches = new Map();
-  let ref, ready = local, connected = false, failed = false, pending = 0;
+  let expiry, ref, ready = local, connected = false, failed = false, pending = 0;
   let tool = 'pen', inkTool = 'pen', active = null, gesture = null, pointer = null, editing = null, space = false, pinch = null;
   let historyStack = [], redoStack = [], frame = 0, dirty = true, orderDirty = true, gridDirty = true, persistTimer = 0, viewTimer = 0, ordered = [];
   let screenW = 0, screenH = 0, dpr = 1;
@@ -414,6 +414,7 @@
     if (['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) document.activeElement.blur();
     const p = world(e); pointer = e.pointerId; canvas.setPointerCapture(pointer);
     if (space) { gesture = { kind: 'pan', start: [e.clientX, e.clientY], view: { ...view } }; setHint(); return; }
+    if (expiry?.expired()) { pointer = null; expiry.clear().catch(fail); return; }
     if (!ready) { pointer = null; $('message').textContent = 'Connecting…'; $('message').hidden = false; return; }
     const freehand = e.button === 1 || tool === 'lasso', selecting = freehand || tool === 'select';
     if (e.button === 1) { tool = 'select'; updateToolUI(); }
@@ -636,9 +637,23 @@
   async function loadSDK(file) {
     await new Promise((resolve, reject) => { const script = document.createElement('script'); script.src = 'https://www.gstatic.com/firebasejs/10.12.2/' + file; script.onload = resolve; script.onerror = () => reject(new Error('Firebase could not load')); document.head.append(script); });
   }
+  function expiredBoard() {
+    clearInterval(active?.timer); clearInterval(gesture?.timer); active = gesture = editing = null; pointer = null;
+    $('text-edit').hidden = true; selected.clear(); objects.clear(); historyStack = []; redoStack = []; historyInitialized = true;
+    dirty = orderDirty = true; renderSoon();
+    for (const key of [cacheKey, historyKey, viewKey, 'whiteboard-activity-' + room]) try { localStorage.removeItem(key); } catch {}
+    notice('Board cleared after 12 hours of inactivity.');
+  }
+  function listenActivity() {
+    for (const event of ['pointerdown', 'keydown', 'input', 'wheel']) addEventListener(event, e => { if (ready && e.isTrusted) expiry?.touch(); }, { capture: true, passive: true });
+    addEventListener('pointermove', e => { if (ready && pointer !== null && e.isTrusted) expiry?.touch(); }, { passive: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && expiry?.expired()) expiry.clear().catch(fail); });
+  }
   async function connect() {
     await loadSDK('firebase-app-compat.js'); await loadSDK('firebase-database-compat.js');
-    firebase.initializeApp(CONFIG); const db = firebase.database(); ref = db.ref('whiteboards/' + room + '/objects');
+    firebase.initializeApp(CONFIG); const db = firebase.database();
+    expiry = BoardExpiry.watch({ room, db, onExpire: expiredBoard, onError: fail }); await expiry.start();
+    ref = db.ref('whiteboards/' + room + '/objects');
     const receive = snapshot => { objects.set(snapshot.key, snapshot.val()); orderDirty = true; if (active?.id !== snapshot.key) dirty = true; renderSoon(); };
     ref.on('child_added', receive, fail); ref.on('child_changed', receive, fail);
     ref.on('child_removed', snapshot => { objects.delete(snapshot.key); selected.delete(snapshot.key); if (active?.id === snapshot.key) { clearInterval(active.timer); active = null; pointer = null; } dirty = orderDirty = true; renderSoon(); }, fail);
@@ -648,5 +663,6 @@
     seedHistory(); status(); db.ref('.info/connected').on('value', snapshot => { connected = snapshot.val() === true; status(); });
   }
   updateSettingsUI(); updateToolUI(); sizeCanvases();
-  if (local) { seedHistory(); status(); } else connect().catch(fail);
+  listenActivity();
+  if (local) { expiry = BoardExpiry.watch({ room, onExpire: expiredBoard, onError: fail }); expiry.start().then(() => { seedHistory(); status(); }); } else connect().catch(fail);
 })();

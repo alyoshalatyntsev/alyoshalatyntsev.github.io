@@ -1,0 +1,21 @@
+name: Expire inactive whiteboards
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: whiteboard-cleanup
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Remove boards inactive for twelve hours
+        env:
+          CLEANUP_SOURCE: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/whiteboard/cleanup.py
+        run: |
+          curl --fail --silent --show-error "$CLEANUP_SOURCE" --output "$RUNNER_TEMP/whiteboard-cleanup.py"
+          python3 "$RUNNER_TEMP/whiteboard-cleanup.py"
