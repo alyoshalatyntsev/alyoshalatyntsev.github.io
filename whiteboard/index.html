@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Whiteboard</title>
+  <link rel="stylesheet" href="board.css">
+</head>
+<body>
+  <header>
+    <div class="identity"><strong>Whiteboard</strong><span id="status" role="status">Connecting…</span></div>
+    <div class="sharing"><button id="share">Copy link</button><button id="new">New board</button></div>
+  </header>
+  <main>
+    <div class="toolbar" aria-label="Drawing tools">
+      <div class="tools" role="group" aria-label="Tool">
+        <button data-tool="select" aria-pressed="false" title="Rectangle select (V)">↖ <span>Select</span></button>
+        <button data-tool="lasso" aria-pressed="false" title="Freehand select (L), or hold the middle mouse button">◌ <span>Lasso</span></button>
+        <button data-tool="pen" aria-pressed="true" title="Pen (P)">✎ <span>Draw</span></button>
+        <button data-tool="highlight" aria-pressed="false" title="Highlighter (H)">▰ <span>Highlight</span></button>
+        <button data-tool="text" aria-pressed="false" title="Text (T)">T <span>Text</span></button>
+        <button data-tool="erase" aria-pressed="false" title="Erase a stroke or text (E)">⌫ <span>Erase</span></button>
+      </div>
+      <div class="actions"><button id="undo" disabled title="Undo your last action (Ctrl/⌘ Z)">Undo</button><button id="save">Save image</button><button id="clear">Clear</button></div>
+    </div>
+    <div class="settings">
+      <div id="colors" role="group" aria-label="Ink colour"></div>
+      <label class="custom">Custom <input id="custom-color" type="color" value="#26352f" aria-label="Custom ink colour"></label>
+      <label class="setting"><span id="width-label">Width</span><input id="width" type="range" min="1" max="80" value="4" aria-label="Stroke width"><output id="width-value">4</output></label>
+      <label class="setting">Opacity<input id="opacity" type="range" min="5" max="100" value="100" step="5" aria-label="Ink opacity"><output id="opacity-value">100%</output></label>
+      <canvas id="sample" width="140" height="42" aria-label="Ink preview"></canvas>
+      <div id="selection-actions" hidden><span id="selection-count"></span><button id="delete-selection">Delete selected</button><button id="deselect">Deselect</button></div>
+    </div>
+    <p id="message" role="status">Share the link so everyone can draw together.</p>
+    <div id="paper">
+      <canvas id="board" width="1600" height="1000" aria-label="Shared whiteboard. Use the drawing tools, or select Text and tap to type."></canvas>
+      <canvas id="overlay" width="1600" height="1000" aria-hidden="true"></canvas>
+      <textarea id="editor" aria-label="Text to add to the board" placeholder="Type here…" maxlength="2000" hidden></textarea>
+      <div id="text-actions" hidden><button id="add-text">Add text</button><button id="cancel-text">Cancel</button></div>
+    </div>
+    <footer><span id="hint">Draw with a mouse, finger or pen.</span><span>Anyone with this link can edit.</span></footer>
+  </main>
+  <script src="board.js"></script>
+</body>
+</html>

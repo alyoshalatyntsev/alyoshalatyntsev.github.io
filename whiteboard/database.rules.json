@@ -1,0 +1,132 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "go": {
+      ".read": true,
+      "current": {
+        ".write": true,
+        ".validate": "newData.isString() && newData.val().length < 40"
+      },
+      "snap": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['g', 'by', 't'])"
+      },
+      "presence": {
+        "$tab": {
+          ".write": true,
+          ".validate": "$tab.length < 40 && newData.hasChildren(['a', 'c', 'g'])"
+        }
+      },
+      "games": {
+        "$g": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['size', 'created'])",
+          "size": {
+            ".validate": "newData.val() === 9 || newData.val() === 13 || newData.val() === 19"
+          },
+          "created": {
+            ".validate": "newData.isNumber()"
+          },
+          "moves": {
+            "$i": {
+              ".validate": "newData.hasChildren(['c', 'p']) && (newData.child('c').val() === 'b' || newData.child('c').val() === 'w') && newData.child('p').isNumber() && newData.child('p').val() >= -1 && newData.child('p').val() < 361"
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "gotest": {
+      ".read": true,
+      "current": {
+        ".write": true,
+        ".validate": "newData.isString() && newData.val().length < 40"
+      },
+      "snap": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['g', 'by', 't'])"
+      },
+      "presence": {
+        "$tab": {
+          ".write": true,
+          ".validate": "$tab.length < 40 && newData.hasChildren(['a', 'c', 'g'])"
+        }
+      },
+      "games": {
+        "$g": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['size', 'created'])",
+          "size": {
+            ".validate": "newData.val() === 9 || newData.val() === 13 || newData.val() === 19"
+          },
+          "created": {
+            ".validate": "newData.isNumber()"
+          },
+          "moves": {
+            "$i": {
+              ".validate": "newData.hasChildren(['c', 'p']) && (newData.child('c').val() === 'b' || newData.child('c').val() === 'w') && newData.child('p').isNumber() && newData.child('p').val() >= -1 && newData.child('p').val() < 361"
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "whiteboards": {
+      "$room": {
+        ".read": "$room.matches(/^[a-f0-9]{32}$/)",
+        "objects": {
+          "$id": {
+            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $id.length <= 40",
+            ".validate": "newData.hasChildren(['kind', 'color', 'width', 'opacity']) && (newData.child('kind').val() === 'text' ? newData.hasChildren(['text', 'x', 'y']) : newData.hasChild('chunks'))",
+            "kind": {
+              ".validate": "newData.val() === 'pen' || newData.val() === 'highlight' || newData.val() === 'text'"
+            },
+            "color": {
+              ".validate": "newData.isString() && newData.val().matches(/^#[a-fA-F0-9]{6}$/)"
+            },
+            "width": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
+            },
+            "hidden": {
+              ".validate": "newData.isBoolean()"
+            },
+            "x": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1600"
+            },
+            "y": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000"
+            },
+            "text": {
+              ".validate": "newData.isString() && newData.val().length <= 2000"
+            },
+            "chunks": {
+              "$chunk": {
+                ".validate": "$chunk.matches(/^[0-9]{6}$/) && newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^[0-9 ]+$/)"
+              }
+            },
+            "$other": {
+              ".validate": false
+            },
+            "opacity": {
+              ".validate": "newData.isNumber() && newData.val() >= 0.05 && newData.val() <= 1"
+            },
+            "dx": {
+              ".validate": "newData.isNumber() && newData.val() >= -1600 && newData.val() <= 1600"
+            },
+            "dy": {
+              ".validate": "newData.isNumber() && newData.val() >= -1000 && newData.val() <= 1000"
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
