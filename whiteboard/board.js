@@ -121,8 +121,9 @@
   function geometry(obj) {
     if (decoded.has(obj)) return decoded.get(obj);
     const g = obj.kind === 'text' ? Text.layout(obj, ctx) : (() => {
-      const pts = Ink.decode(obj.chunks), origin = pts[0] || [0, 0], unit = obj.width;
-      return { pts, origin, unit, path: Ink.path(pts, origin, unit), bounds: pointBounds(pts, obj.width / 2) };
+      const pts = Ink.decode(obj.chunks), origin = pts[0] || [0, 0], bounds = pointBounds(pts);
+      const unit = Math.max(bounds[2] - bounds[0], bounds[3] - bounds[1]) / 1024 || 1;
+      return { pts, origin, unit, path: Ink.path(pts, origin, unit), bounds };
     })();
     decoded.set(obj, g); return g;
   }
@@ -138,7 +139,8 @@
   }
   function boundsFor(id, obj) {
     obj = effective(id, obj); const [dx, dy] = offset(id, obj), b = geometry(obj).bounds;
-    return [b[0] + dx, b[1] + dy, b[2] + dx, b[3] + dy];
+    const pad = obj.kind === 'text' ? 0 : obj.width / view.zoom / 2;
+    return [b[0] + dx - pad, b[1] + dy - pad, b[2] + dx + pad, b[3] + dy + pad];
   }
   function onScreen(b) { return b[2] >= view.x && b[3] >= view.y && b[0] <= view.x + screenW / view.zoom && b[1] <= view.y + screenH / view.zoom; }
   function draw(out, obj, delta, stroke) {
@@ -150,7 +152,8 @@
     } else {
       const g = stroke ? { pts: stroke.points, origin: stroke.origin, unit: stroke.unit, path: stroke.livePath() } : geometry(obj);
       out.translate(...g.origin); out.scale(g.unit, g.unit);
-      out.lineWidth = obj.width / g.unit; out.lineCap = out.lineJoin = 'round';
+      // Ink widths are screen pixels; zoom changes positions, never thickness.
+      out.lineWidth = obj.width / view.zoom / g.unit; out.lineCap = out.lineJoin = 'round';
       if (g.pts.length === 1 && (!stroke || Ink.distance(stroke.tip, g.pts[0]) < .001 / view.zoom)) {
         out.beginPath(); out.arc(0, 0, out.lineWidth / 2, 0, Math.PI * 2); out.fill();
       } else out.stroke(g.path);
@@ -222,7 +225,7 @@
     const before = [], wire = {};
     for (const [id, update] of updates) {
       const old = objects.get(id);
-      // Undo retains deleted objects only in browser memory, never in Firebase.
+      // Deleted objects stay in local undo history, never in Firebase.
       if ('$object' in update || update.hidden === true) {
         const next = update.hidden === true ? null : update.$object;
         if (!old && !next) continue;
@@ -300,7 +303,7 @@
       if (!inside(p, boundsFor(id, obj), radius)) continue;
       if (obj.kind === 'text') return id;
       const pts = geometry(obj).pts, [dx, dy] = offset(id, obj), q = [p[0] - dx, p[1] - dy];
-      if (pts.some((point, i) => segmentDistance(q, i ? pts[i - 1] : point, point) <= radius + obj.width / 2)) return id;
+      if (pts.some((point, i) => segmentDistance(q, i ? pts[i - 1] : point, point) <= radius + obj.width / view.zoom / 2)) return id;
     }
     return null;
   }
@@ -342,7 +345,7 @@
       const edges = pts.slice(1).map((p, i) => [pts[i], p]);
       const crossing = edges.some(([a, b]) => polygon.some((c, j) => crosses(a, b, c, polygon[(j + 1) % polygon.length])));
       if (crossing) continue;
-      const radius = obj.kind === 'text' ? 0 : obj.width / 2;
+      const radius = obj.kind === 'text' ? 0 : obj.width / view.zoom / 2;
       if (radius && !pts.every(p => [[radius, 0], [-radius, 0], [0, radius], [0, -radius]].every(d => contains([p[0] + d[0], p[1] + d[1]])))) continue;
       selected.add(id);
     }
@@ -355,12 +358,14 @@
   }
   function layoutEditor() {
     if (!editing) return;
-    const obj = editing.obj, g = Text.layout(obj, ctx), p = screen([obj.x + (obj.dx || 0), obj.y + (obj.dy || 0)]);
+    const obj = editing.obj, natural = Text.layout(obj, ctx), p = screen([obj.x + (obj.dx || 0), obj.y + (obj.dy || 0)]);
     const frame = $('text-edit'), editor = $('editor');
-    editing.displayWidth = editing.autoWidth ? Math.max(editing.displayWidth, 160 / view.zoom, (Math.ceil(g.width * view.zoom) + 12) / view.zoom) : g.width;
+    const available = Math.max(160, screenW - p[0] - 100) / view.zoom;
+    editing.displayWidth = editing.autoWidth ? Math.min(available, Math.max(editing.displayWidth, 160 / view.zoom, (Math.ceil(natural.width * view.zoom) + 12) / view.zoom)) : natural.width;
+    const g = editing.autoWidth ? Text.layout({ ...obj, boxW: editing.displayWidth }, ctx) : natural;
     frame.style.left = p[0] + 'px'; frame.style.top = p[1] + 'px'; frame.style.width = editing.displayWidth * view.zoom + 'px'; frame.style.height = g.height * view.zoom + 'px';
     editor.style.fontSize = obj.width * view.zoom + 'px'; editor.style.color = obj.color; editor.style.opacity = obj.opacity;
-    editor.style.padding = Text.padding(obj) * view.zoom + 'px'; editor.style.whiteSpace = editing.autoWidth ? 'pre' : 'pre-wrap';
+    editor.style.padding = Text.padding(obj) * view.zoom + 'px'; editor.style.whiteSpace = 'pre-wrap';
     editor.scrollLeft = 0;
   }
   function commitText(cancel = false) {
@@ -438,7 +443,7 @@
     }
     selected.clear();
     if (tool === 'erase') { gesture = { kind: 'erase', last: p, undo: [] }; eraseAt(p); renderSoon(); return; }
-    const id = objectId(), obj = { kind: tool, ...settings[tool], width: settings[tool].width / view.zoom, chunks: { '000000': Ink.chunks([p])[0] } };
+    const id = objectId(), obj = { kind: tool, ...settings[tool], width: settings[tool].width, chunks: { '000000': Ink.chunks([p])[0] } };
     active = { id, obj, stroke: new Ink.Stroke(p, view.zoom), chunk: 1, timer: setInterval(flush, 80) };
     write(id, obj); remember([[id, { hidden: true }]]);
   });
@@ -516,7 +521,7 @@
     for (const name of Object.keys(settings)) document.querySelector(`[data-tool="${name}"]`).style.setProperty('--ink', settings[name].color);
   }
   function stylePatch(obj, key, value) {
-    if (key === 'width') value /= view.zoom;
+    if (key === 'width' && obj.kind === 'text') value /= view.zoom;
     if (key === 'width' && obj.kind === 'text') {
       const g = geometry(obj), scale = value / obj.width; return { width: value, ...(obj.boxW != null ? { boxW: g.width * scale, boxH: g.height * scale } : {}) };
     }

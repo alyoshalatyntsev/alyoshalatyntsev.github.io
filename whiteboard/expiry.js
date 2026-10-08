@@ -35,7 +35,11 @@
         last = 0; try { localStorage.removeItem(key); } catch {} onExpire();
       } catch (error) {
         // A peer may have renewed the board while a cleanup request was in flight.
-        if (db) { const s = await db.ref(boardPath + '/lastActive').once('value'); receive(s.val()); }
+        if (db) {
+          const s = await db.ref(boardPath + '/lastActive').once('value');
+          if (s.val() == null) { last = 0; try { localStorage.removeItem(key); } catch {} onExpire(); }
+          else receive(s.val());
+        }
         schedule(); if (!/permission/i.test(error.message || '')) throw error;
       } finally { clearing = false; }
     }
