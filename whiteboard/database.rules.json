@@ -90,23 +90,23 @@
               ".validate": "newData.isString() && newData.val().matches(/^#[a-fA-F0-9]{6}$/)"
             },
             "width": {
-              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 1e15"
             },
             "hidden": {
               ".validate": "newData.isBoolean()"
             },
             "x": {
-              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1600"
+              ".validate": "newData.isNumber()"
             },
             "y": {
-              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000"
+              ".validate": "newData.isNumber()"
             },
             "text": {
               ".validate": "newData.isString() && newData.val().length <= 2000"
             },
             "chunks": {
               "$chunk": {
-                ".validate": "$chunk.matches(/^[0-9]{6}$/) && newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^[0-9 ]+$/)"
+                ".validate": "$chunk.matches(/^[0-9]{6}$/) && newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^-?[0-9]+(\\.[0-9]+)?(e[+-]?[0-9]+)?( -?[0-9]+(\\.[0-9]+)?(e[+-]?[0-9]+)?)*$/)"
               }
             },
             "$other": {
@@ -116,10 +116,16 @@
               ".validate": "newData.isNumber() && newData.val() >= 0.05 && newData.val() <= 1"
             },
             "dx": {
-              ".validate": "newData.isNumber() && newData.val() >= -1600 && newData.val() <= 1600"
+              ".validate": "newData.isNumber()"
             },
             "dy": {
-              ".validate": "newData.isNumber() && newData.val() >= -1000 && newData.val() <= 1000"
+              ".validate": "newData.isNumber()"
+            },
+            "boxW": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && newData.isNumber() && newData.val() > 0"
+            },
+            "boxH": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && newData.isNumber() && newData.val() > 0"
             }
           }
         },

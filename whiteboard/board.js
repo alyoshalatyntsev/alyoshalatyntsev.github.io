@@ -7,207 +7,296 @@
     projectId: 'project-0cbb7d36-56e5-441e-8fe',
     appId: '1:531740406755:web:fe0ee4c37001a9d4e966d6'
   };
-  const $ = id => document.getElementById(id);
-  const canvas = $('board'), ctx = canvas.getContext('2d'), overlay = $('overlay').getContext('2d');
-  const W = 1600, H = 1000;
-  const palette = ['#26352f', '#64748b', '#ffffff', '#cd4141', '#ec7953', '#f4cf45', '#258259', '#24a7a0', '#2463bd', '#9857b2',
-    '#b3bbc1', '#e0e4e8', '#f4b8c2', '#f5a6df', '#fbc69a', '#fff09c', '#a8ddb0', '#a4e0de', '#9ec5f5', '#cdb9ed'];
-  const names = ['Black', 'Grey', 'White', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Blue', 'Purple',
-    'Silver', 'Light grey', 'Pink', 'Magenta', 'Peach', 'Light yellow', 'Light green', 'Light teal', 'Light blue', 'Lavender'];
-  const local = new URLSearchParams(location.search).has('local');
-  const uid = () => crypto.randomUUID().replace(/-/g, '');
+  const $ = id => document.getElementById(id), Ink = BoardInk, Text = BoardText;
+  const canvas = $('board'), ctx = canvas.getContext('2d'), overlay = $('overlay').getContext('2d'), grid = $('grid').getContext('2d');
+  const base = document.createElement('canvas'), baseCtx = base.getContext('2d');
+  const palette = ['#111111', '#5c5f66', '#adb5bd', '#e03131', '#f76707', '#f58c00', '#2f9e44', '#1971c2',
+    '#ffe633', '#ffc9c9', '#ffd8a8', '#ffec99', '#b2f2bb', '#a5d8ff', '#d0bfff', '#fcc2d7',
+    '#7048e8', '#c2255c', '#0c8599', '#099268', '#74b816', '#e8590c', '#9c36b5', '#3b5bdb'];
+  const names = ['Black', 'Grey', 'Silver', 'Red', 'Orange', 'Amber', 'Green', 'Blue', 'Yellow', 'Light red', 'Peach', 'Light yellow',
+    'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
+  const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   if (!/^[a-f0-9]{32}$/.test(location.hash.slice(1))) history.replaceState(null, '', location.pathname + location.search + '#' + uid());
-  const room = location.hash.slice(1), cacheKey = 'whiteboard-local-' + room;
-  const settings = {
-    pen: { color: palette[0], width: 4, opacity: 1 },
-    highlight: { color: palette[5], width: 28, opacity: .35 },
-    text: { color: palette[0], width: 30, opacity: 1 }
-  };
+  const room = location.hash.slice(1), cacheKey = 'whiteboard-local-' + room, viewKey = 'whiteboard-view-' + room;
+  let sequence = 0;
+  const objectId = () => local ? Date.now().toString(36).padStart(10, '0') + '-' + String(sequence++).padStart(6, '0') + '-' + uid().slice(0, 16) : ref.push().key;
+  const settings = { pen: { color: palette[0], width: 4, opacity: 1 }, highlight: { color: palette[8], width: 28, opacity: .35 }, text: { color: palette[0], width: 30, opacity: 1 } };
+  const view = { x: 0, y: 0, zoom: 1 };
+  try {
+    const saved = JSON.parse(localStorage.getItem(viewKey));
+    if (saved && [saved.x, saved.y, saved.zoom].every(Number.isFinite) && saved.zoom >= 1e-9 && saved.zoom <= 1e9) Object.assign(view, saved);
+  } catch {}
+  const objects = new Map(), decoded = new WeakMap(), selected = new Set(), touches = new Map();
   let ref, ready = local, connected = false, failed = false, pending = 0;
-  let tool = 'pen', inkTool = 'pen', active = null, gesture = null, pointer = null, textAt = null;
-  let historyStack = [], frame = 0, dirty = true, persistTimer = 0, ordered = [];
-  const objects = new Map(), decoded = new Map(), selected = new Set();
-  const base = document.createElement('canvas'); base.width = W; base.height = H;
-  const baseCtx = base.getContext('2d');
+  let tool = 'pen', inkTool = 'pen', active = null, gesture = null, pointer = null, editing = null, space = false, pinch = null;
+  let historyStack = [], redoStack = [], frame = 0, dirty = true, orderDirty = true, gridDirty = true, persistTimer = 0, viewTimer = 0, ordered = [];
+  let screenW = 0, screenH = 0, dpr = 1;
+  let settingUndo = null;
+  if (local) try { for (const [id, obj] of Object.entries(JSON.parse(localStorage.getItem(cacheKey) || '{}'))) objects.set(id, obj); } catch {}
   function persistNow() {
     clearTimeout(persistTimer); persistTimer = 0;
     if (local) try { localStorage.setItem(cacheKey, JSON.stringify(Object.fromEntries(objects))); } catch {}
   }
   function persist() { if (local && !persistTimer) persistTimer = setTimeout(persistNow, 400); }
-  if (local) try { for (const [id, obj] of Object.entries(JSON.parse(localStorage.getItem(cacheKey) || '{}'))) objects.set(id, obj); } catch {}
   function status() {
     $('status').textContent = local ? 'On this device' : failed ? 'Sharing unavailable' : !ready ? 'Connecting…' : !connected ? 'Offline · changes waiting' : pending ? 'Saving…' : 'Live · saved';
-    $('status').className = failed ? 'error' : connected ? 'live' : '';
+    for (const id of ['new-board', 'open-board', 'save-board']) $(id).disabled = !ready;
+    $('status').className = 'sr-only' + (failed ? ' error' : connected ? ' live' : '');
+    if (ready && connected) $('message').hidden = true;
   }
   function fail(error) {
-    failed = true; ready = false; status();
-    $('message').textContent = /permission/i.test(error.message || String(error)) ? 'Shared access has not been enabled for this board yet.' : 'Cannot reach the shared board. Check your connection and reload.';
-    console.error('Whiteboard:', error);
+    failed = true; status();
+    $('message').textContent = /permission/i.test(error.message || String(error)) ? 'Shared access needs updating for this version.' : 'Cannot reach the shared board. Check your connection and reload.';
+    $('message').hidden = false; console.error('Whiteboard:', error);
   }
-  function track(promise) {
-    pending++; status();
-    promise.then(() => { pending--; status(); }, error => { pending--; fail(error); });
-  }
+  function track(promise) { pending++; status(); promise.then(() => { pending--; status(); }, error => { pending--; fail(error); }); }
   function renderSoon() { if (!frame) frame = requestAnimationFrame(() => { frame = 0; render(); }); }
-  function changed() { dirty = true; renderSoon(); persist(); }
-  function geometry(obj) {
-    if (decoded.has(obj)) return decoded.get(obj);
-    let pts = [], bounds, path = new Path2D();
-    if (obj.kind === 'text') {
-      ctx.font = `${obj.width}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-      const lines = String(obj.text).split('\n');
-      bounds = [obj.x, obj.y, obj.x + Math.max(...lines.map(line => ctx.measureText(line).width)), obj.y + lines.length * obj.width * 1.3];
-    } else {
-      const values = Object.keys(obj.chunks || {}).sort().map(key => obj.chunks[key]).join(' ').trim().split(/\s+/).filter(Boolean).map(Number);
-      for (let i = 0; i + 1 < values.length; i += 2) if (Number.isFinite(values[i]) && Number.isFinite(values[i + 1])) pts.push([values[i], values[i + 1]]);
-      path = smoothPath(pts, obj.width);
-      bounds = pointBounds(pts, obj.width / 2);
+  function changed() { dirty = orderDirty = true; renderSoon(); persist(); }
+  function world(e) { return [view.x + e.clientX / view.zoom, view.y + e.clientY / view.zoom]; }
+  function screen(p) { return [(p[0] - view.x) * view.zoom, (p[1] - view.y) * view.zoom]; }
+  function transform(out) { out.setTransform(dpr * view.zoom, 0, 0, dpr * view.zoom, -view.x * dpr * view.zoom, -view.y * dpr * view.zoom); }
+  function clear(out) { out.setTransform(1, 0, 0, 1, 0, 0); out.clearRect(0, 0, out.canvas.width, out.canvas.height); }
+  function cameraChanged() {
+    dirty = gridDirty = true; renderSoon(); setHint();
+    canvas.dataset.zoom = String(view.zoom); canvas.dataset.viewX = String(view.x); canvas.dataset.viewY = String(view.y);
+    clearTimeout(viewTimer); viewTimer = setTimeout(() => { try { localStorage.setItem(viewKey, JSON.stringify(view)); } catch {} }, 250);
+  }
+  function zoomAt(factor, at = [screenW / 2, screenH / 2]) {
+    const anchor = [view.x + at[0] / view.zoom, view.y + at[1] / view.zoom];
+    view.zoom = Math.max(1e-9, Math.min(1e9, view.zoom * factor));
+    view.x = anchor[0] - at[0] / view.zoom; view.y = anchor[1] - at[1] / view.zoom; cameraChanged();
+  }
+  function fit() {
+    const all = entries();
+    if (!all.length) Object.assign(view, { x: 0, y: 0, zoom: 1 });
+    else {
+      const b = pointBounds(all.flatMap(([id, obj]) => { const b = boundsFor(id, obj); return [[b[0], b[1]], [b[2], b[3]]]; }));
+      view.zoom = Math.max(1e-9, Math.min(4, (screenW - 140) / Math.max(1, b[2] - b[0]), (screenH - 100) / Math.max(1, b[3] - b[1])));
+      view.x = (b[0] + b[2]) / 2 - screenW / 2 / view.zoom; view.y = (b[1] + b[3]) / 2 - screenH / 2 / view.zoom;
     }
-    const result = { pts, bounds, path }; decoded.set(obj, result); return result;
+    cameraChanged();
+  }
+  function sizeCanvases() {
+    screenW = innerWidth; screenH = innerHeight; dpr = devicePixelRatio || 1;
+    for (const c of [canvas, $('overlay'), $('grid'), base]) { c.width = Math.round(screenW * dpr); c.height = Math.round(screenH * dpr); }
+    cameraChanged(); placeOptions();
+  }
+  function drawGrid() {
+    clear(grid); grid.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const step = 32 * 2 ** Math.floor(Math.log2(48 / (32 * view.zoom))), spacing = step * view.zoom;
+    $('grid').dataset.step = String(step); $('grid').dataset.spacing = String(spacing);
+    const x0 = Math.floor(view.x / step), y0 = Math.floor(view.y / step);
+    const firstX = -((view.x % step + step) % step) * view.zoom, firstY = -((view.y % step + step) % step) * view.zoom;
+    // Loop in screen-sized increments even when world coordinates are enormous.
+    for (let ix = 0; ix <= Math.ceil(screenW / spacing) + 1; ix++) {
+      const x = firstX + ix * spacing;
+      for (let iy = 0; iy <= Math.ceil(screenH / spacing) + 1; iy++) {
+        const y = firstY + iy * spacing, major = (x0 + ix) % 4 === 0 && (y0 + iy) % 4 === 0;
+        grid.fillStyle = major ? '#d7dce1' : '#e9ecf0'; grid.beginPath(); grid.arc(x, y, major ? .9 : .65, 0, Math.PI * 2); grid.fill();
+      }
+    }
+    gridDirty = false;
   }
   function pointBounds(pts, padding = 0) {
-    let x0 = W, y0 = H, x1 = 0, y1 = 0;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
     return [x0 - padding, y0 - padding, x1 + padding, y1 + padding];
   }
-  function smoothPath(pts, width) {
-    const path = new Path2D(); if (!pts.length) return path;
-    if (pts.length === 1) { path.arc(pts[0][0], pts[0][1], width / 2, 0, Math.PI * 2); return path; }
-    path.moveTo(...pts[0]);
-    for (let i = 1; i < pts.length - 1; i++) path.quadraticCurveTo(...pts[i], (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2);
-    path.lineTo(...pts[pts.length - 1]); return path;
+  function geometry(obj) {
+    if (decoded.has(obj)) return decoded.get(obj);
+    const g = obj.kind === 'text' ? Text.layout(obj, ctx) : (() => {
+      const pts = Ink.decode(obj.chunks), origin = pts[0] || [0, 0], unit = obj.width;
+      return { pts, origin, unit, path: Ink.path(pts, origin, unit), bounds: pointBounds(pts, obj.width / 2) };
+    })();
+    decoded.set(obj, g); return g;
   }
   function isVisible(obj) { return obj && !obj.hidden && ['pen', 'highlight', 'text'].includes(obj.kind); }
-  function entries() { return [...objects.entries()].filter(([, obj]) => isVisible(obj)); }
+  function entries() {
+    if (orderDirty) { ordered = [...objects.entries()].filter(([, obj]) => isVisible(obj)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0); orderDirty = false; }
+    return ordered;
+  }
+  function effective(id, obj) { return gesture?.kind === 'resize' && gesture.id === id ? gesture.preview : obj; }
   function offset(id, obj) {
-    if (gesture?.kind === 'move' && gesture.origins.has(id)) {
-      const original = gesture.origins.get(id); return [original.dx + gesture.delta[0], original.dy + gesture.delta[1]];
-    }
+    if (gesture?.kind === 'move' && gesture.origins.has(id)) { const original = gesture.origins.get(id); return [original.dx + gesture.delta[0], original.dy + gesture.delta[1]]; }
     return [obj.dx || 0, obj.dy || 0];
   }
   function boundsFor(id, obj) {
-    const [dx, dy] = offset(id, obj), b = geometry(obj).bounds;
+    obj = effective(id, obj); const [dx, dy] = offset(id, obj), b = geometry(obj).bounds;
     return [b[0] + dx, b[1] + dy, b[2] + dx, b[3] + dy];
   }
-  function draw(out, obj, delta, livePoints) {
-    out.save(); out.translate(...delta); out.fillStyle = out.strokeStyle = obj.color;
-    out.globalAlpha = obj.opacity ?? (obj.kind === 'highlight' ? .35 : 1);
+  function onScreen(b) { return b[2] >= view.x && b[3] >= view.y && b[0] <= view.x + screenW / view.zoom && b[1] <= view.y + screenH / view.zoom; }
+  function draw(out, obj, delta, stroke) {
+    out.save(); out.translate(...delta); out.fillStyle = out.strokeStyle = obj.color; out.globalAlpha = obj.opacity;
     if (obj.kind === 'text') {
-      out.font = `${obj.width}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`; out.textBaseline = 'top';
-      String(obj.text).split('\n').forEach((line, i) => out.fillText(line, obj.x, obj.y + i * obj.width * 1.3));
+      const g = geometry(obj); out.translate(obj.x, obj.y); out.scale(obj.width / 30, obj.width / 30);
+      out.font = `30px ${Text.FONT}`; out.textBaseline = 'alphabetic';
+      g.lines.forEach((line, i) => out.fillText(line, 4, 4 + g.baseline + i * 39));
     } else {
-      out.lineWidth = obj.width; out.lineCap = out.lineJoin = 'round';
-      const g = livePoints ? { pts: livePoints, path: smoothPath(livePoints, obj.width) } : geometry(obj);
-      if (g.pts.length === 1) out.fill(g.path); else out.stroke(g.path);
+      const g = stroke ? { pts: stroke.points, origin: stroke.origin, unit: stroke.unit, path: stroke.livePath() } : geometry(obj);
+      out.translate(...g.origin); out.scale(g.unit, g.unit);
+      out.lineWidth = obj.width / g.unit; out.lineCap = out.lineJoin = 'round';
+      if (g.pts.length === 1 && (!stroke || Ink.distance(stroke.tip, g.pts[0]) < .001 / view.zoom)) {
+        out.beginPath(); out.arc(0, 0, out.lineWidth / 2, 0, Math.PI * 2); out.fill();
+      } else out.stroke(g.path);
     }
     out.restore();
   }
+  function floating(id) { return active?.id === id || editing?.id === id || gesture?.kind === 'move' && selected.has(id) || gesture?.kind === 'resize' && gesture.id === id; }
   function render() {
+    if (gridDirty) drawGrid();
+    const all = entries();
     if (dirty) {
-      ordered = entries().sort(([a], [b]) => a.localeCompare(b));
-      baseCtx.clearRect(0, 0, W, H);
-      for (const highlight of [true, false]) for (const [id, obj] of ordered) {
-        if ((obj.kind === 'highlight') !== highlight || active?.id === id || gesture?.kind === 'move' && selected.has(id)) continue;
+      clear(baseCtx); transform(baseCtx);
+      for (const highlight of [true, false]) for (const [id, obj] of all) {
+        if ((obj.kind === 'highlight') !== highlight || floating(id) || !onScreen(boundsFor(id, obj))) continue;
         draw(baseCtx, obj, [obj.dx || 0, obj.dy || 0]);
       }
       dirty = false;
     }
-    ctx.clearRect(0, 0, W, H); ctx.drawImage(base, 0, 0);
+    clear(ctx); ctx.drawImage(base, 0, 0); transform(ctx);
     if (active && !objects.get(active.id)?.hidden) {
-      // Highlight ink goes behind existing writing, even while it is being drawn.
       ctx.save(); if (active.obj.kind === 'highlight') ctx.globalCompositeOperation = 'destination-over';
-      draw(ctx, active.obj, [0, 0], active.points); ctx.restore();
+      draw(ctx, active.obj, [0, 0], active.stroke); ctx.restore();
     }
-    if (gesture?.kind === 'move') for (const [id, obj] of ordered) if (selected.has(id)) draw(ctx, obj, offset(id, obj));
-    drawSelection();
-    $('undo').disabled = !ready || historyStack.length === 0;
-    $('selection-actions').hidden = selected.size === 0;
-    $('selection-count').textContent = `${selected.size} selected`;
+    if (gesture?.kind === 'move' || gesture?.kind === 'resize') for (const highlight of [true, false]) for (const [id, original] of all) {
+      if (!floating(id) || (original.kind === 'highlight') !== highlight || editing?.id === id || active?.id === id) continue;
+      const obj = effective(id, original); ctx.save(); if (highlight) ctx.globalCompositeOperation = 'destination-over'; draw(ctx, obj, offset(id, obj)); ctx.restore();
+    }
+    drawSelection(); layoutEditor();
+    $('selection-actions').hidden = selected.size === 0; $('selection-count').textContent = `${selected.size} selected`;
+  }
+  function selectedText() {
+    if (selected.size !== 1) return null;
+    const id = [...selected][0], obj = objects.get(id); return isVisible(obj) && obj.kind === 'text' ? [id, effective(id, obj)] : null;
   }
   function drawSelection() {
-    overlay.clearRect(0, 0, W, H); overlay.strokeStyle = '#367acc'; overlay.fillStyle = '#367acc12';
-    overlay.lineWidth = 1.5 * W / canvas.getBoundingClientRect().width; overlay.setLineDash([8, 5]);
+    clear(overlay); transform(overlay);
+    overlay.strokeStyle = '#367acc'; overlay.fillStyle = '#367acc12'; overlay.lineWidth = 1 / view.zoom;
     for (const id of selected) {
       const obj = objects.get(id); if (!isVisible(obj)) { selected.delete(id); continue; }
-      const b = boundsFor(id, obj); overlay.strokeRect(b[0] - 4, b[1] - 4, b[2] - b[0] + 8, b[3] - b[1] + 8);
+      if (editing?.id === id) continue;
+      const b = boundsFor(id, obj), padding = obj.kind === 'text' ? 0 : 4 / view.zoom;
+      overlay.setLineDash(obj.kind === 'text' ? [] : [5 / view.zoom, 4 / view.zoom]);
+      overlay.strokeRect(b[0] - padding, b[1] - padding, b[2] - b[0] + 2 * padding, b[3] - b[1] + 2 * padding);
     }
-    if (gesture?.kind === 'rect') {
+    const text = selectedText();
+    if (text && !editing) {
+      overlay.setLineDash([]); overlay.fillStyle = '#fff';
+      for (const p of Object.values(Text.handles(boundsFor(...text)))) {
+        const r = 3.5 / view.zoom; overlay.fillRect(p[0] - r, p[1] - r, r * 2, r * 2); overlay.strokeRect(p[0] - r, p[1] - r, r * 2, r * 2);
+      }
+    }
+    overlay.fillStyle = '#367acc12'; overlay.setLineDash([5 / view.zoom, 4 / view.zoom]);
+    if (gesture?.kind === 'rect' || gesture?.kind === 'textBox') {
       const b = pointBounds([gesture.start, gesture.end]); overlay.fillRect(b[0], b[1], b[2] - b[0], b[3] - b[1]); overlay.strokeRect(b[0], b[1], b[2] - b[0], b[3] - b[1]);
     } else if (gesture?.kind === 'lasso') {
       overlay.beginPath(); gesture.points.forEach((p, i) => i ? overlay.lineTo(...p) : overlay.moveTo(...p)); overlay.closePath(); overlay.fill(); overlay.stroke();
     }
   }
-  function write(id, obj) {
-    objects.set(id, obj); changed();
-    if (!local) track(ref.child(id).set(obj));
-  }
-  function patchMany(updates, remember = true) {
+  function remember(action) { historyStack.push(action); if (historyStack.length > 50) historyStack.shift(); redoStack = []; }
+  function write(id, obj) { objects.set(id, obj); changed(); if (!local) track(ref.child(id).set(obj)); }
+  function patchMany(updates, record = true) {
     const before = [], wire = {};
     for (const [id, update] of updates) {
-      const old = objects.get(id); if (!old) continue;
-      before.push([id, Object.fromEntries(Object.keys(update).map(key => [key, old[key] ?? (key === 'hidden' ? false : key === 'opacity' ? (old.kind === 'highlight' ? .35 : 1) : 0)]))]);
-      decoded.delete(old); objects.set(id, { ...old, ...update });
-      for (const [key, value] of Object.entries(update)) wire[id + '/' + key] = value;
+      const old = objects.get(id);
+      // Undo retains deleted objects only in browser memory, never in Firebase.
+      if ('$object' in update || update.hidden === true) {
+        const next = update.hidden === true ? null : update.$object;
+        if (!old && !next) continue;
+        before.push([id, { $object: old || null }]);
+        if (next) objects.set(id, next); else { objects.delete(id); selected.delete(id); }
+        wire[id] = next; continue;
+      }
+      if (!old) continue;
+      const next = { ...old }, patch = {}, inverse = {};
+      for (const [key, value] of Object.entries(update)) {
+        if ((old[key] ?? null) === value) continue;
+        inverse[key] = old[key] ?? null; patch[key] = value;
+        if (value === null) delete next[key]; else next[key] = value;
+        wire[id + '/' + key] = value;
+      }
+      if (Object.keys(patch).length) { before.push([id, inverse]); objects.set(id, next); }
     }
-    if (!before.length) return;
-    if (remember) rememberAction(before); changed();
-    if (!local) track(ref.update(wire));
+    if (before.length) { if (record) remember(before); changed(); if (!local) track(ref.update(wire)); }
+    return before;
   }
-  function rememberAction(action) { historyStack.push(action); if (historyStack.length > 100) historyStack.shift(); renderSoon(); }
-  function position(e) {
-    const box = canvas.getBoundingClientRect();
-    return [Math.round(Math.max(0, Math.min(W, (e.clientX - box.left) * W / box.width))), Math.round(Math.max(0, Math.min(H, (e.clientY - box.top) * H / box.height)))];
+  function flush(final = false) {
+    if (!active) return;
+    const values = Ink.chunks(active.stroke.pending(final)), wire = {}, old = objects.get(active.id);
+    if (!values.length || !old) return;
+    const chunks = { ...old.chunks };
+    for (const value of values) { const key = String(active.chunk++).padStart(6, '0'); chunks[key] = value; wire[key] = value; }
+    objects.set(active.id, { ...old, chunks }); orderDirty = true;
+    if (!local) track(ref.child(active.id).child('chunks').update(wire)); persist();
   }
-  function flush() {
-    if (!active || !active.unsent.length) return;
-    const key = String(active.chunk++).padStart(6, '0'), value = active.unsent.flat().join(' '), old = objects.get(active.id);
-    if (old) { decoded.delete(old); objects.set(active.id, { ...old, chunks: { ...old.chunks, [key]: value } }); }
-    if (!local) track(ref.child(active.id).child('chunks').child(key).set(value));
-    active.unsent = []; persist();
-  }
-  function moveUpdates() {
-    return [...gesture.origins].map(([id, original]) => [id, { dx: original.dx + gesture.delta[0], dy: original.dy + gesture.delta[1] }]);
+  function geometryPatch(obj) { return Object.fromEntries(['x', 'y', 'dx', 'dy', 'width', 'boxW', 'boxH'].map(key => [key, obj[key] ?? null])); }
+  function moveUpdates() { return [...gesture.origins].map(([id, original]) => [id, { dx: original.dx + gesture.delta[0], dy: original.dy + gesture.delta[1] }]); }
+  function sendGesture() {
+    if (!gesture?.changed) return;
+    if (gesture.kind === 'move') patchMany(moveUpdates(), false);
+    else if (gesture.kind === 'resize') patchMany([[gesture.id, geometryPatch(gesture.preview)]], false);
+    gesture.changed = false;
   }
   function finish(cancel = false) {
-    if (active) { clearInterval(active.timer); flush(); active = null; dirty = true; }
-    if (gesture?.kind === 'move') {
-      clearInterval(gesture.timer);
-      if (cancel) patchMany([...gesture.origins].map(([id, original]) => [id, original]), false);
+    const done = gesture;
+    if (cancel && done?.kind.startsWith('edit') && editing) editing.obj = done.original;
+    if (active) {
+      clearInterval(active.timer);
+      if (cancel) {
+        const id = active.id; active = null; patchMany([[id, { hidden: true }]], false);
+        if (historyStack.at(-1)?.[0]?.[0] === id) historyStack.pop();
+      } else { active.stroke.finish(); flush(true); active = null; }
+      dirty = true;
+    }
+    if (done?.kind === 'move' || done?.kind === 'resize') {
+      clearInterval(done.timer);
+      const originals = done.kind === 'move' ? [...done.origins] : [[done.id, geometryPatch(done.original)]];
+      if (cancel) patchMany(originals, false);
       else {
-        patchMany(moveUpdates(), false);
-        if (gesture.delta.some(Boolean)) rememberAction([...gesture.origins]);
+        sendGesture();
+        if (done.changedOnce) remember(originals);
       }
       dirty = true;
-    } else if (gesture && !cancel) completeSelection();
-    if (gesture?.kind === 'erase' && gesture.undo.length) rememberAction(gesture.undo);
-    gesture = null; pointer = null; persistNow(); renderSoon();
+    } else if (done && !cancel && ['rect', 'lasso'].includes(done.kind)) completeSelection();
+    else if (done?.kind === 'textBox' && !cancel) {
+      const b = pointBounds([done.start, done.end]);
+      const fixed = (b[2] - b[0]) * view.zoom > 6 && (b[3] - b[1]) * view.zoom > 6;
+      beginText(null, { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: fixed ? b[0] : done.start[0], y: fixed ? b[1] : done.start[1], text: '', ...(fixed ? { boxW: Math.max((settings.text.width * 1.5 + 8) / view.zoom, b[2] - b[0]), boxH: b[3] - b[1] } : {}) });
+    }
+    if (done?.kind === 'erase' && done.undo.length) { if (cancel) patchMany(done.undo, false); else remember(done.undo); }
+    gesture = null; pointer = null; persistNow(); setHint(); renderSoon();
   }
   function segmentDistance(p, a, b) {
-    const dx = b[0] - a[0], dy = b[1] - a[1], length = dx * dx + dy * dy;
-    const t = length ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / length)) : 0;
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = dx * dx + dy * dy;
+    const t = len ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len)) : 0;
     return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
   }
-  function insideRect(p, b, padding = 0) { return p[0] >= b[0] - padding && p[0] <= b[2] + padding && p[1] >= b[1] - padding && p[1] <= b[3] + padding; }
-  function hitAt(p, radius = 5 * W / canvas.getBoundingClientRect().width) {
-    for (const [id, obj] of entries().reverse()) {
-      if (!insideRect(p, boundsFor(id, obj), radius)) continue;
+  function inside(p, b, pad = 0) { return p[0] >= b[0] - pad && p[0] <= b[2] + pad && p[1] >= b[1] - pad && p[1] <= b[3] + pad; }
+  function hitAt(p, radius = 5 / view.zoom) {
+    for (const [id, obj] of [...entries()].reverse()) {
+      if (!inside(p, boundsFor(id, obj), radius)) continue;
       if (obj.kind === 'text') return id;
       const pts = geometry(obj).pts, [dx, dy] = offset(id, obj), q = [p[0] - dx, p[1] - dy];
       if (pts.some((point, i) => segmentDistance(q, i ? pts[i - 1] : point, point) <= radius + obj.width / 2)) return id;
     }
     return null;
   }
+  function handleAt(p, touch = false) {
+    const text = selectedText(); if (!text) return null;
+    for (const [handle, q] of Object.entries(Text.handles(boundsFor(...text)))) if (Ink.distance(p, q) * view.zoom <= (touch ? 13 : 8)) return { id: text[0], handle };
+    return null;
+  }
   function eraseAt(p) {
-    const id = hitAt(p, 10 * W / canvas.getBoundingClientRect().width);
-    if (id) { patchMany([[id, { hidden: true }]], false); gesture.undo.push([id, { hidden: false }]); selected.delete(id); }
+    const id = hitAt(p, 10 / view.zoom);
+    if (id) { gesture.undo.push(...patchMany([[id, { hidden: true }]], false)); selected.delete(id); }
   }
   function pointInPolygon(p, polygon) {
-    let inside = false;
+    let result = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
       const a = polygon[i], b = polygon[j];
-      if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
+      if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) result = !result;
     }
-    return inside;
+    return result;
   }
   function crosses(a, b, c, d) {
     const cross = (p, q, r) => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
@@ -216,188 +305,331 @@
     return u * v <= 0 && s * t <= 0;
   }
   function completeSelection() {
-    if (!['rect', 'lasso'].includes(gesture.kind)) return;
     const polygon = gesture.kind === 'rect' ? (() => { const b = pointBounds([gesture.start, gesture.end]); return [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]]; })() : gesture.points;
     if (polygon.length < 3) return;
     const area = pointBounds(polygon);
     for (const [id, obj] of entries()) {
-      const b = boundsFor(id, obj);
-      if (b[2] < area[0] || b[0] > area[2] || b[3] < area[1] || b[1] > area[3]) continue;
-      const [dx, dy] = offset(id, obj);
-      const pts = obj.kind === 'text' ? [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]], [b[0], b[1]]] : geometry(obj).pts.map(([x, y]) => [x + dx, y + dy]);
-      const hit = pts.some(p => pointInPolygon(p, polygon)) || obj.kind === 'text' && polygon.some(p => insideRect(p, b)) || pts.some((p, i) => i && polygon.some((q, j) => crosses(pts[i - 1], p, q, polygon[(j + 1) % polygon.length])));
-      if (hit) selected.add(id);
+      const b = boundsFor(id, obj); if (b[2] < area[0] || b[0] > area[2] || b[3] < area[1] || b[1] > area[3]) continue;
+      const [dx, dy] = offset(id, obj), pts = obj.kind === 'text' ? [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]], [b[0], b[1]]] : geometry(obj).pts.map(([x, y]) => [x + dx, y + dy]);
+      if (pts.some(p => pointInPolygon(p, polygon)) || obj.kind === 'text' && polygon.some(p => inside(p, b)) || pts.some((p, i) => i && polygon.some((q, j) => crosses(pts[i - 1], p, q, polygon[(j + 1) % polygon.length])))) selected.add(id);
     }
     if (selected.size) { tool = 'select'; updateToolUI(); }
   }
-  function openText(p) {
-    textAt = { x: p[0], y: p[1], ...settings.text };
-    const box = canvas.getBoundingClientRect();
-    $('editor').style.left = Math.min(p[0] / W * box.width, Math.max(0, box.width - Math.min(340, box.width * .9))) + 'px';
-    $('editor').style.top = Math.min(p[1] / H * box.height, Math.max(0, box.height - 100)) + 'px';
-    $('editor').style.color = textAt.color;
-    $('editor').hidden = $('text-actions').hidden = false; $('editor').value = ''; $('editor').focus();
-    $('hint').textContent = 'Add text when finished. Ctrl/⌘ Enter also works.';
+  function beginText(id, obj) {
+    editing = { id, original: obj, obj: { ...obj } }; selected.clear(); if (id) selected.add(id);
+    $('text-edit').hidden = false; $('editor').value = obj.text; dirty = true; layoutEditor(); renderSoon();
+    $('editor').focus({ preventScroll: true }); $('editor').setSelectionRange(obj.text.length, obj.text.length);
   }
-  function closeText() { textAt = null; $('editor').hidden = $('text-actions').hidden = true; setHint(); }
-  $('add-text').onclick = () => {
-    const text = $('editor').value.trim(); if (!text || !textAt || !ready) return;
-    const id = local ? uid() : ref.push().key;
-    write(id, { kind: 'text', ...textAt, text }); rememberAction([[id, { hidden: true }]]); closeText(); persistNow();
-  };
-  $('cancel-text').onclick = closeText;
+  function layoutEditor() {
+    if (!editing) return;
+    const obj = editing.obj, g = Text.layout(obj, ctx), p = screen([obj.x + (obj.dx || 0), obj.y + (obj.dy || 0)]);
+    const frame = $('text-edit'), editor = $('editor');
+    frame.style.left = p[0] + 'px'; frame.style.top = p[1] + 'px'; frame.style.width = g.width * view.zoom + 'px'; frame.style.height = g.height * view.zoom + 'px';
+    editor.style.fontSize = obj.width * view.zoom + 'px'; editor.style.color = obj.color; editor.style.opacity = obj.opacity;
+    editor.style.padding = Text.padding(obj) * view.zoom + 'px'; editor.style.whiteSpace = obj.boxW == null ? 'pre' : 'pre-wrap';
+  }
+  function commitText(cancel = false) {
+    if (!editing) return;
+    const edit = editing; editing = null; $('text-edit').hidden = true; $('editor').blur();
+    if (!cancel && ready) {
+      const obj = { ...edit.obj, text: $('editor').value };
+      if (edit.id) {
+        if (!obj.text.trim()) { patchMany([[edit.id, { hidden: true }]]); selected.clear(); }
+        else {
+          const patch = {}; for (const key of new Set([...Object.keys(edit.original), ...Object.keys(obj)])) if (edit.original[key] !== obj[key]) patch[key] = obj[key] ?? null;
+          patchMany([[edit.id, patch]]);
+        }
+      } else if (obj.text.trim()) {
+        const id = objectId(); write(id, obj); remember([[id, { hidden: true }]]); selected.add(id);
+      }
+    }
+    dirty = true; persistNow(); renderSoon();
+  }
+  $('editor').addEventListener('input', () => { if (editing) { editing.obj = { ...editing.obj, text: $('editor').value }; layoutEditor(); } });
+  $('editor').addEventListener('blur', () => { queueMicrotask(() => { if (editing && !gesture?.kind.startsWith('edit') && !document.activeElement.closest('#text-edit, #options, #toolbar')) commitText(); }); });
+  $('text-edit').addEventListener('pointerdown', e => {
+    const handle = e.target.dataset.handle, edge = e.target.dataset.edge;
+    if (!editing || e.button !== 0 || (!handle && !edge)) return;
+    e.preventDefault(); e.stopPropagation(); hideOptions(); pointer = e.pointerId; e.target.setPointerCapture(pointer);
+    const obj = editing.obj, b = Text.layout(obj, ctx).bounds.map((v, i) => v + (i % 2 ? obj.dy || 0 : obj.dx || 0));
+    gesture = { kind: handle ? 'editResize' : 'editMove', handle, start: world(e), anchor: handle ? Text.handles(b)[handle] : null, original: { ...obj } };
+  });
+  function startMove(p) {
+    const origins = new Map([...selected].map(id => { const obj = objects.get(id); return [id, { dx: obj.dx || 0, dy: obj.dy || 0 }]; }));
+    gesture = { kind: 'move', start: p, delta: [0, 0], origins, timer: setInterval(sendGesture, 100) }; dirty = true;
+  }
+  function startResize(id, handle, p) {
+    const original = objects.get(id); gesture = { kind: 'resize', id, handle, start: p, anchor: Text.handles(boundsFor(id, original))[handle], original, preview: original, timer: setInterval(sendGesture, 100) }; dirty = true;
+  }
+  function touchState() {
+    const p = [...touches.values()].slice(0, 2); return { centre: [(p[0][0] + p[1][0]) / 2, (p[0][1] + p[1][1]) / 2], distance: Math.max(1, Ink.distance(...p)) };
+  }
   canvas.addEventListener('pointerdown', e => {
-    if (![0, 1].includes(e.button) || pointer !== null) return;
+    if (![0, 1].includes(e.button)) return;
     e.preventDefault();
-    if (!ready) { $('message').textContent = failed ? 'Sharing is unavailable. Reload after shared access is enabled.' : 'Wait for the board to connect before drawing.'; return; }
-    if (textAt) return;
-    const p = position(e), selecting = e.button === 1 || ['select', 'lasso'].includes(tool);
-    if (!selecting && tool === 'text') { openText(p); return; }
-    pointer = e.pointerId; canvas.setPointerCapture(pointer);
+    if (e.pointerType === 'touch') {
+      touches.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId);
+      if (touches.size === 2) { finish(true); commitText(); const s = touchState(); pinch = { ...s, zoom: view.zoom, anchor: [view.x + s.centre[0] / view.zoom, view.y + s.centre[1] / view.zoom] }; return; }
+      if (pinch || touches.size > 2) return;
+    }
+    if (pointer !== null) return;
+    hideOptions(); commitText();
+    if (['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) document.activeElement.blur();
+    const p = world(e); pointer = e.pointerId; canvas.setPointerCapture(pointer);
+    if (space) { gesture = { kind: 'pan', start: [e.clientX, e.clientY], view: { ...view } }; setHint(); return; }
+    if (!ready) { pointer = null; $('message').textContent = 'Connecting…'; $('message').hidden = false; return; }
+    const freehand = e.button === 1 || tool === 'lasso', selecting = freehand || tool === 'select';
+    const handle = !freehand && ['select', 'text'].includes(tool) ? handleAt(p, e.pointerType === 'touch') : null;
+    if (handle) { startResize(handle.id, handle.handle, p); renderSoon(); return; }
+    if (tool === 'text' && !freehand) {
+      const hit = hitAt(p), obj = objects.get(hit);
+      if (obj?.kind === 'text') {
+        const b = boundsFor(hit, obj), onBorder = !inside(p, [b[0] + 5 / view.zoom, b[1] + 5 / view.zoom, b[2] - 5 / view.zoom, b[3] - 5 / view.zoom]);
+        if (onBorder) { selected.clear(); selected.add(hit); startMove(p); }
+        else { pointer = null; beginText(hit, obj); }
+      } else { selected.clear(); gesture = { kind: 'textBox', start: p, end: p }; }
+      renderSoon(); return;
+    }
     if (selecting) {
-      const freehand = e.button === 1 || tool === 'lasso', hit = freehand ? null : hitAt(p);
+      const hit = freehand ? null : hitAt(p);
       if (!e.shiftKey && (!hit || !selected.has(hit))) selected.clear();
-      if (hit) {
-        selected.add(hit); const origins = new Map([...selected].map(id => { const obj = objects.get(id); return [id, { dx: obj.dx || 0, dy: obj.dy || 0 }]; }));
-        const allBounds = [...selected].flatMap(id => { const b = boundsFor(id, objects.get(id)); return [[b[0], b[1]], [b[2], b[3]]]; });
-        gesture = { kind: 'move', start: p, delta: [0, 0], origins, bounds: pointBounds(allBounds), timer: setInterval(() => { if (gesture?.kind === 'move' && gesture.changed) { patchMany(moveUpdates(), false); gesture.changed = false; } }, 100) };
-        dirty = true;
-      } else gesture = freehand ? { kind: 'lasso', points: [p] } : { kind: 'rect', start: p, end: p };
+      if (hit) { selected.add(hit); startMove(p); }
+      else gesture = freehand ? { kind: 'lasso', points: [p] } : { kind: 'rect', start: p, end: p };
       renderSoon(); return;
     }
     selected.clear();
-    if (tool === 'erase') { gesture = { kind: 'erase', last: p, undo: [] }; eraseAt(p); return; }
-    const id = local ? uid() : ref.push().key, obj = { kind: tool, ...settings[tool], chunks: { '000000': p.join(' ') } };
-    write(id, obj); rememberAction([[id, { hidden: true }]]);
-    active = { id, obj, chunk: 1, unsent: [], points: [p], last: p, timer: setInterval(flush, 80) };
+    if (tool === 'erase') { gesture = { kind: 'erase', last: p, undo: [] }; eraseAt(p); renderSoon(); return; }
+    const id = objectId(), obj = { kind: tool, ...settings[tool], width: settings[tool].width / view.zoom, chunks: { '000000': Ink.chunks([p])[0] } };
+    active = { id, obj, stroke: new Ink.Stroke(p, view.zoom), chunk: 1, timer: setInterval(flush, 80) };
+    write(id, obj); remember([[id, { hidden: true }]]);
   });
   function movePointer(e) {
     if (e.pointerId !== pointer) return;
+    if (gesture?.kind === 'pan') {
+      view.x = gesture.view.x - (e.clientX - gesture.start[0]) / view.zoom; view.y = gesture.view.y - (e.clientY - gesture.start[1]) / view.zoom; cameraChanged(); return;
+    }
     const events = e.getCoalescedEvents?.();
     for (const event of events?.length ? events : [e]) {
-      const p = position(event);
-      if (gesture?.kind === 'rect') gesture.end = p;
-      else if (gesture?.kind === 'lasso') {
-        const last = gesture.points[gesture.points.length - 1]; if (Math.hypot(p[0] - last[0], p[1] - last[1]) >= 3) gesture.points.push(p);
-      } else if (gesture?.kind === 'move') {
-        const b = gesture.bounds;
-        gesture.delta = [Math.max(-b[0], Math.min(W - b[2], p[0] - gesture.start[0])), Math.max(-b[1], Math.min(H - b[3], p[1] - gesture.start[1]))].map(Math.round); gesture.changed = true;
-      } else if (gesture?.kind === 'erase') {
-        const a = gesture.last, steps = Math.max(1, Math.ceil(Math.hypot(p[0] - a[0], p[1] - a[1]) / 8));
-        for (let i = 1; i <= steps; i++) eraseAt([a[0] + (p[0] - a[0]) * i / steps, a[1] + (p[1] - a[1]) * i / steps]); gesture.last = p;
-      } else if (active && Math.hypot(p[0] - active.last[0], p[1] - active.last[1]) >= 1.5) {
-        active.unsent.push(p); active.points.push(p); active.last = p;
-        if (active.unsent.length >= 128) flush();
+      const p = world(event);
+      if (gesture?.kind === 'rect' || gesture?.kind === 'textBox') gesture.end = p;
+      else if (gesture?.kind === 'lasso') { if (Ink.distance(p, gesture.points.at(-1)) * view.zoom >= 2) gesture.points.push(p); }
+      else if (gesture?.kind === 'move') { gesture.delta = [p[0] - gesture.start[0], p[1] - gesture.start[1]]; gesture.changed = true; gesture.changedOnce ||= gesture.delta.some(Boolean); }
+      else if (gesture?.kind === 'resize') {
+        if (Ink.distance(p, gesture.start) * view.zoom > .5 || gesture.changedOnce) {
+          const at = gesture.anchor.map((v, i) => v + p[i] - gesture.start[i]);
+          gesture.preview = Text.resize(gesture.original, gesture.handle, at, ctx, view.zoom); gesture.changed = gesture.changedOnce = true;
+        }
       }
+      else if (gesture?.kind === 'editMove' && editing) {
+        editing.obj = { ...gesture.original, dx: (gesture.original.dx || 0) + p[0] - gesture.start[0], dy: (gesture.original.dy || 0) + p[1] - gesture.start[1] };
+      } else if (gesture?.kind === 'editResize' && editing) {
+        const at = gesture.anchor.map((v, i) => v + p[i] - gesture.start[i]); editing.obj = Text.resize(gesture.original, gesture.handle, at, ctx, view.zoom);
+      }
+      else if (gesture?.kind === 'erase') {
+        const a = gesture.last, steps = Math.min(1000, Math.max(1, Math.ceil(Ink.distance(p, a) * view.zoom / 6)));
+        for (let i = 1; i <= steps; i++) eraseAt([a[0] + (p[0] - a[0]) * i / steps, a[1] + (p[1] - a[1]) * i / steps]); gesture.last = p;
+      } else if (active) active.stroke.add(p);
     }
     renderSoon();
   }
-  canvas.addEventListener('pointermove', movePointer);
-  canvas.addEventListener('pointerup', e => { if (e.pointerId === pointer) { movePointer(e); finish(); } });
-  canvas.addEventListener('pointercancel', () => finish(true));
-  canvas.addEventListener('lostpointercapture', () => { if (pointer !== null) finish(true); });
-  canvas.addEventListener('auxclick', e => e.preventDefault());
-  canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
-  function setHint() {
-    $('hint').textContent = tool === 'text' ? 'Tap anywhere to add text.' : tool === 'erase' ? 'Drag over a stroke or text to erase it.' : tool === 'select' ? 'Drag a rectangle to select. Drag selected ink to move. Shift adds to selection.' : tool === 'lasso' ? 'Draw around ink to select it. Middle-drag works from any tool.' : 'Draw with a mouse, finger or pen. Middle-drag to lasso select.';
-    canvas.style.cursor = tool === 'text' ? 'text' : tool === 'select' ? 'default' : 'crosshair';
+  addEventListener('pointermove', e => {
+    if (touches.has(e.pointerId)) {
+      touches.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pinch) {
+        if (touches.size >= 2) { const s = touchState(); view.zoom = Math.max(1e-9, Math.min(1e9, pinch.zoom * s.distance / pinch.distance)); view.x = pinch.anchor[0] - s.centre[0] / view.zoom; view.y = pinch.anchor[1] - s.centre[1] / view.zoom; cameraChanged(); }
+        return;
+      }
+    }
+    movePointer(e);
+    if (pointer === null && e.target === canvas && !editing) {
+      const handle = ['select', 'text'].includes(tool) && handleAt(world(e));
+      canvas.style.cursor = space ? 'grab' : handle ? Text.cursor(handle.handle) : tool === 'text' ? 'text' : tool === 'select' ? hitAt(world(e)) ? 'move' : 'default' : 'crosshair';
+    }
+  });
+  function endPointer(e, cancel = false) {
+    touches.delete(e.pointerId);
+    if (pinch) { if (!touches.size) pinch = null; return; }
+    if (e.pointerId === pointer) { if (!cancel) movePointer(e); finish(cancel); }
   }
-  function updateToolUI() {
-    document.querySelectorAll('[data-tool]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.tool === tool)));
-    setHint();
-  }
-  function selectTool(next) {
-    finish(); closeText(); tool = next;
-    if (settings[tool]) { inkTool = tool; selected.clear(); updateSettingsUI(); }
+  addEventListener('pointerup', e => endPointer(e)); addEventListener('pointercancel', e => endPointer(e, true));
+  canvas.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) finish(true); touches.delete(e.pointerId); if (!touches.size) pinch = null; });
+  canvas.addEventListener('auxclick', e => e.preventDefault()); canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
+  canvas.addEventListener('dblclick', e => { if (!['text', 'select'].includes(tool)) return; const id = hitAt(world(e)), obj = objects.get(id); if (obj?.kind === 'text') { finish(); tool = 'text'; updateToolUI(); beginText(id, obj); } });
+  $('paper').addEventListener('wheel', e => {
+    e.preventDefault(); if (active || gesture) return;
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? screenH : 1;
+    if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-Math.max(-500, Math.min(500, e.deltaY * unit)) * .002), [e.clientX, e.clientY]);
+    else { view.x += (e.shiftKey && !e.deltaX ? e.deltaY : e.deltaX) * unit / view.zoom; view.y += (e.shiftKey ? 0 : e.deltaY) * unit / view.zoom; cameraChanged(); }
+  }, { passive: false });
+  function setHint() { canvas.style.cursor = gesture?.kind === 'pan' ? 'grabbing' : space ? 'grab' : tool === 'text' ? 'text' : tool === 'select' ? 'default' : 'crosshair'; }
+  function updateToolUI() { document.querySelectorAll('[data-tool]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.tool === tool || button.dataset.tool === 'select' && tool === 'lasso'))); setHint(); }
+  function selectTool(next, preserve = false) {
+    finish(); if (next !== 'text') commitText(); tool = next;
+    if (settings[next]) { inkTool = next; if (!preserve) selected.clear(); updateSettingsUI(); }
     updateToolUI(); renderSoon();
   }
   function updateSettingsUI() {
-    const ink = settings[inkTool];
-    $('custom-color').value = ink.color;
-    $('width').value = ink.width; $('width-value').textContent = ink.width;
+    const ink = settings[inkTool]; $('custom-color').value = ink.color;
+    $('width').max = inkTool === 'text' ? 512 : 80; $('width').value = ink.width; $('width-value').textContent = Math.round(ink.width);
     $('width-label').textContent = inkTool === 'text' ? 'Text size' : 'Width';
     $('opacity').value = Math.round(ink.opacity * 100); $('opacity-value').textContent = Math.round(ink.opacity * 100) + '%';
     document.querySelectorAll('.swatch').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === ink.color)));
-    const sample = $('sample').getContext('2d'); sample.clearRect(0, 0, 140, 42); sample.globalAlpha = 1;
-    sample.fillStyle = '#26352f'; sample.font = '14px sans-serif'; sample.fillText('Aa', 60, 26);
-    draw(sample, { kind: inkTool === 'highlight' ? 'highlight' : 'pen', ...ink }, [0, 0], [[12, 27], [40, 12], [65, 30], [98, 12], [127, 22]]);
+    for (const name of Object.keys(settings)) document.querySelector(`[data-tool="${name}"]`).style.setProperty('--ink', settings[name].color);
+  }
+  function stylePatch(obj, key, value) {
+    if (key === 'width') value /= view.zoom;
+    if (key === 'width' && obj.kind === 'text') {
+      const g = geometry(obj), scale = value / obj.width; return { width: value, ...(obj.boxW != null ? { boxW: g.width * scale, boxH: g.height * scale } : {}) };
+    }
+    return { [key]: value };
   }
   function changeSetting(key, value, commit = true) {
     settings[inkTool][key] = value; updateSettingsUI();
-    if (commit && selected.size && ready) patchMany([...selected].map(id => [id, { [key]: value }]));
+    if (editing) { editing.obj = { ...editing.obj, ...stylePatch(editing.obj, key, value) }; layoutEditor(); }
+    else if (selected.size && ready) {
+      if (settingUndo && settingUndo.key !== key) finishSetting();
+      const updates = [...selected].map(id => [id, stylePatch(objects.get(id), key, value)]);
+      if (!commit || settingUndo) {
+        settingUndo ||= { key, originals: new Map() };
+        for (const [id, inverse] of patchMany(updates, false)) {
+          const original = settingUndo.originals.get(id) || {};
+          for (const [name, before] of Object.entries(inverse)) if (!(name in original)) original[name] = before;
+          settingUndo.originals.set(id, original);
+        }
+        if (commit) finishSetting();
+      } else patchMany(updates);
+    }
   }
-  palette.forEach((color, i) => {
-    const button = document.createElement('button'); button.className = 'swatch'; button.dataset.color = color;
-    button.style.setProperty('--ink', color); button.title = names[i]; button.setAttribute('aria-label', names[i]);
-    button.onclick = () => changeSetting('color', color); $('colors').append(button);
-  });
-  $('custom-color').oninput = e => changeSetting('color', e.target.value, false);
-  $('custom-color').onchange = e => changeSetting('color', e.target.value);
+  function finishSetting() {
+    if (!settingUndo) return;
+    const action = [...settingUndo.originals].filter(([id, patch]) => Object.entries(patch).some(([key, value]) => (objects.get(id)?.[key] ?? null) !== value));
+    settingUndo = null; if (action.length) remember(action);
+  }
+  palette.forEach((color, i) => { const b = document.createElement('button'); b.className = 'swatch'; b.dataset.color = color; b.style.setProperty('--ink', color); b.title = names[i]; b.setAttribute('aria-label', names[i]); b.onclick = () => changeSetting('color', color); $('colors').append(b); });
+  $('custom-color').oninput = e => changeSetting('color', e.target.value, false); $('custom-color').onchange = e => changeSetting('color', e.target.value);
   for (const key of ['width', 'opacity']) {
     $(key).oninput = e => changeSetting(key, Number(e.target.value) / (key === 'opacity' ? 100 : 1), false);
     $(key).onchange = e => changeSetting(key, Number(e.target.value) / (key === 'opacity' ? 100 : 1));
   }
-  document.querySelectorAll('[data-tool]').forEach(button => button.onclick = () => selectTool(button.dataset.tool));
-  $('undo').onclick = () => { if (!ready) return; finish(); const action = historyStack.pop(); if (action) patchMany(action, false); renderSoon(); persistNow(); };
+  function placeOptions() {
+    if ($('options').hidden) return;
+    const bar = $('toolbar').getBoundingClientRect(), panel = $('options').getBoundingClientRect(), button = document.querySelector(`[data-tool="${inkTool}"]`).getBoundingClientRect();
+    const x = bar.left - panel.width - 12; $('options').style.left = Math.max(4, x >= 4 ? x : Math.min(innerWidth - panel.width - 4, bar.right + 12)) + 'px';
+    $('options').style.top = Math.max(4, Math.min(innerHeight - panel.height - 4, button.top)) + 'px';
+  }
+  function hideOptions() { finishSetting(); $('options').hidden = true; }
+  function openOptions(next, toggle = false) {
+    if (!settings[next]) return;
+    const closing = toggle && !$('options').hidden && next === inkTool;
+    selectTool(next, true); inkTool = next;
+    const text = editing?.obj || selectedText()?.[1]; if (next === 'text' && text) Object.assign(settings.text, { color: text.color, width: Math.max(1, Math.min(512, text.width * view.zoom)), opacity: text.opacity });
+    updateSettingsUI(); $('options').hidden = closing; placeOptions();
+  }
+  document.querySelectorAll('[data-tool]').forEach(button => {
+    let timer, start, held = false;
+    const stop = () => clearTimeout(timer);
+    button.onclick = () => { if (held) { held = false; return; } hideOptions(); selectTool(button.dataset.tool); button.blur(); };
+    button.ondblclick = () => openOptions(button.dataset.tool, true);
+    button.oncontextmenu = e => { e.preventDefault(); openOptions(button.dataset.tool); };
+    button.onpointerdown = e => { held = false; start = [e.clientX, e.clientY]; if (e.button === 0 && settings[button.dataset.tool]) timer = setTimeout(() => { held = true; openOptions(button.dataset.tool); }, 450); };
+    button.onpointermove = e => { if (start && Ink.distance(start, [e.clientX, e.clientY]) > 6) stop(); };
+    button.onpointerup = button.onpointercancel = button.onpointerleave = stop;
+  });
+  function undo(redo = false) {
+    if (!ready) return; finishSetting(); finish(); commitText();
+    const from = redo ? redoStack : historyStack, to = redo ? historyStack : redoStack, action = from.pop();
+    if (action) to.push(patchMany(action, false)); renderSoon(); persistNow();
+  }
   $('deselect').onclick = () => { selected.clear(); renderSoon(); };
-  $('delete-selection').onclick = () => { if (!ready) return; patchMany([...selected].map(id => [id, { hidden: true }])); selected.clear(); renderSoon(); persistNow(); };
-  $('clear').onclick = () => {
-    if (!ready || !confirm('Clear this board for everyone? Save an image first if you need a copy.')) return;
-    finish(); closeText();
-    // Clear known objects only, preserving concurrent new drawings by another person.
-    const update = Object.fromEntries([...objects.keys()].map(id => [id, null]));
-    objects.clear(); decoded.clear(); selected.clear(); historyStack = []; changed(); persistNow();
-    if (!local && Object.keys(update).length) track(ref.update(update));
+  $('delete-selection').onclick = () => { if (ready) { commitText(); patchMany([...selected].map(id => [id, { hidden: true }])); selected.clear(); renderSoon(); persistNow(); } };
+  function fileSnapshot() { finish(); commitText(); hideOptions(); return entries().map(([, obj]) => obj); }
+  function saveBoard() { BoardFiles.save(fileSnapshot(), { ...view }); }
+  function notice(text) { $('message').textContent = text; $('message').hidden = false; setTimeout(() => { $('message').hidden = true; }, 5000); }
+  function replaceSheet(content, camera = { x: 0, y: 0, zoom: 1 }) {
+    const changes = [...objects.keys()].map(id => [id, { $object: null }]);
+    for (const obj of content) changes.push([objectId(), { $object: obj }]);
+    patchMany(changes); selected.clear(); tool = 'pen'; updateToolUI();
+    Object.assign(view, camera); cameraChanged(); persistNow();
+  }
+  $('save-board').onclick = () => { try { saveBoard(); } catch (error) { notice(error.message); } };
+  $('new-board').onclick = () => {
+    fileSnapshot();
+    if (entries().length && !confirm('Start a blank board at this link? Other viewers will see it too. You can undo this.')) return;
+    replaceSheet([]);
   };
-  $('save').onclick = () => {
-    render(); const image = document.createElement('canvas'); image.width = W; image.height = H;
-    const out = image.getContext('2d'); out.fillStyle = 'white'; out.fillRect(0, 0, W, H); out.drawImage(canvas, 0, 0);
-    const link = document.createElement('a'); link.download = 'whiteboard.png'; link.href = image.toDataURL('image/png'); link.click();
+  $('open-board').onclick = () => $('open-file').click();
+  $('open-file').onchange = async e => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+    try {
+      const data = await BoardFiles.read(file); fileSnapshot();
+      if (entries().length && !confirm('Replace this board with the saved file? Other viewers will see it too. You can undo this.')) return;
+      replaceSheet(data.objects, data.view || undefined);
+    } catch (error) { notice(error.message); }
   };
-  $('new').onclick = () => { finish(); if (pending && !confirm('Some changes are still waiting to save. Open a new board anyway?')) return; location.hash = uid(); };
+  $('export-pdf').onclick = async () => {
+    const button = $('export-pdf'); button.disabled = true;
+    try {
+      fileSnapshot(); const all = entries();
+      const b = all.length ? pointBounds(all.flatMap(([id, obj]) => { const b = boundsFor(id, obj); return [[b[0], b[1]], [b[2], b[3]]]; })) : [view.x, view.y, view.x + screenW / view.zoom, view.y + screenH / view.zoom];
+      const w = Math.max(Number.MIN_VALUE, b[2] - b[0]), h = Math.max(Number.MIN_VALUE, b[3] - b[1]);
+      const landscape = w > h, pw = landscape ? 842 : 595, ph = landscape ? 595 : 842;
+      const image = document.createElement('canvas'); image.width = Math.round(pw * 300 / 72); image.height = Math.round(ph * 300 / 72);
+      const out = image.getContext('2d'); out.fillStyle = '#fff'; out.fillRect(0, 0, image.width, image.height);
+      const margin = 100, scale = Math.min((image.width - 2 * margin) / w, (image.height - 2 * margin) / h);
+      const x = (image.width - w * scale) / 2, y = (image.height - h * scale) / 2;
+      out.setTransform(scale, 0, 0, scale, x - b[0] * scale, y - b[1] * scale);
+      for (const highlight of [true, false]) for (const [, obj] of all) if ((obj.kind === 'highlight') === highlight) draw(out, obj, [obj.dx || 0, obj.dy || 0]);
+      await BoardFiles.pdf(image, pw, ph);
+    } catch (error) { notice(error.message); }
+    finally { button.disabled = false; }
+  };
   addEventListener('hashchange', () => location.reload());
-  $('share').onclick = async () => {
-    if (local) { $('message').textContent = 'This board is saved only on this device. Open the shared version to collaborate.'; return; }
-    try { await navigator.clipboard.writeText(location.href); $('message').textContent = 'Link copied. Everyone who opens it can draw together.'; }
-    catch { prompt('Copy this board link:', location.href); }
-  };
   addEventListener('keydown', e => {
-    if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) {
-      if (e.target === $('editor') && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $('add-text').click(); }
-      if (e.key === 'Escape') closeText(); return;
+    if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '0'].includes(e.key)) {
+      e.preventDefault();
+      if (!gesture && !active) { if (e.key === '0') fit(); else zoomAt(e.key === '-' ? 1 / 1.25 : 1.25); }
+      return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); $('undo').click(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveBoard(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') { e.preventDefault(); $('open-board').click(); return; }
+    if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) {
+      if (e.target === $('editor') && (e.key === 'Escape' || e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); commitText(); hideOptions(); }
+      else if (e.key === 'Escape') { hideOptions(); e.target.blur(); }
+      return;
+    }
+    const cmd = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
+    if (cmd && key === 'z') { e.preventDefault(); undo(e.shiftKey); }
+    else if (cmd && key === 'y') { e.preventDefault(); undo(true); }
+    else if (cmd && key === 's') { e.preventDefault(); saveBoard(); }
+    else if (cmd && key === 'a') { e.preventDefault(); finish(); commitText(); selected.clear(); for (const [id] of entries()) selected.add(id); tool = 'select'; updateToolUI(); renderSoon(); }
+    else if (['=', '+', '-'].includes(key)) { e.preventDefault(); if (!gesture && !active) zoomAt(key === '-' ? 1 / 1.25 : 1.25); }
+    else if (cmd && key === '0') { e.preventDefault(); finish(); fit(); }
+    else if (key === ' ') { e.preventDefault(); space = true; setHint(); }
     else if (['Delete', 'Backspace'].includes(e.key) && selected.size) { e.preventDefault(); $('delete-selection').click(); }
-    else if (e.key === 'Escape') { finish(true); selected.clear(); closeText(); renderSoon(); }
-    else if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-      const next = { p: 'pen', h: 'highlight', t: 'text', e: 'erase', v: 'select', l: 'lasso' }[e.key.toLowerCase()]; if (next) selectTool(next);
+    else if (e.key === 'Escape') { finish(true); commitText(); selected.clear(); hideOptions(); renderSoon(); }
+    else if (!cmd && !e.altKey) {
+      const next = { p: 'pen', h: 'highlight', t: 'text', e: 'erase', v: 'select', l: 'lasso' }[key];
+      if (next) { e.preventDefault(); if (e.shiftKey && settings[next]) openOptions(next, true); else { hideOptions(); selectTool(next); } }
     }
   });
-  addEventListener('resize', () => { renderSoon(); });
-  addEventListener('beforeunload', e => { finish(); if (pending) { e.preventDefault(); e.returnValue = ''; } });
+  addEventListener('keyup', e => { if (e.key === ' ') { space = false; setHint(); } });
+  addEventListener('blur', () => { space = false; finish(); touches.clear(); pinch = null; });
+  addEventListener('resize', sizeCanvases);
+  addEventListener('beforeunload', e => { finish(); commitText(); try { localStorage.setItem(viewKey, JSON.stringify(view)); } catch {} if (pending) { e.preventDefault(); e.returnValue = ''; } });
   async function loadSDK(file) {
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script'); script.src = 'https://www.gstatic.com/firebasejs/10.12.2/' + file;
-      script.onload = resolve; script.onerror = () => reject(new Error('Firebase could not load')); document.head.append(script);
-    });
+    await new Promise((resolve, reject) => { const script = document.createElement('script'); script.src = 'https://www.gstatic.com/firebasejs/10.12.2/' + file; script.onload = resolve; script.onerror = () => reject(new Error('Firebase could not load')); document.head.append(script); });
   }
   async function connect() {
     await loadSDK('firebase-app-compat.js'); await loadSDK('firebase-database-compat.js');
     firebase.initializeApp(CONFIG); const db = firebase.database(); ref = db.ref('whiteboards/' + room + '/objects');
-    const receive = snapshot => {
-      const old = objects.get(snapshot.key); if (old) decoded.delete(old); objects.set(snapshot.key, snapshot.val()); dirty = true; renderSoon();
-    };
+    const receive = snapshot => { objects.set(snapshot.key, snapshot.val()); orderDirty = true; if (active?.id !== snapshot.key) dirty = true; renderSoon(); };
     ref.on('child_added', receive, fail); ref.on('child_changed', receive, fail);
-    ref.on('child_removed', snapshot => {
-      decoded.delete(objects.get(snapshot.key)); objects.delete(snapshot.key); selected.delete(snapshot.key);
-      if (active?.id === snapshot.key) { clearInterval(active.timer); active = null; pointer = null; }
-      dirty = true; renderSoon();
-    }, fail);
-    await ref.once('value'); ready = true; status();
-    db.ref('.info/connected').on('value', snapshot => { connected = snapshot.val() === true; status(); });
+    ref.on('child_removed', snapshot => { objects.delete(snapshot.key); selected.delete(snapshot.key); if (active?.id === snapshot.key) { clearInterval(active.timer); active = null; pointer = null; } dirty = orderDirty = true; renderSoon(); }, fail);
+    await ref.once('value'); ready = true;
+    const stale = [...objects].filter(([, obj]) => obj?.hidden).map(([id]) => [id, { hidden: true }]);
+    if (stale.length) patchMany(stale, false);
+    status(); db.ref('.info/connected').on('value', snapshot => { connected = snapshot.val() === true; status(); });
   }
-  updateSettingsUI(); updateToolUI();
-  if (local) { $('message').textContent = 'Local board — saved on this device.'; status(); }
-  else connect().catch(fail);
-  renderSoon();
+  updateSettingsUI(); updateToolUI(); sizeCanvases();
+  if (local) status(); else connect().catch(fail);
 })();
