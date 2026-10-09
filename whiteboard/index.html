@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-version="20261009-15">
+<html lang="en" data-version="20261009-16">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -56,7 +56,7 @@
   <script>
     (async () => {
       const version = document.documentElement.dataset.version;
-      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"950bbb5baff44d3f","ink.js":"720d1b271c39c2b5","text.js":"c0b8417ff08d10fd","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"e1ca14715775d648"};
+      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"950bbb5baff44d3f","ink.js":"720d1b271c39c2b5","text.js":"c0b8417ff08d10fd","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"90e2de69bf336969"};
       const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 1500);
       try {
         const response = await fetch('release.json?check=' + Date.now(), { cache: 'no-store', signal: controller.signal });

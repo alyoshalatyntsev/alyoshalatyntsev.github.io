@@ -17,7 +17,7 @@
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
   const cursorAnimals = [['Fox', '🦊'], ['Cat', '🐈'], ['Dog', '🐕'], ['Owl', '🦉'], ['Bear', '🐻'], ['Rabbit', '🐇'], ['Panda', '🐼'], ['Tiger', '🐯'], ['Lion', '🦁'], ['Koala', '🐨'], ['Frog', '🐸'], ['Penguin', '🐧'], ['Otter', '🦦'], ['Deer', '🦌'], ['Raccoon', '🦝'], ['Squirrel', '🐿️'], ['Hedgehog', '🦔'], ['Turtle', '🐢'], ['Whale', '🐳'], ['Dolphin', '🐬'], ['Duck', '🦆'], ['Monkey', '🐵'], ['Bee', '🐝'], ['Sloth', '🦥']];
   const cursorColors = [['Coral', '#bd454b'], ['Terracotta', '#a94f35'], ['Saffron', '#8c6415'], ['Moss', '#496b3d'], ['Jade', '#246b56'], ['Teal', '#1b6874'], ['Ocean', '#245f87'], ['Blue', '#36549b'], ['Iris', '#584c97'], ['Plum', '#75457f'], ['Berry', '#96395f'], ['Rosewood', '#874754']];
-  const MIN_ZOOM = .25, MAX_ZOOM = 8, DEFAULT_ZOOM = .9, OPTIONS_HOLD_MS = 90, ERASE_FAST = 2500;
+  const MIN_ZOOM = .25, MAX_ZOOM = 8, DEFAULT_ZOOM = .95, OPTIONS_HOLD_MS = 90, ERASE_FAST = 2500;
   const clampZoom = zoom => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   const lastRoomKey = 'whiteboard-last-' + (local ? 'local' : 'shared');
