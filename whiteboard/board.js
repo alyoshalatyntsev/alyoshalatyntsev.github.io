@@ -17,6 +17,8 @@
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
   const cursorAnimals = [['Fox', '🦊'], ['Cat', '🐈'], ['Dog', '🐕'], ['Owl', '🦉'], ['Bear', '🐻'], ['Rabbit', '🐇'], ['Panda', '🐼'], ['Tiger', '🐯'], ['Lion', '🦁'], ['Koala', '🐨'], ['Frog', '🐸'], ['Penguin', '🐧'], ['Otter', '🦦'], ['Deer', '🦌'], ['Raccoon', '🦝'], ['Squirrel', '🐿️'], ['Hedgehog', '🦔'], ['Turtle', '🐢'], ['Whale', '🐳'], ['Dolphin', '🐬'], ['Duck', '🦆'], ['Monkey', '🐵'], ['Bee', '🐝'], ['Sloth', '🦥']];
   const cursorColors = [['Coral', '#bd454b'], ['Terracotta', '#a94f35'], ['Saffron', '#8c6415'], ['Moss', '#496b3d'], ['Jade', '#246b56'], ['Teal', '#1b6874'], ['Ocean', '#245f87'], ['Blue', '#36549b'], ['Iris', '#584c97'], ['Plum', '#75457f'], ['Berry', '#96395f'], ['Rosewood', '#874754']];
+  const MIN_ZOOM = .1, MAX_ZOOM = 8, OPTIONS_HOLD_MS = 90;
+  const clampZoom = zoom => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   const lastRoomKey = 'whiteboard-last-' + (local ? 'local' : 'shared');
   if (!/^[a-f0-9]{32}$/.test(location.hash.slice(1))) {
@@ -28,14 +30,21 @@
   const TTL = 24 * 60 * 60 * 1000;
   let sequence = 0;
   const objectId = () => local ? Date.now().toString(36).padStart(10, '0') + '-' + String(sequence++).padStart(6, '0') + '-' + uid().slice(0, 16) : ref.push().key;
-  const settings = { pen: { color: palette[0], width: 4, opacity: 1 }, highlight: { color: palette[8], width: 28, opacity: .35 }, text: { color: palette[0], width: 30, opacity: 1 } };
+  const settings = { pen: { color: palette[0], width: 6, opacity: 1 }, highlight: { color: palette[8], width: 32, opacity: .35 }, text: { color: palette[0], width: 30, opacity: 1 } };
   const view = { x: 0, y: 0, zoom: 1 };
   try {
     const saved = JSON.parse(localStorage.getItem(viewKey));
-    if (saved && [saved.x, saved.y, saved.zoom].every(Number.isFinite) && saved.zoom >= 1e-9 && saved.zoom <= 1e9) Object.assign(view, saved);
+    if (saved && [saved.x, saved.y, saved.zoom].every(Number.isFinite) && saved.zoom >= 1e-9 && saved.zoom <= 1e9) {
+      Object.assign(view, saved);
+      view.zoom = clampZoom(saved.zoom);
+      if (view.zoom !== saved.zoom) {
+        view.x += innerWidth / 2 / saved.zoom - innerWidth / 2 / view.zoom;
+        view.y += innerHeight / 2 / saved.zoom - innerHeight / 2 / view.zoom;
+      }
+    }
   } catch {}
   const objects = new Map(), decoded = new WeakMap(), selected = new Set(), touches = new Map();
-  let expiry, ref, ready = local, connected = false, failed = false, pending = 0;
+  let expiry, ref, ready = local, connected = false, everConnected = false, failed = false, pending = 0;
   let tool = 'pen', inkTool = 'pen', active = null, gesture = null, pointer = null, editing = null, space = false, pinch = null;
   let historyStack = [], redoStack = [], frame = 0, dirty = true, orderDirty = true, gridDirty = true, persistTimer = 0, viewTimer = 0, ordered = [];
   let screenW = 0, screenH = 0, dpr = 1;
@@ -67,6 +76,9 @@
   function persist() { if (local && !persistTimer) persistTimer = setTimeout(persistNow, 400); }
   function status() {
     $('status').textContent = local ? 'On this device' : failed ? 'Sharing unavailable' : !ready ? 'Connecting…' : !connected ? 'Offline · changes waiting' : pending ? 'Saving…' : 'Live · saved';
+    const waiting = !local && !failed && (!ready || !connected);
+    $('connection-overlay').hidden = !waiting;
+    if (waiting) $('connection-overlay').textContent = everConnected ? 'Reconnecting…' : 'Connecting…';
     $('export-pdf').disabled = !ready || exporting;
     $('status').className = 'sr-only' + (failed ? ' error' : connected ? ' live' : '');
     if (ready && connected) $('message').hidden = true;
@@ -90,7 +102,7 @@
   }
   function zoomAt(factor, at = [screenW / 2, screenH / 2]) {
     zoomMotion = { at, anchor: [view.x + at[0] / view.zoom, view.y + at[1] / view.zoom],
-      target: Math.max(1e-9, Math.min(1e9, (zoomMotion?.target || view.zoom) * factor)), last: performance.now() - 16 };
+      target: clampZoom((zoomMotion?.target || view.zoom) * factor), last: performance.now() - 16 };
     renderSoon();
   }
   function animateZoom(time) {
@@ -108,7 +120,7 @@
     if (!all.length) Object.assign(view, { x: 0, y: 0, zoom: 1 });
     else {
       const b = pointBounds(all.flatMap(([id, obj]) => { const b = boundsFor(id, obj); return [[b[0], b[1]], [b[2], b[3]]]; }));
-      view.zoom = Math.max(1e-9, Math.min(4, (screenW - 140) / Math.max(1, b[2] - b[0]), (screenH - 100) / Math.max(1, b[3] - b[1])));
+      view.zoom = clampZoom(Math.min((screenW - 140) / Math.max(1, b[2] - b[0]), (screenH - 100) / Math.max(1, b[3] - b[1])));
       view.x = (b[0] + b[2]) / 2 - screenW / 2 / view.zoom; view.y = (b[1] + b[3]) / 2 - screenH / 2 / view.zoom;
     }
     cameraChanged();
@@ -202,15 +214,11 @@
     if (!element) {
       element = document.createElement('div'); element.className = 'collaborator-cursor';
       element.setAttribute('aria-label', `${cursor.name} cursor`); element.title = `${cursor.name} is here`;
-      const pointer = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); pointer.setAttribute('viewBox', '0 0 20 25'); pointer.setAttribute('aria-hidden', 'true');
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', 'M2 1v18l5-4 4 8 3-1.5-4-8 7-.5z'); pointer.append(path); element.append(pointer);
       const label = document.createElement('span'); label.className = 'collaborator-label';
-      const animal = document.createElement('span'); animal.className = 'collaborator-animal'; animal.setAttribute('aria-hidden', 'true');
-      const name = document.createElement('span'); name.className = 'collaborator-name'; label.append(animal, name); element.append(label);
+      const name = document.createElement('span'); name.className = 'collaborator-name'; label.append(name); element.append(label);
       $('collaborators').append(element); cursorElements.set(snapshot.key, element);
     }
     element.style.setProperty('--cursor-color', cursor.color);
-    element.querySelector('.collaborator-animal').textContent = cursor.emoji;
     element.querySelector('.collaborator-name').textContent = cursor.name;
     element.setAttribute('aria-label', `${cursor.name} cursor`); element.title = `${cursor.name} is here`;
     renderSoon();
@@ -373,11 +381,16 @@
   function flush(final = false) {
     if (!active) return;
     const values = Ink.chunks(active.stroke.pending(final)), wire = {}, old = objects.get(active.id);
-    if (!values.length || !old) return;
+    if (!old) return;
     const chunks = { ...old.chunks };
     for (const value of values) { const key = String(active.chunk++).padStart(6, '0'); chunks[key] = value; wire[key] = value; }
-    objects.set(active.id, { ...old, chunks });
-    if (!local) track(ref.child(active.id).child('chunks').update(wire)); persist();
+    const next = values.length ? { ...old, chunks } : old;
+    if (values.length) { objects.set(active.id, next); persist(); }
+    if (!active.sent) {
+      // A short stroke can finish before the first interval; publish all its points together.
+      active.sent = true;
+      if (!local) track(ref.child(active.id).set(next));
+    } else if (values.length && !local) track(ref.child(active.id).child('chunks').update(wire));
   }
   function geometryPatch(obj) { return Object.fromEntries(['x', 'y', 'dx', 'dy', 'width', 'boxW', 'boxH'].map(key => [key, obj[key] ?? null])); }
   function moveUpdates() { return [...gesture.origins].map(([id, original]) => [id, { dx: original.dx + gesture.delta[0], dy: original.dy + gesture.delta[1] }]); }
@@ -569,8 +582,8 @@
     selected.clear();
     if (tool === 'erase') { gesture = { kind: 'erase', last: p, undo: [] }; eraseAt(p); renderSoon(); return; }
     const id = objectId(), obj = { kind: tool, ...settings[tool], width: settings[tool].width, chunks: { '000000': Ink.chunks([p])[0] } };
-    active = { id, obj, stroke: new Ink.Stroke(p, view.zoom), chunk: 1, timer: setInterval(flush, 80) };
-    write(id, obj); remember([[id, { hidden: true }]]);
+    active = { id, obj, stroke: new Ink.Stroke(p, view.zoom), chunk: 1, sent: false, timer: setInterval(flush, 80) };
+    objects.set(id, obj); changed(); remember([[id, { hidden: true }]]);
   }
   canvas.addEventListener('pointerdown', startPointer);
   $('paper').addEventListener('pointerdown', e => { if (e.button === 1 && e.target !== canvas) { e.stopPropagation(); startPointer(e); } }, { capture: true });
@@ -607,7 +620,7 @@
     if (touches.has(e.pointerId)) {
       touches.set(e.pointerId, [e.clientX, e.clientY]);
       if (pinch) {
-        if (touches.size >= 2) { const s = touchState(); view.zoom = Math.max(1e-9, Math.min(1e9, pinch.zoom * s.distance / pinch.distance)); view.x = pinch.anchor[0] - s.centre[0] / view.zoom; view.y = pinch.anchor[1] - s.centre[1] / view.zoom; cameraChanged(); }
+        if (touches.size >= 2) { const s = touchState(); view.zoom = clampZoom(pinch.zoom * s.distance / pinch.distance); view.x = pinch.anchor[0] - s.centre[0] / view.zoom; view.y = pinch.anchor[1] - s.centre[1] / view.zoom; cameraChanged(); }
         return;
       }
     }
@@ -621,10 +634,10 @@
   function endPointer(e, cancel = false) {
     touches.delete(e.pointerId);
     if (pinch) { if (!touches.size) pinch = null; return; }
-    if (e.pointerId === pointer) { if (!cancel) movePointer(e); finish(cancel); }
+    if (e.pointerId === pointer) { if (!cancel) movePointer(e); finish(cancel && !active); }
   }
   addEventListener('pointerup', e => endPointer(e)); addEventListener('pointercancel', e => endPointer(e, true));
-  canvas.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) finish(true); touches.delete(e.pointerId); if (!touches.size) pinch = null; });
+  canvas.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) finish(!active); touches.delete(e.pointerId); if (!touches.size) pinch = null; });
   canvas.addEventListener('auxclick', e => e.preventDefault()); canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
   canvas.addEventListener('dblclick', e => { if (!['text', 'select'].includes(tool)) return; const id = hitAt(world(e)), obj = objects.get(id); if (obj?.kind === 'text') { finish(); tool = 'text'; updateToolUI(); beginText(id, obj); } });
   $('paper').addEventListener('wheel', e => {
@@ -722,12 +735,12 @@
     button.onclick = () => { if (held) { held = false; return; } if (button.dataset.tool === tool && settings[tool]) openOptions(tool, true); else { hideOptions(); selectTool(button.dataset.tool); } button.blur(); };
     button.ondblclick = () => openOptions(button.dataset.tool, true);
     button.oncontextmenu = e => { e.preventDefault(); openOptions(button.dataset.tool); };
-    button.onpointerdown = e => { held = false; if (e.button === 0) { e.preventDefault(); button.setPointerCapture(e.pointerId); } if (e.button === 0 && settings[button.dataset.tool]) { started = performance.now(); timer = setTimeout(() => { held = true; openOptions(button.dataset.tool); }, 150); } };
+    button.onpointerdown = e => { held = false; if (e.button === 0) { e.preventDefault(); button.setPointerCapture(e.pointerId); } if (e.button === 0 && settings[button.dataset.tool]) { started = performance.now(); timer = setTimeout(() => { held = true; openOptions(button.dataset.tool); }, OPTIONS_HOLD_MS); } };
     button.onpointermove = e => {
       const b = button.getBoundingClientRect();
       if (e.clientX < b.left - 8 || e.clientX > b.right + 8 || e.clientY < b.top - 8 || e.clientY > b.bottom + 8) stop();
     };
-    button.onpointerup = () => { if (!held && started != null && performance.now() - started >= 150) { held = true; openOptions(button.dataset.tool); } stop(); };
+    button.onpointerup = () => { if (!held && started != null && performance.now() - started >= OPTIONS_HOLD_MS) { held = true; openOptions(button.dataset.tool); } stop(); };
     button.onpointercancel = button.onlostpointercapture = stop;
   });
   function undo(redo = false) {
@@ -834,6 +847,7 @@
     if (stale.length) patchMany(stale, false);
     seedHistory(); status(); db.ref('.info/connected').on('value', snapshot => {
       connected = snapshot.val() === true; status();
+      if (connected) everConnected = true;
       if (!connected) cursorArmed = false;
       else if (cursorPoint) transmitCursor();
     });

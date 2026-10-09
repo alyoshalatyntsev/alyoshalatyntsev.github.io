@@ -56,14 +56,13 @@ input[type="color"] { width: 32px; height: 24px; padding: 0; border: 1px solid #
 .scale-handle { left: calc(100% + 18px); top: calc(100% + 18px); width: 16px; height: 16px; border-radius: 50%; color: #367acc; font: 13px/14px sans-serif; text-align: center; cursor: nwse-resize; }
 @media (pointer: coarse) { .text-handle::after { inset: -9px; } }
 #message { position: fixed; bottom: 16px; right: 16px; z-index: 5; max-width: 320px; margin: 0; padding: 8px 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+#connection-overlay { position: fixed; left: 50%; top: 50%; z-index: 7; transform: translate(-50%, -50%); padding: 10px 16px; border: 1px solid #e2e5e9; border-radius: 20px; background: #fff; color: #30343b; font-size: 14px; font-weight: 500; box-shadow: 0 2px 12px #00000012; pointer-events: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-height: 480px) { #toolbar { top: 6px; transform: none; } }
 @media (max-width: 450px) { #toolbar { left: 10px; } #options { width: 268px; } #colors { gap: 4px; } .setting input[type="range"] { width: 107px; } }
 
 #collaborators { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; }
-.collaborator-cursor { position: absolute; top: 0; left: 0; display: flex; align-items: flex-start; gap: 2px; white-space: nowrap; pointer-events: none; will-change: transform; }
+.collaborator-cursor { position: absolute; top: 0; left: 0; white-space: nowrap; pointer-events: none; will-change: transform; }
 .collaborator-cursor[hidden] { display: none; }
-.collaborator-cursor svg { width: 20px; height: 24px; flex: none; overflow: visible; filter: drop-shadow(0 1px 1px #0005); }
-.collaborator-cursor svg path { fill: var(--cursor-color); stroke: #fff; stroke-width: 1.2px; stroke-linejoin: round; }
-.collaborator-label { display: inline-flex; align-items: center; gap: 4px; margin: 15px 0 0 -2px; padding: 3px 7px 3px 5px; border-left: 3px solid var(--cursor-color); border-radius: 3px 8px 8px 3px; background: var(--cursor-color); color: #fff; font-size: 12px; font-weight: 600; line-height: 17px; letter-spacing: .01em; box-shadow: 0 1px 3px #0003; }
-.collaborator-animal { font-size: 13px; line-height: 1; }
+.collaborator-cursor::before { content: ""; position: absolute; left: 0; top: 0; width: 18px; height: 18px; background: var(--cursor-color); clip-path: polygon(0 0, 100% 0, 0 100%); filter: drop-shadow(0 1px 1px #0002); }
+.collaborator-label { display: inline-flex; align-items: center; margin: 8px 0 0 10px; padding: 5px 11px; border-radius: 18px; background: var(--cursor-color); color: #fff; font-size: 12px; font-weight: 600; line-height: 17px; letter-spacing: .01em; box-shadow: 0 1px 3px #0003; }
