@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-version="20261009-13">
+<html lang="en" data-version="20261009-14">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title> </title>
-  <link rel="stylesheet" href="board.css?v=4a52400becd01860">
+  <link rel="stylesheet" href="board.css?v=950bbb5baff44d3f">
 </head>
 <body>
   <div id="paper">
@@ -36,7 +36,7 @@
     <button data-tool="text" aria-label="Text" aria-pressed="false" title="Text · T · hold for options">
       <svg viewBox="0 0 22 24" aria-hidden="true"><path d="M5 4h12M11 4v13M7.5 17h7M5 4v3M17 4v3" stroke-width="2"/><path class="ink" d="M4 21h14"/></svg>
     </button>
-    <button data-tool="erase" aria-label="Eraser" aria-pressed="false" title="Eraser · E">
+    <button data-tool="erase" aria-label="Eraser" aria-pressed="false" title="Eraser · E · hold for size">
       <svg viewBox="0 0 22 24" aria-hidden="true"><g transform="translate(11 11) rotate(45)"><rect x="-4.5" y="-8" width="9" height="16" rx="1.5"/><path d="M-4.5 2h9v4.5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5Z" fill="currentColor" stroke="none"/></g></svg>
     </button>
     <span class="tool-divider" aria-hidden="true"></span>
@@ -44,18 +44,19 @@
     <button id="new-board" aria-label="New board" title="New board · keep this board and start another"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M11 5v14M4 12h14" stroke-width="2"/></svg></button>
     <span id="status" class="sr-only" role="status">Connecting</span>
   </div>
+  <div id="tool-tooltip" role="tooltip" hidden></div>
   <div id="options" role="dialog" aria-label="Tool options" hidden>
     <div id="colors" role="group" aria-label="Colour"></div>
-    <label class="custom" title="Custom colour"><span>Custom colour</span><input id="custom-color" type="color" value="#111111" aria-label="Custom colour"></label>
-    <label class="setting"><span id="width-label">Width</span><input id="width" type="range" min="0" max="13" step="1" value="4" aria-label="Width" title="Drag to change width in steps"><input id="width-value" class="setting-value" type="text" value="6" inputmode="decimal" aria-label="Exact width" readonly title="Click to type a width"></label>
-    <label class="setting">Opacity<input id="opacity" type="range" min="0" max="100" value="100" step="10" aria-label="Opacity" title="Drag to change opacity in 10% steps"><input id="opacity-value" class="setting-value" type="text" value="100%" inputmode="decimal" aria-label="Exact opacity" readonly title="Click to type an opacity"></label>
+    <label id="custom-row" class="custom" title="Custom colour"><span>Custom colour</span><input id="custom-color" type="color" value="#111111" aria-label="Custom colour"></label>
+    <label class="setting"><span id="width-label">Width</span><input id="width" type="range" min="0" max="15" step="1" value="5" aria-label="Width" title="Drag to change width in steps"><input id="width-value" class="setting-value" type="text" value="3" inputmode="decimal" aria-label="Exact width" readonly title="Click to type a width"></label>
+    <label id="opacity-row" class="setting">Opacity<input id="opacity" type="range" min="0" max="100" value="100" step="10" aria-label="Opacity" title="Drag to change opacity in 10% steps"><input id="opacity-value" class="setting-value" type="text" value="100%" inputmode="decimal" aria-label="Exact opacity" readonly title="Click to type an opacity"></label>
     <div id="selection-actions" hidden><span id="selection-count" class="sr-only"></span><button id="delete-selection" title="Delete selected objects">Delete</button><button id="deselect" title="Clear the selection">Deselect</button></div>
   </div>
   <p id="message" role="status" hidden></p>
   <script>
     (async () => {
       const version = document.documentElement.dataset.version;
-      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"4a52400becd01860","ink.js":"04e2bd4f86a83979","text.js":"aa832a5c720c3c3a","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"c59fb4c5e55c76de"};
+      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"950bbb5baff44d3f","ink.js":"720d1b271c39c2b5","text.js":"c0b8417ff08d10fd","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"bbc7b2402f7a7d0d"};
       const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 1500);
       try {
         const response = await fetch('release.json?check=' + Date.now(), { cache: 'no-store', signal: controller.signal });

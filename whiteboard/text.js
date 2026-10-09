@@ -81,7 +81,7 @@
     editor.addEventListener('keydown', e => {
       if (e.isComposing) return;
       if (e.key !== ' ') lastSpace = -1;
-      if (e.key !== 'Enter' || e.ctrlKey || e.metaKey || e.shiftKey || editor.selectionStart !== editor.selectionEnd) return;
+      if (e.key !== 'Enter' || e.ctrlKey || e.metaKey || !e.shiftKey || editor.selectionStart !== editor.selectionEnd) return;
       const line = lineAt(), match = marker(line.text);
       if (!match) { exitLine = -1; return; }
       e.preventDefault();

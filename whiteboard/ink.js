@@ -23,7 +23,8 @@
   }
   function settled(a, b, c, zoom) {
     const spacing = (distance(a, b) + distance(b, c)) * zoom / 2;
-    const weight = .32 * Math.max(0, Math.min(1, (9 - spacing) / 6));
+    const span = distance(a, c), bend = span ? Math.abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])) * zoom / span : 0;
+    const weight = (.32 + .12 * Math.max(0, 1 - bend / 2)) * Math.max(0, Math.min(1, (9 - spacing) / 6));
     return [0, 1].map(k => b[k] + weight * (a[k] - 2 * b[k] + c[k]));
   }
   class Stroke {
@@ -40,7 +41,7 @@
       this.bounds[2] = Math.max(this.bounds[2], point[0]); this.bounds[3] = Math.max(this.bounds[3], point[1]);
       const k = Math.max(.25, Math.min(1, distance(point, this.filtered) * this.zoom / 3.5));
       this.filtered = [0, 1].map(i => this.filtered[i] + k * (point[i] - this.filtered[i]));
-      if (distance(this.filtered, this.raw[this.raw.length - 1]) * this.zoom >= 1.5) this.append(this.filtered);
+      if (distance(this.filtered, this.raw[this.raw.length - 1]) * this.zoom >= 2) this.append(this.filtered);
       this.version++;
     }
     append(point) {
@@ -82,5 +83,52 @@
     for (let i = 0; i + 1 < values.length; i += 2) if (Number.isFinite(values[i]) && Number.isFinite(values[i + 1])) points.push([values[i], values[i + 1]]);
     return points;
   }
-  window.BoardInk = { path, Stroke, chunks, decode, distance };
+  function cutStroke(points, center, radius) {
+    const [cx, cy] = center, r2 = radius * radius, kept = [];
+    const inside = p => (p[0] - cx) ** 2 + (p[1] - cy) ** 2 < r2 - 1e-7;
+    if (points.length === 1) return inside(points[0]) ? [] : null;
+    if (points.length >= 64) {
+      const removed = points.map(inside);
+      if (!removed.some(Boolean)) return null;
+      const edge = (outside, inner) => {
+        const dx = inner[0] - outside[0], dy = inner[1] - outside[1], fx = outside[0] - cx, fy = outside[1] - cy;
+        const a = dx * dx + dy * dy, b = 2 * (fx * dx + fy * dy);
+        const t = a ? Math.max(0, Math.min(1, (-b - Math.sqrt(Math.max(0, b * b - 4 * a * (fx * fx + fy * fy - r2)))) / (2 * a))) : 0;
+        return [outside[0] + dx * t, outside[1] + dy * t];
+      };
+      for (let i = 0; i < points.length;) {
+        if (removed[i]) { i++; continue; }
+        const start = i; while (i < points.length && !removed[i]) i++;
+        const piece = points.slice(start, i);
+        if (start) piece.unshift(edge(points[start], points[start - 1]));
+        if (i < points.length) piece.push(edge(points[i - 1], points[i]));
+        if (piece.length > 1) kept.push(piece);
+      }
+      return kept;
+    }
+    let piece = [], hit = false;
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i], b = points[i + 1], dx = b[0] - a[0], dy = b[1] - a[1];
+      const fx = a[0] - cx, fy = a[1] - cy, ina = inside(a), inb = inside(b);
+      const qa = dx * dx + dy * dy, qb = 2 * (fx * dx + fy * dy);
+      const disc = qb * qb - 4 * qa * (fx * fx + fy * fy - r2);
+      const root = qa && disc > 0 ? Math.sqrt(disc) : null;
+      const t0 = root === null ? null : (-qb - root) / (2 * qa), t1 = root === null ? null : (-qb + root) / (2 * qa);
+      if (!ina && !(t0 !== null && t1 > 0 && t0 < 1)) {
+        if (!piece.length) piece.push(a);
+        piece.push(b); continue;
+      }
+      hit = true;
+      if (!ina && t0 !== null && t0 > 0) {
+        if (!piece.length) piece.push(a);
+        piece.push([a[0] + dx * t0, a[1] + dy * t0]);
+      }
+      if (piece.length > 1) kept.push(piece);
+      piece = [];
+      if (!inb && t1 !== null && t1 < 1) piece = [[a[0] + dx * t1, a[1] + dy * t1], b];
+    }
+    if (piece.length > 1) kept.push(piece);
+    return hit ? kept : null;
+  }
+  window.BoardInk = { path, Stroke, chunks, decode, distance, cutStroke };
 })();

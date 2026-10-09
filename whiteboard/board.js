@@ -17,7 +17,7 @@
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
   const cursorAnimals = [['Fox', '🦊'], ['Cat', '🐈'], ['Dog', '🐕'], ['Owl', '🦉'], ['Bear', '🐻'], ['Rabbit', '🐇'], ['Panda', '🐼'], ['Tiger', '🐯'], ['Lion', '🦁'], ['Koala', '🐨'], ['Frog', '🐸'], ['Penguin', '🐧'], ['Otter', '🦦'], ['Deer', '🦌'], ['Raccoon', '🦝'], ['Squirrel', '🐿️'], ['Hedgehog', '🦔'], ['Turtle', '🐢'], ['Whale', '🐳'], ['Dolphin', '🐬'], ['Duck', '🦆'], ['Monkey', '🐵'], ['Bee', '🐝'], ['Sloth', '🦥']];
   const cursorColors = [['Coral', '#bd454b'], ['Terracotta', '#a94f35'], ['Saffron', '#8c6415'], ['Moss', '#496b3d'], ['Jade', '#246b56'], ['Teal', '#1b6874'], ['Ocean', '#245f87'], ['Blue', '#36549b'], ['Iris', '#584c97'], ['Plum', '#75457f'], ['Berry', '#96395f'], ['Rosewood', '#874754']];
-  const MIN_ZOOM = .1, MAX_ZOOM = 8, OPTIONS_HOLD_MS = 90;
+  const MIN_ZOOM = .25, MAX_ZOOM = 8, OPTIONS_HOLD_MS = 90, ERASE_FAST = 2500;
   const clampZoom = zoom => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   const lastRoomKey = 'whiteboard-last-' + (local ? 'local' : 'shared');
@@ -30,7 +30,7 @@
   const TTL = 24 * 60 * 60 * 1000;
   let sequence = 0;
   const objectId = () => local ? Date.now().toString(36).padStart(10, '0') + '-' + String(sequence++).padStart(6, '0') + '-' + uid().slice(0, 16) : ref.push().key;
-  const settings = { pen: { color: palette[0], width: 6, opacity: 1 }, highlight: { color: palette[8], width: 32, opacity: .35 }, text: { color: palette[0], width: 30, opacity: 1 } };
+  const settings = { pen: { color: palette[0], width: 3, opacity: 1 }, highlight: { color: palette[8], width: 16, opacity: .4 }, text: { color: palette[0], width: 30, opacity: 1 }, erase: { width: 9 } };
   const view = { x: 0, y: 0, zoom: 1 };
   try {
     const saved = JSON.parse(localStorage.getItem(viewKey));
@@ -49,7 +49,7 @@
   let historyStack = [], redoStack = [], frame = 0, dirty = true, orderDirty = true, gridDirty = true, persistTimer = 0, viewTimer = 0, ordered = [];
   let screenW = 0, screenH = 0, dpr = 1;
   let settingUndo = null, exporting = false, historyInitialized = false;
-  let zoomMotion = null, lastLiveBounds = null;
+  let zoomMotion = null, lastLiveBounds = null, eraserVisual = null, eraserTimer = 0, lastTextEmptyClick = null;
   const pendingWrites = new Set();
   const remoteCursors = new Map(), cursorElements = new Map();
   let cursorCollection, cursorRef, cursorId, cursorProfile, cursorPoint = null, cursorTimer = 0, cursorRegistration = null, cursorArmed = false, lastCursorSend = 0, lastCursorScreen = null;
@@ -350,6 +350,14 @@
     } else if (gesture?.kind === 'lasso') {
       overlay.beginPath(); gesture.points.forEach((p, i) => i ? overlay.lineTo(...p) : overlay.moveTo(...p)); overlay.closePath(); overlay.fill(); overlay.stroke();
     }
+    if (eraserVisual) {
+      const base = settings.erase.width, grow = Math.max(0, Math.min(1, (eraserVisual.r - base) / (Math.max(46, 3 * base) - base)));
+      overlay.setTransform(dpr, 0, 0, dpr, 0, 0); overlay.setLineDash([]);
+      overlay.beginPath(); overlay.arc(eraserVisual.x, eraserVisual.y, eraserVisual.r, 0, Math.PI * 2);
+      overlay.fillStyle = `rgba(128,128,128,${(28 + 40 * grow) / 255})`;
+      overlay.strokeStyle = `rgba(90,90,90,${(150 + 100 * grow) / 255})`;
+      overlay.lineWidth = 1.2; overlay.fill(); overlay.stroke();
+    }
   }
   function remember(action) { historyStack.push(action); if (historyStack.length > 50) historyStack.shift(); redoStack = []; historyInitialized = true; saveHistory(); }
   function write(id, obj) { objects.set(id, obj); changed(); if (!local) track(ref.child(id).set(obj)); }
@@ -421,12 +429,34 @@
       }
       dirty = true;
     } else if (done && !cancel && ['rect', 'lasso'].includes(done.kind)) completeSelection();
-    else if (done?.kind === 'textBox' && !cancel) {
+    else if (done?.kind === 'textHit' && !cancel) {
+      const obj = objects.get(done.id); if (obj?.kind === 'text') beginText(done.id, obj);
+    } else if (done?.kind === 'textBox' && !cancel) {
       const b = pointBounds([done.start, done.end]);
-      const fixed = (b[2] - b[0]) * view.zoom > 6 && (b[3] - b[1]) * view.zoom > 6;
-      beginText(null, { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: fixed ? b[0] : done.start[0], y: fixed ? b[1] : done.start[1], text: '', ...(fixed ? { boxW: Math.max((settings.text.width * 1.5 + 8) / view.zoom, b[2] - b[0]), boxH: b[3] - b[1] } : {}) });
+      if (Ink.distance(done.start, done.end) * view.zoom > 6) {
+        beginText(null, { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: b[0], y: b[1], text: '', boxW: Math.max((settings.text.width * 1.5 + 8) / view.zoom, b[2] - b[0]), boxH: Math.max(settings.text.width * 1.3 / view.zoom, b[3] - b[1]) });
+      } else {
+        lastTextEmptyClick = { x: done.screen[0], y: done.screen[1], time: performance.now() };
+        tool = 'select'; updateToolUI();
+      }
     }
-    if (done?.kind === 'erase' && done.undo.length) { if (cancel) patchMany(done.undo, false); else remember(done.undo); }
+    if (done?.kind === 'erase') {
+      if (cancel) {
+        for (const id of done.created) objects.delete(id);
+        for (const [id, obj] of done.originals) objects.set(id, obj);
+        changed();
+      } else if (done.originals.size || done.created.size) {
+        const undo = [...done.originals].map(([id, obj]) => [id, { $object: obj }]);
+        undo.push(...[...done.created].map(id => [id, { $object: null }]));
+        remember(undo);
+        if (!local) {
+          const wire = {};
+          for (const id of done.originals.keys()) wire[id] = null;
+          for (const id of done.created) wire[id] = objects.get(id);
+          track(ref.update(wire));
+        }
+      }
+    }
     gesture = null; pointer = null; persistNow(); setHint(); renderSoon();
   }
   function segmentDistance(p, a, b) {
@@ -446,12 +476,51 @@
   }
   function handleAt(p, touch = false) {
     const text = selectedText(); if (!text) return null;
-    for (const [handle, q] of Object.entries(Text.handles(boundsFor(...text), view.zoom))) if (Ink.distance(p, q) * view.zoom <= (touch ? 13 : 8)) return { id: text[0], handle };
+    for (const [handle, q] of Object.entries(Text.handles(boundsFor(...text), view.zoom))) if (Ink.distance(p, q) * view.zoom <= (touch ? 20 : 13)) return { id: text[0], handle };
     return null;
   }
-  function eraseAt(p) {
-    const id = hitAt(p, 10 / view.zoom);
-    if (id) { gesture.undo.push(...patchMany([[id, { hidden: true }]], false)); selected.delete(id); }
+  function showEraser(pos, r) {
+    eraserVisual = { x: pos[0], y: pos[1], r };
+    if (!eraserTimer) eraserTimer = setInterval(tickEraser, 16);
+    renderSoon();
+  }
+  function tickEraser() {
+    if (!eraserVisual) { clearInterval(eraserTimer); eraserTimer = 0; return; }
+    const erasing = gesture?.kind === 'erase';
+    if (erasing && performance.now() - gesture.t < 50) return;
+    const base = settings.erase.width, r = base + (eraserVisual.r - base) * .8;
+    if (erasing) gesture.r = r;
+    if (r - base < .5) {
+      eraserVisual = erasing ? { ...eraserVisual, r: base } : null;
+      clearInterval(eraserTimer); eraserTimer = 0;
+    } else eraserVisual.r = r;
+    renderSoon();
+  }
+  function eraseDisc(p, radius) {
+    for (const [id, obj] of entries()) {
+      if (obj.kind === 'text' || !inside(p, boundsFor(id, obj), radius)) continue;
+      const dx = obj.dx || 0, dy = obj.dy || 0;
+      const pieces = Ink.cutStroke(geometry(obj).pts, [p[0] - dx, p[1] - dy], radius + obj.width * .25);
+      if (!pieces) continue;
+      if (!gesture.created.delete(id)) gesture.originals.set(id, obj);
+      objects.delete(id); selected.delete(id);
+      for (const points of pieces) {
+        const chunks = Object.fromEntries(Ink.chunks(points).map((value, i) => [String(i).padStart(6, '0'), value]));
+        const nextId = objectId(); objects.set(nextId, { ...obj, chunks }); gesture.created.add(nextId);
+      }
+      changed();
+    }
+  }
+  function eraseTo(event, p) {
+    const er = gesture, now = performance.now(), pos = [event.clientX, event.clientY];
+    const dist = Ink.distance(pos, er.screen);
+    er.v = .6 * er.v + .4 * dist / Math.max((now - er.t) / 1000, .001);
+    const base = settings.erase.width, want = Math.min(Math.max(46, 3 * base), base + Math.max(0, er.v - ERASE_FAST) * .012);
+    er.r = Math.max(er.r, want);
+    const steps = Math.max(1, Math.min(24, Math.ceil(dist / (er.r * .8))));
+    for (let i = 1; i <= steps; i++) eraseDisc([er.last[0] + (p[0] - er.last[0]) * i / steps, er.last[1] + (p[1] - er.last[1]) * i / steps], er.r / view.zoom);
+    er.last = p; er.screen = pos; er.t = now;
+    showEraser(pos, er.r);
   }
   function pointInPolygon(p, polygon) {
     let result = false;
@@ -522,6 +591,9 @@
     }
     dirty = true; persistNow(); renderSoon();
   }
+  $('editor').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); e.stopImmediatePropagation(); commitText(); }
+  }, { capture: true });
   Text.bindLists($('editor'));
   $('editor').addEventListener('input', () => { if (editing) { editing.obj = { ...editing.obj, text: $('editor').value }; layoutEditor(); } });
   $('editor').addEventListener('scroll', () => { if ($('editor').scrollLeft) $('editor').scrollLeft = 0; });
@@ -566,10 +638,8 @@
     if (tool === 'text' && !freehand) {
       const hit = hitAt(p), obj = objects.get(hit);
       if (obj?.kind === 'text') {
-        const b = boundsFor(hit, obj), onBorder = !inside(p, [b[0] + 5 / view.zoom, b[1] + 5 / view.zoom, b[2] - 5 / view.zoom, b[3] - 5 / view.zoom]);
-        if (onBorder) { selected.clear(); selected.add(hit); startMove(p); }
-        else { pointer = null; beginText(hit, obj); }
-      } else { selected.clear(); gesture = { kind: 'textBox', start: p, end: p }; }
+        selected.clear(); selected.add(hit); gesture = { kind: 'textHit', id: hit, start: p };
+      } else { selected.clear(); gesture = { kind: 'textBox', start: p, end: p, screen: [e.clientX, e.clientY] }; }
       renderSoon(); return;
     }
     if (selecting) {
@@ -580,7 +650,10 @@
       renderSoon(); return;
     }
     selected.clear();
-    if (tool === 'erase') { gesture = { kind: 'erase', last: p, undo: [] }; eraseAt(p); renderSoon(); return; }
+    if (tool === 'erase') {
+      gesture = { kind: 'erase', last: p, screen: [e.clientX, e.clientY], t: performance.now(), r: settings.erase.width, v: 0, originals: new Map(), created: new Set() };
+      eraseDisc(p, gesture.r / view.zoom); showEraser(gesture.screen, gesture.r); return;
+    }
     const id = objectId(), obj = { kind: tool, ...settings[tool], width: settings[tool].width, chunks: { '000000': Ink.chunks([p])[0] } };
     active = { id, obj, stroke: new Ink.Stroke(p, view.zoom), chunk: 1, sent: false, timer: setInterval(flush, 80) };
     objects.set(id, obj); changed(); remember([[id, { hidden: true }]]);
@@ -596,6 +669,11 @@
     for (const event of events?.length ? events : [e]) {
       const p = world(event);
       if (gesture?.kind === 'rect' || gesture?.kind === 'textBox') gesture.end = p;
+      else if (gesture?.kind === 'textHit' && Ink.distance(p, gesture.start) * view.zoom > 4) {
+        const start = gesture.start; startMove(start);
+        gesture.delta = [p[0] - start[0], p[1] - start[1]];
+        gesture.changed = gesture.changedOnce = true;
+      }
       else if (gesture?.kind === 'lasso') { if (Ink.distance(p, gesture.points.at(-1)) * view.zoom >= 2) gesture.points.push(p); }
       else if (gesture?.kind === 'move') { gesture.delta = [p[0] - gesture.start[0], p[1] - gesture.start[1]]; gesture.changed = true; gesture.changedOnce ||= gesture.delta.some(Boolean); }
       else if (gesture?.kind === 'resize') {
@@ -610,8 +688,7 @@
         const at = gesture.anchor.map((v, i) => v + p[i] - gesture.start[i]); editing.obj = Text.resize(gesture.original, gesture.handle, at, ctx, view.zoom);
       }
       else if (gesture?.kind === 'erase') {
-        const a = gesture.last, steps = Math.min(1000, Math.max(1, Math.ceil(Ink.distance(p, a) * view.zoom / 6)));
-        for (let i = 1; i <= steps; i++) eraseAt([a[0] + (p[0] - a[0]) * i / steps, a[1] + (p[1] - a[1]) * i / steps]); gesture.last = p;
+        eraseTo(event, p);
       } else if (active) active.stroke.add(p);
     }
     renderSoon();
@@ -639,7 +716,15 @@
   addEventListener('pointerup', e => endPointer(e)); addEventListener('pointercancel', e => endPointer(e, true));
   canvas.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) finish(!active); touches.delete(e.pointerId); if (!touches.size) pinch = null; });
   canvas.addEventListener('auxclick', e => e.preventDefault()); canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
-  canvas.addEventListener('dblclick', e => { if (!['text', 'select'].includes(tool)) return; const id = hitAt(world(e)), obj = objects.get(id); if (obj?.kind === 'text') { finish(); tool = 'text'; updateToolUI(); beginText(id, obj); } });
+  canvas.addEventListener('dblclick', e => {
+    if (!['text', 'select'].includes(tool)) return;
+    const p = world(e), id = hitAt(p), obj = objects.get(id);
+    if (obj?.kind === 'text') { finish(); tool = 'text'; updateToolUI(); beginText(id, obj); }
+    else if (lastTextEmptyClick && performance.now() - lastTextEmptyClick.time < 550 && Math.hypot(e.clientX - lastTextEmptyClick.x, e.clientY - lastTextEmptyClick.y) < 12) {
+      lastTextEmptyClick = null; finish(); selected.clear(); tool = 'text'; updateToolUI();
+      beginText(null, { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: p[0], y: p[1], text: '' });
+    }
+  });
   $('paper').addEventListener('wheel', e => {
     e.preventDefault(); if (active || gesture) return;
     const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? screenH : 1;
@@ -652,16 +737,24 @@
     if (settings[next]) { inkTool = next; if (!preserve) selected.clear(); updateSettingsUI(); }
     updateToolUI(); renderSoon();
   }
-  const widthSteps = () => inkTool === 'text' ? [8,12,16,20,24,30,36,48,60,72,96,128,192,256,384,512] : [1,2,3,4,6,8,12,16,24,28,32,48,64,80];
+  const widthSteps = () => inkTool === 'text' ? [8,12,16,20,24,30,36,48,60,72,96,128,192,256,384,512]
+    : inkTool === 'pen' ? [.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10,11,12]
+      : inkTool === 'erase' ? [3,5,7,9,12,16,20,28,36,46,60] : [1,2,3,4,6,8,12,16,24,28,32,48,64,80];
   function updateSettingsUI() {
-    const ink = settings[inkTool]; $('custom-color').value = ink.color;
+    const ink = settings[inkTool], erasing = inkTool === 'erase';
+    $('colors').hidden = $('custom-row').hidden = $('opacity-row').hidden = erasing;
+    if (!erasing) $('custom-color').value = ink.color;
     const widths = widthSteps(); $('width').max = widths.length - 1;
     $('width').value = widths.reduce((best, value, i) => Math.abs(value - ink.width) < Math.abs(widths[best] - ink.width) ? i : best, 0);
     if ($('width-value').readOnly) $('width-value').value = String(ink.width);
-    $('width-label').textContent = inkTool === 'text' ? 'Text size' : 'Width';
-    $('opacity').value = Math.round(ink.opacity * 100); if ($('opacity-value').readOnly) $('opacity-value').value = Number((ink.opacity * 100).toFixed(8)) + '%';
-    document.querySelectorAll('.swatch').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === ink.color)));
-    for (const name of Object.keys(settings)) document.querySelector(`[data-tool="${name}"]`).style.setProperty('--ink', settings[name].color);
+    $('width-label').textContent = erasing ? 'Eraser size' : inkTool === 'text' ? 'Text size' : 'Width';
+    $('width').setAttribute('aria-label', $('width-label').textContent);
+    $('width-value').setAttribute('aria-label', `Exact ${$('width-label').textContent.toLowerCase()}`);
+    if (!erasing) {
+      $('opacity').value = Math.round(ink.opacity * 100); if ($('opacity-value').readOnly) $('opacity-value').value = Number((ink.opacity * 100).toFixed(8)) + '%';
+      document.querySelectorAll('.swatch').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === ink.color)));
+    }
+    for (const name of ['pen', 'highlight', 'text']) document.querySelector(`[data-tool="${name}"]`).style.setProperty('--ink', settings[name].color);
   }
   function stylePatch(obj, key, value) {
     if (key === 'width' && obj.kind === 'text') value /= view.zoom;
@@ -672,6 +765,7 @@
   }
   function changeSetting(key, value, commit = true) {
     settings[inkTool][key] = value; updateSettingsUI();
+    if (inkTool === 'erase') return;
     if (editing) { editing.obj = { ...editing.obj, ...stylePatch(editing.obj, key, value) }; layoutEditor(); }
     else if (selected.size && ready) {
       if (settingUndo && settingUndo.key !== key) finishSetting();
@@ -697,6 +791,11 @@
   for (const key of ['width', 'opacity']) {
     $(key).oninput = e => changeSetting(key, key === 'opacity' ? Number(e.target.value) / 100 : widthSteps()[Number(e.target.value)], false);
     $(key).onchange = e => changeSetting(key, key === 'opacity' ? Number(e.target.value) / 100 : widthSteps()[Number(e.target.value)]);
+    $(key).addEventListener('wheel', e => {
+      e.preventDefault(); e.stopPropagation();
+      const slider = $(key), next = Math.max(Number(slider.min), Math.min(Number(slider.max), Number(slider.value) + (e.deltaY < 0 ? 1 : -1) * Number(slider.step)));
+      if (e.deltaY && next !== Number(slider.value)) { slider.value = next; changeSetting(key, key === 'opacity' ? next / 100 : widthSteps()[next]); }
+    }, { passive: false });
   }
   for (const key of ['width', 'opacity']) {
     const input = $(key + '-value');
@@ -704,7 +803,8 @@
       if (input.readOnly) return;
       const value = Number(input.value.trim().replace(/(?:%|px)$/i, '').trim());
       input.readOnly = true;
-      if (input.value.trim() && Number.isFinite(value) && (key === 'width' ? value > 0 && value <= 1e15 : value >= 0 && value <= 100)) changeSetting(key, key === 'opacity' ? value / 100 : value);
+      const validWidth = inkTool === 'pen' ? value >= .1 && value <= 12 : inkTool === 'erase' ? value >= 2 && value <= 120 : value > 0 && value <= 1e15;
+      if (input.value.trim() && Number.isFinite(value) && (key === 'width' ? validWidth : value >= 0 && value <= 100)) changeSetting(key, key === 'opacity' ? value / 100 : value);
       updateSettingsUI();
     };
     input.onclick = () => { if (input.readOnly) { input.readOnly = false; input.focus(); input.select(); } };
@@ -729,6 +829,27 @@
     const text = editing?.obj || selectedText()?.[1]; if (next === 'text' && text) Object.assign(settings.text, { color: text.color, width: text.width * view.zoom, opacity: text.opacity });
     updateSettingsUI(); $('options').hidden = closing; placeOptions();
   }
+  const tooltip = $('tool-tooltip');
+  let tooltipTimer = 0;
+  function hideToolTip() { clearTimeout(tooltipTimer); tooltipTimer = 0; tooltip.hidden = true; }
+  function showToolTip(button) {
+    const parts = button.dataset.tooltip.split(' · '), shortcut = /^[A-Z]$/.test(parts[1] || '') ? parts.splice(1, 1)[0] : null;
+    tooltip.replaceChildren(document.createTextNode(parts.shift()));
+    if (shortcut) { const key = document.createElement('strong'); key.textContent = shortcut; tooltip.append(' · ', key); }
+    if (parts.length) tooltip.append(' · ' + parts.join(' · '));
+    tooltip.hidden = false;
+    const bar = $('toolbar').getBoundingClientRect(), rect = button.getBoundingClientRect();
+    tooltip.style.left = Math.max(4, Math.min(innerWidth - tooltip.offsetWidth - 4, bar.right + 8)) + 'px';
+    tooltip.style.top = Math.max(4, Math.min(innerHeight - tooltip.offsetHeight - 4, rect.top + (rect.height - tooltip.offsetHeight) / 2)) + 'px';
+  }
+  document.querySelectorAll('#toolbar button').forEach(button => {
+    button.dataset.tooltip = button.title; button.removeAttribute('title');
+    button.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') tooltipTimer = setTimeout(() => showToolTip(button), 160); });
+    button.addEventListener('pointerleave', hideToolTip);
+    button.addEventListener('pointerdown', hideToolTip);
+    button.addEventListener('focus', () => { if (button.matches(':focus-visible')) showToolTip(button); });
+    button.addEventListener('blur', hideToolTip);
+  });
   document.querySelectorAll('[data-tool]').forEach(button => {
     let timer, held = false, started = null;
     const stop = () => { clearTimeout(timer); started = null; };
