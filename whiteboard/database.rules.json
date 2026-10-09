@@ -135,6 +135,27 @@
             ".validate": "newData.hasChildren(['name', 'animal', 'emoji', 'color', 'x', 'y', 'updated']) && newData.child('name').isString() && newData.child('name').val().length <= 32 && newData.child('animal').isString() && newData.child('animal').val().length <= 20 && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8 && newData.child('color').isString() && newData.child('color').val().matches(/^#[a-fA-F0-9]{6}$/) && newData.child('x').isNumber() && newData.child('x').val() >= -1e15 && newData.child('x').val() <= 1e15 && newData.child('y').isNumber() && newData.child('y').val() >= -1e15 && newData.child('y').val() <= 1e15 && newData.child('updated').val() === now",
             "$other": {
               ".validate": false
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length <= 32"
+            },
+            "animal": {
+              ".validate": "newData.isString() && newData.val().length <= 20"
+            },
+            "emoji": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            },
+            "color": {
+              ".validate": "newData.isString() && newData.val().matches(/^#[a-fA-F0-9]{6}$/)"
+            },
+            "x": {
+              ".validate": "newData.isNumber() && newData.val() >= -1e15 && newData.val() <= 1e15"
+            },
+            "y": {
+              ".validate": "newData.isNumber() && newData.val() >= -1e15 && newData.val() <= 1e15"
+            },
+            "updated": {
+              ".validate": "newData.isNumber() && newData.val() === now"
             }
           }
         },
