@@ -49,7 +49,7 @@
   let historyStack = [], redoStack = [], frame = 0, dirty = true, orderDirty = true, gridDirty = true, persistTimer = 0, viewTimer = 0, ordered = [];
   let screenW = 0, screenH = 0, dpr = 1;
   let settingUndo = null, exporting = false, historyInitialized = false;
-  let zoomMotion = null, lastLiveBounds = null, eraserVisual = null, eraserTimer = 0, lastTextEmptyClick = null;
+  let zoomMotion = null, lastLiveBounds = null, eraserVisual = null, eraserTimer = 0, lastTextDoubleClick = null;
   const pendingWrites = new Set();
   const remoteCursors = new Map(), cursorElements = new Map();
   let cursorCollection, cursorRef, cursorId, cursorProfile, cursorPoint = null, cursorTimer = 0, cursorRegistration = null, cursorArmed = false, lastCursorSend = 0, lastCursorScreen = null;
@@ -203,8 +203,20 @@
     out.save(); out.translate(...delta); out.fillStyle = out.strokeStyle = obj.color; out.globalAlpha = obj.opacity;
     if (obj.kind === 'text') {
       const g = geometry(obj); out.translate(obj.x, obj.y); out.scale(obj.width / 30, obj.width / 30);
-      out.font = `30px ${Text.FONT}`; out.textBaseline = 'alphabetic';
-      g.lines.forEach((line, i) => out.fillText(line, 4, 4 + g.baseline + i * 39));
+      out.font = Text.font(obj); out.textBaseline = 'alphabetic';
+      const align = obj.align || 'left', innerWidth = g.width * 30 / obj.width;
+      out.textAlign = align; const x = align === 'center' ? innerWidth / 2 : align === 'right' ? innerWidth - 4 : 4;
+      g.lines.forEach((line, i) => {
+        const y = 4 + g.baseline + i * 39;
+        out.fillText(line, x, y);
+        if (obj.underline || obj.strike) {
+          const width = out.measureText(line).width, start = align === 'center' ? x - width / 2 : align === 'right' ? x - width : x;
+          out.lineWidth = 1.2; out.beginPath();
+          if (obj.underline) { out.moveTo(start, y + 2); out.lineTo(start + width, y + 2); }
+          if (obj.strike) { out.moveTo(start, y - 10); out.lineTo(start + width, y - 10); }
+          out.stroke();
+        }
+      });
     } else {
       const g = stroke ? { pts: stroke.points, origin: stroke.origin, unit: stroke.unit, path: stroke.livePath() } : geometry(obj);
       out.translate(...g.origin); out.scale(g.unit, g.unit);
@@ -335,7 +347,7 @@
       if (!floating(id) || (original.kind === 'highlight') !== highlight || editing?.id === id || active?.id === id) continue;
       const obj = effective(id, original); ctx.save(); if (highlight) ctx.globalCompositeOperation = 'destination-over'; draw(ctx, obj, offset(id, obj)); ctx.restore();
     }
-    drawSelection(); layoutEditor(); renderCursors();
+    drawSelection(); layoutEditor(); layoutTextFormat(); renderCursors();
     $('selection-actions').hidden = selected.size === 0;
     const count = `${selected.size} selected`; if ($('selection-count').textContent !== count) $('selection-count').textContent = count;
     updateResetView();
@@ -343,6 +355,23 @@
   function selectedText() {
     if (selected.size !== 1) return null;
     const id = [...selected][0], obj = objects.get(id); return isVisible(obj) && obj.kind === 'text' ? [id, effective(id, obj)] : null;
+  }
+  function layoutTextFormat() {
+    const selectedTextObject = selectedText(), obj = editing?.obj || selectedTextObject?.[1], bar = $('text-format');
+    if (!obj) { bar.hidden = true; return; }
+    const b = editing ? Text.layout({ ...obj, boxW: editing.displayWidth }, ctx).bounds.map((v, i) => v + (i % 2 ? obj.dy || 0 : obj.dx || 0)) : boundsFor(...selectedTextObject);
+    const topLeft = screen([b[0], b[1]]), bottomRight = screen([b[2], b[3]]);
+    if (bottomRight[0] < 0 || bottomRight[1] < 0 || topLeft[0] > screenW || topLeft[1] > screenH) { bar.hidden = true; return; }
+    bar.hidden = false;
+    if (document.activeElement !== $('text-font')) $('text-font').value = obj.font || 'sans';
+    if (document.activeElement !== $('text-size')) $('text-size').value = String(Number((obj.width * view.zoom).toFixed(1)));
+    if (document.activeElement !== $('text-color')) $('text-color').value = obj.color;
+    if (document.activeElement !== $('text-align')) $('text-align').value = obj.align || 'left';
+    bar.querySelectorAll('[data-text-style]').forEach(button => button.setAttribute('aria-pressed', String(!!obj[button.dataset.textStyle])));
+    const width = bar.offsetWidth, height = bar.offsetHeight;
+    bar.style.left = Math.max(8, Math.min(screenW - width - 8, topLeft[0])) + 'px';
+    const above = topLeft[1] - height - 12;
+    bar.style.top = Math.max(8, Math.min(screenH - height - 8, above >= 8 ? above : bottomRight[1] + 12)) + 'px';
   }
   function drawSelection() {
     clear(overlay); transform(overlay);
@@ -453,15 +482,13 @@
       }
       dirty = true;
     } else if (done && !cancel && ['rect', 'lasso'].includes(done.kind)) completeSelection();
-    else if (done?.kind === 'textHit' && !cancel) {
-      const obj = objects.get(done.id); if (obj?.kind === 'text') beginText(done.id, obj);
-    } else if (done?.kind === 'textBox' && !cancel) {
+    else if (done?.kind === 'textBox' && !cancel) {
       const b = pointBounds([done.start, done.end]);
+      tool = 'select'; updateToolUI();
       if (Ink.distance(done.start, done.end) * view.zoom > 6) {
         beginText(null, { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: b[0], y: b[1], text: '', boxW: Math.max((settings.text.width * 1.5 + 8) / view.zoom, b[2] - b[0]), boxH: Math.max(settings.text.width * 1.3 / view.zoom, b[3] - b[1]) });
       } else {
-        lastTextEmptyClick = { x: done.screen[0], y: done.screen[1], time: performance.now() };
-        tool = 'select'; updateToolUI();
+        beginText(null, { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: done.start[0], y: done.start[1], text: '' });
       }
     }
     if (done?.kind === 'erase') {
@@ -563,7 +590,7 @@
   function completeSelection() {
     const rectangle = gesture.kind === 'rect', area = pointBounds(rectangle ? [gesture.start, gesture.end] : gesture.points);
     const polygon = rectangle ? null : gesture.points;
-    if (!rectangle && polygon.length < 3) { tool = 'select'; updateToolUI(); return; }
+    if (!rectangle && polygon.length < 3) { tool = gesture.returnTool || 'select'; updateToolUI(); return; }
     const contains = p => pointInPolygon(p, polygon) || polygon.some((q, i) => segmentDistance(p, q, polygon[(i + 1) % polygon.length]) < .001 / view.zoom);
     for (const [id, obj] of entries()) {
       const b = boundsFor(id, obj);
@@ -579,12 +606,15 @@
       if (radius && !pts.every(p => [[radius, 0], [-radius, 0], [0, radius], [0, -radius]].every(d => contains([p[0] + d[0], p[1] + d[1]])))) continue;
       selected.add(id);
     }
-    tool = 'select'; updateToolUI();
+    tool = gesture.returnTool || 'select'; updateToolUI();
   }
-  function beginText(id, obj) {
+  function beginText(id, obj, click = null) {
     editing = { id, original: obj, obj: { ...obj }, autoWidth: obj.boxW == null, displayWidth: obj.boxW || 0 }; selected.clear(); if (id) selected.add(id);
     $('text-edit').hidden = false; $('editor').value = obj.text; dirty = true; layoutEditor(); renderSoon();
-    $('editor').focus({ preventScroll: true }); $('editor').setSelectionRange(obj.text.length, obj.text.length);
+    $('editor').focus({ preventScroll: true });
+    const origin = screen([obj.x + (obj.dx || 0), obj.y + (obj.dy || 0)]);
+    const caret = click ? Text.caretIndex({ ...obj, boxW: editing.displayWidth }, ctx, (click[0] - origin[0]) / view.zoom, (click[1] - origin[1]) / view.zoom) : obj.text.length;
+    $('editor').setSelectionRange(caret, caret);
   }
   function layoutEditor() {
     if (!editing) return;
@@ -595,6 +625,9 @@
     const g = editing.autoWidth ? Text.layout({ ...obj, boxW: editing.displayWidth }, ctx) : natural;
     frame.style.left = p[0] + 'px'; frame.style.top = p[1] + 'px'; frame.style.width = editing.displayWidth * view.zoom + 'px'; frame.style.height = g.height * view.zoom + 'px';
     editor.style.fontSize = obj.width * view.zoom + 'px'; editor.style.color = obj.color; editor.style.opacity = obj.opacity;
+    editor.style.fontFamily = Text.family(obj); editor.style.fontWeight = obj.bold ? '700' : '400'; editor.style.fontStyle = obj.italic ? 'italic' : 'normal';
+    editor.style.textDecorationLine = [obj.underline && 'underline', obj.strike && 'line-through'].filter(Boolean).join(' ') || 'none';
+    editor.style.textAlign = obj.align || 'left';
     editor.style.padding = Text.padding(obj) * view.zoom + 'px'; editor.style.whiteSpace = 'pre-wrap';
     editor.scrollLeft = 0;
   }
@@ -621,7 +654,16 @@
   Text.bindLists($('editor'));
   $('editor').addEventListener('input', () => { if (editing) { editing.obj = { ...editing.obj, text: $('editor').value }; layoutEditor(); } });
   $('editor').addEventListener('scroll', () => { if ($('editor').scrollLeft) $('editor').scrollLeft = 0; });
-  $('editor').addEventListener('blur', () => { queueMicrotask(() => { if (editing && !gesture?.kind.startsWith('edit') && !document.activeElement.closest('#text-edit, #options, #toolbar')) commitText(); }); });
+  let textFormatPointer = false;
+  $('text-format').addEventListener('pointerdown', () => { textFormatPointer = true; }, { capture: true });
+  for (const event of ['pointerup', 'pointercancel']) addEventListener(event, () => setTimeout(() => { textFormatPointer = false; }, 0));
+  $('editor').addEventListener('blur', () => { queueMicrotask(() => { if (editing && !textFormatPointer && !gesture?.kind.startsWith('edit') && !document.activeElement.closest('#text-edit, #options, #toolbar, #text-format')) commitText(); }); });
+  $('editor').addEventListener('pointerdown', e => {
+    if (lastTextDoubleClick && performance.now() - lastTextDoubleClick.time < 650 && Math.hypot(e.clientX - lastTextDoubleClick.x, e.clientY - lastTextDoubleClick.y) < 16) {
+      e.preventDefault(); $('editor').focus(); $('editor').select(); lastTextDoubleClick = null;
+    } else lastTextDoubleClick = null;
+  }, { capture: true });
+  $('editor').addEventListener('click', e => { if (e.detail >= 3) $('editor').select(); });
   $('text-edit').addEventListener('pointerdown', e => {
     const handle = e.target.dataset.handle || e.target.dataset.edge;
     if (!editing || e.button !== 0 || !handle) return;
@@ -653,24 +695,25 @@
     if (['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) document.activeElement.blur();
     zoomMotion = null;
     const p = world(e); pointer = e.pointerId; canvas.setPointerCapture(pointer);
-    if (space || tool === 'hand' || e.button === 1 && tool !== 'select') { gesture = { kind: 'pan', start: [e.clientX, e.clientY], view: { ...view } }; setHint(); return; }
+    const lasso = tool === 'lasso' || e.button === 1 && ['pen', 'highlight'].includes(tool);
+    if (space || tool === 'hand' || e.button === 1 && !lasso) { gesture = { kind: 'pan', start: [e.clientX, e.clientY], view: { ...view } }; setHint(); return; }
     if (expiry?.expired()) { pointer = null; expiry.clear().catch(fail); return; }
     if (!ready) { pointer = null; $('message').textContent = 'Connecting…'; $('message').hidden = false; return; }
-    const freehand = e.button === 1 && tool === 'select' || tool === 'lasso', selecting = freehand || tool === 'select';
+    const freehand = lasso, selecting = freehand || tool === 'select';
     const handle = !freehand && ['select', 'text'].includes(tool) ? handleAt(p, e.pointerType === 'touch') : null;
-    if (handle) { startResize(handle.id, handle.handle, p); renderSoon(); return; }
+    if (handle) { if (tool === 'text') { tool = 'select'; updateToolUI(); } startResize(handle.id, handle.handle, p); renderSoon(); return; }
     if (tool === 'text' && !freehand) {
-      const hit = hitAt(p), obj = objects.get(hit);
-      if (obj?.kind === 'text') {
-        selected.clear(); selected.add(hit); gesture = { kind: 'textHit', id: hit, start: p };
-      } else { selected.clear(); gesture = { kind: 'textBox', start: p, end: p, screen: [e.clientX, e.clientY] }; }
+      const hit = hitAt(p);
+      selected.clear();
+      if (hit) { selected.add(hit); tool = 'select'; updateToolUI(); startMove(p); }
+      else gesture = { kind: 'textBox', start: p, end: p };
       renderSoon(); return;
     }
     if (selecting) {
       const hit = freehand ? null : hitAt(p);
       if (!e.shiftKey && (!hit || !selected.has(hit))) selected.clear();
       if (hit) { selected.add(hit); startMove(p); }
-      else gesture = freehand ? { kind: 'lasso', points: [p] } : { kind: 'rect', start: p, end: p };
+      else gesture = freehand ? { kind: 'lasso', points: [p], returnTool: tool === 'lasso' ? 'select' : tool } : { kind: 'rect', start: p, end: p };
       renderSoon(); return;
     }
     selected.clear();
@@ -693,11 +736,6 @@
     for (const event of events?.length ? events : [e]) {
       const p = world(event);
       if (gesture?.kind === 'rect' || gesture?.kind === 'textBox') gesture.end = p;
-      else if (gesture?.kind === 'textHit' && Ink.distance(p, gesture.start) * view.zoom > 4) {
-        const start = gesture.start; startMove(start);
-        gesture.delta = [p[0] - start[0], p[1] - start[1]];
-        gesture.changed = gesture.changedOnce = true;
-      }
       else if (gesture?.kind === 'lasso') { if (Ink.distance(p, gesture.points.at(-1)) * view.zoom >= 2) gesture.points.push(p); }
       else if (gesture?.kind === 'move') { gesture.delta = [p[0] - gesture.start[0], p[1] - gesture.start[1]]; gesture.changed = true; gesture.changedOnce ||= gesture.delta.some(Boolean); }
       else if (gesture?.kind === 'resize') {
@@ -741,13 +779,9 @@
   canvas.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) finish(!active); touches.delete(e.pointerId); if (!touches.size) pinch = null; });
   canvas.addEventListener('auxclick', e => e.preventDefault()); canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
   canvas.addEventListener('dblclick', e => {
-    if (!['text', 'select'].includes(tool)) return;
+    if (tool !== 'select') return;
     const p = world(e), id = hitAt(p), obj = objects.get(id);
-    if (obj?.kind === 'text') { finish(); tool = 'text'; updateToolUI(); beginText(id, obj); }
-    else if (lastTextEmptyClick && performance.now() - lastTextEmptyClick.time < 550 && Math.hypot(e.clientX - lastTextEmptyClick.x, e.clientY - lastTextEmptyClick.y) < 12) {
-      lastTextEmptyClick = null; finish(); selected.clear(); tool = 'text'; updateToolUI();
-      beginText(null, { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: p[0], y: p[1], text: '' });
-    }
+    if (obj?.kind === 'text') { finish(); beginText(id, obj, [e.clientX, e.clientY]); lastTextDoubleClick = { x: e.clientX, y: e.clientY, time: performance.now() }; }
   });
   $('paper').addEventListener('wheel', e => {
     e.preventDefault(); if (active || gesture) return;
@@ -755,7 +789,7 @@
     zoomAt(Math.exp(-Math.max(-500, Math.min(500, e.deltaY * unit)) * .002), [e.clientX, e.clientY]);
   }, { passive: false });
   function setHint() { canvas.style.cursor = gesture?.kind === 'pan' ? 'grabbing' : space || tool === 'hand' ? 'grab' : tool === 'text' ? 'text' : tool === 'select' ? 'default' : 'crosshair'; }
-  function updateToolUI() { document.querySelectorAll('[data-tool]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.tool === tool || button.dataset.tool === 'select' && tool === 'lasso'))); setHint(); }
+  function updateToolUI() { document.querySelectorAll('[data-tool]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.tool === tool))); setHint(); }
   function selectTool(next, preserve = false) {
     finish(); if (next !== 'text') commitText(); tool = next;
     if (settings[next]) { inkTool = next; if (!preserve) selected.clear(); updateSettingsUI(); }
@@ -810,6 +844,26 @@
     const action = [...settingUndo.originals].filter(([id, patch]) => Object.entries(patch).some(([key, value]) => (objects.get(id)?.[key] ?? null) !== value));
     settingUndo = null; if (action.length) remember(action);
   }
+  function changeTextFormat(key, value) {
+    const text = selectedText(); if (!editing && !text) return;
+    const patch = { [key]: key === 'width' ? value / view.zoom : value };
+    if (editing) { editing.obj = { ...editing.obj, ...patch }; layoutEditor(); renderSoon(); }
+    else patchMany([[text[0], patch]]);
+    settings.text[key] = value;
+    updateSettingsUI();
+  }
+  $('text-font').onchange = e => changeTextFormat('font', e.target.value);
+  $('text-size').onchange = e => {
+    const size = Number(e.target.value);
+    if (Number.isFinite(size) && size >= 4 && size <= 2048) changeTextFormat('width', size);
+    else renderSoon();
+  };
+  $('text-size').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
+  $('text-color').onchange = e => changeTextFormat('color', e.target.value);
+  $('text-align').onchange = e => changeTextFormat('align', e.target.value);
+  document.querySelectorAll('[data-text-style]').forEach(button => button.onclick = () => {
+    const obj = editing?.obj || selectedText()?.[1]; if (obj) changeTextFormat(button.dataset.textStyle, !obj[button.dataset.textStyle]);
+  });
   palette.forEach((color, i) => { const b = document.createElement('button'); b.className = 'swatch'; b.dataset.color = color; b.style.setProperty('--ink', color); b.title = names[i]; b.setAttribute('aria-label', names[i]); b.onclick = () => changeSetting('color', color); $('colors').append(b); });
   $('custom-color').oninput = e => changeSetting('color', e.target.value, false); $('custom-color').onchange = e => changeSetting('color', e.target.value);
   for (const key of ['width', 'opacity']) {
@@ -935,6 +989,7 @@
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); finish(); commitText(); persistNow(); return; }
     if (e.key === 'Escape') { e.preventDefault(); finish(true); commitText(); selected.clear(); hideOptions(); tool = 'select'; updateToolUI(); renderSoon(); return; }
+    if (e.target.closest('#text-format')) return;
     if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) {
       if (e.target === $('editor') && (e.key === 'Escape' || e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); commitText(); hideOptions(); }
       else if (e.key === 'Escape') { hideOptions(); e.target.blur(); }

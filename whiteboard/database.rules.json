@@ -126,6 +126,24 @@
             },
             "boxH": {
               ".validate": "newData.parent().child('kind').val() === 'text' && newData.isNumber() && newData.val() > 0"
+            },
+            "font": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && (newData.val() === 'sans' || newData.val() === 'serif' || newData.val() === 'mono')"
+            },
+            "bold": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && newData.isBoolean()"
+            },
+            "italic": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && newData.isBoolean()"
+            },
+            "underline": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && newData.isBoolean()"
+            },
+            "strike": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && newData.isBoolean()"
+            },
+            "align": {
+              ".validate": "newData.parent().child('kind').val() === 'text' && (newData.val() === 'left' || newData.val() === 'center' || newData.val() === 'right')"
             }
           }
         },
