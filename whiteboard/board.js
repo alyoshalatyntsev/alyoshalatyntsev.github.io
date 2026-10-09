@@ -104,16 +104,15 @@
   }
   function drawGrid() {
     clear(grid); grid.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const step = 32 * 2 ** Math.floor(Math.log2(48 / (32 * view.zoom))), spacing = step * view.zoom;
+    const step = 64 * 2 ** Math.floor(Math.log2(96 / (64 * view.zoom))), spacing = step * view.zoom;
     $('grid').dataset.step = String(step); $('grid').dataset.spacing = String(spacing);
-    const x0 = Math.floor(view.x / step), y0 = Math.floor(view.y / step);
     const firstX = -((view.x % step + step) % step) * view.zoom, firstY = -((view.y % step + step) % step) * view.zoom;
     // Loop in screen-sized increments even when world coordinates are enormous.
     for (let ix = 0; ix <= Math.ceil(screenW / spacing) + 1; ix++) {
       const x = firstX + ix * spacing;
       for (let iy = 0; iy <= Math.ceil(screenH / spacing) + 1; iy++) {
-        const y = firstY + iy * spacing, major = (x0 + ix) % 4 === 0 && (y0 + iy) % 4 === 0;
-        grid.fillStyle = major ? '#b9c3ce' : '#d6dde5'; grid.beginPath(); grid.arc(x, y, major ? 1.05 : .85, 0, Math.PI * 2); grid.fill();
+        const y = firstY + iy * spacing;
+        grid.fillStyle = '#afb9c5'; grid.beginPath(); grid.arc(x, y, 1.2, 0, Math.PI * 2); grid.fill();
       }
     }
     gridDirty = false;
