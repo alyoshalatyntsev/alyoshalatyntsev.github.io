@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-version="20261009-5">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title> </title>
-  <link rel="stylesheet" href="board.css?v=20261009-4">
+  <link rel="stylesheet" href="board.css?v=20261009-5">
 </head>
 <body>
   <div id="paper">
@@ -46,10 +46,37 @@
     <div id="selection-actions" hidden><span id="selection-count" class="sr-only"></span><button id="delete-selection">Delete</button><button id="deselect">Deselect</button></div>
   </div>
   <p id="message" role="status" hidden></p>
-  <script src="ink.js?v=20261009-4"></script>
-  <script src="text.js?v=20261009-4"></script>
-  <script src="files.js?v=20261009-4"></script>
-  <script src="expiry.js?v=20261009-4"></script>
-  <script src="board.js?v=20261009-4"></script>
+  <script>
+    (async () => {
+      const version = document.documentElement.dataset.version;
+      const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 1500);
+      try {
+        const response = await fetch('release.json?check=' + Date.now(), { cache: 'no-store', signal: controller.signal });
+        if (response.ok) {
+          const latest = (await response.json()).version;
+          if (/^\d{8}-\d+$/.test(latest)) {
+            const [date, build] = version.split('-').map(Number), [nextDate, nextBuild] = latest.split('-').map(Number);
+            const url = new URL(location.href);
+            if ((nextDate > date || nextDate === date && nextBuild > build) && url.searchParams.get('v') !== latest) {
+              url.searchParams.set('v', latest);
+              location.replace(url.href); // Keep this board's sharing ID and drawings.
+              return;
+            }
+          }
+        }
+      } catch {} finally { clearTimeout(timeout); }
+      const load = file => new Promise((resolve, reject) => {
+        const script = document.createElement('script'); script.src = file + '?v=' + version;
+        script.onload = resolve; script.onerror = () => reject(new Error('Could not load the whiteboard. Reload to try again.'));
+        document.body.append(script);
+      });
+      try {
+        await Promise.all(['ink.js', 'text.js', 'files.js', 'expiry.js'].map(load));
+        await load('board.js');
+      } catch (error) {
+        const message = document.getElementById('message'); message.textContent = error.message; message.hidden = false;
+      }
+    })();
+  </script>
 </body>
 </html>

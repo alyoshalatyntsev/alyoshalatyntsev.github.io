@@ -108,7 +108,7 @@
       const x = firstX + ix * spacing;
       for (let iy = 0; iy <= Math.ceil(screenH / spacing) + 1; iy++) {
         const y = firstY + iy * spacing, major = (x0 + ix) % 4 === 0 && (y0 + iy) % 4 === 0;
-        grid.fillStyle = major ? '#d7dce1' : '#e9ecf0'; grid.beginPath(); grid.arc(x, y, major ? .9 : .65, 0, Math.PI * 2); grid.fill();
+        grid.fillStyle = major ? '#b9c3ce' : '#d6dde5'; grid.beginPath(); grid.arc(x, y, major ? 1.05 : .85, 0, Math.PI * 2); grid.fill();
       }
     }
     gridDirty = false;
