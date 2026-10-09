@@ -17,7 +17,7 @@
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
   const cursorAnimals = [['Fox', '🦊'], ['Cat', '🐈'], ['Dog', '🐕'], ['Owl', '🦉'], ['Bear', '🐻'], ['Rabbit', '🐇'], ['Panda', '🐼'], ['Tiger', '🐯'], ['Lion', '🦁'], ['Koala', '🐨'], ['Frog', '🐸'], ['Penguin', '🐧'], ['Otter', '🦦'], ['Deer', '🦌'], ['Raccoon', '🦝'], ['Squirrel', '🐿️'], ['Hedgehog', '🦔'], ['Turtle', '🐢'], ['Whale', '🐳'], ['Dolphin', '🐬'], ['Duck', '🦆'], ['Monkey', '🐵'], ['Bee', '🐝'], ['Sloth', '🦥']];
   const cursorColors = [['Coral', '#bd454b'], ['Terracotta', '#a94f35'], ['Saffron', '#8c6415'], ['Moss', '#496b3d'], ['Jade', '#246b56'], ['Teal', '#1b6874'], ['Ocean', '#245f87'], ['Blue', '#36549b'], ['Iris', '#584c97'], ['Plum', '#75457f'], ['Berry', '#96395f'], ['Rosewood', '#874754']];
-  const MIN_ZOOM = .25, MAX_ZOOM = 8, OPTIONS_HOLD_MS = 90, ERASE_FAST = 2500;
+  const MIN_ZOOM = .25, MAX_ZOOM = 8, DEFAULT_ZOOM = .9, OPTIONS_HOLD_MS = 90, ERASE_FAST = 2500;
   const clampZoom = zoom => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   const lastRoomKey = 'whiteboard-last-' + (local ? 'local' : 'shared');
@@ -31,7 +31,7 @@
   let sequence = 0;
   const objectId = () => local ? Date.now().toString(36).padStart(10, '0') + '-' + String(sequence++).padStart(6, '0') + '-' + uid().slice(0, 16) : ref.push().key;
   const settings = { pen: { color: palette[0], width: 3, opacity: 1 }, highlight: { color: palette[8], width: 16, opacity: .4 }, text: { color: palette[0], width: 30, opacity: 1 }, erase: { width: 9 } };
-  const view = { x: 0, y: 0, zoom: 1 };
+  const view = { x: 0, y: 0, zoom: DEFAULT_ZOOM };
   try {
     const saved = JSON.parse(localStorage.getItem(viewKey));
     if (saved && [saved.x, saved.y, saved.zoom].every(Number.isFinite) && saved.zoom >= 1e-9 && saved.zoom <= 1e9) {
@@ -117,7 +117,7 @@
   function fit() {
     zoomMotion = null;
     const all = entries();
-    if (!all.length) Object.assign(view, { x: 0, y: 0, zoom: 1 });
+    if (!all.length) Object.assign(view, { x: 0, y: 0, zoom: DEFAULT_ZOOM });
     else {
       const b = pointBounds(all.flatMap(([id, obj]) => { const b = boundsFor(id, obj); return [[b[0], b[1]], [b[2], b[3]]]; }));
       view.zoom = clampZoom(Math.min((screenW - 140) / Math.max(1, b[2] - b[0]), (screenH - 100) / Math.max(1, b[3] - b[1])));
