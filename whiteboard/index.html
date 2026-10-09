@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-version="20261009-16">
+<html lang="en" data-version="20261009-17">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title> </title>
-  <link rel="stylesheet" href="board.css?v=950bbb5baff44d3f">
+  <link rel="stylesheet" href="board.css?v=2f524af6fed9dd85">
 </head>
 <body>
   <div id="paper">
@@ -20,6 +20,7 @@
     <div id="collaborators" aria-label="Collaborator cursors" aria-live="off"></div>
   </div>
   <div id="connection-overlay" role="status">Connecting…</div>
+  <button id="reset-view" type="button" hidden>Reset view</button>
   <div id="toolbar" role="toolbar" aria-label="Tools">
     <button data-tool="hand" aria-label="Hand" aria-pressed="false" title="Hand · G · drag to move the board">
       <svg viewBox="0 0 22 24" aria-hidden="true"><path d="M6 12V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-6a1.5 1.5 0 0 1 3 0v7-4a1.5 1.5 0 0 1 3 0v7c0 4-2 7-6 7h-1c-2 0-3-1-4-3l-3-5c-1-2 1-3 2-2l3 3"/></svg>
@@ -56,7 +57,7 @@
   <script>
     (async () => {
       const version = document.documentElement.dataset.version;
-      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"950bbb5baff44d3f","ink.js":"720d1b271c39c2b5","text.js":"c0b8417ff08d10fd","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"90e2de69bf336969"};
+      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"2f524af6fed9dd85","ink.js":"720d1b271c39c2b5","text.js":"c0b8417ff08d10fd","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"223a118ede6285aa"};
       const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 1500);
       try {
         const response = await fetch('release.json?check=' + Date.now(), { cache: 'no-store', signal: controller.signal });

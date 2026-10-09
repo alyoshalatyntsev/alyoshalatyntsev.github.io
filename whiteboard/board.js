@@ -125,6 +125,29 @@
     }
     cameraChanged();
   }
+  function resetViewTarget() {
+    const all = entries();
+    if (!all.length) return { x: 0, y: 0, zoom: DEFAULT_ZOOM, bounds: null };
+    const bounds = pointBounds(all.flatMap(([id, obj]) => { const b = boundsFor(id, obj); return [[b[0], b[1]], [b[2], b[3]]]; }));
+    const zoom = clampZoom(Math.min(DEFAULT_ZOOM, (screenW - 140) / Math.max(1, bounds[2] - bounds[0]), (screenH - 100) / Math.max(1, bounds[3] - bounds[1])));
+    return { x: (bounds[0] + bounds[2]) / 2 - screenW / (2 * zoom), y: (bounds[1] + bounds[3]) / 2 - screenH / (2 * zoom), zoom, bounds };
+  }
+  function updateResetView() {
+    const target = resetViewTarget(), ratio = view.zoom / target.zoom;
+    let far = false;
+    if (target.bounds) {
+      const [x0, y0, x1, y1] = target.bounds, vw = screenW / view.zoom, vh = screenH / view.zoom;
+      far = x1 < view.x - vw || x0 > view.x + 2 * vw || y1 < view.y - vh || y0 > view.y + 2 * vh;
+    } else {
+      far = Math.abs((view.x - target.x) * view.zoom) > screenW * 1.5 || Math.abs((view.y - target.y) * view.zoom) > screenH * 1.5;
+    }
+    $('reset-view').hidden = ratio >= .5 && ratio <= 2.5 && !far;
+  }
+  $('reset-view').onclick = () => {
+    finish(); commitText(); zoomMotion = null;
+    const { x, y, zoom } = resetViewTarget(); Object.assign(view, { x, y, zoom });
+    cameraChanged(); updateResetView();
+  };
   function sizeCanvases() {
     zoomMotion = null; lastLiveBounds = null;
     screenW = innerWidth; screenH = innerHeight; dpr = devicePixelRatio || 1;
@@ -315,6 +338,7 @@
     drawSelection(); layoutEditor(); renderCursors();
     $('selection-actions').hidden = selected.size === 0;
     const count = `${selected.size} selected`; if ($('selection-count').textContent !== count) $('selection-count').textContent = count;
+    updateResetView();
   }
   function selectedText() {
     if (selected.size !== 1) return null;
