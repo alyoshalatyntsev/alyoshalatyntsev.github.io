@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-version="20261009-9">
+<html lang="en" data-version="20261009-10">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title> </title>
-  <link rel="stylesheet" href="board.css?v=59d970aba322dbeb">
+  <link rel="stylesheet" href="board.css?v=560b9f81f9fed95b">
 </head>
 <body>
   <div id="paper">
@@ -17,13 +17,14 @@
       <span class="text-handle" data-handle="tl"></span><span class="text-handle" data-handle="t"></span><span class="text-handle" data-handle="tr"></span><span class="text-handle" data-handle="l"></span><span class="text-handle" data-handle="r"></span><span class="text-handle" data-handle="bl"></span><span class="text-handle" data-handle="b"></span><span class="text-handle" data-handle="br"></span>
       <span class="text-handle scale-handle" data-handle="scale" aria-label="Scale text" title="Scale text">↘</span>
     </div>
+    <div id="collaborators" aria-label="Collaborator cursors" aria-live="off"></div>
   </div>
   <div id="toolbar" role="toolbar" aria-label="Tools">
-    <button data-tool="select" aria-label="Select" aria-pressed="false" title="Select · V · middle-drag to lasso">
-      <svg viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v14l3.6-3.4L12 19l2.2-1-2.4-5.2h4.7Z" fill="currentColor" stroke="none"/></svg>
-    </button>
     <button data-tool="hand" aria-label="Hand" aria-pressed="false" title="Hand · G · drag to move the board">
       <svg viewBox="0 0 22 24" aria-hidden="true"><path d="M6 12V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-6a1.5 1.5 0 0 1 3 0v7-4a1.5 1.5 0 0 1 3 0v7c0 4-2 7-6 7h-1c-2 0-3-1-4-3l-3-5c-1-2 1-3 2-2l3 3"/></svg>
+    </button>
+    <button data-tool="select" aria-label="Select" aria-pressed="false" title="Select · V · drag a box or middle-drag to freehand select">
+      <svg viewBox="0 0 22 24" aria-hidden="true"><path d="M6 3v14l3.6-3.4L12 19l2.2-1-2.4-5.2h4.7Z" fill="currentColor" stroke="none"/></svg>
     </button>
     <button data-tool="pen" aria-label="Pen" aria-pressed="true" title="Pen · P · hold for options">
       <svg viewBox="0 0 22 24" aria-hidden="true"><g transform="translate(11 10) rotate(45)"><path d="M-2.5-9h5V4L0 9l-2.5-5Z M-2.5 4h5"/></g><path class="ink" d="M4 21h14"/></svg>
@@ -38,22 +39,22 @@
       <svg viewBox="0 0 22 24" aria-hidden="true"><g transform="translate(11 11) rotate(45)"><rect x="-4.5" y="-8" width="9" height="16" rx="1.5"/><path d="M-4.5 2h9v4.5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5Z" fill="currentColor" stroke="none"/></g></svg>
     </button>
     <span class="tool-divider" aria-hidden="true"></span>
-    <button id="export-pdf" aria-label="Export PDF" title="Export all drawings as PDF"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M5 3h8l4 4v5 M13 3v5h4 M4 17h14v4H4 M11 11v6 M8 14l3 3 3-3"/></svg></button>
-    <button id="new-board" aria-label="New board" title="New board"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M11 5v14M4 12h14" stroke-width="2"/></svg></button>
+    <button id="export-pdf" aria-label="Export PDF" title="Export PDF · choose a folder"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M5 3h8l4 4v5 M13 3v5h4 M4 17h14v4H4 M11 11v6 M8 14l3 3 3-3"/></svg></button>
+    <button id="new-board" aria-label="New board" title="New board · keep this board and start another"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M11 5v14M4 12h14" stroke-width="2"/></svg></button>
     <span id="status" class="sr-only" role="status">Connecting</span>
   </div>
   <div id="options" role="dialog" aria-label="Tool options" hidden>
     <div id="colors" role="group" aria-label="Colour"></div>
     <label class="custom" title="Custom colour"><span>Custom colour</span><input id="custom-color" type="color" value="#111111" aria-label="Custom colour"></label>
-    <label class="setting"><span id="width-label">Width</span><input id="width" type="range" min="0" max="13" step="1" value="3" aria-label="Width"><input id="width-value" class="setting-value" type="text" value="4" inputmode="decimal" aria-label="Exact width" readonly title="Click to type a width"></label>
-    <label class="setting">Opacity<input id="opacity" type="range" min="0" max="100" value="100" step="10" aria-label="Opacity"><input id="opacity-value" class="setting-value" type="text" value="100%" inputmode="decimal" aria-label="Exact opacity" readonly title="Click to type an opacity"></label>
-    <div id="selection-actions" hidden><span id="selection-count" class="sr-only"></span><button id="delete-selection">Delete</button><button id="deselect">Deselect</button></div>
+    <label class="setting"><span id="width-label">Width</span><input id="width" type="range" min="0" max="13" step="1" value="3" aria-label="Width" title="Drag to change width in steps"><input id="width-value" class="setting-value" type="text" value="4" inputmode="decimal" aria-label="Exact width" readonly title="Click to type a width"></label>
+    <label class="setting">Opacity<input id="opacity" type="range" min="0" max="100" value="100" step="10" aria-label="Opacity" title="Drag to change opacity in 10% steps"><input id="opacity-value" class="setting-value" type="text" value="100%" inputmode="decimal" aria-label="Exact opacity" readonly title="Click to type an opacity"></label>
+    <div id="selection-actions" hidden><span id="selection-count" class="sr-only"></span><button id="delete-selection" title="Delete selected objects">Delete</button><button id="deselect" title="Clear the selection">Deselect</button></div>
   </div>
   <p id="message" role="status" hidden></p>
   <script>
     (async () => {
       const version = document.documentElement.dataset.version;
-      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"59d970aba322dbeb","ink.js":"04e2bd4f86a83979","text.js":"aa832a5c720c3c3a","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"adfb5bdeccad7048"};
+      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"560b9f81f9fed95b","ink.js":"04e2bd4f86a83979","text.js":"aa832a5c720c3c3a","files.js":"8e8b933e645c61e1","expiry.js":"51b113a9df9e1f1e","board.js":"b31097c8bcccaebc"};
       const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 1500);
       try {
         const response = await fetch('release.json?check=' + Date.now(), { cache: 'no-store', signal: controller.signal });

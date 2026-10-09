@@ -15,6 +15,8 @@
     '#7048e8', '#c2255c', '#0c8599', '#099268', '#74b816', '#e8590c', '#9c36b5', '#3b5bdb'];
   const names = ['Black', 'Grey', 'Silver', 'Red', 'Orange', 'Amber', 'Green', 'Blue', 'Yellow', 'Light red', 'Peach', 'Light yellow',
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
+  const cursorAnimals = [['Fox', '🦊'], ['Cat', '🐈'], ['Dog', '🐕'], ['Owl', '🦉'], ['Bear', '🐻'], ['Rabbit', '🐇'], ['Panda', '🐼'], ['Tiger', '🐯'], ['Lion', '🦁'], ['Koala', '🐨'], ['Frog', '🐸'], ['Penguin', '🐧'], ['Otter', '🦦'], ['Deer', '🦌'], ['Raccoon', '🦝'], ['Squirrel', '🐿️'], ['Hedgehog', '🦔'], ['Turtle', '🐢'], ['Whale', '🐳'], ['Dolphin', '🐬'], ['Duck', '🦆'], ['Monkey', '🐵'], ['Bee', '🐝'], ['Sloth', '🦥']];
+  const cursorColors = [['Coral', '#d83b4c'], ['Tangerine', '#c65312'], ['Amber', '#936000'], ['Leaf', '#218342'], ['Teal', '#087e8b'], ['Blue', '#1767c0'], ['Indigo', '#5146b8'], ['Violet', '#873bb3'], ['Rose', '#bf2865'], ['Slate', '#475569'], ['Cyan', '#087da2'], ['Plum', '#923c70']];
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   const lastRoomKey = 'whiteboard-last-' + (local ? 'local' : 'shared');
   if (!/^[a-f0-9]{32}$/.test(location.hash.slice(1))) {
@@ -40,6 +42,8 @@
   let settingUndo = null, exporting = false, historyInitialized = false;
   let zoomMotion = null, lastLiveBounds = null;
   const pendingWrites = new Set();
+  const remoteCursors = new Map(), cursorElements = new Map();
+  let cursorCollection, cursorRef, cursorId, cursorProfile, cursorPoint = null, cursorTimer = 0, cursorRegistration = null, cursorArmed = false, lastCursorSend = 0, lastCursorScreen = null;
   try {
     const saved = JSON.parse(localStorage.getItem(historyKey));
     if (saved && Date.now() - saved.updated < TTL && Array.isArray(saved.undo) && Array.isArray(saved.redo)) { historyStack = saved.undo.slice(-50); redoStack = saved.redo.slice(-50); historyInitialized = true; }
@@ -178,6 +182,94 @@
     out.restore();
   }
   function floating(id) { return active?.id === id || editing?.id === id || gesture?.kind === 'move' && selected.has(id) || gesture?.kind === 'resize' && gesture.id === id; }
+  function renderCursors() {
+    for (const [id, cursor] of remoteCursors) {
+      const element = cursorElements.get(id); if (!element) continue;
+      const x = (cursor.x - view.x) * view.zoom, y = (cursor.y - view.y) * view.zoom;
+      element.hidden = x < -8 || y < -8 || x > screenW + 8 || y > screenH + 8;
+      if (!element.hidden) element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    }
+  }
+  function removeCursor(id) {
+    remoteCursors.delete(id); cursorElements.get(id)?.remove(); cursorElements.delete(id);
+  }
+  function receiveCursor(snapshot) {
+    if (snapshot.key === cursorId) return;
+    const cursor = snapshot.val();
+    if (!cursor || !Number.isFinite(cursor.x) || !Number.isFinite(cursor.y) || typeof cursor.name !== 'string') { removeCursor(snapshot.key); return; }
+    remoteCursors.set(snapshot.key, cursor);
+    let element = cursorElements.get(snapshot.key);
+    if (!element) {
+      element = document.createElement('div'); element.className = 'collaborator-cursor';
+      element.setAttribute('aria-label', `${cursor.name} cursor`); element.title = `${cursor.name} is here`;
+      const pointer = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); pointer.setAttribute('viewBox', '0 0 20 25'); pointer.setAttribute('aria-hidden', 'true');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', 'M2 1v18l5-4 4 8 3-1.5-4-8 7-.5z'); pointer.append(path); element.append(pointer);
+      const label = document.createElement('span'); label.className = 'collaborator-label';
+      const animal = document.createElement('span'); animal.className = 'collaborator-animal'; animal.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span'); name.className = 'collaborator-name'; label.append(animal, name); element.append(label);
+      $('collaborators').append(element); cursorElements.set(snapshot.key, element);
+    }
+    element.style.setProperty('--cursor-color', cursor.color);
+    element.querySelector('.collaborator-animal').textContent = cursor.emoji;
+    element.querySelector('.collaborator-name').textContent = cursor.name;
+    element.setAttribute('aria-label', `${cursor.name} cursor`); element.title = `${cursor.name} is here`;
+    renderSoon();
+  }
+  function chooseCursorIdentity(records) {
+    let saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem('whiteboard-cursor-profile-' + room)); } catch {}
+    const active = Object.entries(records || {}).filter(([id, value]) => id !== cursorId && value && typeof value === 'object');
+    const usedAnimals = new Set(active.map(([, value]) => value.animal));
+    const usedColors = new Set(active.map(([, value]) => value.color));
+    const animal = saved && cursorAnimals.some(([name, emoji]) => name === saved.animal && emoji === saved.emoji) && !usedAnimals.has(saved.animal)
+      ? cursorAnimals.find(([name]) => name === saved.animal)
+      : pick(cursorAnimals.filter(([name]) => !usedAnimals.has(name)));
+    const color = saved && cursorColors.some(([name, hex]) => name === saved.colorName && hex === saved.color) && !usedColors.has(saved.color)
+      ? cursorColors.find(([, hex]) => hex === saved.color)
+      : pick(cursorColors.filter(([, hex]) => !usedColors.has(hex)));
+    const chosenAnimal = animal || pick(cursorAnimals), chosenColor = color || pick(cursorColors);
+    cursorProfile = { animal: chosenAnimal[0], emoji: chosenAnimal[1], colorName: chosenColor[0], color: chosenColor[1], name: `${chosenColor[0]} ${chosenAnimal[0]}` };
+    try { sessionStorage.setItem('whiteboard-cursor-profile-' + room, JSON.stringify(cursorProfile)); } catch {}
+  }
+  function pick(items) { return items.length ? items[crypto.getRandomValues(new Uint32Array(1))[0] % items.length] : null; }
+  async function startCollaborators(db) {
+    cursorCollection = db.ref(`whiteboards/${room}/cursors`);
+    const clientKey = 'whiteboard-cursor-client-' + room;
+    try { cursorId = sessionStorage.getItem(clientKey); } catch {}
+    if (!/^[a-f0-9]{32}$/.test(cursorId || '')) cursorId = uid();
+    const people = await cursorCollection.once('value'), records = people.val() || {};
+    // Duplicated tabs can inherit sessionStorage, so give the second live tab its own cursor ID.
+    if (records[cursorId]) cursorId = uid();
+    try { sessionStorage.setItem(clientKey, cursorId); } catch {}
+    chooseCursorIdentity(records);
+    cursorRef = cursorCollection.child(cursorId);
+    cursorCollection.on('child_added', receiveCursor, error => console.warn('Cursor updates:', error));
+    cursorCollection.on('child_changed', receiveCursor, error => console.warn('Cursor updates:', error));
+    cursorCollection.on('child_removed', snapshot => { removeCursor(snapshot.key); renderSoon(); }, error => console.warn('Cursor updates:', error));
+  }
+  function publishCursor(event) {
+    if (local || !cursorRef || !event.isTrusted) return;
+    const point = world(event), screenPoint = [event.clientX, event.clientY];
+    if (lastCursorScreen && Math.hypot(screenPoint[0] - lastCursorScreen[0], screenPoint[1] - lastCursorScreen[1]) < 1.25) return;
+    lastCursorScreen = screenPoint; cursorPoint = point;
+    if (ready) expiry?.touch();
+    if (!connected || cursorTimer || performance.now() - lastCursorSend < 60) {
+      if (connected && !cursorTimer) cursorTimer = setTimeout(() => { cursorTimer = 0; transmitCursor(); }, Math.max(0, 60 - (performance.now() - lastCursorSend)));
+      return;
+    }
+    transmitCursor();
+  }
+  function transmitCursor() {
+    if (!cursorRef || !cursorProfile || !cursorPoint || !connected || !ready) return;
+    lastCursorSend = performance.now();
+    const payload = { name: cursorProfile.name, animal: cursorProfile.animal, emoji: cursorProfile.emoji, color: cursorProfile.color, x: cursorPoint[0], y: cursorPoint[1], updated: firebase.database.ServerValue.TIMESTAMP };
+    const send = () => cursorRef.set(payload).catch(error => console.warn('Cursor update failed:', error));
+    if (cursorArmed) { send(); return; }
+    if (cursorRegistration) return;
+    cursorRegistration = cursorRef.onDisconnect().remove().then(() => {
+      cursorRegistration = null; cursorArmed = true; if (connected && cursorPoint) send();
+    }).catch(error => { cursorRegistration = null; console.warn('Cursor cleanup could not be armed:', error); });
+  }
   function liveBounds() {
     const b = active.stroke.bounds, a = screen([b[0], b[1]]), z = screen([b[2], b[3]]);
     const pad = (active.obj.width / 2 + active.stroke.maxGap / 3) * view.zoom + 3;
@@ -212,7 +304,7 @@
       if (!floating(id) || (original.kind === 'highlight') !== highlight || editing?.id === id || active?.id === id) continue;
       const obj = effective(id, original); ctx.save(); if (highlight) ctx.globalCompositeOperation = 'destination-over'; draw(ctx, obj, offset(id, obj)); ctx.restore();
     }
-    drawSelection(); layoutEditor();
+    drawSelection(); layoutEditor(); renderCursors();
     $('selection-actions').hidden = selected.size === 0;
     const count = `${selected.size} selected`; if ($('selection-count').textContent !== count) $('selection-count').textContent = count;
   }
@@ -520,6 +612,7 @@
       }
     }
     movePointer(e);
+    publishCursor(e);
     if (pointer === null && e.target === canvas && !editing) {
       const handle = ['select', 'text'].includes(tool) && handleAt(world(e));
       canvas.style.cursor = space || tool === 'hand' ? 'grab' : handle ? Text.cursor(handle.handle) : tool === 'text' ? 'text' : tool === 'select' ? hitAt(world(e)) ? 'move' : 'default' : 'crosshair';
@@ -727,13 +820,24 @@
     firebase.initializeApp(CONFIG); const db = firebase.database();
     expiry = BoardExpiry.watch({ room, db, onExpire: expiredBoard, onError: fail }); await expiry.start();
     ref = db.ref('whiteboards/' + room + '/objects');
-    const receive = snapshot => { objects.set(snapshot.key, snapshot.val()); if (active?.id !== snapshot.key) dirty = orderDirty = true; renderSoon(); };
+    const receive = snapshot => {
+      const incoming = snapshot.val(), current = objects.get(snapshot.key);
+      // The initial child_added may arrive after a fast stroke has already queued its final chunk update.
+      // Ink chunks are append-only, so keep locally queued chunks when an older snapshot is echoed.
+      if (incoming?.chunks && current?.chunks) incoming.chunks = { ...incoming.chunks, ...current.chunks };
+      objects.set(snapshot.key, incoming); if (active?.id !== snapshot.key) dirty = orderDirty = true; renderSoon();
+    };
     ref.on('child_added', receive, fail); ref.on('child_changed', receive, fail);
     ref.on('child_removed', snapshot => { objects.delete(snapshot.key); selected.delete(snapshot.key); if (active?.id === snapshot.key) { clearInterval(active.timer); active = null; pointer = null; } dirty = orderDirty = true; renderSoon(); }, fail);
     await ref.once('value'); ready = true;
     const stale = [...objects].filter(([, obj]) => obj?.hidden).map(([id]) => [id, { hidden: true }]);
     if (stale.length) patchMany(stale, false);
-    seedHistory(); status(); db.ref('.info/connected').on('value', snapshot => { connected = snapshot.val() === true; status(); });
+    seedHistory(); status(); db.ref('.info/connected').on('value', snapshot => {
+      connected = snapshot.val() === true; status();
+      if (!connected) cursorArmed = false;
+      else if (cursorPoint) transmitCursor();
+    });
+    startCollaborators(db).catch(error => console.warn('Whiteboard cursors are unavailable:', error));
   }
   updateSettingsUI(); updateToolUI(); sizeCanvases();
   listenActivity();
