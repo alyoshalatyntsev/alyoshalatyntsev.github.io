@@ -156,7 +156,7 @@
   }
   function boundsFor(id, obj) {
     obj = effective(id, obj); const [dx, dy] = offset(id, obj), b = geometry(obj).bounds;
-    const pad = obj.kind === 'text' ? 0 : obj.width / view.zoom / 2;
+    const pad = obj.kind === 'text' ? 0 : obj.width / 2;
     return [b[0] + dx - pad, b[1] + dy - pad, b[2] + dx + pad, b[3] + dy + pad];
   }
   function onScreen(b) { return b[2] >= view.x && b[3] >= view.y && b[0] <= view.x + screenW / view.zoom && b[1] <= view.y + screenH / view.zoom; }
@@ -169,8 +169,8 @@
     } else {
       const g = stroke ? { pts: stroke.points, origin: stroke.origin, unit: stroke.unit, path: stroke.livePath() } : geometry(obj);
       out.translate(...g.origin); out.scale(g.unit, g.unit);
-      // Ink widths are screen pixels; zoom changes positions, never thickness.
-      out.lineWidth = obj.width / view.zoom / g.unit; out.lineCap = out.lineJoin = 'round';
+      // Ink widths use board coordinates, so existing and new strokes scale with zoom.
+      out.lineWidth = obj.width / g.unit; out.lineCap = out.lineJoin = 'round';
       if (g.pts.length === 1 && (!stroke || Ink.distance(stroke.tip, g.pts[0]) < .001 / view.zoom)) {
         out.beginPath(); out.arc(0, 0, out.lineWidth / 2, 0, Math.PI * 2); out.fill();
       } else out.stroke(g.path);
@@ -180,7 +180,7 @@
   function floating(id) { return active?.id === id || editing?.id === id || gesture?.kind === 'move' && selected.has(id) || gesture?.kind === 'resize' && gesture.id === id; }
   function liveBounds() {
     const b = active.stroke.bounds, a = screen([b[0], b[1]]), z = screen([b[2], b[3]]);
-    const pad = active.obj.width / 2 + active.stroke.maxGap * view.zoom / 3 + 3;
+    const pad = (active.obj.width / 2 + active.stroke.maxGap / 3) * view.zoom + 3;
     return [a[0] - pad, a[1] - pad, z[0] + pad, z[1] + pad];
   }
   function render() {
@@ -335,7 +335,7 @@
       if (!inside(p, boundsFor(id, obj), radius)) continue;
       if (obj.kind === 'text') return id;
       const pts = geometry(obj).pts, [dx, dy] = offset(id, obj), q = [p[0] - dx, p[1] - dy];
-      if (pts.some((point, i) => segmentDistance(q, i ? pts[i - 1] : point, point) <= radius + obj.width / view.zoom / 2)) return id;
+      if (pts.some((point, i) => segmentDistance(q, i ? pts[i - 1] : point, point) <= radius + obj.width / 2)) return id;
     }
     return null;
   }
@@ -377,7 +377,7 @@
       const edges = pts.slice(1).map((p, i) => [pts[i], p]);
       const crossing = edges.some(([a, b]) => polygon.some((c, j) => crosses(a, b, c, polygon[(j + 1) % polygon.length])));
       if (crossing) continue;
-      const radius = obj.kind === 'text' ? 0 : obj.width / view.zoom / 2;
+      const radius = obj.kind === 'text' ? 0 : obj.width / 2;
       if (radius && !pts.every(p => [[radius, 0], [-radius, 0], [0, radius], [0, -radius]].every(d => contains([p[0] + d[0], p[1] + d[1]])))) continue;
       selected.add(id);
     }
