@@ -24,7 +24,17 @@
     const xref = length; append('xref\n0 6\n0000000000 65535 f \n');
     for (let i = 1; i <= 5; i++) append(String(offsets[i]).padStart(10, '0') + ' 00000 n \n');
     append(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
-    download(new Blob(parts, { type: 'application/pdf' }), 'board.pdf');
+    return new Blob(parts, { type: 'application/pdf' });
   }
-  window.BoardFiles = { pdf };
+  function chooseDestination() {
+    if (!window.showSaveFilePicker) return Promise.resolve(null);
+    return window.showSaveFilePicker({ id: 'whiteboard-pdf', startIn: 'documents', suggestedName: 'board.pdf', types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+  }
+  async function save(blob, handle) {
+    if (!handle) { download(blob, 'board.pdf'); return; }
+    const writer = await handle.createWritable();
+    try { await writer.write(blob); await writer.close(); }
+    catch (error) { await writer.abort().catch(() => {}); throw error; }
+  }
+  window.BoardFiles = { pdf, chooseDestination, save };
 })();

@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const TTL = 12 * 60 * 60 * 1000;
+  const TTL = 24 * 60 * 60 * 1000;
   function watch({ room, db, onExpire, onError }) {
     const key = 'whiteboard-activity-' + room, root = db?.ref(), boardPath = 'whiteboards/' + room, indexPath = 'whiteboardExpiry/' + room;
     let last = 0, offset = 0, timer, debounce, lastSent = 0, clearing = false;

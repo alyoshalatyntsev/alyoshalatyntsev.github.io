@@ -46,5 +46,55 @@
     out.boxH = layout(out, ctx).height; return out;
   }
   const cursor = handle => ({ tl: 'nwse-resize', br: 'nwse-resize', scale: 'nwse-resize', tr: 'nesw-resize', bl: 'nesw-resize', l: 'ew-resize', r: 'ew-resize', t: 'ns-resize', b: 'ns-resize' })[handle];
-  window.BoardText = { layout, handles, resize, cursor, padding, FONT };
+  function bindLists(editor) {
+    let inserting = false, lastSpace = -1, exitLine = -1;
+    const replace = (start, end, text) => {
+      if (editor.value.length - (end - start) + text.length > editor.maxLength) return;
+      // Keep list transformations in the browser's native text undo history.
+      inserting = true; editor.setSelectionRange(start, end);
+      if (!document.execCommand('insertText', false, text)) {
+        editor.setRangeText(text, start, end, 'end'); editor.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      editor.setSelectionRange(start + text.length, start + text.length);
+      inserting = false;
+    };
+    const lineAt = () => {
+      const position = editor.selectionStart, start = editor.value.slice(0, position).lastIndexOf('\n') + 1;
+      return { position, start, text: editor.value.slice(start, position) };
+    };
+    const marker = text => /^(\s*)(?:([•*-]) |(\d+)\. )(.*)$/.exec(text);
+    editor.addEventListener('beforeinput', e => {
+      if (inserting || e.isComposing || e.inputType !== 'insertText' || e.data !== ' ' || editor.selectionStart !== editor.selectionEnd) return;
+      const line = lineAt(), match = marker(line.text);
+      if (match && lastSpace === line.position) {
+        e.preventDefault();
+        if (!match[4].trim()) replace(line.start, line.position, '');
+        else { replace(line.position, line.position, ' '); exitLine = line.start; }
+        lastSpace = -1; return;
+      }
+      if (/^\s*[-*]$/.test(line.text)) {
+        e.preventDefault(); replace(line.start, line.position, line.text.slice(0, -1) + '• ');
+        exitLine = -1; lastSpace = editor.selectionStart; return;
+      }
+      lastSpace = line.position + 1;
+    });
+    editor.addEventListener('keydown', e => {
+      if (e.isComposing) return;
+      if (e.key !== ' ') lastSpace = -1;
+      if (e.key !== 'Enter' || e.ctrlKey || e.metaKey || e.shiftKey || editor.selectionStart !== editor.selectionEnd) return;
+      const line = lineAt(), match = marker(line.text);
+      if (!match) { exitLine = -1; return; }
+      e.preventDefault();
+      if (!match[4].trim()) replace(line.start, line.position, '');
+      else if (exitLine === line.start) replace(line.position, line.position, '\n');
+      else {
+        const prefix = match[3] ? (BigInt(match[3]) + 1n).toString() + '. ' : '• ';
+        replace(line.position, line.position, '\n' + match[1] + prefix);
+      }
+      exitLine = -1;
+    });
+    editor.addEventListener('input', e => { if (!inserting && (e.inputType !== 'insertText' || e.data !== ' ')) { lastSpace = -1; if (e.inputType !== 'insertText') exitLine = -1; } });
+    for (const event of ['pointerdown', 'blur']) editor.addEventListener(event, () => { lastSpace = -1; exitLine = -1; });
+  }
+  window.BoardText = { layout, handles, resize, cursor, padding, FONT, bindLists };
 })();

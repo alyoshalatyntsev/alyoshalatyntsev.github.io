@@ -78,10 +78,10 @@
     },
     "whiteboards": {
       "$room": {
-        ".read": "$room.matches(/^[a-f0-9]{32}$/) && (!data.hasChild('lastActive') || data.child('lastActive').val() > now - 43200000)",
+        ".read": "$room.matches(/^[a-f0-9]{32}$/) && (!data.hasChild('lastActive') || data.child('lastActive').val() > now - 86400000)",
         "objects": {
           "$id": {
-            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $id.length <= 40 && newData.parent().parent().child('lastActive').isNumber() && newData.parent().parent().child('lastActive').val() > now - 43200000",
+            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $id.length <= 40 && newData.parent().parent().child('lastActive').isNumber() && newData.parent().parent().child('lastActive').val() > now - 86400000",
             ".validate": "newData.hasChildren(['kind', 'color', 'width', 'opacity']) && (newData.child('kind').val() === 'text' ? newData.hasChildren(['text', 'x', 'y']) : newData.hasChild('chunks'))",
             "kind": {
               ".validate": "newData.val() === 'pen' || newData.val() === 'highlight' || newData.val() === 'text'"
@@ -113,7 +113,7 @@
               ".validate": false
             },
             "opacity": {
-              ".validate": "newData.isNumber() && newData.val() >= 0.05 && newData.val() <= 1"
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1"
             },
             "dx": {
               ".validate": "newData.isNumber()"
@@ -132,25 +132,25 @@
         "$other": {
           ".validate": false
         },
-        ".write": "$room.matches(/^[a-f0-9]{32}$/) && !newData.exists() && ((data.child('lastActive').isNumber() && data.child('lastActive').val() <= now - 43200000) || (!data.exists() && root.child('whiteboardExpiry').child($room).isNumber() && root.child('whiteboardExpiry').child($room).val() <= now - 43200000))",
+        ".write": "$room.matches(/^[a-f0-9]{32}$/) && !newData.exists() && ((data.child('lastActive').isNumber() && data.child('lastActive').val() <= now - 86400000) || (!data.exists() && root.child('whiteboardExpiry').child($room).isNumber() && root.child('whiteboardExpiry').child($room).val() <= now - 86400000))",
         "lastActive": {
-          ".write": "$room.matches(/^[a-f0-9]{32}$/) && newData.isNumber() && newData.val() === now && (!data.exists() || data.val() > now - 43200000)",
+          ".write": "$room.matches(/^[a-f0-9]{32}$/) && newData.isNumber() && newData.val() === now && (!data.exists() || data.val() > now - 86400000)",
           ".validate": "newData.isNumber() && newData.val() === now && newData.parent().parent().parent().child('whiteboardExpiry').child($room).val() === newData.val()"
         }
       }
     },
     "whiteboardExpiry": {
       ".indexOn": ".value",
-      ".read": "query.orderByValue && query.endAt === root.child('whiteboardCleanupCutoff').val() && query.limitToFirst === 100 && root.child('whiteboardCleanupCutoff').isNumber() && root.child('whiteboardCleanupCutoff').val() <= now - 43200000",
+      ".read": "query.orderByValue && query.endAt === root.child('whiteboardCleanupCutoff').val() && query.limitToFirst === 100 && root.child('whiteboardCleanupCutoff').isNumber() && root.child('whiteboardCleanupCutoff').val() <= now - 86400000",
       "$room": {
         ".read": "$room.matches(/^[a-f0-9]{32}$/)",
-        ".write": "$room.matches(/^[a-f0-9]{32}$/) && ((!newData.exists() && data.isNumber() && data.val() <= now - 43200000) || (newData.isNumber() && newData.val() === now && newData.parent().parent().child('whiteboards').child($room).child('lastActive').val() === newData.val()))",
+        ".write": "$room.matches(/^[a-f0-9]{32}$/) && ((!newData.exists() && data.isNumber() && data.val() <= now - 86400000) || (newData.isNumber() && newData.val() === now && newData.parent().parent().child('whiteboards').child($room).child('lastActive').val() === newData.val()))",
         ".validate": "newData.isNumber() && newData.val() === now"
       }
     },
     "whiteboardCleanupCutoff": {
       ".read": true,
-      ".write": "newData.isNumber() && newData.val() <= now - 43200000 && newData.val() > now - 43260000",
+      ".write": "newData.isNumber() && newData.val() <= now - 86400000 && newData.val() > now - 86460000",
       ".validate": "newData.isNumber()"
     }
   }

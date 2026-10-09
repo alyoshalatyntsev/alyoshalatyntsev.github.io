@@ -10,7 +10,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #0078d4; outline-
 #grid { pointer-events: none; }
 #board { cursor: crosshair; }
 #overlay { pointer-events: none; }
-#toolbar { position: fixed; right: 12px; top: 42%; transform: translateY(-50%); max-height: calc(100dvh - 12px); overflow-y: auto; scrollbar-width: none; width: 44px; padding: 7px 4px; border: 1px solid #ddd; border-radius: 14px; background: #fff; user-select: none; touch-action: manipulation; z-index: 3; }
+#toolbar { position: fixed; left: 12px; top: 42%; transform: translateY(-50%); max-height: calc(100dvh - 12px); overflow-y: auto; scrollbar-width: none; width: 44px; padding: 7px 4px; border: 1px solid #ddd; border-radius: 14px; background: #fff; user-select: none; touch-action: manipulation; z-index: 3; }
 #toolbar::-webkit-scrollbar { display: none; }
 .tool-divider { display: block; height: 1px; margin: 6px 5px; background: #e6e6e6; }
 #toolbar button { position: relative; display: grid; place-items: center; width: 34px; height: 36px; margin: 2px 0; padding: 0; color: #868686; border: 0; border-radius: 9px; background: transparent; }
@@ -29,8 +29,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid #0078d4; outline-
 input[type="color"] { width: 32px; height: 24px; padding: 0; border: 1px solid #ddd; border-radius: 3px; background: transparent; cursor: pointer; }
 .setting > span, .setting { font-size: 12px; }
 .setting > span { min-width: 48px; }
-.setting input { width: 135px; min-width: 0; margin-left: auto; accent-color: #0078d4; cursor: pointer; }
-output { width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+.setting input[type="range"] { width: 125px; min-width: 0; margin-left: auto; accent-color: #0078d4; cursor: pointer; }
+.setting-value { width: 46px; min-width: 0; padding: 3px; margin: 0; text-align: right; font-variant-numeric: tabular-nums; border: 1px solid transparent; border-radius: 3px; color: #555; background: transparent; cursor: text; }
+.setting-value:not([readonly]) { border-color: #aaa; background: #fff; color: #111; }
 #selection-actions { display: flex; gap: 8px; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 8px; }
 #selection-actions button { background: #f5f5f5; color: #555; border: 1px solid #ddd; border-radius: 4px; padding: 4px 12px; }
 #text-edit { position: absolute; border: 0; outline: 1px solid #367acc; z-index: 2; touch-action: none; }
@@ -57,4 +58,4 @@ output { width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
 #message { position: fixed; bottom: 16px; right: 16px; z-index: 5; max-width: 320px; margin: 0; padding: 8px 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-height: 480px) { #toolbar { top: 6px; transform: none; } }
-@media (max-width: 450px) { #toolbar { right: 10px; } #options { width: 268px; } #colors { gap: 4px; } .setting input { width: 115px; } }
+@media (max-width: 450px) { #toolbar { left: 10px; } #options { width: 268px; } #colors { gap: 4px; } .setting input[type="range"] { width: 107px; } }

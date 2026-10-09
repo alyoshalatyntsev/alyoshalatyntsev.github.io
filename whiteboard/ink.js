@@ -30,17 +30,21 @@
     constructor(point, zoom) {
       this.zoom = zoom; this.raw = [point]; this.points = [point]; this.tip = point; this.filtered = point;
       this.origin = point; this.unit = 1 / zoom;
+      this.bounds = [point[0], point[1], point[0], point[1]]; this.maxGap = 0;
       this.sent = 1; this.done = 0; this.grown = new Path2D(); this.grown.moveTo(0, 0);
       this.version = 0; this.pathVersion = -1; this.cachedPath = null;
     }
     add(point) {
       this.tip = point;
+      this.bounds[0] = Math.min(this.bounds[0], point[0]); this.bounds[1] = Math.min(this.bounds[1], point[1]);
+      this.bounds[2] = Math.max(this.bounds[2], point[0]); this.bounds[3] = Math.max(this.bounds[3], point[1]);
       const k = Math.max(.25, Math.min(1, distance(point, this.filtered) * this.zoom / 3.5));
       this.filtered = [0, 1].map(i => this.filtered[i] + k * (point[i] - this.filtered[i]));
       if (distance(this.filtered, this.raw[this.raw.length - 1]) * this.zoom >= 1.5) this.append(this.filtered);
       this.version++;
     }
     append(point) {
+      this.maxGap = Math.max(this.maxGap, distance(point, this.raw.at(-1)));
       this.raw.push(point); this.points.push(point);
       const n = this.raw.length;
       if (n > 2) this.points[n - 2] = settled(this.raw[n - 3], this.raw[n - 2], point, this.zoom);
@@ -57,9 +61,9 @@
       if (this.pathVersion === this.version) return this.cachedPath;
       const firm = Math.max(0, this.points.length - 3);
       if (firm > this.done) { extend(this.grown, this.points, this.done, firm, this.origin, this.unit); this.done = firm; }
-      const tail = this.points.slice();
+      const offset = Math.max(0, this.done - 1), tail = this.points.slice(offset);
       if (distance(this.tip, tail[tail.length - 1]) * this.zoom > .001) tail.push(this.tip);
-      const live = new Path2D(this.grown); extend(live, tail, this.done, tail.length - 1, this.origin, this.unit);
+      const live = new Path2D(this.grown); extend(live, tail, this.done - offset, tail.length - 1, this.origin, this.unit);
       this.cachedPath = live; this.pathVersion = this.version; return live;
     }
   }

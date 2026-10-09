@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 DATABASE = 'https://project-0cbb7d36-56e5-441e-8fe-default-rtdb.europe-west1.firebasedatabase.app'
-TTL_MS = 12 * 60 * 60 * 1000
+TTL_MS = 24 * 60 * 60 * 1000
 
 
 def request(path, method='GET', value=None):

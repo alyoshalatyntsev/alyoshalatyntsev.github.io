@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Remove boards inactive for twelve hours
+      - name: Remove boards inactive for twenty-four hours
         env:
           CLEANUP_SOURCE: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/whiteboard/cleanup.py
         run: |
