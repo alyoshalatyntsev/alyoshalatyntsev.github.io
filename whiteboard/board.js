@@ -16,7 +16,12 @@
   const names = ['Black', 'Grey', 'Silver', 'Red', 'Orange', 'Amber', 'Green', 'Blue', 'Yellow', 'Light red', 'Peach', 'Light yellow',
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
-  if (!/^[a-f0-9]{32}$/.test(location.hash.slice(1))) history.replaceState(null, '', location.pathname + location.search + '#' + uid());
+  const lastRoomKey = 'whiteboard-last-' + (local ? 'local' : 'shared');
+  if (!/^[a-f0-9]{32}$/.test(location.hash.slice(1))) {
+    let previous; try { previous = localStorage.getItem(lastRoomKey); } catch {}
+    history.replaceState(null, '', location.pathname + location.search + '#' + (/^[a-f0-9]{32}$/.test(previous) ? previous : uid()));
+  }
+  try { localStorage.setItem(lastRoomKey, location.hash.slice(1)); } catch {}
   const room = location.hash.slice(1), cacheKey = 'whiteboard-local-' + room, viewKey = 'whiteboard-view-' + room, historyKey = 'whiteboard-history-' + room;
   const TTL = 12 * 60 * 60 * 1000;
   let sequence = 0;
@@ -570,13 +575,16 @@
     updateSettingsUI(); $('options').hidden = closing; placeOptions();
   }
   document.querySelectorAll('[data-tool]').forEach(button => {
-    let timer, start, held = false;
+    let timer, held = false;
     const stop = () => clearTimeout(timer);
     button.onclick = () => { if (held) { held = false; return; } hideOptions(); selectTool(button.dataset.tool); button.blur(); };
     button.ondblclick = () => openOptions(button.dataset.tool, true);
     button.oncontextmenu = e => { e.preventDefault(); openOptions(button.dataset.tool); };
-    button.onpointerdown = e => { held = false; start = [e.clientX, e.clientY]; if (e.button === 0) { e.preventDefault(); button.setPointerCapture(e.pointerId); } if (e.button === 0 && settings[button.dataset.tool]) timer = setTimeout(() => { held = true; openOptions(button.dataset.tool); }, 450); };
-    button.onpointermove = e => { if (start && Ink.distance(start, [e.clientX, e.clientY]) > 6) stop(); };
+    button.onpointerdown = e => { held = false; if (e.button === 0) { e.preventDefault(); button.setPointerCapture(e.pointerId); } if (e.button === 0 && settings[button.dataset.tool]) timer = setTimeout(() => { held = true; openOptions(button.dataset.tool); }, 450); };
+    button.onpointermove = e => {
+      const b = button.getBoundingClientRect();
+      if (e.clientX < b.left - 8 || e.clientX > b.right + 8 || e.clientY < b.top - 8 || e.clientY > b.bottom + 8) stop();
+    };
     button.onpointerup = button.onpointercancel = button.onlostpointercapture = stop;
   });
   function undo(redo = false) {
