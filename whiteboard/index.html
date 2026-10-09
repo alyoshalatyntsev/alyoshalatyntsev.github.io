@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-version="20261009-5">
+<html lang="en" data-version="20261009-6">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title> </title>
-  <link rel="stylesheet" href="board.css?v=20261009-5">
+  <link rel="stylesheet" href="board.css?v=80fc419bf8494aff">
 </head>
 <body>
   <div id="paper">
@@ -49,11 +49,13 @@
   <script>
     (async () => {
       const version = document.documentElement.dataset.version;
+      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"80fc419bf8494aff","ink.js":"cc954957440620de","text.js":"c686ed42c84c236f","files.js":"8b40732029d685f0","expiry.js":"010e96f6868cca4e","board.js":"68b6cd9f4afea6a4"};
       const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 1500);
       try {
         const response = await fetch('release.json?check=' + Date.now(), { cache: 'no-store', signal: controller.signal });
         if (response.ok) {
-          const latest = (await response.json()).version;
+          const release = await response.json(), latest = release.version;
+          if (latest === version && release.assets && typeof release.assets === 'object') assets = release.assets;
           if (/^\d{8}-\d+$/.test(latest)) {
             const [date, build] = version.split('-').map(Number), [nextDate, nextBuild] = latest.split('-').map(Number);
             const url = new URL(location.href);
@@ -65,8 +67,11 @@
           }
         }
       } catch {} finally { clearTimeout(timeout); }
+      const fingerprint = file => /^[a-f0-9]{16}$/.test(assets[file]) ? assets[file] : version;
+      const css = document.querySelector('link[rel=stylesheet]'), stylesheet = 'board.css?v=' + fingerprint('board.css');
+      if (css.getAttribute('href') !== stylesheet) css.setAttribute('href', stylesheet);
       const load = file => new Promise((resolve, reject) => {
-        const script = document.createElement('script'); script.src = file + '?v=' + version;
+        const script = document.createElement('script'); script.src = file + '?v=' + fingerprint(file);
         script.onload = resolve; script.onerror = () => reject(new Error('Could not load the whiteboard. Reload to try again.'));
         document.body.append(script);
       });

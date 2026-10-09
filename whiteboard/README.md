@@ -13,4 +13,4 @@ Ink widths are screen pixels: zoom moves and scales stroke paths while preservin
 
 For a device-only preview, serve the repository and open `/whiteboard/?local=1`. Shared mode uses the Firebase project configured in `board.js`; deploy `database.rules.json` with `firebase.json` when changing persistence rules.
 
-Startup checks `release.json` without browser caching. A newer release refreshes the page while preserving the room ID, before loading drawing scripts. Bump the version in both `index.html` and `release.json` together when publishing changes.
+Startup checks `release.json` without browser caching. A newer release refreshes the page while preserving the room ID, before loading drawing scripts. Assets use content fingerprints so a cached page can load updated drawing code. After editing assets, run `python3 whiteboard/release.py` before publishing. When the HTML structure changes, also bump `data-version` in `index.html` first.
