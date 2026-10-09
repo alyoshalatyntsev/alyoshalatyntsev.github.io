@@ -16,7 +16,7 @@
   const names = ['Black', 'Grey', 'Silver', 'Red', 'Orange', 'Amber', 'Green', 'Blue', 'Yellow', 'Light red', 'Peach', 'Light yellow',
     'Light green', 'Light blue', 'Lavender', 'Pink', 'Violet', 'Magenta', 'Teal', 'Mint', 'Lime', 'Burnt orange', 'Purple', 'Indigo'];
   const cursorAnimals = [['Fox', '🦊'], ['Cat', '🐈'], ['Dog', '🐕'], ['Owl', '🦉'], ['Bear', '🐻'], ['Rabbit', '🐇'], ['Panda', '🐼'], ['Tiger', '🐯'], ['Lion', '🦁'], ['Koala', '🐨'], ['Frog', '🐸'], ['Penguin', '🐧'], ['Otter', '🦦'], ['Deer', '🦌'], ['Raccoon', '🦝'], ['Squirrel', '🐿️'], ['Hedgehog', '🦔'], ['Turtle', '🐢'], ['Whale', '🐳'], ['Dolphin', '🐬'], ['Duck', '🦆'], ['Monkey', '🐵'], ['Bee', '🐝'], ['Sloth', '🦥']];
-  const cursorColors = [['Coral', '#d83b4c'], ['Tangerine', '#c65312'], ['Amber', '#936000'], ['Leaf', '#218342'], ['Teal', '#087e8b'], ['Blue', '#1767c0'], ['Indigo', '#5146b8'], ['Violet', '#873bb3'], ['Rose', '#bf2865'], ['Slate', '#475569'], ['Cyan', '#087da2'], ['Plum', '#923c70']];
+  const cursorColors = [['Coral', '#bd454b'], ['Terracotta', '#a94f35'], ['Saffron', '#8c6415'], ['Moss', '#496b3d'], ['Jade', '#246b56'], ['Teal', '#1b6874'], ['Ocean', '#245f87'], ['Blue', '#36549b'], ['Iris', '#584c97'], ['Plum', '#75457f'], ['Berry', '#96395f'], ['Rosewood', '#874754']];
   const local = new URLSearchParams(location.search).has('local'), uid = () => crypto.randomUUID().replace(/-/g, '');
   const lastRoomKey = 'whiteboard-last-' + (local ? 'local' : 'shared');
   if (!/^[a-f0-9]{32}$/.test(location.hash.slice(1))) {
@@ -228,7 +228,7 @@
       ? cursorColors.find(([, hex]) => hex === saved.color)
       : pick(cursorColors.filter(([, hex]) => !usedColors.has(hex)));
     const chosenAnimal = animal || pick(cursorAnimals), chosenColor = color || pick(cursorColors);
-    cursorProfile = { animal: chosenAnimal[0], emoji: chosenAnimal[1], colorName: chosenColor[0], color: chosenColor[1], name: `${chosenColor[0]} ${chosenAnimal[0]}` };
+    cursorProfile = { animal: chosenAnimal[0], emoji: chosenAnimal[1], colorName: chosenColor[0], color: chosenColor[1], name: chosenAnimal[0] };
     try { sessionStorage.setItem('whiteboard-cursor-profile-' + room, JSON.stringify(cursorProfile)); } catch {}
   }
   function pick(items) { return items.length ? items[crypto.getRandomValues(new Uint32Array(1))[0] % items.length] : null; }
