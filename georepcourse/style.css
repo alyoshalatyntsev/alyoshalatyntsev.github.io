@@ -1,0 +1,44 @@
+body {
+        font-family: sans-serif;
+        font-size: 15px;
+        color: #000;
+        background: #fff;
+        line-height: 1.35;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .page {
+        position: relative;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    /* Keep the seminar's narrow column and open margins. */
+    h1 { font-size: 1.5em; font-weight: bold; margin: 0; }
+    h2 { font-size: 1.15em; font-weight: bold; margin: 0 0 0.6em 0; }
+    h3 { font-size: 1em; font-weight: bold; margin: 1.2em 0 0.3em 0; }
+
+    p { margin: 0.5em 0; }
+
+    a { color: #0000cc; }
+
+    table { border-collapse: collapse; width: 100%; margin-top: 0.3em; border: 1px solid #ccc; }
+    th { text-align: left; font-weight: bold; padding: 3px 8px; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc; background: #e0e0e0; }
+    td { padding: 3px 8px; vertical-align: top; border-right: 1px solid #ccc; }
+    tr.lec td { border-top: 1px solid #ccc; }
+    td.date { white-space: nowrap; }
+    td.jc { color: #333; }
+    tr.jcrow td { background: #f2f2f2; }
+    .tbl { overflow-x: auto; }
+
+    ul { margin: 0.3em 0; padding-left: 1.4em; }
+    li { margin: 0.15em 0; }
+
+    .tbl:focus-visible, a:focus-visible { outline: 2px solid #0000cc; outline-offset: 3px; }
+    .tbl caption { text-align: left; margin-bottom: 0.4em; }
+    .outline th:first-child, .outline td:first-child { width: 2.5em; }
+    .outline tbody tr + tr td { border-top: 1px solid #ccc; }
+    .outline tbody tr:nth-child(even) { background: #f2f2f2; }
+
+    nav { margin: 0.5em 0; }
