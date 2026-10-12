@@ -378,8 +378,6 @@ function draw(k) {
   }
   if (mask) {  // the mask line: the same PM2.5 on both panels
     el("line", { x1: m.l, x2: W - m.r, y1: Y(mask.v), y2: Y(mask.v), stroke: "var(--red)", "stroke-width": 1.5 }, svg);
-    const tx = el("text", { x: m.l + 4, y: Y(mask.v) - 4, style: "fill:var(--red);font-size:11.5px;paint-order:stroke;stroke:var(--surface);stroke-width:3px" }, svg);
-    tx.textContent = narrow ? mask.label.split(/[:(]/)[0].trim() : mask.label;
   }
   const axis = el("g", { class: "axis" }, svg);
   el("line", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0) }, axis);
@@ -443,6 +441,10 @@ function draw(k) {
   // Picked lines: bold, full colour, no fade, above everything.
   const top2 = el("g", {}, svg);
   for (const it of [...obs.filter(o => o.d), ...lines]) if (state.pins.has(it.key)) emphasise(top2, it, X, Y);
+  if (mask) {  // its label goes on last, so no line runs through it
+    const tx = el("text", { x: m.l + 4, y: Y(mask.v) - 5, style: "fill:var(--red);font-size:12px;font-weight:700;paint-order:stroke;stroke:var(--surface);stroke-width:4px" }, svg);
+    tx.textContent = narrow ? mask.label.split(/[:(]/)[0].trim() : mask.label;
+  }
   P.hoverLayer = el("g", {}, svg);
   // Name each forecaster at the end of its newest line; push labels apart where they collide.
   ends.sort((a, b) => a.y - b.y);
