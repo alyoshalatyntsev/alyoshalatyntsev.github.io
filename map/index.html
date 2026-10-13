@@ -3,45 +3,50 @@
 <head>
 <meta charset="utf-8">
 <title>Map</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="leaflet/leaflet.css">
+<link rel="stylesheet" href="maplibre/maplibre-gl.css">
 <style>
-  html, body { height: 100%; margin: 0; font: 14px/1.4 "Segoe UI", system-ui, sans-serif; color: #222; }
+  html, body { height: 100%; margin: 0; font: 14px/1.35 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #2b2b2a; }
   #app { display: flex; height: 100%; }
-  #side { width: 280px; flex: none; overflow-y: auto; border-right: 1px solid #ddd; background: #fafaf8; }
+  #side { width: 300px; flex: none; overflow-y: auto; border-right: 1px solid #e4e3df; background: #fcfcfb; }
   #map { flex: 1; }
-  h1 { font-size: 16px; margin: 14px 14px 8px; }
-  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #777; margin: 16px 14px 4px; }
-  #filters { margin: 0 14px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
-  #filters label { cursor: pointer; white-space: nowrap; }
-  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
-  .item { padding: 6px 14px; cursor: pointer; }
-  .item:hover { background: #eeece6; }
-  .item.unplaced { cursor: default; color: #555; }
-  .item small { display: block; color: #777; }
-  .item .q { color: #a04a00; }
-  #forget { display: block; margin: 18px 14px; color: #999; font-size: 12px; }
-  #coords { position: absolute; right: 10px; bottom: 22px; z-index: 1000; background: #fff; padding: 3px 8px;
-            border: 1px solid #ccc; border-radius: 3px; font: 12px Consolas, monospace; user-select: all; }
-  #toggle { display: none; position: absolute; top: 10px; right: 10px; z-index: 1100; padding: 7px 12px;
-            background: #fff; border: 1px solid #bbb; border-radius: 4px; font: inherit; }
-  .lbl { background: none; border: none; box-shadow: none; padding: 0; font: 600 12px "Segoe UI", sans-serif;
-         color: #222; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
-  .lbl::before { display: none; }
-  .far .lbl { display: none; }
-  .leaflet-tile-pane { filter: saturate(.3) brightness(1.04); }
-  #gate { position: fixed; inset: 0; z-index: 2000; background: #fafaf8; display: none;
-          align-items: center; justify-content: center; }
+  #controls { position: sticky; top: 0; z-index: 2; background: #fcfcfb; padding: 10px 10px 8px; border-bottom: 1px solid #eceBe7; }
+  #q { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; border: 1px solid #cfcec9; border-radius: 6px; }
+  #openRow { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  #openRow select, #openRow input[type=time] { font: inherit; padding: 3px 4px; border: 1px solid #cfcec9; border-radius: 5px; background: #fff; }
+  #chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .chip { border: 1px solid #cfcec9; border-radius: 999px; padding: 2px 9px 2px 7px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; }
+  .chip .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; background: var(--c); }
+  .chip.off { color: #a3a29c; }
+  .chip.off .dot { background: #d6d5d0; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #7b7a74; margin: 14px 12px 4px; font-weight: 600; }
+  .item { display: flex; align-items: center; gap: 10px; margin: 4px 10px; padding: 6px 8px; border-radius: 6px; cursor: pointer;
+          border-left: 4px solid var(--c); background: color-mix(in srgb, var(--c) 11%, #fff); }
+  .item:hover { background: color-mix(in srgb, var(--c) 20%, #fff); }
+  .item b { display: block; font-weight: 600; }
+  .item small { display: block; color: #6b6a65; font-size: 12px; }
+  .logo { width: 36px; height: 36px; border-radius: 6px; flex: none; object-fit: cover; }
+  .logo.ph { display: flex; align-items: center; justify-content: center; background: var(--c); color: #fff; font-weight: 700; }
+  #note { margin: 10px 12px; color: #7b7a74; font-size: 12px; }
+  #forget { display: block; margin: 18px 12px; color: #a3a29c; font-size: 12px; }
+  #toggle { display: none; position: absolute; top: 10px; left: 10px; z-index: 5; padding: 8px 13px; background: #fff;
+            border: 0; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); font: inherit; font-weight: 600; }
+  .pop { display: flex; gap: 10px; font: 13px/1.35 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .pop .logo { width: 48px; height: 48px; }
+  .pop small { color: #6b6a65; display: block; }
+  .pop .q { color: #a04a00; }
+  .maplibregl-popup-content { padding: 10px 12px; border-radius: 8px; }
+  #gate { position: fixed; inset: 0; z-index: 2000; background: #fcfcfb; display: none; align-items: center; justify-content: center; }
   #gate form { width: min(340px, 86vw); }
   #gate input { width: 100%; box-sizing: border-box; padding: 8px; font: 14px Consolas, monospace; margin: 8px 0; }
   #gate button { padding: 7px 16px; font: inherit; }
   #gateMsg { color: #a04a00; min-height: 1.4em; margin-top: 8px; }
   @media (max-width: 700px) {
-    #side { display: none; position: absolute; z-index: 1050; top: 0; bottom: 0; left: 0; width: min(300px, 85vw); }
+    #side { display: none; position: absolute; z-index: 10; top: 0; bottom: 0; left: 0; width: min(320px, 88vw); box-shadow: 0 0 24px rgba(0,0,0,.25); }
     #app.list #side { display: block; }
     #toggle { display: block; }
-    #coords { display: none; }
+    #app.list ~ #toggle { left: auto; right: 10px; top: 10px; z-index: 11; }
   }
 </style>
 </head>
@@ -56,25 +61,31 @@
 </div>
 <div id="app">
   <div id="side">
-    <h1>Beijing</h1>
-    <div id="filters"></div>
-    <h2>Places</h2>
-    <div id="placed"></div>
-    <h2 id="unplacedHead">Not placed yet</h2>
-    <div id="unplaced"></div>
+    <div id="controls">
+      <input id="q" type="search" placeholder="Search name, 中文, area, chain" autocomplete="off">
+      <div id="openRow">
+        <label><input id="openOn" type="checkbox"> Open at</label>
+        <select id="openDay"></select>
+        <input id="openTime" type="time">
+      </div>
+      <div id="chips"></div>
+    </div>
+    <div id="list"></div>
+    <div id="note"></div>
     <a id="forget" href="#">Forget token on this device</a>
   </div>
   <div id="map"></div>
 </div>
 <button id="toggle">List</button>
-<div id="coords">click map for coordinates</div>
 
-<script src="leaflet/leaflet.js"></script>
+<script src="maplibre/maplibre-gl.js"></script>
 <script>
 // The place data is not in this (public) site. It is read from a private GitHub
 // repository with a token that the visitor types in once; the token stays in this browser.
 const DATA = "https://api.github.com/repos/alyoshalatyntsev/beijing-map-data/contents/";
+const LOCAL = location.hostname === "localhost";   // the data repo served from disk, for testing
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function askToken(msg) {
   $("gateMsg").textContent = msg || "";
@@ -83,21 +94,22 @@ function askToken(msg) {
 }
 
 async function load(token) {
-  const get = async f => {
-    const r = await fetch(DATA + f, { headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json" } });
-    if (!r.ok) throw r.status;
+  const get = async (f, optional) => {
+    const r = LOCAL ? await fetch("../../" + f)
+      : await fetch(DATA + f, { headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json" } });
+    if (!r.ok) { if (optional) return {}; throw r.status; }
     return r.json();
   };
-  return Promise.all([get("places.json"), get("chains.json")]);
+  return Promise.all([get("places.json"), get("chains.json"), get("logos.json", true)]);
 }
 
 async function start() {
   const token = localStorage.getItem("mapToken");
-  if (!token) return askToken();
+  if (!token && !LOCAL) return askToken();
   try {
-    const [main, chains] = await load(token);
+    const [main, chains, logos] = await load(token);
     $("gate").style.display = "none";
-    draw(main.categories, main.places.concat(chains.places));
+    draw(main.categories, main.places.concat(chains.places), logos);
   } catch (e) {
     askToken(e === 401 ? "That token was not accepted." : e === 403 || e === 404 ? "That token cannot read the map data."
       : "Could not reach GitHub. Try again.");
@@ -113,80 +125,169 @@ $("gateForm").onsubmit = e => {
   start();
 };
 $("forget").onclick = e => { e.preventDefault(); localStorage.removeItem("mapToken"); location.reload(); };
-$("toggle").onclick = () => $("app").classList.toggle("list");
+$("toggle").onclick = () => {
+  $("toggle").textContent = $("app").classList.toggle("list") ? "Map" : "List";
+};
 
-function draw(CATEGORIES, PLACES) {
-  const map = L.map("map", { zoomSnap: 0.5 }).setView([39.9420, 116.4030], 15.5);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map);
-  L.control.scale({ imperial: false }).addTo(map);
+// Opening hours: "HH:MM-HH:MM" for every day, or 7 strings Monday..Sunday; "closed"; several spans joined by ",".
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const toMin = t => { const [h, m] = t.split(":"); return h * 60 + +m; };
+const dayHours = (p, d) => Array.isArray(p.hours) ? p.hours[d] : p.hours;
+function spans(s) {
+  if (!s || s === "closed") return [];
+  return s.split(",").map(x => { let [a, b] = x.split("-").map(toMin); if (b <= a) b += 1440; return [a, b]; });
+}
+function isOpen(p, d, m) {
+  if (p.hours == null) return null;
+  return spans(dayHours(p, d)).some(([a, b]) => a <= m && m < b)
+    || spans(dayHours(p, (d + 6) % 7)).some(([a, b]) => a <= m + 1440 && m + 1440 < b);
+}
+const now = () => { const t = new Date(); return { day: (t.getDay() + 6) % 7, min: t.getHours() * 60 + t.getMinutes() }; };
 
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const title = p => esc(p.name) + (p.name_zh ? " <small style='display:inline;color:#777'>" + esc(p.name_zh) + "</small>" : "");
+function draw(CATEGORIES, PLACES, LOGOS) {
+  const catOf = p => CATEGORIES[p.category] || CATEGORIES.other;
+  const order = Object.keys(CATEGORIES);
+  const cats = new Set(order);
+  const byId = {};
+  PLACES = PLACES.filter(p => p.lat != null);
+  for (const p of PLACES) byId[p.id] = p;
 
-  function popup(p) {
-    let h = "<b>" + title(p) + "</b>";
-    if (p.address) h += "<br>" + esc(p.address);
-    if (p.located === "approx") h += "<br><i>approximate position</i>";
-    if (p.notes) h += "<br>" + esc(p.notes);
-    if (p.check) h += "<br><span style='color:#a04a00'>" + esc(p.check) + "</span>";
-    return h;
+  const logo = (p, key) => LOGOS[key || p.id]
+    ? "<img class='logo' alt='' src='" + LOGOS[key || p.id] + "'>"
+    : "<span class='logo ph' style='--c:" + catOf(p).color + "'>" + esc(p.name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 1).toUpperCase()) + "</span>";
+
+  // controls
+  DAYS.forEach((d, i) => $("openDay").add(new Option(d, i)));
+  const t0 = now();
+  $("openDay").value = t0.day;
+  $("openTime").value = String(Math.floor(t0.min / 60)).padStart(2, "0") + ":" + String(t0.min % 60).padStart(2, "0");
+  for (const key of order) {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.style.setProperty("--c", CATEGORIES[key].color);
+    b.innerHTML = "<span class='dot'></span>" + esc(CATEGORIES[key].label);
+    b.onclick = () => { cats.has(key) ? cats.delete(key) : cats.add(key); b.classList.toggle("off"); render(); };
+    $("chips").appendChild(b);
+  }
+  $("q").oninput = $("openOn").onchange = () => render();
+  $("openDay").onchange = $("openTime").onchange = () => { $("openOn").checked = true; render(); };
+
+  // map
+  const first = PLACES.filter(p => !p.chain);
+  const bounds = first.reduce((b, p) => b.extend([p.lon, p.lat]), new maplibregl.LngLatBounds());
+  const map = new maplibregl.Map({
+    container: "map", style: "https://tiles.openfreemap.org/styles/positron",
+    bounds, fitBoundsOptions: { padding: 50 }, attributionControl: { compact: true },
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  const geo = new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true,
+    fitBoundsOptions: { maxZoom: 15 },
+  });
+  map.addControl(geo, "top-right");
+  map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
+  const popup = new maplibregl.Popup({ offset: 12, maxWidth: "280px" });
+
+  const feature = p => ({
+    type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
+    properties: { id: p.id, name: p.name, color: catOf(p).color, chain: !!p.chain, approx: p.located === "approx" },
+  });
+
+  function showPopup(p) {
+    const t = now(), open = isOpen(p, t.day, t.min), today = p.hours == null ? null : dayHours(p, t.day);
+    let h = "<div class='pop'>" + logo(p, p.chain) + "<div><b>" + esc(p.name) + "</b>";
+    if (p.name_zh) h += "<small>" + esc(p.name_zh) + "</small>";
+    if (today != null) h += "<div>" + (open ? "Open now" : "Closed now") + " · today " + esc(today.replace(/,/g, ", ")) + "</div>";
+    if (p.address) h += "<small>" + esc(p.address) + "</small>";
+    if (p.located === "approx") h += "<small><i>approximate position</i></small>";
+    if (p.notes) h += "<small>" + esc(p.notes) + "</small>";
+    if (p.check) h += "<small class='q'>" + esc(p.check) + "</small>";
+    popup.setLngLat([p.lon, p.lat]).setHTML(h + "</div></div>").addTo(map);
   }
 
-  const groups = {};
-  for (const key in CATEGORIES) groups[key] = L.layerGroup().addTo(map);
+  function go(p) {
+    $("app").classList.remove("list"); $("toggle").textContent = "List";
+    map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
+    showPopup(p);
+  }
 
-  for (const p of PLACES) {
-    const cat = CATEGORIES[p.category];
-    const dot = "<span class='dot' style='background:" + cat.color + "'></span>";
-    if (p.lat == null) {
-      const d = document.createElement("div");
-      d.className = "item unplaced";
-      d.innerHTML = dot + title(p) + (p.notes ? "<small>" + esc(p.notes) + "</small>" : "")
-        + (p.check ? "<small class='q'>" + esc(p.check) + "</small>" : "");
-      $("unplaced").appendChild(d);
-      continue;
-    }
-    const approx = p.located === "approx";
-    const m = L.circleMarker([p.lat, p.lon], {
-      radius: p.chain ? 4.5 : 7, color: approx ? cat.color : "#fff", weight: p.chain ? 1 : 2, dashArray: approx ? "3 3" : null,
-      fillColor: cat.color, fillOpacity: approx ? 0.35 : 1,
-    }).bindPopup(popup(p));
-    if (p.chain) m.bindTooltip(p.name_zh || p.name, { direction: "right", offset: [6, 0] });
-    else m.bindTooltip(p.name, { permanent: true, direction: "right", offset: [8, 0], className: "lbl" });
-    m.addTo(groups[p.category]);
-    if (p.chain) continue;
-
+  function item(p, title, sub, logoKey, onclick) {
     const d = document.createElement("div");
     d.className = "item";
-    d.dataset.cat = p.category;
-    d.innerHTML = dot + title(p) + (p.address ? "<small>" + esc(p.address) + (approx ? " (approx.)" : "") + "</small>" : "");
-    d.onclick = () => {
-      $("app").classList.remove("list");
-      map.setView([p.lat, p.lon], Math.max(map.getZoom(), 16.5));
-      m.openPopup();
-    };
-    $("placed").appendChild(d);
+    d.style.setProperty("--c", catOf(p).color);
+    d.innerHTML = logo(p, logoKey) + "<div><b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
+    d.onclick = onclick;
+    return d;
   }
 
-  for (const key in CATEGORIES) {
-    const l = document.createElement("label");
-    l.innerHTML = "<input type='checkbox' checked> <span class='dot' style='background:" + CATEGORIES[key].color + "'></span>" + CATEGORIES[key].label;
-    l.firstChild.onchange = e => {
-      e.target.checked ? groups[key].addTo(map) : groups[key].remove();
-      document.querySelectorAll(".item[data-cat='" + key + "']").forEach(el => el.style.display = e.target.checked ? "" : "none");
-    };
-    $("filters").appendChild(l);
+  function render() {
+    const q = $("q").value.trim().toLowerCase();
+    const at = $("openOn").checked && $("openTime").value ? { day: +$("openDay").value, min: toMin($("openTime").value) } : null;
+    const text = p => [p.name, p.name_zh, p.area, p.address, catOf(p).label, p.chain].join(" ").toLowerCase();
+    let unknown = 0;
+    const shown = PLACES.filter(p => {
+      if (!cats.has(p.category in CATEGORIES ? p.category : "other") || (q && !text(p).includes(q))) return false;
+      if (!at) return true;
+      const o = isOpen(p, at.day, at.min);
+      if (o == null && !p.chain) unknown++;
+      return o === true;
+    });
+    if (map.getSource("places")) map.getSource("places").setData({ type: "FeatureCollection", features: shown.map(feature) });
+
+    const list = $("list");
+    list.textContent = "";
+    for (const key of order) {
+      const here = shown.filter(p => (p.category in CATEGORIES ? p.category : "other") === key);
+      if (!here.length) continue;
+      const h = document.createElement("h2");
+      h.textContent = CATEGORIES[key].label;
+      list.appendChild(h);
+      for (const p of here.filter(p => !p.chain).sort((a, b) => a.name.localeCompare(b.name)))
+        list.appendChild(item(p, p.name, p.name_zh, null, () => go(p)));
+      const chains = {};
+      for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
+      for (const c in chains) {
+        const branches = chains[c].sort((a, b) => (a.name_zh || "").localeCompare(b.name_zh || "", "zh"));
+        if (q) for (const p of branches) list.appendChild(item(p, p.name, p.name_zh, c, () => go(p)));
+        else list.appendChild(item(branches[0], branches[0].name, branches.length + " branches", c, () => {
+          $("q").value = branches[0].name; render();
+          $("app").classList.remove("list"); $("toggle").textContent = "List";
+          map.fitBounds(branches.reduce((b, p) => b.extend([p.lon, p.lat]), new maplibregl.LngLatBounds()), { padding: 50 });
+        }));
+      }
+    }
+    $("note").textContent = (shown.length ? "" : "Nothing matches. ")
+      + (unknown ? unknown + " place" + (unknown > 1 ? "s" : "") + " with unknown hours hidden." : "");
   }
 
-  if (!$("unplaced").children.length) $("unplacedHead").style.display = "none";
-  const showLabels = () => map.getContainer().classList.toggle("far", map.getZoom() < 14.5);
-  map.on("zoomend", showLabels); showLabels();
-
-  map.on("click", e => {
-    $("coords").textContent = e.latlng.lat.toFixed(5) + ", " + e.latlng.lng.toFixed(5);
+  map.on("load", () => {
+    for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"])
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
+    map.addSource("places", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    // chain branches: thin coloured ring, not filled
+    map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3.5, 14, 6],
+      "circle-color": "#ffffff", "circle-opacity": 0.55,
+      "circle-stroke-color": ["get", "color"], "circle-stroke-width": 1.8,
+    } });
+    map.addLayer({ id: "dots", type: "circle", source: "places", filter: ["!", ["get", "chain"]], paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 7.5],
+      "circle-color": ["get", "color"], "circle-opacity": ["case", ["get", "approx"], 0.45, 1],
+      "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+    } });
+    map.addLayer({ id: "labels", type: "symbol", source: "places", minzoom: 11.5, filter: ["!", ["get", "chain"]], layout: {
+      "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12,
+      "text-variable-anchor": ["left", "right", "top", "bottom"], "text-radial-offset": 0.9, "text-justify": "auto",
+    }, paint: { "text-color": "#2b2b2a", "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
+    for (const id of ["dots", "rings"]) {
+      map.on("click", id, e => showPopup(byId[e.features[0].properties.id]));
+      map.on("mouseenter", id, () => map.getCanvas().style.cursor = "pointer");
+      map.on("mouseleave", id, () => map.getCanvas().style.cursor = "");
+    }
+    render();
+    geo.trigger();   // show my location
   });
+  render();
 }
 
 start();
