@@ -7,33 +7,43 @@
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="maplibre/maplibre-gl.css">
 <style>
-  html, body { height: 100%; margin: 0; font: 14px/1.35 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #2b2b2a; }
+  html, body { height: 100%; margin: 0; font: 13px/1.3 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #2b2b2a; }
   #app { display: flex; height: 100%; }
-  #side { width: 300px; flex: none; overflow-y: auto; border-right: 1px solid #e4e3df; background: #fcfcfb; }
-  #map { flex: 1; }
-  #controls { position: sticky; top: 0; z-index: 2; background: #fcfcfb; padding: 10px 10px 8px; border-bottom: 1px solid #eceBe7; }
-  #q { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; border: 1px solid #cfcec9; border-radius: 6px; }
-  #openRow { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
-  #openRow select, #openRow input[type=time] { font: inherit; padding: 3px 4px; border: 1px solid #cfcec9; border-radius: 5px; background: #fff; }
-  #chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-  .chip { border: 1px solid #cfcec9; border-radius: 999px; padding: 2px 9px 2px 7px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; }
-  .chip .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; background: var(--c); }
+  #side { position: relative; width: 250px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #e4e3df; background: #fcfcfb; }
+  #grip { position: absolute; top: 0; bottom: 0; right: -5px; width: 10px; cursor: ew-resize; z-index: 20; touch-action: none; }
+  #map { flex: 1; min-width: 0; }
+  #top { padding: 8px 8px 6px; border-bottom: 1px solid #ecebe7; }
+  #q { width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; border: 1px solid #cfcec9; border-radius: 6px; }
+  #timeRow { display: flex; align-items: center; gap: 6px; margin-top: 6px; white-space: nowrap; }
+  #slider { flex: 1; min-width: 0; }
+  #slider:disabled { opacity: .35; }
+  #timeText { width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
+  #list { flex: 1; overflow-y: auto; padding-bottom: 8px; }
+  #bottom { padding: 6px 8px 8px; border-top: 1px solid #ecebe7; }
+  #chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { border: 1px solid #cfcec9; border-radius: 999px; padding: 1px 8px 1px 6px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; user-select: none; }
+  .chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; background: var(--c); }
   .chip.off { color: #a3a29c; }
   .chip.off .dot { background: #d6d5d0; }
-  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #7b7a74; margin: 14px 12px 4px; font-weight: 600; }
-  .item { display: flex; align-items: center; gap: 10px; margin: 4px 10px; padding: 6px 8px; border-radius: 6px; cursor: pointer;
-          border-left: 4px solid var(--c); background: color-mix(in srgb, var(--c) 11%, #fff); }
-  .item:hover { background: color-mix(in srgb, var(--c) 20%, #fff); }
-  .item b { display: block; font-weight: 600; }
-  .item small { display: block; color: #6b6a65; font-size: 12px; }
-  .logo { width: 36px; height: 36px; border-radius: 6px; flex: none; object-fit: cover; }
-  .logo.ph { display: flex; align-items: center; justify-content: center; background: var(--c); color: #fff; font-weight: 700; }
-  #note { margin: 10px 12px; color: #7b7a74; font-size: 12px; }
-  #forget { display: block; margin: 18px 12px; color: #a3a29c; font-size: 12px; }
+  #opts { display: flex; gap: 12px; margin-top: 6px; color: #55544f; }
+  h2 { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #7b7a74; margin: 8px 9px 2px; font-weight: 600; }
+  .item { margin: 2px 7px; border-radius: 4px; cursor: pointer; border-left: 3px solid var(--c); overflow: hidden; user-select: none; }
+  .row { display: flex; align-items: center; gap: 6px; padding: 2px 6px; }
+  .row b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row small { color: #55544f; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 10 0; }
+  .item.closed .row b, .item.closed .row small { color: #9a9993; }
+  .item.closed .logo { opacity: .45; }
+  .logo { width: 18px; height: 18px; border-radius: 4px; flex: none; object-fit: cover; }
+  .logo.ph { display: flex; align-items: center; justify-content: center; background: var(--c); color: #fff; font-weight: 700; font-size: 11px; }
+  .more { padding: 2px 6px 6px; background: rgba(255,255,255,.72); font-size: 12px; color: #44433f; cursor: default; }
+  .more img { width: 100%; border-radius: 4px; display: block; margin-bottom: 4px; }
+  #note { margin: 8px 9px; color: #7b7a74; font-size: 12px; }
+  #forget { display: block; margin: 12px 9px 4px; color: #a3a29c; font-size: 11px; }
   #toggle { display: none; position: absolute; top: 10px; left: 10px; z-index: 5; padding: 8px 13px; background: #fff;
             border: 0; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); font: inherit; font-weight: 600; }
-  .pop { display: flex; gap: 10px; font: 13px/1.35 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
-  .pop .logo { width: 48px; height: 48px; }
+  .me { width: 14px; height: 14px; border-radius: 50%; background: #2a78d6; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(42,120,214,.5), 0 0 0 8px rgba(42,120,214,.15); }
+  .pop { font: 13px/1.35 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .pop img.photo { width: 100%; border-radius: 6px; display: block; margin-bottom: 6px; }
   .pop small { color: #6b6a65; display: block; }
   .pop .q { color: #a04a00; }
   .maplibregl-popup-content { padding: 10px 12px; border-radius: 8px; }
@@ -43,10 +53,10 @@
   #gate button { padding: 7px 16px; font: inherit; }
   #gateMsg { color: #a04a00; min-height: 1.4em; margin-top: 8px; }
   @media (max-width: 700px) {
-    #side { display: none; position: absolute; z-index: 10; top: 0; bottom: 0; left: 0; width: min(320px, 88vw); box-shadow: 0 0 24px rgba(0,0,0,.25); }
-    #app.list #side { display: block; }
+    #side { display: none; position: absolute; z-index: 10; top: 0; bottom: 0; left: 0; max-width: 92vw; box-shadow: 0 0 24px rgba(0,0,0,.25); }
+    #app.list #side { display: flex; }
     #toggle { display: block; }
-    #app.list ~ #toggle { left: auto; right: 10px; top: 10px; z-index: 11; }
+    #app.list ~ #toggle { left: auto; right: 10px; z-index: 11; }
   }
 </style>
 </head>
@@ -61,18 +71,23 @@
 </div>
 <div id="app">
   <div id="side">
-    <div id="controls">
+    <div id="top">
       <input id="q" type="search" placeholder="Search name, 中文, area, chain" autocomplete="off">
-      <div id="openRow">
-        <label><input id="openOn" type="checkbox"> Open at</label>
-        <select id="openDay"></select>
-        <input id="openTime" type="time">
+      <div id="timeRow">
+        <label title="Use the current time"><input id="nowOn" type="checkbox" checked> Now</label>
+        <input id="slider" type="range" min="0" max="23" step="1" disabled>
+        <span id="timeText"></span>
       </div>
-      <div id="chips"></div>
     </div>
     <div id="list"></div>
-    <div id="note"></div>
-    <a id="forget" href="#">Forget token on this device</a>
+    <div id="bottom">
+      <div id="chips" title="Click: show or hide a type. Shift+click: only that type."></div>
+      <div id="opts">
+        <label><input id="zhOn" type="checkbox"> 中文</label>
+        <label><input id="hideClosed" type="checkbox"> Hide closed</label>
+      </div>
+    </div>
+    <div id="grip"></div>
   </div>
   <div id="map"></div>
 </div>
@@ -86,6 +101,8 @@ const DATA = "https://api.github.com/repos/alyoshalatyntsev/beijing-map-data/con
 const LOCAL = location.hostname === "localhost";   // the data repo served from disk, for testing
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// Google Maps-like yellows for areas: somewhat busy, very busy
+const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7] };
 
 function askToken(msg) {
   $("gateMsg").textContent = msg || "";
@@ -93,23 +110,21 @@ function askToken(msg) {
   $("token").focus();
 }
 
-async function load(token) {
-  const get = async (f, optional) => {
-    const r = LOCAL ? await fetch("../../" + f)
-      : await fetch(DATA + f, { headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json" } });
-    if (!r.ok) { if (optional) return {}; throw r.status; }
-    return r.json();
-  };
-  return Promise.all([get("places.json"), get("chains.json"), get("logos.json", true)]);
+async function get(f, optional) {
+  const token = localStorage.getItem("mapToken");
+  const r = LOCAL ? await fetch("../../" + f)
+    : await fetch(DATA + f, { headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json" } });
+  if (!r.ok) { if (optional) return {}; throw r.status; }
+  return r.json();
 }
 
 async function start() {
-  const token = localStorage.getItem("mapToken");
-  if (!token && !LOCAL) return askToken();
+  if (!localStorage.getItem("mapToken") && !LOCAL) return askToken();
   try {
-    const [main, chains, logos] = await load(token);
+    const [main, chains, logos, areas] = await Promise.all(
+      [get("places.json"), get("chains.json"), get("logos.json", true), get("areas.json", true)]);
     $("gate").style.display = "none";
-    draw(main.categories, main.places.concat(chains.places), logos);
+    draw(main.categories, main.places.concat(chains.places), logos, areas.areas || []);
   } catch (e) {
     askToken(e === 401 ? "That token was not accepted." : e === 403 || e === 404 ? "That token cannot read the map data."
       : "Could not reach GitHub. Try again.");
@@ -124,14 +139,12 @@ $("gateForm").onsubmit = e => {
   $("gateMsg").textContent = "Loading...";
   start();
 };
-$("forget").onclick = e => { e.preventDefault(); localStorage.removeItem("mapToken"); location.reload(); };
-$("toggle").onclick = () => {
-  $("toggle").textContent = $("app").classList.toggle("list") ? "Map" : "List";
-};
+const setList = on => { $("app").classList.toggle("list", on); $("toggle").textContent = on ? "Map" : "List"; };
+$("toggle").onclick = () => setList(!$("app").classList.contains("list"));
 
 // Opening hours: "HH:MM-HH:MM" for every day, or 7 strings Monday..Sunday; "closed"; several spans joined by ",".
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const toMin = t => { const [h, m] = t.split(":"); return h * 60 + +m; };
+const hhmm = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
 const dayHours = (p, d) => Array.isArray(p.hours) ? p.hours[d] : p.hours;
 function spans(s) {
   if (!s || s === "closed") return [];
@@ -144,148 +157,246 @@ function isOpen(p, d, m) {
 }
 const now = () => { const t = new Date(); return { day: (t.getDay() + 6) % 7, min: t.getHours() * 60 + t.getMinutes() }; };
 
-function draw(CATEGORIES, PLACES, LOGOS) {
-  const catOf = p => CATEGORIES[p.category] || CATEGORIES.other;
+function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
+  const catKey = p => p.category in CATEGORIES ? p.category : "other";
+  const color = p => CATEGORIES[catKey(p)].color;
   const order = Object.keys(CATEGORIES);
   const cats = new Set(order);
   const byId = {};
+  let PHOTOS = {}, expanded = null;
   PLACES = PLACES.filter(p => p.lat != null);
   for (const p of PLACES) byId[p.id] = p;
 
   const logo = (p, key) => LOGOS[key || p.id]
     ? "<img class='logo' alt='' src='" + LOGOS[key || p.id] + "'>"
-    : "<span class='logo ph' style='--c:" + catOf(p).color + "'>" + esc(p.name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 1).toUpperCase()) + "</span>";
+    : "<span class='logo ph' style='--c:" + color(p) + "'>" + esc(p.name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 1).toUpperCase()) + "</span>";
 
-  // controls
-  DAYS.forEach((d, i) => $("openDay").add(new Option(d, i)));
-  const t0 = now();
-  $("openDay").value = t0.day;
-  $("openTime").value = String(Math.floor(t0.min / 60)).padStart(2, "0") + ":" + String(t0.min % 60).padStart(2, "0");
+  // the time everything is judged at: now, or today at the slider's quarter past the hour
+  const at = () => $("nowOn").checked ? now() : { day: now().day, min: $("slider").value * 60 + 15 };
+  $("slider").value = Math.min(23, Math.floor(now().min / 60));
+
+  // type chips: click toggles one, shift+click (or long press) shows only that one
+  const chipEls = {};
+  const syncChips = () => { for (const k of order) chipEls[k].classList.toggle("off", !cats.has(k)); render(); };
+  const solo = k => {
+    const only = cats.size === 1 && cats.has(k);
+    cats.clear();
+    (only ? order : [k]).forEach(x => cats.add(x));
+    syncChips();
+  };
   for (const key of order) {
-    const b = document.createElement("button");
+    const b = chipEls[key] = document.createElement("button");
     b.className = "chip";
     b.style.setProperty("--c", CATEGORIES[key].color);
     b.innerHTML = "<span class='dot'></span>" + esc(CATEGORIES[key].label);
-    b.onclick = () => { cats.has(key) ? cats.delete(key) : cats.add(key); b.classList.toggle("off"); render(); };
+    b.onclick = e => { if (e.shiftKey) return solo(key); cats.has(key) ? cats.delete(key) : cats.add(key); syncChips(); };
+    b.oncontextmenu = e => { e.preventDefault(); solo(key); };
     $("chips").appendChild(b);
   }
-  $("q").oninput = $("openOn").onchange = () => render();
-  $("openDay").onchange = $("openTime").onchange = () => { $("openOn").checked = true; render(); };
+  $("q").oninput = $("zhOn").onchange = $("hideClosed").onchange = $("slider").oninput = () => render();
+  $("nowOn").onchange = () => { $("slider").disabled = $("nowOn").checked; render(); };
+  setInterval(() => { if ($("nowOn").checked) render(); }, 5 * 60000);
 
-  // map
-  const first = PLACES.filter(p => !p.chain);
-  const bounds = first.reduce((b, p) => b.extend([p.lon, p.lat]), new maplibregl.LngLatBounds());
+  // sidebar edge is draggable
+  const side = $("side");
+  if (localStorage.getItem("mapSide")) side.style.width = localStorage.getItem("mapSide") + "px";
+  $("grip").onpointerdown = e => {
+    $("grip").setPointerCapture(e.pointerId);
+    const move = ev => { side.style.width = Math.max(150, Math.min(innerWidth * 0.92, ev.clientX - side.getBoundingClientRect().left)) + "px"; map.resize(); };
+    const up = () => { $("grip").removeEventListener("pointermove", move); localStorage.setItem("mapSide", parseInt(side.style.width)); };
+    $("grip").addEventListener("pointermove", move);
+    $("grip").addEventListener("pointerup", up, { once: true });
+  };
+
+  // map: a standard view of Beijing
   const map = new maplibregl.Map({
     container: "map", style: "https://tiles.openfreemap.org/styles/positron",
-    bounds, fitBoundsOptions: { padding: 50 }, attributionControl: { compact: true },
+    bounds: [[116.27, 39.84], [116.53, 40.02]], fitBoundsOptions: { padding: 10 }, attributionControl: { compact: true },
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-  const geo = new maplibregl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true,
-    fitBoundsOptions: { maxZoom: 15 },
-  });
-  map.addControl(geo, "top-right");
   map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
-  const popup = new maplibregl.Popup({ offset: 12, maxWidth: "280px" });
+  const popup = new maplibregl.Popup({ offset: 12, maxWidth: "260px" });
 
-  const feature = p => ({
+  // my location: a dot that never moves the camera; the button goes there
+  let me = null, meMarker = null;
+  if (navigator.geolocation) navigator.geolocation.watchPosition(pos => {
+    me = [pos.coords.longitude, pos.coords.latitude];
+    if (meMarker) return meMarker.setLngLat(me);
+    const el = document.createElement("div");
+    el.className = "me";
+    meMarker = new maplibregl.Marker({ element: el }).setLngLat(me).addTo(map);
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
+  map.addControl({
+    onAdd() {
+      const d = document.createElement("div");
+      d.className = "maplibregl-ctrl maplibregl-ctrl-group";
+      d.innerHTML = "<button title='My location' style='font-size:17px;line-height:1'>&#9678;</button>";
+      d.firstChild.onclick = () => { if (me) map.easeTo({ center: me, zoom: Math.max(map.getZoom(), 14) }); };
+      return d;
+    },
+    onRemove() {},
+  }, "top-right");
+
+  const feature = (p, closed) => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-    properties: { id: p.id, name: p.name, color: catOf(p).color, chain: !!p.chain, approx: p.located === "approx" },
+    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx" || closed },
   });
+
+  function hoursLine(p) {
+    const t = at(), today = p.hours == null ? null : dayHours(p, t.day);
+    if (today == null) return "";
+    const open = isOpen(p, t.day, t.min);
+    return ($("nowOn").checked ? (open ? "Open now" : "Closed now") : (open ? "Open" : "Closed") + " at " + hhmm(t.min))
+      + " · today " + esc(today.replace(/,/g, ", "));
+  }
 
   function showPopup(p) {
-    const t = now(), open = isOpen(p, t.day, t.min), today = p.hours == null ? null : dayHours(p, t.day);
-    let h = "<div class='pop'>" + logo(p, p.chain) + "<div><b>" + esc(p.name) + "</b>";
+    let h = "<div class='pop'>";
+    if (PHOTOS[p.id]) h += "<img class='photo' alt='' src='" + PHOTOS[p.id] + "'>";
+    h += "<b>" + esc(p.name) + "</b>";
     if (p.name_zh) h += "<small>" + esc(p.name_zh) + "</small>";
-    if (today != null) h += "<div>" + (open ? "Open now" : "Closed now") + " · today " + esc(today.replace(/,/g, ", ")) + "</div>";
+    if (hoursLine(p)) h += "<div>" + hoursLine(p) + "</div>";
     if (p.address) h += "<small>" + esc(p.address) + "</small>";
     if (p.located === "approx") h += "<small><i>approximate position</i></small>";
     if (p.notes) h += "<small>" + esc(p.notes) + "</small>";
     if (p.check) h += "<small class='q'>" + esc(p.check) + "</small>";
-    popup.setLngLat([p.lon, p.lat]).setHTML(h + "</div></div>").addTo(map);
+    popup.setLngLat([p.lon, p.lat]).setHTML(h + "</div>").addTo(map);
   }
 
-  function go(p) {
-    $("app").classList.remove("list"); $("toggle").textContent = "List";
-    map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
-    showPopup(p);
+  // deeper colour between opening and closing time; the tab's width is 0h to 24h
+  const pct = m => (m / 14.4).toFixed(2) + "%";
+  function band(p, day) {
+    const c = color(p), base = "color-mix(in srgb, " + c + " 9%, #fff)", deep = "color-mix(in srgb, " + c + " 36%, #fff)";
+    if (p.hours == null || p.chainSummary) return base;
+    const segs = [];
+    for (const [, b] of spans(dayHours(p, (day + 6) % 7))) if (b > 1440) segs.push([0, b - 1440]);
+    for (const [a, b] of spans(dayHours(p, day))) segs.push([a, Math.min(b, 1440)]);
+    segs.sort((x, y) => x[0] - y[0]);
+    const stops = [];
+    let pos = 0;
+    for (const [a, b] of segs) {
+      const A = Math.max(a, pos);
+      if (b <= A) continue;
+      stops.push(base + " " + pct(pos) + " " + pct(A), deep + " " + pct(A) + " " + pct(b));
+      pos = b;
+    }
+    stops.push(base + " " + pct(pos) + " 100%");
+    return "linear-gradient(to right, " + stops.join(", ") + ")";
   }
+  const tick = "linear-gradient(to right, transparent calc(var(--t) - 1px), rgba(43,43,42,.5) calc(var(--t) - 1px) var(--t), transparent var(--t))";
 
-  function item(p, title, sub, logoKey, onclick) {
+  function item(p, title, sub, logoKey, closed, single, double) {
     const d = document.createElement("div");
-    d.className = "item";
-    d.style.setProperty("--c", catOf(p).color);
-    d.innerHTML = logo(p, logoKey) + "<div><b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
-    d.onclick = onclick;
+    d.className = "item" + (closed ? " closed" : "");
+    d.style.setProperty("--c", color(p));
+    d.style.background = tick + ", " + band(p, at().day);
+    d.innerHTML = "<div class='row'>" + logo(p, logoKey) + "<b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
+    if (expanded === p.id && !p.chainSummary) {
+      const m = document.createElement("div");
+      m.className = "more";
+      m.innerHTML = (PHOTOS[p.id] ? "<img alt='' src='" + PHOTOS[p.id] + "'>" : "")
+        + (p.name_zh ? "<div>" + esc(p.name_zh) + "</div>" : "") + (hoursLine(p) ? "<div>" + hoursLine(p) + "</div>" : "")
+        + (p.address ? "<div>" + esc(p.address) + "</div>" : "") + (p.notes ? "<div>" + esc(p.notes) + "</div>" : "");
+      d.appendChild(m);
+    }
+    // one click centres, a double click zooms in and opens the tab
+    let timer;
+    d.onclick = () => { clearTimeout(timer); timer = setTimeout(single, 230); };
+    d.ondblclick = () => { clearTimeout(timer); (double || single)(); };
     return d;
   }
 
-  function render() {
-    const q = $("q").value.trim().toLowerCase();
-    const at = $("openOn").checked && $("openTime").value ? { day: +$("openDay").value, min: toMin($("openTime").value) } : null;
-    const text = p => [p.name, p.name_zh, p.area, p.address, catOf(p).label, p.chain].join(" ").toLowerCase();
-    let unknown = 0;
-    const shown = PLACES.filter(p => {
-      if (!cats.has(p.category in CATEGORIES ? p.category : "other") || (q && !text(p).includes(q))) return false;
-      if (!at) return true;
-      const o = isOpen(p, at.day, at.min);
-      if (o == null && !p.chain) unknown++;
-      return o === true;
-    });
-    if (map.getSource("places")) map.getSource("places").setData({ type: "FeatureCollection", features: shown.map(feature) });
+  const centre = p => { if (innerWidth <= 700) setList(false); map.easeTo({ center: [p.lon, p.lat] }); showPopup(p); };
+  const zoomIn = p => {
+    expanded = expanded === p.id ? null : p.id;
+    map.easeTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
+    showPopup(p);
+    render();
+  };
 
-    const list = $("list");
+  function render() {
+    const q = $("q").value.trim().toLowerCase(), t = at(), zh = $("zhOn").checked, hide = $("hideClosed").checked;
+    $("timeText").textContent = hhmm(t.min);
+    $("list").style.setProperty("--t", pct(t.min));
+    const text = p => [p.name, p.name_zh, p.area, p.address, CATEGORIES[catKey(p)].label, p.chain].join(" ").toLowerCase();
+    const closedIds = new Set();
+    const shown = PLACES.filter(p => {
+      if (!cats.has(catKey(p)) || (q && !text(p).includes(q))) return false;
+      if (isOpen(p, t.day, t.min) === false) { if (hide) return false; closedIds.add(p.id); }
+      return true;
+    });
+    if (map.getSource("places"))
+      map.getSource("places").setData({ type: "FeatureCollection", features: shown.map(p => feature(p, closedIds.has(p.id))) });
+
+    const list = $("list"), scroll = list.scrollTop;
     list.textContent = "";
     for (const key of order) {
-      const here = shown.filter(p => (p.category in CATEGORIES ? p.category : "other") === key);
+      const here = shown.filter(p => catKey(p) === key);
       if (!here.length) continue;
       const h = document.createElement("h2");
       h.textContent = CATEGORIES[key].label;
       list.appendChild(h);
       for (const p of here.filter(p => !p.chain).sort((a, b) => a.name.localeCompare(b.name)))
-        list.appendChild(item(p, p.name, p.name_zh, null, () => go(p)));
+        list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, closedIds.has(p.id), () => centre(p), () => zoomIn(p)));
       const chains = {};
       for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
       for (const c in chains) {
         const branches = chains[c].sort((a, b) => (a.name_zh || "").localeCompare(b.name_zh || "", "zh"));
-        if (q) for (const p of branches) list.appendChild(item(p, p.name, p.name_zh, c, () => go(p)));
-        else list.appendChild(item(branches[0], branches[0].name, branches.length + " branches", c, () => {
+        if (q) for (const p of branches)
+          list.appendChild(item(p, p.name_zh || p.name, "", c, closedIds.has(p.id), () => centre(p), () => zoomIn(p)));
+        else list.appendChild(item(Object.assign({}, branches[0], { chainSummary: true }), branches[0].name, branches.length + " branches", c, false, () => {
           $("q").value = branches[0].name; render();
-          $("app").classList.remove("list"); $("toggle").textContent = "List";
+          if (innerWidth <= 700) setList(false);
           map.fitBounds(branches.reduce((b, p) => b.extend([p.lon, p.lat]), new maplibregl.LngLatBounds()), { padding: 50 });
         }));
       }
     }
-    $("note").textContent = (shown.length ? "" : "Nothing matches. ")
-      + (unknown ? unknown + " place" + (unknown > 1 ? "s" : "") + " with unknown hours hidden." : "");
+    const n = document.createElement("div");
+    n.id = "note";
+    n.textContent = shown.length ? "" : "Nothing matches.";
+    list.appendChild(n);
+    const f = document.createElement("a");
+    f.id = "forget"; f.href = "#"; f.textContent = "Forget token on this device";
+    f.onclick = e => { e.preventDefault(); localStorage.removeItem("mapToken"); location.reload(); };
+    list.appendChild(f);
+    list.scrollTop = scroll;
   }
 
   map.on("load", () => {
     for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"])
       if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
+    // coloured areas, under the roads
+    map.addSource("areas", { type: "geojson", data: { type: "FeatureCollection", features: AREAS.map(a => ({
+      type: "Feature", geometry: { type: "Polygon", coordinates: [a.polygon.concat([a.polygon[0]])] },
+      properties: { color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1] },
+    })) } });
+    map.addLayer({ id: "areas", type: "fill", source: "areas",
+      paint: { "fill-color": ["get", "color"], "fill-opacity": ["get", "opacity"] } },
+      ["tunnel_motorway_casing", "highway_path", "highway_minor"].find(id => map.getLayer(id)));
     map.addSource("places", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
     // chain branches: thin coloured ring, not filled
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3.5, 14, 6],
       "circle-color": "#ffffff", "circle-opacity": 0.55,
       "circle-stroke-color": ["get", "color"], "circle-stroke-width": 1.8,
+      "circle-stroke-opacity": ["case", ["get", "faint"], 0.35, 1],
     } });
     map.addLayer({ id: "dots", type: "circle", source: "places", filter: ["!", ["get", "chain"]], paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 7.5],
-      "circle-color": ["get", "color"], "circle-opacity": ["case", ["get", "approx"], 0.45, 1],
+      "circle-color": ["get", "color"], "circle-opacity": ["case", ["get", "faint"], 0.35, 1],
       "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
     } });
     map.addLayer({ id: "labels", type: "symbol", source: "places", minzoom: 11.5, filter: ["!", ["get", "chain"]], layout: {
       "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12,
       "text-variable-anchor": ["left", "right", "top", "bottom"], "text-radial-offset": 0.9, "text-justify": "auto",
-    }, paint: { "text-color": "#2b2b2a", "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
+    }, paint: { "text-color": ["case", ["get", "faint"], "#8b8b86", "#2b2b2a"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
     for (const id of ["dots", "rings"]) {
       map.on("click", id, e => showPopup(byId[e.features[0].properties.id]));
       map.on("mouseenter", id, () => map.getCanvas().style.cursor = "pointer");
       map.on("mouseleave", id, () => map.getCanvas().style.cursor = "");
     }
     render();
-    geo.trigger();   // show my location
+    get("photos.json", true).then(p => { PHOTOS = p; }).catch(() => {});   // pictures of the inside, loaded last
   });
   render();
 }
