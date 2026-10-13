@@ -11,14 +11,27 @@
   #app { display: flex; height: 100%; }
   #side { position: relative; width: 250px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #e4e3df; background: #fcfcfb; }
   #grip { position: absolute; top: 0; bottom: 0; right: -5px; width: 10px; cursor: ew-resize; z-index: 20; touch-action: none; }
-  #map { flex: 1; min-width: 0; }
+  #map { flex: 1; min-width: 0; position: relative; }
   #top { padding: 8px 8px 6px; border-bottom: 1px solid #ecebe7; }
   #q { width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; border: 1px solid #cfcec9; border-radius: 6px; }
-  #timeRow { display: flex; align-items: center; gap: 6px; margin-top: 6px; white-space: nowrap; }
-  #slider { flex: 1; min-width: 0; }
-  #slider:disabled { opacity: .35; }
-  #timeText { width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
-  #list { flex: 1; overflow-y: auto; padding-bottom: 8px; }
+  #timeRow { display: flex; align-items: center; gap: 7px; margin-top: 6px; white-space: nowrap; }
+  #openBtn { font: inherit; padding: 2px 9px; border: 1px solid #cfcec9; border-radius: 999px; background: #fff; cursor: pointer; }
+  #openBtn.on { background: #2b2b2a; border-color: #2b2b2a; color: #fff; }
+  .dual { position: relative; height: 20px; margin-top: 4px; }
+  .dual::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 2px; background: #cfcec9; border-radius: 1px; }
+  .dual.off { opacity: .35; }
+  .dual input { position: absolute; left: 0; top: 0; width: 100%; height: 20px; margin: 0; background: none; pointer-events: none;
+                -webkit-appearance: none; appearance: none; }
+  .dual input::-webkit-slider-runnable-track { background: none; }
+  .dual input::-moz-range-track { background: none; }
+  .dual input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 14px; height: 14px; border-radius: 50%;
+                background: #2b2b2a; border: 2px solid #fff; box-shadow: 0 0 0 1px #8b8b86; cursor: pointer; }
+  .dual input::-moz-range-thumb { pointer-events: auto; width: 12px; height: 12px; border-radius: 50%; background: #2b2b2a;
+                border: 2px solid #fff; box-shadow: 0 0 0 1px #8b8b86; cursor: pointer; }
+  #timeText { font-variant-numeric: tabular-nums; font-size: 12px; }
+  #listWrap { position: relative; flex: 1; min-height: 0; }
+  #list { height: 100%; overflow-y: auto; }
+  .tline { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(43,43,42,.6); pointer-events: none; z-index: 3; display: none; }
   #bottom { padding: 6px 8px 8px; border-top: 1px solid #ecebe7; }
   #chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .chip { border: 1px solid #cfcec9; border-radius: 999px; padding: 1px 8px 1px 6px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; user-select: none; }
@@ -31,22 +44,34 @@
   .row { display: flex; align-items: center; gap: 6px; padding: 2px 6px; }
   .row b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row small { color: #55544f; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 10 0; }
-  .item.closed .row b, .item.closed .row small { color: #9a9993; }
-  .item.closed .logo { opacity: .45; }
+  .item.dim .row b, .item.dim .row small { color: #9a9993; }
+  .item.dim .logo { opacity: .45; }
+  .item.open .row b, .more { user-select: text; }
   .logo { width: 18px; height: 18px; border-radius: 4px; flex: none; object-fit: cover; }
   .logo.ph { display: flex; align-items: center; justify-content: center; background: var(--c); color: #fff; font-weight: 700; font-size: 11px; }
-  .more { padding: 2px 6px 6px; background: rgba(255,255,255,.72); font-size: 12px; color: #44433f; cursor: default; }
+  .more { padding: 2px 6px 6px; background: rgba(255,255,255,.74); font-size: 12px; color: #44433f; cursor: text; }
   .more img { width: 100%; border-radius: 4px; display: block; margin-bottom: 4px; }
   #note { margin: 8px 9px; color: #7b7a74; font-size: 12px; }
-  #forget { display: block; margin: 12px 9px 4px; color: #a3a29c; font-size: 11px; }
+  #forget { display: block; margin: 12px 9px 8px; color: #a3a29c; font-size: 11px; }
   #toggle { display: none; position: absolute; top: 10px; left: 10px; z-index: 5; padding: 8px 13px; background: #fff;
             border: 0; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); font: inherit; font-weight: 600; }
   .me { width: 14px; height: 14px; border-radius: 50%; background: #2a78d6; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(42,120,214,.5), 0 0 0 8px rgba(42,120,214,.15); }
+  .pin { width: 12px; height: 12px; border-radius: 50%; background: #2b2b2a; border: 3px solid #fff; box-shadow: 0 0 0 1px #2b2b2a; }
   .pop { font: 13px/1.35 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
   .pop img.photo { width: 100%; border-radius: 6px; display: block; margin-bottom: 6px; }
   .pop small { color: #6b6a65; display: block; }
   .pop .q { color: #a04a00; }
   .maplibregl-popup-content { padding: 10px 12px; border-radius: 8px; }
+  #addMenu { display: none; position: absolute; top: 44px; left: 10px; z-index: 6; background: #fff; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); overflow: hidden; }
+  #addMenu button { display: block; width: 100%; text-align: left; padding: 8px 14px; border: 0; background: none; font: inherit; cursor: pointer; }
+  #addMenu button:hover { background: #f1f0ec; }
+  #addBar { display: none; position: absolute; left: 50%; transform: translateX(-50%); bottom: 34px; z-index: 6; width: min(340px, calc(100% - 24px));
+            background: #fff; border-radius: 8px; box-shadow: 0 2px 14px rgba(0,0,0,.25); padding: 10px 12px; box-sizing: border-box; }
+  #addBar textarea { width: 100%; box-sizing: border-box; height: 64px; font: inherit; margin: 6px 0; padding: 6px; border: 1px solid #cfcec9; border-radius: 6px; resize: vertical; }
+  #addBar .btns { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  #addBar button { font: inherit; padding: 5px 14px; border: 1px solid #cfcec9; border-radius: 6px; background: #fff; cursor: pointer; }
+  #addBar button.go { background: #2b2b2a; border-color: #2b2b2a; color: #fff; }
+  #addMsg { color: #a04a00; font-size: 12px; flex: 1; }
   #gate { position: fixed; inset: 0; z-index: 2000; background: #fcfcfb; display: none; align-items: center; justify-content: center; }
   #gate form { width: min(340px, 86vw); }
   #gate input { width: 100%; box-sizing: border-box; padding: 8px; font: 14px Consolas, monospace; margin: 8px 0; }
@@ -57,6 +82,8 @@
     #app.list #side { display: flex; }
     #toggle { display: block; }
     #app.list ~ #toggle { left: auto; right: 10px; z-index: 11; }
+    .maplibregl-ctrl-top-left { top: 44px; }
+    #addMenu { top: 88px; }
   }
 </style>
 </head>
@@ -74,22 +101,40 @@
     <div id="top">
       <input id="q" type="search" placeholder="Search name, 中文, area, chain" autocomplete="off">
       <div id="timeRow">
+        <button id="openBtn" title="Only show places that are open at the chosen time">Open</button>
         <label title="Use the current time"><input id="nowOn" type="checkbox" checked> Now</label>
-        <input id="slider" type="range" min="0" max="23" step="1" disabled>
         <span id="timeText"></span>
       </div>
+      <div class="dual off" id="dual"><input id="s1" type="range" min="0" max="23" step="1" disabled><input id="s2" type="range" min="0" max="23" step="1" disabled></div>
     </div>
-    <div id="list"></div>
+    <div id="listWrap"><div id="list"></div><div class="tline" id="tl1"></div><div class="tline" id="tl2"></div></div>
     <div id="bottom">
       <div id="chips" title="Click: show or hide a type. Shift+click: only that type."></div>
       <div id="opts">
         <label><input id="zhOn" type="checkbox"> 中文</label>
-        <label><input id="hideClosed" type="checkbox"> Hide closed</label>
+        <label><input id="blocksOn" type="checkbox"> Blocks</label>
+        <label><input id="mallsOn" type="checkbox" checked> Malls</label>
       </div>
     </div>
     <div id="grip"></div>
   </div>
-  <div id="map"></div>
+  <div id="map">
+    <div id="addMenu">
+      <button data-kind="point">Point</button>
+      <button data-kind="region">Region</button>
+      <button data-kind="block">Block</button>
+      <button data-kind="note">Note or picture</button>
+    </div>
+    <div id="addBar">
+      <b id="addTitle"></b>
+      <div id="addHint" style="color:#6b6a65"></div>
+      <div id="addForm">
+        <textarea id="addText" placeholder="What is it?"></textarea>
+        <input id="addPic" type="file" accept="image/*">
+      </div>
+      <div class="btns"><span id="addMsg"></span><button id="addCancel" type="button">Cancel</button><button id="addSave" class="go" type="button">Save</button></div>
+    </div>
+  </div>
 </div>
 <button id="toggle">List</button>
 
@@ -101,8 +146,9 @@ const DATA = "https://api.github.com/repos/alyoshalatyntsev/beijing-map-data/con
 const LOCAL = location.hostname === "localhost";   // the data repo served from disk, for testing
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-// Google Maps-like yellows for areas: somewhat busy, very busy
-const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7] };
+// area colours: Google Maps-like yellows for somewhat/very busy, greens for parks and palaces, grey for places to avoid, pale blue for malls
+const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75],
+               grey: ["#bdbdb9", 0.6], mall: ["#cfe3f7", 0.6] };
 
 function askToken(msg) {
   $("gateMsg").textContent = msg || "";
@@ -111,11 +157,34 @@ function askToken(msg) {
 }
 
 async function get(f, optional) {
-  const token = localStorage.getItem("mapToken");
   const r = LOCAL ? await fetch("../../" + f)
-    : await fetch(DATA + f, { headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json" } });
+    : await fetch(DATA + f, { headers: { Authorization: "Bearer " + localStorage.getItem("mapToken"), Accept: "application/vnd.github.raw+json" } });
   if (!r.ok) { if (optional) return {}; throw r.status; }
   return r.json();
+}
+
+// things added from the map go into inbox/ in the data repository, for an agent to look at later
+const SAVED = [];
+async function put(path, b64) {
+  if (LOCAL) return void SAVED.push(path);
+  const r = await fetch(DATA + path, { method: "PUT",
+    headers: { Authorization: "Bearer " + localStorage.getItem("mapToken"), Accept: "application/vnd.github+json" },
+    body: JSON.stringify({ message: "Inbox: " + path.split("/").pop(), content: b64 }) });
+  if (!r.ok) throw r.status;
+}
+const b64text = s => { const u = new TextEncoder().encode(s); let b = ""; for (const c of u) b += String.fromCharCode(c); return btoa(b); };
+function shrink(file) {   // picture as JPEG, at most 1600 px on the long side, base64 without the prefix
+  return new Promise((ok, bad) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      ok(c.toDataURL("image/jpeg", 0.82).split(",")[1]);
+    };
+    img.onerror = bad;
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 async function start() {
@@ -150,10 +219,12 @@ function spans(s) {
   if (!s || s === "closed") return [];
   return s.split(",").map(x => { let [a, b] = x.split("-").map(toMin); if (b <= a) b += 1440; return [a, b]; });
 }
-function isOpen(p, d, m) {
+// open for the whole of a..b (minutes of day d); a == b asks about one moment
+function isOpen(p, d, a, b) {
   if (p.hours == null) return null;
-  return spans(dayHours(p, d)).some(([a, b]) => a <= m && m < b)
-    || spans(dayHours(p, (d + 6) % 7)).some(([a, b]) => a <= m + 1440 && m + 1440 < b);
+  const covers = (s, e, x, y) => s <= x && (x === y ? y < e : y <= e);
+  return spans(dayHours(p, d)).some(([s, e]) => covers(s, e, a, b))
+    || spans(dayHours(p, (d + 6) % 7)).some(([s, e]) => covers(s, e, a + 1440, b + 1440));
 }
 const now = () => { const t = new Date(); return { day: (t.getDay() + 6) % 7, min: t.getHours() * 60 + t.getMinutes() }; };
 
@@ -163,7 +234,7 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
   const order = Object.keys(CATEGORIES);
   const cats = new Set(order);
   const byId = {};
-  let PHOTOS = {}, expanded = null;
+  let PHOTOS = {}, expanded = null, mode = null;
   PLACES = PLACES.filter(p => p.lat != null);
   for (const p of PLACES) byId[p.id] = p;
 
@@ -171,9 +242,14 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
     ? "<img class='logo' alt='' src='" + LOGOS[key || p.id] + "'>"
     : "<span class='logo ph' style='--c:" + color(p) + "'>" + esc(p.name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 1).toUpperCase()) + "</span>";
 
-  // the time everything is judged at: now, or today at the slider's quarter past the hour
-  const at = () => $("nowOn").checked ? now() : { day: now().day, min: $("slider").value * 60 + 15 };
-  $("slider").value = Math.min(23, Math.floor(now().min / 60));
+  // the time everything is judged at: now, or today from t1 to t2 (each at a quarter past the hour)
+  $("s1").value = $("s2").value = Math.min(23, Math.floor(now().min / 60));
+  const at = () => {
+    const n = now();
+    if ($("nowOn").checked) return { day: n.day, a: n.min, b: n.min };
+    const x = $("s1").value * 60 + 15, y = $("s2").value * 60 + 15;
+    return { day: n.day, a: Math.min(x, y), b: Math.max(x, y) };
+  };
 
   // type chips: click toggles one, shift+click (or long press) shows only that one
   const chipEls = {};
@@ -193,8 +269,13 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
     b.oncontextmenu = e => { e.preventDefault(); solo(key); };
     $("chips").appendChild(b);
   }
-  $("q").oninput = $("zhOn").onchange = $("hideClosed").onchange = $("slider").oninput = () => render();
-  $("nowOn").onchange = () => { $("slider").disabled = $("nowOn").checked; render(); };
+  $("q").oninput = $("zhOn").onchange = $("s1").oninput = $("s2").oninput = () => render();
+  $("openBtn").onclick = () => { $("openBtn").classList.toggle("on"); render(); };
+  $("nowOn").onchange = () => {
+    $("s1").disabled = $("s2").disabled = $("nowOn").checked;
+    $("dual").classList.toggle("off", $("nowOn").checked);
+    render();
+  };
   setInterval(() => { if ($("nowOn").checked) render(); }, 5 * 60000);
 
   // sidebar edge is draggable
@@ -202,17 +283,32 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
   if (localStorage.getItem("mapSide")) side.style.width = localStorage.getItem("mapSide") + "px";
   $("grip").onpointerdown = e => {
     $("grip").setPointerCapture(e.pointerId);
-    const move = ev => { side.style.width = Math.max(150, Math.min(innerWidth * 0.92, ev.clientX - side.getBoundingClientRect().left)) + "px"; map.resize(); };
+    const move = ev => {
+      side.style.width = Math.max(150, Math.min(innerWidth * 0.92, ev.clientX - side.getBoundingClientRect().left)) + "px";
+      map.resize(); lines();
+    };
     const up = () => { $("grip").removeEventListener("pointermove", move); localStorage.setItem("mapSide", parseInt(side.style.width)); };
     $("grip").addEventListener("pointermove", move);
     $("grip").addEventListener("pointerup", up, { once: true });
   };
+  addEventListener("resize", () => lines());
 
   // map: a standard view of Beijing
   const map = new maplibregl.Map({
     container: "map", style: "https://tiles.openfreemap.org/styles/positron",
     bounds: [[116.27, 39.84], [116.53, 40.02]], fitBoundsOptions: { padding: 10 }, attributionControl: { compact: true },
   });
+  const button = (html, title, onclick) => ({
+    onAdd() {
+      const d = document.createElement("div");
+      d.className = "maplibregl-ctrl maplibregl-ctrl-group";
+      d.innerHTML = "<button title='" + title + "' style='font-size:18px;line-height:1'>" + html + "</button>";
+      d.firstChild.onclick = onclick;
+      return d;
+    },
+    onRemove() {},
+  });
+  map.addControl(button("+", "Add something", () => { $("addMenu").style.display = $("addMenu").style.display === "block" ? "none" : "block"; }), "top-left");
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
   const popup = new maplibregl.Popup({ offset: 12, maxWidth: "260px" });
@@ -226,28 +322,19 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
     el.className = "me";
     meMarker = new maplibregl.Marker({ element: el }).setLngLat(me).addTo(map);
   }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
-  map.addControl({
-    onAdd() {
-      const d = document.createElement("div");
-      d.className = "maplibregl-ctrl maplibregl-ctrl-group";
-      d.innerHTML = "<button title='My location' style='font-size:17px;line-height:1'>&#9678;</button>";
-      d.firstChild.onclick = () => { if (me) map.easeTo({ center: me, zoom: Math.max(map.getZoom(), 14) }); };
-      return d;
-    },
-    onRemove() {},
-  }, "top-right");
+  map.addControl(button("&#9678;", "My location", () => { if (me) map.easeTo({ center: me, zoom: Math.max(map.getZoom(), 14) }); }), "top-right");
 
-  const feature = (p, closed) => ({
+  const feature = (p, dim) => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx" || closed },
+    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx" || dim },
   });
 
   function hoursLine(p) {
     const t = at(), today = p.hours == null ? null : dayHours(p, t.day);
     if (today == null) return "";
-    const open = isOpen(p, t.day, t.min);
-    return ($("nowOn").checked ? (open ? "Open now" : "Closed now") : (open ? "Open" : "Closed") + " at " + hhmm(t.min))
-      + " · today " + esc(today.replace(/,/g, ", "));
+    const open = isOpen(p, t.day, t.a, t.b);
+    const when = $("nowOn").checked ? " now" : t.a === t.b ? " at " + hhmm(t.a) : " " + hhmm(t.a) + "-" + hhmm(t.b);
+    return (open ? "Open" : "Closed") + when + " · today " + esc(today.replace(/,/g, ", "));
   }
 
   function showPopup(p) {
@@ -283,30 +370,56 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
     stops.push(base + " " + pct(pos) + " 100%");
     return "linear-gradient(to right, " + stops.join(", ") + ")";
   }
-  const tick = "linear-gradient(to right, transparent calc(var(--t) - 1px), rgba(43,43,42,.5) calc(var(--t) - 1px) var(--t), transparent var(--t))";
 
-  function item(p, title, sub, logoKey, closed, single, double) {
-    const d = document.createElement("div");
-    d.className = "item" + (closed ? " closed" : "");
+  // one continuous vertical line down the list at the chosen time (two for a span)
+  function lines() {
+    const it = $("list").querySelector(".item"), t = at(), ts = t.a === t.b ? [t.a] : [t.a, t.b];
+    ["tl1", "tl2"].forEach((id, i) => {
+      const el = $(id);
+      if (!it || i >= ts.length) return void (el.style.display = "none");
+      const r = it.getBoundingClientRect(), w = $("listWrap").getBoundingClientRect();
+      el.style.display = "block";
+      el.style.left = (r.left - w.left + 3 + (r.width - 3) * ts[i] / 1440) + "px";
+    });
+    if (it) {   // the slider sits on the same 0h-24h scale as the tabs: its ends are 00:15 and 23:15
+      const r = it.getBoundingClientRect(), w = $("top").getBoundingClientRect(), wd = r.width - 3;
+      $("dual").style.marginLeft = (r.left - w.left + 3 + wd * 15 / 1440 - 7 - 8) + "px";
+      $("dual").style.width = (wd * 23 * 60 / 1440 + 14) + "px";
+    }
+  }
+
+  function item(p, title, sub, logoKey, dim, single, double) {
+    const d = document.createElement("div"), isOpenTab = expanded === p.id && !p.chainSummary;
+    d.className = "item" + (dim ? " dim" : "") + (isOpenTab ? " open" : "");
     d.style.setProperty("--c", color(p));
-    d.style.background = tick + ", " + band(p, at().day);
+    d.style.background = band(p, at().day);
     d.innerHTML = "<div class='row'>" + logo(p, logoKey) + "<b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
-    if (expanded === p.id && !p.chainSummary) {
+    if (isOpenTab) {
       const m = document.createElement("div");
       m.className = "more";
       m.innerHTML = (PHOTOS[p.id] ? "<img alt='' src='" + PHOTOS[p.id] + "'>" : "")
         + (p.name_zh ? "<div>" + esc(p.name_zh) + "</div>" : "") + (hoursLine(p) ? "<div>" + hoursLine(p) + "</div>" : "")
-        + (p.address ? "<div>" + esc(p.address) + "</div>" : "") + (p.notes ? "<div>" + esc(p.notes) + "</div>" : "");
+        + (p.notes ? "<div>" + esc(p.notes) + "</div>" : "");
+      m.onclick = m.ondblclick = e => e.stopPropagation();   // the text in an open tab can be selected and copied
       d.appendChild(m);
     }
-    // one click centres, a double click zooms in and opens the tab
+    // one click centres; a double click zooms in and opens the tab; a click on an open tab closes it
     let timer;
-    d.onclick = () => { clearTimeout(timer); timer = setTimeout(single, 230); };
+    d.onclick = () => {
+      if (String(getSelection())) return;
+      clearTimeout(timer);
+      timer = setTimeout(isOpenTab ? () => { expanded = null; render(); } : single, 230);
+    };
     d.ondblclick = () => { clearTimeout(timer); (double || single)(); };
     return d;
   }
 
-  const centre = p => { if (innerWidth <= 700) setList(false); map.easeTo({ center: [p.lon, p.lat] }); showPopup(p); };
+  const centre = p => {
+    if (innerWidth <= 700) setList(false);
+    if (expanded) { expanded = null; render(); }
+    map.easeTo({ center: [p.lon, p.lat] });
+    showPopup(p);
+  };
   const zoomIn = p => {
     expanded = expanded === p.id ? null : p.id;
     map.easeTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
@@ -315,18 +428,20 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
   };
 
   function render() {
-    const q = $("q").value.trim().toLowerCase(), t = at(), zh = $("zhOn").checked, hide = $("hideClosed").checked;
-    $("timeText").textContent = hhmm(t.min);
-    $("list").style.setProperty("--t", pct(t.min));
+    const q = $("q").value.trim().toLowerCase(), t = at(), zh = $("zhOn").checked, care = $("openBtn").classList.contains("on");
+    const a = $("s1").value * 60 + 15, b = $("s2").value * 60 + 15;
+    $("timeText").textContent = $("nowOn").checked ? hhmm(t.a) : a === b ? hhmm(a) : hhmm(Math.min(a, b)) + "-" + hhmm(Math.max(a, b));
     const text = p => [p.name, p.name_zh, p.area, p.address, CATEGORIES[catKey(p)].label, p.chain].join(" ").toLowerCase();
-    const closedIds = new Set();
+    const dimIds = new Set();
     const shown = PLACES.filter(p => {
       if (!cats.has(catKey(p)) || (q && !text(p).includes(q))) return false;
-      if (isOpen(p, t.day, t.min) === false) { if (hide) return false; closedIds.add(p.id); }
-      return true;
+      if (!care) return true;
+      const o = isOpen(p, t.day, t.a, t.b);
+      if (o == null) dimIds.add(p.id);          // hours unknown: kept, greyed
+      return o !== false;
     });
     if (map.getSource("places"))
-      map.getSource("places").setData({ type: "FeatureCollection", features: shown.map(p => feature(p, closedIds.has(p.id))) });
+      map.getSource("places").setData({ type: "FeatureCollection", features: shown.map(p => feature(p, dimIds.has(p.id))) });
 
     const list = $("list"), scroll = list.scrollTop;
     list.textContent = "";
@@ -336,18 +451,18 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
       const h = document.createElement("h2");
       h.textContent = CATEGORIES[key].label;
       list.appendChild(h);
-      for (const p of here.filter(p => !p.chain).sort((a, b) => a.name.localeCompare(b.name)))
-        list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, closedIds.has(p.id), () => centre(p), () => zoomIn(p)));
+      for (const p of here.filter(p => !p.chain).sort((x, y) => x.name.localeCompare(y.name)))
+        list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, dimIds.has(p.id), () => centre(p), () => zoomIn(p)));
       const chains = {};
       for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
       for (const c in chains) {
-        const branches = chains[c].sort((a, b) => (a.name_zh || "").localeCompare(b.name_zh || "", "zh"));
+        const branches = chains[c].sort((x, y) => (x.name_zh || "").localeCompare(y.name_zh || "", "zh"));
         if (q) for (const p of branches)
-          list.appendChild(item(p, p.name_zh || p.name, "", c, closedIds.has(p.id), () => centre(p), () => zoomIn(p)));
+          list.appendChild(item(p, p.name_zh || p.name, "", c, dimIds.has(p.id), () => centre(p), () => zoomIn(p)));
         else list.appendChild(item(Object.assign({}, branches[0], { chainSummary: true }), branches[0].name, branches.length + " branches", c, false, () => {
           $("q").value = branches[0].name; render();
           if (innerWidth <= 700) setList(false);
-          map.fitBounds(branches.reduce((b, p) => b.extend([p.lon, p.lat]), new maplibregl.LngLatBounds()), { padding: 50 });
+          map.fitBounds(branches.reduce((bb, p) => bb.extend([p.lon, p.lat]), new maplibregl.LngLatBounds()), { padding: 50 });
         }));
       }
     }
@@ -360,16 +475,119 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
     f.onclick = e => { e.preventDefault(); localStorage.removeItem("mapToken"); location.reload(); };
     list.appendChild(f);
     list.scrollTop = scroll;
+    lines();
   }
+
+  // blocks and sub-blocks (cut out of the road network), loaded when first asked for
+  const poly = (ring, props) => ({ type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } });
+  let blocksReady = null;
+  function blocks(on) {
+    blocksReady = blocksReady || fetch("blocks.json").then(r => r.json()).then(d => {
+      map.addSource("blocks", { type: "geojson", data: { type: "FeatureCollection",
+        features: d.sub.map(s => poly(s.p, { id: s.id, block: s.b, sub: true })).concat(d.blocks.map(b => poly(b.p, { id: b.id, block: b.id, sub: false }))) } });
+      map.addLayer({ id: "blocks-fill", type: "fill", source: "blocks", paint: { "fill-color": "#000", "fill-opacity": 0 } }, "rings");
+      map.addLayer({ id: "blocks-sub", type: "line", source: "blocks", filter: ["get", "sub"], paint: { "line-color": "#a3a29c", "line-width": 0.7 } }, "rings");
+      map.addLayer({ id: "blocks-line", type: "line", source: "blocks", filter: ["!", ["get", "sub"]], paint: { "line-color": "#6b6a65", "line-width": 1.6 } }, "rings");
+    });
+    return blocksReady.then(() => {
+      for (const id of ["blocks-fill", "blocks-sub", "blocks-line"]) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+      $("blocksOn").checked = on;
+    });
+  }
+  $("blocksOn").onchange = () => blocks($("blocksOn").checked);
+  $("mallsOn").onchange = () => map.setFilter("areas", $("mallsOn").checked ? null : ["!=", ["get", "level"], "mall"]);
+
+  // [+]: add a point, a hand-drawn region, a comment on a block, or just a note; saved to inbox/ in the data repository
+  let draft = null, pin = null, ring = [];
+  const sketch = g => map.getSource("sketch").setData({ type: "FeatureCollection", features: g ? [{ type: "Feature", properties: {}, geometry: g }] : [] });
+  const HINT = { point: "Click the place on the map.", region: "Press and drag on the map to draw around it.",
+                 block: "Click a block on the map.", note: "" };
+  const TITLE = { point: "New point", region: "New region", block: "Comment on a block", note: "Note or picture" };
+  function form(show) { $("addForm").style.display = $("addSave").style.display = show ? "" : "none"; $("addHint").style.display = show ? "none" : ""; }
+  function begin(kind) {
+    cancel();
+    mode = kind; draft = { kind };
+    $("addMenu").style.display = "none"; $("addBar").style.display = "block";
+    $("addTitle").textContent = TITLE[kind]; $("addHint").textContent = HINT[kind]; $("addMsg").textContent = "";
+    $("addText").value = ""; $("addPic").value = "";
+    form(kind === "note");
+    if (innerWidth <= 700) setList(false);
+    if (kind === "block") blocks(true);
+    if (kind === "region") { map.dragPan.disable(); map.touchZoomRotate.disable(); map.getCanvas().style.cursor = "crosshair"; }
+    if (kind === "point") map.getCanvas().style.cursor = "crosshair";
+  }
+  function cancel() {
+    mode = null; draft = null; ring = [];
+    $("addBar").style.display = "none";
+    if (pin) { pin.remove(); pin = null; }
+    if (map.getSource("sketch")) sketch(null);
+    map.dragPan.enable(); map.touchZoomRotate.enable(); map.getCanvas().style.cursor = "";
+  }
+  for (const b of $("addMenu").children) b.onclick = () => begin(b.dataset.kind);
+  $("addCancel").onclick = cancel;
+  $("addSave").onclick = async () => {
+    const text = $("addText").value.trim(), file = $("addPic").files[0];
+    if (!text && !file) return void ($("addMsg").textContent = "Write something or choose a picture.");
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-"), name = "inbox/" + stamp + "-" + draft.kind;
+    $("addMsg").textContent = "Saving...";
+    try {
+      const rec = Object.assign({ created: new Date().toISOString(), text }, draft);
+      if (file) { rec.picture = name + ".jpg"; await put(rec.picture, await shrink(file)); }
+      await put(name + ".json", b64text(JSON.stringify(rec, null, 1)));
+      cancel();
+    } catch (e) {
+      $("addMsg").textContent = e === 403 || e === 404 ? "This token can only read. Adding needs a token with Contents: Read and write."
+        : e === 401 ? "The token was not accepted." : "Could not save. Try again.";
+    }
+  };
+  const down = e => { if (mode === "region" && !draft.polygon) { ring = [[e.lngLat.lng, e.lngLat.lat]]; } };
+  const move = e => {
+    if (mode !== "region" || !ring.length || draft.polygon) return;
+    ring.push([+e.lngLat.lng.toFixed(6), +e.lngLat.lat.toFixed(6)]);
+    sketch({ type: "LineString", coordinates: ring });
+  };
+  const up = () => {
+    if (mode !== "region" || ring.length < 4 || draft.polygon) return;
+    draft.polygon = ring.concat([ring[0]]);
+    sketch({ type: "Polygon", coordinates: [draft.polygon] });
+    map.dragPan.enable(); map.touchZoomRotate.enable(); map.getCanvas().style.cursor = "";
+    form(true);
+  };
+  map.on("mousedown", down); map.on("touchstart", down);
+  map.on("mousemove", move); map.on("touchmove", move);
+  map.on("mouseup", up); map.on("touchend", up);
+
+  map.on("click", e => {
+    if (mode === "point") {
+      draft.lon = +e.lngLat.lng.toFixed(6); draft.lat = +e.lngLat.lat.toFixed(6);
+      if (pin) pin.remove();
+      const el = document.createElement("div");
+      el.className = "pin";
+      pin = new maplibregl.Marker({ element: el }).setLngLat(e.lngLat).addTo(map);
+      map.getCanvas().style.cursor = "";
+      return form(true);
+    }
+    if (mode === "block") {
+      const hit = map.getLayer("blocks-fill") ? map.queryRenderedFeatures(e.point, { layers: ["blocks-fill"] }) : [];
+      const f = hit.find(x => x.properties.sub) || hit[0];
+      if (!f) return;
+      draft.block = f.properties.block; draft.sub = f.properties.sub ? f.properties.id : null;
+      sketch(f.geometry);
+      return form(true);
+    }
+    if (mode) return;
+    const dot = map.queryRenderedFeatures(e.point, { layers: ["dots", "rings"] })[0];
+    if (dot) return showPopup(byId[dot.properties.id]);
+    const area = map.queryRenderedFeatures(e.point, { layers: ["areas"] })[0];
+    if (area) popup.setLngLat(e.lngLat).setHTML("<div class='pop'>" + esc(area.properties.name) + "</div>").addTo(map);
+  });
 
   map.on("load", () => {
     for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"])
       if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
     // coloured areas, under the roads
-    map.addSource("areas", { type: "geojson", data: { type: "FeatureCollection", features: AREAS.map(a => ({
-      type: "Feature", geometry: { type: "Polygon", coordinates: [a.polygon.concat([a.polygon[0]])] },
-      properties: { color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1] },
-    })) } });
+    map.addSource("areas", { type: "geojson", data: { type: "FeatureCollection", features: AREAS.map(a =>
+      poly(a.polygon, { name: a.name, level: a.level, color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1] })) } });
     map.addLayer({ id: "areas", type: "fill", source: "areas",
       paint: { "fill-color": ["get", "color"], "fill-opacity": ["get", "opacity"] } },
       ["tunnel_motorway_casing", "highway_path", "highway_minor"].find(id => map.getLayer(id)));
@@ -390,10 +608,12 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
       "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12,
       "text-variable-anchor": ["left", "right", "top", "bottom"], "text-radial-offset": 0.9, "text-justify": "auto",
     }, paint: { "text-color": ["case", ["get", "faint"], "#8b8b86", "#2b2b2a"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
+    map.addSource("sketch", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    map.addLayer({ id: "sketch-fill", type: "fill", source: "sketch", filter: ["==", ["geometry-type"], "Polygon"], paint: { "fill-color": "#2b2b2a", "fill-opacity": 0.15 } });
+    map.addLayer({ id: "sketch-line", type: "line", source: "sketch", paint: { "line-color": "#2b2b2a", "line-width": 2 } });
     for (const id of ["dots", "rings"]) {
-      map.on("click", id, e => showPopup(byId[e.features[0].properties.id]));
-      map.on("mouseenter", id, () => map.getCanvas().style.cursor = "pointer");
-      map.on("mouseleave", id, () => map.getCanvas().style.cursor = "");
+      map.on("mouseenter", id, () => { if (!mode) map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", id, () => { if (!mode) map.getCanvas().style.cursor = ""; });
     }
     render();
     get("photos.json", true).then(p => { PHOTOS = p; }).catch(() => {});   // pictures of the inside, loaded last
