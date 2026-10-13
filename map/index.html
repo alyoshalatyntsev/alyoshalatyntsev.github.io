@@ -5,6 +5,8 @@
 <title>Map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="robots" content="noindex">
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+<link rel="preconnect" href="https://api.github.com" crossorigin>
 <link rel="stylesheet" href="maplibre/maplibre-gl.css">
 <style>
   html, body { height: 100%; margin: 0; font: 13px/1.3 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #2b2b2a; }
@@ -14,21 +16,22 @@
   #map { flex: 1; min-width: 0; position: relative; }
   #top { padding: 8px 8px 6px; border-bottom: 1px solid #ecebe7; }
   #q { width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; border: 1px solid #cfcec9; border-radius: 6px; }
-  #timeRow { display: flex; align-items: center; gap: 7px; margin-top: 6px; white-space: nowrap; }
-  #openBtn { font: inherit; padding: 2px 9px; border: 1px solid #cfcec9; border-radius: 999px; background: #fff; cursor: pointer; }
-  #openBtn.on { background: #2b2b2a; border-color: #2b2b2a; color: #fff; }
-  .dual { position: relative; height: 20px; margin-top: 4px; }
-  .dual::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 2px; background: #cfcec9; border-radius: 1px; }
-  .dual.off { opacity: .35; }
+  #timeRow { display: flex; align-items: center; gap: 5px; margin-top: 6px; white-space: nowrap; }
+  /* a box you click: slightly greyed out, or selected */
+  .tog { font: inherit; font-size: 12px; padding: 2px 9px; border: 1px solid #dcdbd6; border-radius: 6px; background: #f3f2ef; color: #9a9993; cursor: pointer; user-select: none; }
+  .tog.on { background: #fff; border-color: #2b2b2a; color: #2b2b2a; box-shadow: inset 0 0 0 1px #2b2b2a; }
+  #timeText { font-variant-numeric: tabular-nums; font-size: 12px; margin-left: auto; }
+  .dual { position: relative; height: 20px; margin-top: 4px; opacity: .45; }
+  .dual.on { opacity: 1; }
+  .dual::before { content: ""; position: absolute; left: 7px; right: 7px; top: 8px; height: 4px; border-radius: 2px;
+                  background: linear-gradient(to right, #dcdbd6 var(--a, 0%), #2a78d6 var(--a, 0%) var(--b, 0%), #dcdbd6 var(--b, 0%)); }
   .dual input { position: absolute; left: 0; top: 0; width: 100%; height: 20px; margin: 0; background: none; pointer-events: none;
                 -webkit-appearance: none; appearance: none; }
   .dual input::-webkit-slider-runnable-track { background: none; }
   .dual input::-moz-range-track { background: none; }
   .dual input::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 14px; height: 14px; border-radius: 50%;
-                background: #2b2b2a; border: 2px solid #fff; box-shadow: 0 0 0 1px #8b8b86; cursor: pointer; }
-  .dual input::-moz-range-thumb { pointer-events: auto; width: 12px; height: 12px; border-radius: 50%; background: #2b2b2a;
-                border: 2px solid #fff; box-shadow: 0 0 0 1px #8b8b86; cursor: pointer; }
-  #timeText { font-variant-numeric: tabular-nums; font-size: 12px; }
+                background: #2a78d6; border: 0; cursor: pointer; }
+  .dual input::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; border-radius: 50%; background: #2a78d6; border: 0; cursor: pointer; }
   #listWrap { position: relative; flex: 1; min-height: 0; }
   #list { height: 100%; overflow-y: auto; }
   .tline { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(43,43,42,.6); pointer-events: none; z-index: 3; display: none; }
@@ -38,14 +41,15 @@
   .chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; background: var(--c); }
   .chip.off { color: #a3a29c; }
   .chip.off .dot { background: #d6d5d0; }
-  #opts { display: flex; gap: 12px; margin-top: 6px; color: #55544f; }
+  #opts { display: flex; gap: 5px; margin-top: 6px; }
   h2 { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #7b7a74; margin: 8px 9px 2px; font-weight: 600; }
   .item { margin: 2px 7px; border-radius: 4px; cursor: pointer; border-left: 3px solid var(--c); overflow: hidden; user-select: none; }
   .row { display: flex; align-items: center; gap: 6px; padding: 2px 6px; }
   .row b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row small { color: #55544f; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 10 0; }
-  .item.dim .row b, .item.dim .row small { color: #9a9993; }
-  .item.dim .logo { opacity: .45; }
+  .item.dim { border-left-color: #d6d5d0; filter: grayscale(1); }
+  .item.dim .row b, .item.dim .row small { color: #a3a29c; }
+  .item.dim .logo { opacity: .4; }
   .item.open .row b, .more { user-select: text; }
   .logo { width: 18px; height: 18px; border-radius: 4px; flex: none; object-fit: cover; }
   .logo.ph { display: flex; align-items: center; justify-content: center; background: var(--c); color: #fff; font-weight: 700; font-size: 11px; }
@@ -63,13 +67,14 @@
   .pop .q { color: #a04a00; }
   .maplibregl-popup-content { padding: 10px 12px; border-radius: 8px; }
   #addMenu { display: none; position: absolute; top: 44px; left: 10px; z-index: 6; background: #fff; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); overflow: hidden; }
-  #addMenu button { display: block; width: 100%; text-align: left; padding: 8px 14px; border: 0; background: none; font: inherit; cursor: pointer; }
+  #addMenu button { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 8px 14px 8px 11px; border: 0; background: none; font: inherit; cursor: pointer; }
   #addMenu button:hover { background: #f1f0ec; }
+  #addMenu svg { width: 16px; height: 16px; flex: none; fill: none; stroke: #2b2b2a; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
   #addBar { display: none; position: absolute; left: 50%; transform: translateX(-50%); bottom: 34px; z-index: 6; width: min(340px, calc(100% - 24px));
             background: #fff; border-radius: 8px; box-shadow: 0 2px 14px rgba(0,0,0,.25); padding: 10px 12px; box-sizing: border-box; }
   #addBar textarea { width: 100%; box-sizing: border-box; height: 64px; font: inherit; margin: 6px 0; padding: 6px; border: 1px solid #cfcec9; border-radius: 6px; resize: vertical; }
-  #addBar .btns { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
-  #addBar button { font: inherit; padding: 5px 14px; border: 1px solid #cfcec9; border-radius: 6px; background: #fff; cursor: pointer; }
+  #addBar .btns { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+  #addBar button { font: inherit; padding: 5px 12px; border: 1px solid #cfcec9; border-radius: 6px; background: #fff; cursor: pointer; }
   #addBar button.go { background: #2b2b2a; border-color: #2b2b2a; color: #fff; }
   #addMsg { color: #a04a00; font-size: 12px; flex: 1; }
   #gate { position: fixed; inset: 0; z-index: 2000; background: #fcfcfb; display: none; align-items: center; justify-content: center; }
@@ -101,29 +106,30 @@
     <div id="top">
       <input id="q" type="search" placeholder="Search name, 中文, area, chain" autocomplete="off">
       <div id="timeRow">
-        <button id="openBtn" title="Only show places that are open at the chosen time">Open</button>
-        <label title="Use the current time"><input id="nowOn" type="checkbox" checked> Now</label>
+        <button class="tog on" id="tAny" title="Do not grey anything out">Any time</button>
+        <button class="tog" id="tNow" title="Grey out what is closed now">Open now</button>
         <span id="timeText"></span>
       </div>
-      <div class="dual off" id="dual"><input id="s1" type="range" min="0" max="23" step="1" disabled><input id="s2" type="range" min="0" max="23" step="1" disabled></div>
+      <div class="dual" id="dual" title="Grey out what is closed between these times"><input id="s1" type="range" min="0" max="23" step="1"><input id="s2" type="range" min="0" max="23" step="1"></div>
     </div>
     <div id="listWrap"><div id="list"></div><div class="tline" id="tl1"></div><div class="tline" id="tl2"></div></div>
     <div id="bottom">
       <div id="chips" title="Click: show or hide a type. Shift+click: only that type."></div>
       <div id="opts">
-        <label><input id="zhOn" type="checkbox"> 中文</label>
-        <label><input id="blocksOn" type="checkbox"> Blocks</label>
-        <label><input id="mallsOn" type="checkbox" checked> Malls</label>
+        <button class="tog" id="zhOn">中文</button>
+        <button class="tog" id="blocksOn">Blocks</button>
+        <button class="tog on" id="mallsOn">Malls</button>
       </div>
     </div>
     <div id="grip"></div>
   </div>
   <div id="map">
     <div id="addMenu">
-      <button data-kind="point">Point</button>
-      <button data-kind="region">Region</button>
-      <button data-kind="block">Block</button>
-      <button data-kind="note">Note or picture</button>
+      <button data-kind="point"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3.2"/></svg>Point</button>
+      <button data-kind="path"><svg viewBox="0 0 16 16"><path d="M2 12 6 5l4 5 4-7"/><circle cx="2" cy="12" r="1"/><circle cx="14" cy="3" r="1"/></svg>Path</button>
+      <button data-kind="region"><svg viewBox="0 0 16 16"><path d="M3 5 9 2l5 4-2 7H5z"/></svg>Region</button>
+      <button data-kind="block"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/></svg>Block</button>
+      <button data-kind="note"><svg viewBox="0 0 16 16"><path d="M3 13l1-3 7-7 2 2-7 7zM10 4l2 2"/></svg>Note or picture</button>
     </div>
     <div id="addBar">
       <b id="addTitle"></b>
@@ -132,7 +138,7 @@
         <textarea id="addText" placeholder="What is it?"></textarea>
         <input id="addPic" type="file" accept="image/*">
       </div>
-      <div class="btns"><span id="addMsg"></span><button id="addCancel" type="button">Cancel</button><button id="addSave" class="go" type="button">Save</button></div>
+      <div class="btns"><span id="addMsg"></span><button id="addUndo" type="button">Undo</button><button id="addDone" type="button">Done</button><button id="addCancel" type="button">Cancel</button><button id="addSave" class="go" type="button">Save</button></div>
     </div>
   </div>
 </div>
@@ -146,9 +152,9 @@ const DATA = "https://api.github.com/repos/alyoshalatyntsev/beijing-map-data/con
 const LOCAL = location.hostname === "localhost";   // the data repo served from disk, for testing
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-// area colours: Google Maps-like yellows for somewhat/very busy, greens for parks and palaces, grey for places to avoid, pale blue for malls
-const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75],
-               grey: ["#bdbdb9", 0.6], mall: ["#cfe3f7", 0.6] };
+// area colours: Google Maps-like yellows for somewhat/very busy, greens for parks and palaces, grey for places to avoid
+const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75], grey: ["#bdbdb9", 0.6] };
+const FILES = ["places.json", "chains.json", "logos.json", "areas.json", "malls.json"];
 
 function askToken(msg) {
   $("gateMsg").textContent = msg || "";
@@ -156,11 +162,20 @@ function askToken(msg) {
   $("token").focus();
 }
 
-async function get(f, optional) {
-  const r = LOCAL ? await fetch("../../" + f)
-    : await fetch(DATA + f, { headers: { Authorization: "Bearer " + localStorage.getItem("mapToken"), Accept: "application/vnd.github.raw+json" } });
-  if (!r.ok) { if (optional) return {}; throw r.status; }
-  return r.json();
+// Each data file is kept in this browser with its version tag, so the next visit draws at once
+// and only asks GitHub whether anything changed.
+const kept = f => { try { return JSON.parse(localStorage.getItem("mapData:" + f)); } catch (e) { return null; } };
+async function get(f) {
+  if (LOCAL) { const r = await fetch("../../" + f); return r.ok ? r.json() : {}; }
+  const old = kept(f), headers = { Authorization: "Bearer " + localStorage.getItem("mapToken"), Accept: "application/vnd.github.raw+json" };
+  if (old) headers["If-None-Match"] = old.tag;
+  const r = await fetch(DATA + f, { headers });
+  if (r.status === 304) return old.data;
+  if (r.status === 404 && f !== "places.json") return {};
+  if (!r.ok) throw r.status;
+  const data = await r.json();
+  try { localStorage.setItem("mapData:" + f, JSON.stringify({ tag: r.headers.get("ETag"), data })); } catch (e) {}
+  return data;
 }
 
 // things added from the map go into inbox/ in the data repository, for an agent to look at later
@@ -185,19 +200,6 @@ function shrink(file) {   // picture as JPEG, at most 1600 px on the long side, 
     img.onerror = bad;
     img.src = URL.createObjectURL(file);
   });
-}
-
-async function start() {
-  if (!localStorage.getItem("mapToken") && !LOCAL) return askToken();
-  try {
-    const [main, chains, logos, areas] = await Promise.all(
-      [get("places.json"), get("chains.json"), get("logos.json", true), get("areas.json", true)]);
-    $("gate").style.display = "none";
-    draw(main.categories, main.places.concat(chains.places), logos, areas.areas || []);
-  } catch (e) {
-    askToken(e === 401 ? "That token was not accepted." : e === 403 || e === 404 ? "That token cannot read the map data."
-      : "Could not reach GitHub. Try again.");
-  }
 }
 
 $("gateForm").onsubmit = e => {
@@ -228,73 +230,390 @@ function isOpen(p, d, a, b) {
 }
 const now = () => { const t = new Date(); return { day: (t.getDay() + 6) % 7, min: t.getHours() * 60 + t.getMinutes() }; };
 
-function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
-  const catKey = p => p.category in CATEGORIES ? p.category : "other";
-  const color = p => CATEGORIES[catKey(p)].color;
-  const order = Object.keys(CATEGORIES);
-  const cats = new Set(order);
-  const byId = {};
-  let PHOTOS = {}, expanded = null, mode = null;
-  PLACES = PLACES.filter(p => p.lat != null);
+// ---- state ----
+let CATEGORIES = {}, PLACES = [], LOGOS = {}, AREAS = [], MALLS = [], PHOTOS = {}, byId = {}, order = [];
+let cats = null, expanded = null, mode = null, when = "any";   // when: "any" | "now" | "span"
+let map = null, ready = false, popup = null;
+const catKey = p => p.category in CATEGORIES ? p.category : "other";
+const color = p => CATEGORIES[catKey(p)].color;
+const poly = (ring, props) => ({ type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } });
+const fc = features => ({ type: "FeatureCollection", features });
+
+function setData(d) {
+  CATEGORIES = d[0].categories;
+  PLACES = d[0].places.concat(d[1].places || []).filter(p => p.lat != null);
+  LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; MALLS = (d[4] || {}).malls || [];
+  byId = {};
   for (const p of PLACES) byId[p.id] = p;
+  if (order.join() !== Object.keys(CATEGORIES).join()) {
+    order = Object.keys(CATEGORIES);
+    cats = new Set(order);
+    chips();
+  }
+  layers();
+  render();
+}
 
-  const logo = (p, key) => LOGOS[key || p.id]
-    ? "<img class='logo' alt='' src='" + LOGOS[key || p.id] + "'>"
-    : "<span class='logo ph' style='--c:" + color(p) + "'>" + esc(p.name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 1).toUpperCase()) + "</span>";
+async function start() {
+  if (!localStorage.getItem("mapToken") && !LOCAL) return askToken();
+  $("gate").style.display = "none";
+  if (!map) makeMap();
+  const old = FILES.map(kept);
+  if (old[0] && old[1]) setData(old.map(o => o ? o.data : {}));      // draw what this browser already has
+  try {
+    const fresh = await Promise.all(FILES.map(get));
+    if (JSON.stringify(fresh) !== JSON.stringify(old.map(o => o ? o.data : {}))) setData(fresh);
+    get("photos.json").then(p => { PHOTOS = p; }).catch(() => {});   // pictures of the inside, loaded last
+  } catch (e) {
+    if (e === 401 || e === 403 || e === 404) askToken(e === 401 ? "That token was not accepted." : "That token cannot read the map data.");
+    else if (!PLACES.length) askToken("Could not reach GitHub. Try again.");
+  }
+}
 
-  // the time everything is judged at: now, or today from t1 to t2 (each at a quarter past the hour)
-  $("s1").value = $("s2").value = Math.min(23, Math.floor(now().min / 60));
-  const at = () => {
-    const n = now();
-    if ($("nowOn").checked) return { day: n.day, a: n.min, b: n.min };
-    const x = $("s1").value * 60 + 15, y = $("s2").value * 60 + 15;
-    return { day: n.day, a: Math.min(x, y), b: Math.max(x, y) };
-  };
+// ---- controls ----
+const logo = (p, key) => LOGOS[key || p.id]
+  ? "<img class='logo' alt='' src='" + LOGOS[key || p.id] + "'>"
+  : "<span class='logo ph' style='--c:" + color(p) + "'>" + esc(p.name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 1).toUpperCase()) + "</span>";
 
-  // type chips: click toggles one, shift+click (or long press) shows only that one
-  const chipEls = {};
-  const syncChips = () => { for (const k of order) chipEls[k].classList.toggle("off", !cats.has(k)); render(); };
-  const solo = k => {
-    const only = cats.size === 1 && cats.has(k);
-    cats.clear();
-    (only ? order : [k]).forEach(x => cats.add(x));
-    syncChips();
-  };
+// the time things are judged at: now, or today from t1 to t2 (each at a quarter past the hour)
+$("s1").value = $("s2").value = Math.min(23, Math.floor(now().min / 60));
+function at() {
+  const n = now();
+  if (when !== "span") return { day: n.day, a: n.min, b: n.min };
+  const x = $("s1").value * 60 + 15, y = $("s2").value * 60 + 15;
+  return { day: n.day, a: Math.min(x, y), b: Math.max(x, y) };
+}
+function setWhen(w) {
+  when = w;
+  $("tAny").classList.toggle("on", w === "any"); $("tNow").classList.toggle("on", w === "now"); $("dual").classList.toggle("on", w === "span");
+  render();
+}
+$("tAny").onclick = () => setWhen("any");
+$("tNow").onclick = () => setWhen("now");
+$("s1").oninput = $("s2").oninput = () => setWhen("span");
+$("dual").onpointerdown = () => { if (when !== "span") setWhen("span"); };
+$("q").oninput = () => render();
+$("zhOn").onclick = () => { $("zhOn").classList.toggle("on"); render(); };
+$("mallsOn").onclick = () => { $("mallsOn").classList.toggle("on"); if (ready) map.setLayoutProperty("malls", "visibility", $("mallsOn").classList.contains("on") ? "visible" : "none"); };
+$("blocksOn").onclick = () => blocks(!$("blocksOn").classList.contains("on"));
+setInterval(() => { if (when !== "span") render(); }, 5 * 60000);
+
+// type chips: click toggles one, shift+click (or long press) shows only that one
+const chipEls = {};
+function chips() {
+  $("chips").textContent = "";
+  const sync = () => { for (const k of order) chipEls[k].classList.toggle("off", !cats.has(k)); render(); };
+  const solo = k => { const only = cats.size === 1 && cats.has(k); cats.clear(); (only ? order : [k]).forEach(x => cats.add(x)); sync(); };
   for (const key of order) {
     const b = chipEls[key] = document.createElement("button");
     b.className = "chip";
     b.style.setProperty("--c", CATEGORIES[key].color);
     b.innerHTML = "<span class='dot'></span>" + esc(CATEGORIES[key].label);
-    b.onclick = e => { if (e.shiftKey) return solo(key); cats.has(key) ? cats.delete(key) : cats.add(key); syncChips(); };
+    b.onclick = e => { if (e.shiftKey) return solo(key); cats.has(key) ? cats.delete(key) : cats.add(key); sync(); };
     b.oncontextmenu = e => { e.preventDefault(); solo(key); };
     $("chips").appendChild(b);
   }
-  $("q").oninput = $("zhOn").onchange = $("s1").oninput = $("s2").oninput = () => render();
-  $("openBtn").onclick = () => { $("openBtn").classList.toggle("on"); render(); };
-  $("nowOn").onchange = () => {
-    $("s1").disabled = $("s2").disabled = $("nowOn").checked;
-    $("dual").classList.toggle("off", $("nowOn").checked);
-    render();
-  };
-  setInterval(() => { if ($("nowOn").checked) render(); }, 5 * 60000);
+}
 
-  // sidebar edge is draggable
-  const side = $("side");
-  if (localStorage.getItem("mapSide")) side.style.width = localStorage.getItem("mapSide") + "px";
-  $("grip").onpointerdown = e => {
-    $("grip").setPointerCapture(e.pointerId);
-    const move = ev => {
-      side.style.width = Math.max(150, Math.min(innerWidth * 0.92, ev.clientX - side.getBoundingClientRect().left)) + "px";
-      map.resize(); lines();
-    };
-    const up = () => { $("grip").removeEventListener("pointermove", move); localStorage.setItem("mapSide", parseInt(side.style.width)); };
-    $("grip").addEventListener("pointermove", move);
-    $("grip").addEventListener("pointerup", up, { once: true });
+// sidebar edge is draggable
+const side = $("side");
+if (localStorage.getItem("mapSide")) side.style.width = localStorage.getItem("mapSide") + "px";
+$("grip").onpointerdown = e => {
+  $("grip").setPointerCapture(e.pointerId);
+  const move = ev => {
+    side.style.width = Math.max(150, Math.min(innerWidth * 0.92, ev.clientX - side.getBoundingClientRect().left)) + "px";
+    if (map) map.resize();
+    lines();
   };
-  addEventListener("resize", () => lines());
+  const up = () => { $("grip").removeEventListener("pointermove", move); localStorage.setItem("mapSide", parseInt(side.style.width)); };
+  $("grip").addEventListener("pointermove", move);
+  $("grip").addEventListener("pointerup", up, { once: true });
+};
+addEventListener("resize", () => lines());
 
-  // map: a standard view of Beijing
-  const map = new maplibregl.Map({
+// ---- list ----
+function hoursLine(p) {
+  const t = at(), today = p.hours == null ? null : dayHours(p, t.day);
+  if (today == null) return "";
+  const open = isOpen(p, t.day, t.a, t.b);
+  const w = when !== "span" ? " now" : t.a === t.b ? " at " + hhmm(t.a) : " " + hhmm(t.a) + "-" + hhmm(t.b);
+  return (open ? "Open" : "Closed") + w + " · today " + esc(today.replace(/,/g, ", "));
+}
+
+function showPopup(p) {
+  let h = "<div class='pop'>";
+  if (PHOTOS[p.id]) h += "<img class='photo' alt='' src='" + PHOTOS[p.id] + "'>";
+  h += "<b>" + esc(p.name) + "</b>";
+  if (p.name_zh) h += "<small>" + esc(p.name_zh) + "</small>";
+  if (hoursLine(p)) h += "<div>" + hoursLine(p) + "</div>";
+  if (p.address) h += "<small>" + esc(p.address) + "</small>";
+  if (p.located === "approx") h += "<small><i>approximate position</i></small>";
+  if (p.notes) h += "<small>" + esc(p.notes) + "</small>";
+  if (p.check) h += "<small class='q'>" + esc(p.check) + "</small>";
+  popup.setLngLat([p.lon, p.lat]).setHTML(h + "</div>").addTo(map);
+}
+
+// deeper colour between opening and closing time; the tab's width is 0h to 24h
+const pct = m => (m / 14.4).toFixed(2) + "%";
+function band(p, day) {
+  const c = color(p), base = "color-mix(in srgb, " + c + " 9%, #fff)", deep = "color-mix(in srgb, " + c + " 36%, #fff)";
+  if (p.hours == null || p.chainSummary) return base;
+  const segs = [];
+  for (const [, b] of spans(dayHours(p, (day + 6) % 7))) if (b > 1440) segs.push([0, b - 1440]);
+  for (const [a, b] of spans(dayHours(p, day))) segs.push([a, Math.min(b, 1440)]);
+  segs.sort((x, y) => x[0] - y[0]);
+  const stops = [];
+  let pos = 0;
+  for (const [a, b] of segs) {
+    const A = Math.max(a, pos);
+    if (b <= A) continue;
+    stops.push(base + " " + pct(pos) + " " + pct(A), deep + " " + pct(A) + " " + pct(b));
+    pos = b;
+  }
+  stops.push(base + " " + pct(pos) + " 100%");
+  return "linear-gradient(to right, " + stops.join(", ") + ")";
+}
+
+// one continuous vertical line down the list at the chosen time (two for a span);
+// the slider sits on the same 0h-24h scale as the tabs: its ends are 00:15 and 23:15
+function lines() {
+  const it = $("list").querySelector(".item"), t = at(), ts = t.a === t.b ? [t.a] : [t.a, t.b];
+  ["tl1", "tl2"].forEach((id, i) => {
+    const el = $(id);
+    if (!it || i >= ts.length) return void (el.style.display = "none");
+    const r = it.getBoundingClientRect(), w = $("listWrap").getBoundingClientRect();
+    el.style.display = "block";
+    el.style.left = (r.left - w.left + 3 + (r.width - 3) * ts[i] / 1440) + "px";
+  });
+  if (it) {
+    const r = it.getBoundingClientRect(), w = $("top").getBoundingClientRect(), wd = r.width - 3;
+    $("dual").style.marginLeft = (r.left - w.left + 3 + wd * 15 / 1440 - 7 - 8) + "px";
+    $("dual").style.width = (wd * 23 * 60 / 1440 + 14) + "px";
+  }
+  const lo = Math.min($("s1").value, $("s2").value), hi = Math.max($("s1").value, $("s2").value);
+  $("dual").style.setProperty("--a", (lo / 23 * 100) + "%");
+  $("dual").style.setProperty("--b", (hi / 23 * 100) + "%");
+}
+
+function item(p, title, sub, logoKey, dim, single, double) {
+  const d = document.createElement("div"), isOpenTab = expanded === p.id && !p.chainSummary;
+  d.className = "item" + (dim ? " dim" : "") + (isOpenTab ? " open" : "");
+  d.style.setProperty("--c", color(p));
+  d.style.background = band(p, at().day);
+  d.innerHTML = "<div class='row'>" + logo(p, logoKey) + "<b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
+  if (isOpenTab) {
+    const m = document.createElement("div");
+    m.className = "more";
+    m.innerHTML = (PHOTOS[p.id] ? "<img alt='' src='" + PHOTOS[p.id] + "'>" : "")
+      + (p.name_zh ? "<div>" + esc(p.name_zh) + "</div>" : "") + (hoursLine(p) ? "<div>" + hoursLine(p) + "</div>" : "")
+      + (p.notes ? "<div>" + esc(p.notes) + "</div>" : "");
+    m.onclick = m.ondblclick = e => e.stopPropagation();   // the text in an open tab can be selected and copied
+    d.appendChild(m);
+  }
+  // one click centres; a double click zooms in and opens the tab; a click on an open tab closes it
+  let timer;
+  d.onclick = () => {
+    if (String(getSelection())) return;
+    clearTimeout(timer);
+    timer = setTimeout(isOpenTab ? () => { expanded = null; render(); } : single, 230);
+  };
+  d.ondblclick = () => { clearTimeout(timer); (double || single)(); };
+  return d;
+}
+
+const centre = p => {
+  if (innerWidth <= 700) setList(false);
+  if (expanded) { expanded = null; render(); }
+  map.easeTo({ center: [p.lon, p.lat] });
+  showPopup(p);
+};
+const zoomIn = p => {
+  expanded = expanded === p.id ? null : p.id;
+  map.easeTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
+  showPopup(p);
+  render();
+};
+
+function render() {
+  if (!cats) return;
+  const q = $("q").value.trim().toLowerCase(), t = at(), zh = $("zhOn").classList.contains("on");
+  const a = $("s1").value * 60 + 15, b = $("s2").value * 60 + 15;
+  $("timeText").textContent = when === "span" ? (a === b ? hhmm(a) : hhmm(Math.min(a, b)) + "-" + hhmm(Math.max(a, b))) : hhmm(t.a);
+  const text = p => [p.name, p.name_zh, p.area, p.address, CATEGORIES[catKey(p)].label, p.chain].join(" ").toLowerCase();
+  const shown = PLACES.filter(p => cats.has(catKey(p)) && (!q || text(p).includes(q)));
+  // not open at the chosen time: greyed out, in the list and on the map, never removed
+  const dim = new Set(when === "any" ? [] : shown.filter(p => isOpen(p, t.day, t.a, t.b) === false).map(p => p.id));
+  if (ready) map.getSource("places").setData(fc(shown.map(p => ({
+    type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
+    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id) } }))));
+
+  const list = $("list"), scroll = list.scrollTop;
+  list.textContent = "";
+  for (const key of order) {
+    const here = shown.filter(p => catKey(p) === key);
+    if (!here.length) continue;
+    const h = document.createElement("h2");
+    h.textContent = CATEGORIES[key].label;
+    list.appendChild(h);
+    for (const p of here.filter(p => !p.chain).sort((x, y) => x.name.localeCompare(y.name)))
+      list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, dim.has(p.id), () => centre(p), () => zoomIn(p)));
+    const chains = {};
+    for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
+    for (const c in chains) {
+      const branches = chains[c].sort((x, y) => (x.name_zh || "").localeCompare(y.name_zh || "", "zh"));
+      if (q) for (const p of branches)
+        list.appendChild(item(p, p.name_zh || p.name, "", c, dim.has(p.id), () => centre(p), () => zoomIn(p)));
+      else list.appendChild(item(Object.assign({}, branches[0], { chainSummary: true }), branches[0].name, branches.length + " branches", c, false, () => {
+        $("q").value = branches[0].name; render();
+        if (innerWidth <= 700) setList(false);
+        map.fitBounds(branches.reduce((bb, p) => bb.extend([p.lon, p.lat]), new maplibregl.LngLatBounds()), { padding: 50 });
+      }));
+    }
+  }
+  const n = document.createElement("div");
+  n.id = "note";
+  n.textContent = shown.length ? "" : "Nothing matches.";
+  list.appendChild(n);
+  const f = document.createElement("a");
+  f.id = "forget"; f.href = "#"; f.textContent = "Forget token on this device";
+  f.onclick = e => {
+    e.preventDefault();
+    for (const k of Object.keys(localStorage)) if (k === "mapToken" || k.startsWith("mapData:")) localStorage.removeItem(k);
+    location.reload();
+  };
+  list.appendChild(f);
+  list.scrollTop = scroll;
+  lines();
+}
+
+// ---- map ----
+function layers() {   // (re)fill the area and mall layers from the data
+  if (!ready) return;
+  map.getSource("areas").setData(fc(AREAS.map(a =>
+    poly(a.polygon, { name: a.name, color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1] }))));
+  map.getSource("malls").setData(fc(MALLS.map(m => ({ type: "Feature", properties: { name: m.name }, geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
+}
+
+// blocks and sub-blocks (cut out of the road network), loaded when first asked for
+let blocksReady = null;
+function blocks(on) {
+  blocksReady = blocksReady || fetch("blocks.json").then(r => r.json()).then(d => {
+    map.addSource("blocks", { type: "geojson", data: fc(
+      d.sub.map(s => poly(s.p, { id: s.id, block: s.b, sub: true })).concat(d.blocks.map(b => poly(b.p, { id: b.id, block: b.id, sub: false })))) });
+    map.addLayer({ id: "blocks-fill", type: "fill", source: "blocks", paint: { "fill-color": "#000", "fill-opacity": 0 } }, "rings");
+    map.addLayer({ id: "blocks-sub", type: "line", source: "blocks", filter: ["get", "sub"], paint: { "line-color": "#a3a29c", "line-width": 0.7 } }, "rings");
+    map.addLayer({ id: "blocks-line", type: "line", source: "blocks", filter: ["!", ["get", "sub"]], paint: { "line-color": "#6b6a65", "line-width": 1.6 } }, "rings");
+  });
+  return blocksReady.then(() => {
+    for (const id of ["blocks-fill", "blocks-sub", "blocks-line"]) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+    $("blocksOn").classList.toggle("on", on);
+  });
+}
+
+// [+]: add a point, a path, a region (both drawn point to point), a comment on a block, or just a note;
+// each is saved to inbox/ in the data repository
+let draft = null, pin = null, pts = [];
+const HINT = { point: "Click the place on the map.", path: "Click along the path, then Done.",
+               region: "Click each corner of the region, then Done.", block: "Click a block on the map.", note: "" };
+const TITLE = { point: "New point", path: "New path", region: "New region", block: "Comment on a block", note: "Note or picture" };
+function sketch() {
+  const f = [];
+  if (draft && draft.shape) f.push({ type: "Feature", properties: {}, geometry: draft.shape });
+  else if (pts.length > 1) f.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: mode === "region" && pts.length > 2 ? pts.concat([pts[0]]) : pts } });
+  for (const p of pts) f.push({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: p } });
+  map.getSource("sketch").setData(fc(f));
+}
+function bar(step) {   // step: "pick" (still choosing on the map) or "form"
+  const drawing = step === "pick" && (mode === "path" || mode === "region");
+  $("addForm").style.display = $("addSave").style.display = step === "form" ? "" : "none";
+  $("addHint").style.display = step === "pick" ? "" : "none";
+  $("addUndo").style.display = $("addDone").style.display = drawing ? "" : "none";
+}
+function begin(kind) {
+  cancel();
+  mode = kind; draft = { kind };
+  $("addMenu").style.display = "none"; $("addBar").style.display = "block";
+  $("addTitle").textContent = TITLE[kind]; $("addHint").textContent = HINT[kind]; $("addMsg").textContent = "";
+  $("addText").value = ""; $("addPic").value = "";
+  bar(kind === "note" ? "form" : "pick");
+  if (innerWidth <= 700) setList(false);
+  if (kind === "block") blocks(true);
+  if (kind !== "note") map.getCanvas().style.cursor = "crosshair";
+}
+function cancel() {
+  mode = null; draft = null; pts = [];
+  $("addBar").style.display = "none";
+  if (pin) { pin.remove(); pin = null; }
+  if (ready) { sketch(); map.getCanvas().style.cursor = ""; }
+}
+function done() {
+  const need = mode === "region" ? 3 : 2;
+  if (pts.length < need) return void ($("addMsg").textContent = "Click at least " + need + " points.");
+  if (mode === "region") { draft.polygon = pts.concat([pts[0]]); draft.shape = { type: "Polygon", coordinates: [draft.polygon] }; }
+  else { draft.path = pts.slice(); draft.shape = { type: "LineString", coordinates: draft.path }; }
+  pts = [];
+  sketch();
+  $("addMsg").textContent = "";
+  map.getCanvas().style.cursor = "";
+  bar("form");
+}
+for (const b of $("addMenu").children) b.onclick = () => begin(b.dataset.kind);
+$("addCancel").onclick = cancel;
+$("addDone").onclick = done;
+$("addUndo").onclick = () => { pts.pop(); sketch(); };
+$("addSave").onclick = async () => {
+  const text = $("addText").value.trim(), file = $("addPic").files[0];
+  if (!text && !file) return void ($("addMsg").textContent = "Write something or choose a picture.");
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-"), name = "inbox/" + stamp + "-" + draft.kind;
+  $("addMsg").textContent = "Saving...";
+  try {
+    const rec = Object.assign({ created: new Date().toISOString(), text }, draft);
+    delete rec.shape;
+    if (file) { rec.picture = name + ".jpg"; await put(rec.picture, await shrink(file)); }
+    await put(name + ".json", b64text(JSON.stringify(rec, null, 1)));
+    cancel();
+  } catch (e) {
+    $("addMsg").textContent = e === 403 || e === 404 ? "This token can only read. Adding needs a token with Contents: Read and write."
+      : e === 401 ? "The token was not accepted." : "Could not save. Try again.";
+  }
+};
+
+function click(e) {
+  if (mode === "point") {
+    draft.lon = +e.lngLat.lng.toFixed(6); draft.lat = +e.lngLat.lat.toFixed(6);
+    if (pin) pin.remove();
+    const el = document.createElement("div");
+    el.className = "pin";
+    pin = new maplibregl.Marker({ element: el }).setLngLat(e.lngLat).addTo(map);
+    map.getCanvas().style.cursor = "";
+    return bar("form");
+  }
+  if ((mode === "path" || mode === "region") && !draft.shape) {
+    if (mode === "region" && pts.length > 2) {          // a click back on the first corner closes the region
+      const first = map.project(pts[0]);
+      if (Math.hypot(first.x - e.point.x, first.y - e.point.y) < 12) return done();
+    }
+    pts.push([+e.lngLat.lng.toFixed(6), +e.lngLat.lat.toFixed(6)]);
+    return sketch();
+  }
+  if (mode === "block") {
+    const hit = map.getLayer("blocks-fill") ? map.queryRenderedFeatures(e.point, { layers: ["blocks-fill"] }) : [];
+    const f = hit.find(x => x.properties.sub) || hit[0];
+    if (!f) return;
+    draft.block = f.properties.block; draft.sub = f.properties.sub ? f.properties.id : null; draft.shape = f.geometry;
+    sketch();
+    return bar("form");
+  }
+  if (mode) return;
+  const dot = map.queryRenderedFeatures(e.point, { layers: ["dots", "rings"] })[0];
+  if (dot) return showPopup(byId[dot.properties.id]);
+  const named = map.queryRenderedFeatures(e.point, { layers: ["malls", "areas"] })[0];
+  if (named) popup.setLngLat(e.lngLat).setHTML("<div class='pop'>" + esc(named.properties.name) + "</div>").addTo(map);
+}
+
+function makeMap() {
+  // a standard view of Beijing; drawn straight away, before the data arrives
+  map = new maplibregl.Map({
     container: "map", style: "https://tiles.openfreemap.org/styles/positron",
     bounds: [[116.27, 39.84], [116.53, 40.02]], fitBoundsOptions: { padding: 10 }, attributionControl: { compact: true },
   });
@@ -311,7 +630,7 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
   map.addControl(button("+", "Add something", () => { $("addMenu").style.display = $("addMenu").style.display === "block" ? "none" : "block"; }), "top-left");
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
-  const popup = new maplibregl.Popup({ offset: 12, maxWidth: "260px" });
+  popup = new maplibregl.Popup({ offset: 12, maxWidth: "260px" });
 
   // my location: a dot that never moves the camera; the button goes there
   let me = null, meMarker = null;
@@ -324,301 +643,49 @@ function draw(CATEGORIES, PLACES, LOGOS, AREAS) {
   }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
   map.addControl(button("&#9678;", "My location", () => { if (me) map.easeTo({ center: me, zoom: Math.max(map.getZoom(), 14) }); }), "top-right");
 
-  const feature = (p, dim) => ({
-    type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx" || dim },
-  });
-
-  function hoursLine(p) {
-    const t = at(), today = p.hours == null ? null : dayHours(p, t.day);
-    if (today == null) return "";
-    const open = isOpen(p, t.day, t.a, t.b);
-    const when = $("nowOn").checked ? " now" : t.a === t.b ? " at " + hhmm(t.a) : " " + hhmm(t.a) + "-" + hhmm(t.b);
-    return (open ? "Open" : "Closed") + when + " · today " + esc(today.replace(/,/g, ", "));
-  }
-
-  function showPopup(p) {
-    let h = "<div class='pop'>";
-    if (PHOTOS[p.id]) h += "<img class='photo' alt='' src='" + PHOTOS[p.id] + "'>";
-    h += "<b>" + esc(p.name) + "</b>";
-    if (p.name_zh) h += "<small>" + esc(p.name_zh) + "</small>";
-    if (hoursLine(p)) h += "<div>" + hoursLine(p) + "</div>";
-    if (p.address) h += "<small>" + esc(p.address) + "</small>";
-    if (p.located === "approx") h += "<small><i>approximate position</i></small>";
-    if (p.notes) h += "<small>" + esc(p.notes) + "</small>";
-    if (p.check) h += "<small class='q'>" + esc(p.check) + "</small>";
-    popup.setLngLat([p.lon, p.lat]).setHTML(h + "</div>").addTo(map);
-  }
-
-  // deeper colour between opening and closing time; the tab's width is 0h to 24h
-  const pct = m => (m / 14.4).toFixed(2) + "%";
-  function band(p, day) {
-    const c = color(p), base = "color-mix(in srgb, " + c + " 9%, #fff)", deep = "color-mix(in srgb, " + c + " 36%, #fff)";
-    if (p.hours == null || p.chainSummary) return base;
-    const segs = [];
-    for (const [, b] of spans(dayHours(p, (day + 6) % 7))) if (b > 1440) segs.push([0, b - 1440]);
-    for (const [a, b] of spans(dayHours(p, day))) segs.push([a, Math.min(b, 1440)]);
-    segs.sort((x, y) => x[0] - y[0]);
-    const stops = [];
-    let pos = 0;
-    for (const [a, b] of segs) {
-      const A = Math.max(a, pos);
-      if (b <= A) continue;
-      stops.push(base + " " + pct(pos) + " " + pct(A), deep + " " + pct(A) + " " + pct(b));
-      pos = b;
-    }
-    stops.push(base + " " + pct(pos) + " 100%");
-    return "linear-gradient(to right, " + stops.join(", ") + ")";
-  }
-
-  // one continuous vertical line down the list at the chosen time (two for a span)
-  function lines() {
-    const it = $("list").querySelector(".item"), t = at(), ts = t.a === t.b ? [t.a] : [t.a, t.b];
-    ["tl1", "tl2"].forEach((id, i) => {
-      const el = $(id);
-      if (!it || i >= ts.length) return void (el.style.display = "none");
-      const r = it.getBoundingClientRect(), w = $("listWrap").getBoundingClientRect();
-      el.style.display = "block";
-      el.style.left = (r.left - w.left + 3 + (r.width - 3) * ts[i] / 1440) + "px";
-    });
-    if (it) {   // the slider sits on the same 0h-24h scale as the tabs: its ends are 00:15 and 23:15
-      const r = it.getBoundingClientRect(), w = $("top").getBoundingClientRect(), wd = r.width - 3;
-      $("dual").style.marginLeft = (r.left - w.left + 3 + wd * 15 / 1440 - 7 - 8) + "px";
-      $("dual").style.width = (wd * 23 * 60 / 1440 + 14) + "px";
-    }
-  }
-
-  function item(p, title, sub, logoKey, dim, single, double) {
-    const d = document.createElement("div"), isOpenTab = expanded === p.id && !p.chainSummary;
-    d.className = "item" + (dim ? " dim" : "") + (isOpenTab ? " open" : "");
-    d.style.setProperty("--c", color(p));
-    d.style.background = band(p, at().day);
-    d.innerHTML = "<div class='row'>" + logo(p, logoKey) + "<b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
-    if (isOpenTab) {
-      const m = document.createElement("div");
-      m.className = "more";
-      m.innerHTML = (PHOTOS[p.id] ? "<img alt='' src='" + PHOTOS[p.id] + "'>" : "")
-        + (p.name_zh ? "<div>" + esc(p.name_zh) + "</div>" : "") + (hoursLine(p) ? "<div>" + hoursLine(p) + "</div>" : "")
-        + (p.notes ? "<div>" + esc(p.notes) + "</div>" : "");
-      m.onclick = m.ondblclick = e => e.stopPropagation();   // the text in an open tab can be selected and copied
-      d.appendChild(m);
-    }
-    // one click centres; a double click zooms in and opens the tab; a click on an open tab closes it
-    let timer;
-    d.onclick = () => {
-      if (String(getSelection())) return;
-      clearTimeout(timer);
-      timer = setTimeout(isOpenTab ? () => { expanded = null; render(); } : single, 230);
-    };
-    d.ondblclick = () => { clearTimeout(timer); (double || single)(); };
-    return d;
-  }
-
-  const centre = p => {
-    if (innerWidth <= 700) setList(false);
-    if (expanded) { expanded = null; render(); }
-    map.easeTo({ center: [p.lon, p.lat] });
-    showPopup(p);
-  };
-  const zoomIn = p => {
-    expanded = expanded === p.id ? null : p.id;
-    map.easeTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
-    showPopup(p);
-    render();
-  };
-
-  function render() {
-    const q = $("q").value.trim().toLowerCase(), t = at(), zh = $("zhOn").checked, care = $("openBtn").classList.contains("on");
-    const a = $("s1").value * 60 + 15, b = $("s2").value * 60 + 15;
-    $("timeText").textContent = $("nowOn").checked ? hhmm(t.a) : a === b ? hhmm(a) : hhmm(Math.min(a, b)) + "-" + hhmm(Math.max(a, b));
-    const text = p => [p.name, p.name_zh, p.area, p.address, CATEGORIES[catKey(p)].label, p.chain].join(" ").toLowerCase();
-    const dimIds = new Set();
-    const shown = PLACES.filter(p => {
-      if (!cats.has(catKey(p)) || (q && !text(p).includes(q))) return false;
-      if (!care) return true;
-      const o = isOpen(p, t.day, t.a, t.b);
-      if (o == null) dimIds.add(p.id);          // hours unknown: kept, greyed
-      return o !== false;
-    });
-    if (map.getSource("places"))
-      map.getSource("places").setData({ type: "FeatureCollection", features: shown.map(p => feature(p, dimIds.has(p.id))) });
-
-    const list = $("list"), scroll = list.scrollTop;
-    list.textContent = "";
-    for (const key of order) {
-      const here = shown.filter(p => catKey(p) === key);
-      if (!here.length) continue;
-      const h = document.createElement("h2");
-      h.textContent = CATEGORIES[key].label;
-      list.appendChild(h);
-      for (const p of here.filter(p => !p.chain).sort((x, y) => x.name.localeCompare(y.name)))
-        list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, dimIds.has(p.id), () => centre(p), () => zoomIn(p)));
-      const chains = {};
-      for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
-      for (const c in chains) {
-        const branches = chains[c].sort((x, y) => (x.name_zh || "").localeCompare(y.name_zh || "", "zh"));
-        if (q) for (const p of branches)
-          list.appendChild(item(p, p.name_zh || p.name, "", c, dimIds.has(p.id), () => centre(p), () => zoomIn(p)));
-        else list.appendChild(item(Object.assign({}, branches[0], { chainSummary: true }), branches[0].name, branches.length + " branches", c, false, () => {
-          $("q").value = branches[0].name; render();
-          if (innerWidth <= 700) setList(false);
-          map.fitBounds(branches.reduce((bb, p) => bb.extend([p.lon, p.lat]), new maplibregl.LngLatBounds()), { padding: 50 });
-        }));
-      }
-    }
-    const n = document.createElement("div");
-    n.id = "note";
-    n.textContent = shown.length ? "" : "Nothing matches.";
-    list.appendChild(n);
-    const f = document.createElement("a");
-    f.id = "forget"; f.href = "#"; f.textContent = "Forget token on this device";
-    f.onclick = e => { e.preventDefault(); localStorage.removeItem("mapToken"); location.reload(); };
-    list.appendChild(f);
-    list.scrollTop = scroll;
-    lines();
-  }
-
-  // blocks and sub-blocks (cut out of the road network), loaded when first asked for
-  const poly = (ring, props) => ({ type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } });
-  let blocksReady = null;
-  function blocks(on) {
-    blocksReady = blocksReady || fetch("blocks.json").then(r => r.json()).then(d => {
-      map.addSource("blocks", { type: "geojson", data: { type: "FeatureCollection",
-        features: d.sub.map(s => poly(s.p, { id: s.id, block: s.b, sub: true })).concat(d.blocks.map(b => poly(b.p, { id: b.id, block: b.id, sub: false }))) } });
-      map.addLayer({ id: "blocks-fill", type: "fill", source: "blocks", paint: { "fill-color": "#000", "fill-opacity": 0 } }, "rings");
-      map.addLayer({ id: "blocks-sub", type: "line", source: "blocks", filter: ["get", "sub"], paint: { "line-color": "#a3a29c", "line-width": 0.7 } }, "rings");
-      map.addLayer({ id: "blocks-line", type: "line", source: "blocks", filter: ["!", ["get", "sub"]], paint: { "line-color": "#6b6a65", "line-width": 1.6 } }, "rings");
-    });
-    return blocksReady.then(() => {
-      for (const id of ["blocks-fill", "blocks-sub", "blocks-line"]) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
-      $("blocksOn").checked = on;
-    });
-  }
-  $("blocksOn").onchange = () => blocks($("blocksOn").checked);
-  $("mallsOn").onchange = () => map.setFilter("areas", $("mallsOn").checked ? null : ["!=", ["get", "level"], "mall"]);
-
-  // [+]: add a point, a hand-drawn region, a comment on a block, or just a note; saved to inbox/ in the data repository
-  let draft = null, pin = null, ring = [];
-  const sketch = g => map.getSource("sketch").setData({ type: "FeatureCollection", features: g ? [{ type: "Feature", properties: {}, geometry: g }] : [] });
-  const HINT = { point: "Click the place on the map.", region: "Press and drag on the map to draw around it.",
-                 block: "Click a block on the map.", note: "" };
-  const TITLE = { point: "New point", region: "New region", block: "Comment on a block", note: "Note or picture" };
-  function form(show) { $("addForm").style.display = $("addSave").style.display = show ? "" : "none"; $("addHint").style.display = show ? "none" : ""; }
-  function begin(kind) {
-    cancel();
-    mode = kind; draft = { kind };
-    $("addMenu").style.display = "none"; $("addBar").style.display = "block";
-    $("addTitle").textContent = TITLE[kind]; $("addHint").textContent = HINT[kind]; $("addMsg").textContent = "";
-    $("addText").value = ""; $("addPic").value = "";
-    form(kind === "note");
-    if (innerWidth <= 700) setList(false);
-    if (kind === "block") blocks(true);
-    if (kind === "region") { map.dragPan.disable(); map.touchZoomRotate.disable(); map.getCanvas().style.cursor = "crosshair"; }
-    if (kind === "point") map.getCanvas().style.cursor = "crosshair";
-  }
-  function cancel() {
-    mode = null; draft = null; ring = [];
-    $("addBar").style.display = "none";
-    if (pin) { pin.remove(); pin = null; }
-    if (map.getSource("sketch")) sketch(null);
-    map.dragPan.enable(); map.touchZoomRotate.enable(); map.getCanvas().style.cursor = "";
-  }
-  for (const b of $("addMenu").children) b.onclick = () => begin(b.dataset.kind);
-  $("addCancel").onclick = cancel;
-  $("addSave").onclick = async () => {
-    const text = $("addText").value.trim(), file = $("addPic").files[0];
-    if (!text && !file) return void ($("addMsg").textContent = "Write something or choose a picture.");
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-"), name = "inbox/" + stamp + "-" + draft.kind;
-    $("addMsg").textContent = "Saving...";
-    try {
-      const rec = Object.assign({ created: new Date().toISOString(), text }, draft);
-      if (file) { rec.picture = name + ".jpg"; await put(rec.picture, await shrink(file)); }
-      await put(name + ".json", b64text(JSON.stringify(rec, null, 1)));
-      cancel();
-    } catch (e) {
-      $("addMsg").textContent = e === 403 || e === 404 ? "This token can only read. Adding needs a token with Contents: Read and write."
-        : e === 401 ? "The token was not accepted." : "Could not save. Try again.";
-    }
-  };
-  const down = e => { if (mode === "region" && !draft.polygon) { ring = [[e.lngLat.lng, e.lngLat.lat]]; } };
-  const move = e => {
-    if (mode !== "region" || !ring.length || draft.polygon) return;
-    ring.push([+e.lngLat.lng.toFixed(6), +e.lngLat.lat.toFixed(6)]);
-    sketch({ type: "LineString", coordinates: ring });
-  };
-  const up = () => {
-    if (mode !== "region" || ring.length < 4 || draft.polygon) return;
-    draft.polygon = ring.concat([ring[0]]);
-    sketch({ type: "Polygon", coordinates: [draft.polygon] });
-    map.dragPan.enable(); map.touchZoomRotate.enable(); map.getCanvas().style.cursor = "";
-    form(true);
-  };
-  map.on("mousedown", down); map.on("touchstart", down);
-  map.on("mousemove", move); map.on("touchmove", move);
-  map.on("mouseup", up); map.on("touchend", up);
-
-  map.on("click", e => {
-    if (mode === "point") {
-      draft.lon = +e.lngLat.lng.toFixed(6); draft.lat = +e.lngLat.lat.toFixed(6);
-      if (pin) pin.remove();
-      const el = document.createElement("div");
-      el.className = "pin";
-      pin = new maplibregl.Marker({ element: el }).setLngLat(e.lngLat).addTo(map);
-      map.getCanvas().style.cursor = "";
-      return form(true);
-    }
-    if (mode === "block") {
-      const hit = map.getLayer("blocks-fill") ? map.queryRenderedFeatures(e.point, { layers: ["blocks-fill"] }) : [];
-      const f = hit.find(x => x.properties.sub) || hit[0];
-      if (!f) return;
-      draft.block = f.properties.block; draft.sub = f.properties.sub ? f.properties.id : null;
-      sketch(f.geometry);
-      return form(true);
-    }
-    if (mode) return;
-    const dot = map.queryRenderedFeatures(e.point, { layers: ["dots", "rings"] })[0];
-    if (dot) return showPopup(byId[dot.properties.id]);
-    const area = map.queryRenderedFeatures(e.point, { layers: ["areas"] })[0];
-    if (area) popup.setLngLat(e.lngLat).setHTML("<div class='pop'>" + esc(area.properties.name) + "</div>").addTo(map);
-  });
-
+  map.on("click", click);
   map.on("load", () => {
     for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"])
       if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
-    // coloured areas, under the roads
-    map.addSource("areas", { type: "geojson", data: { type: "FeatureCollection", features: AREAS.map(a =>
-      poly(a.polygon, { name: a.name, level: a.level, color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1] })) } });
-    map.addLayer({ id: "areas", type: "fill", source: "areas",
-      paint: { "fill-color": ["get", "color"], "fill-opacity": ["get", "opacity"] } },
-      ["tunnel_motorway_casing", "highway_path", "highway_minor"].find(id => map.getLayer(id)));
-    map.addSource("places", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-    // chain branches: thin coloured ring, not filled
+    const under = ["tunnel_motorway_casing", "highway_path", "highway_minor"].find(id => map.getLayer(id));
+    const empty = () => ({ type: "geojson", data: fc([]) });
+    // coloured areas and malls, under the roads
+    map.addSource("areas", empty());
+    map.addLayer({ id: "areas", type: "fill", source: "areas", paint: { "fill-color": ["get", "color"], "fill-opacity": ["get", "opacity"] } }, under);
+    map.addSource("malls", empty());
+    map.addLayer({ id: "malls", type: "circle", source: "malls", paint: {      // discs about 110 m across the middle
+      "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, 2.2, 20, 2250],
+      "circle-color": "#7fb0ee", "circle-opacity": 0.5 } }, under);
+    map.addSource("places", empty());
+    // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3.5, 14, 6],
       "circle-color": "#ffffff", "circle-opacity": 0.55,
-      "circle-stroke-color": ["get", "color"], "circle-stroke-width": 1.8,
-      "circle-stroke-opacity": ["case", ["get", "faint"], 0.35, 1],
+      "circle-stroke-color": ["case", ["get", "shut"], "#c4c3be", ["get", "color"]], "circle-stroke-width": 1.8,
     } });
     map.addLayer({ id: "dots", type: "circle", source: "places", filter: ["!", ["get", "chain"]], paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 7.5],
-      "circle-color": ["get", "color"], "circle-opacity": ["case", ["get", "faint"], 0.35, 1],
+      "circle-color": ["case", ["get", "shut"], "#c4c3be", ["get", "color"]], "circle-opacity": ["case", ["get", "faint"], 0.4, 1],
       "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
     } });
     map.addLayer({ id: "labels", type: "symbol", source: "places", minzoom: 11.5, filter: ["!", ["get", "chain"]], layout: {
       "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12,
       "text-variable-anchor": ["left", "right", "top", "bottom"], "text-radial-offset": 0.9, "text-justify": "auto",
-    }, paint: { "text-color": ["case", ["get", "faint"], "#8b8b86", "#2b2b2a"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
-    map.addSource("sketch", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    }, paint: { "text-color": ["case", ["get", "shut"], "#a3a29c", "#2b2b2a"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
+    map.addSource("sketch", empty());
     map.addLayer({ id: "sketch-fill", type: "fill", source: "sketch", filter: ["==", ["geometry-type"], "Polygon"], paint: { "fill-color": "#2b2b2a", "fill-opacity": 0.15 } });
-    map.addLayer({ id: "sketch-line", type: "line", source: "sketch", paint: { "line-color": "#2b2b2a", "line-width": 2 } });
+    map.addLayer({ id: "sketch-line", type: "line", source: "sketch", filter: ["!=", ["geometry-type"], "Point"], paint: { "line-color": "#2b2b2a", "line-width": 2 } });
+    map.addLayer({ id: "sketch-pts", type: "circle", source: "sketch", filter: ["==", ["geometry-type"], "Point"],
+      paint: { "circle-radius": 4, "circle-color": "#fff", "circle-stroke-color": "#2b2b2a", "circle-stroke-width": 2 } });
     for (const id of ["dots", "rings"]) {
       map.on("mouseenter", id, () => { if (!mode) map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", id, () => { if (!mode) map.getCanvas().style.cursor = ""; });
     }
+    ready = true;
+    if (!$("mallsOn").classList.contains("on")) map.setLayoutProperty("malls", "visibility", "none");
+    layers();
     render();
-    get("photos.json", true).then(p => { PHOTOS = p; }).catch(() => {});   // pictures of the inside, loaded last
   });
-  render();
 }
 
 start();
