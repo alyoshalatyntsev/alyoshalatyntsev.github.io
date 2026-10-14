@@ -724,7 +724,7 @@ function makeMap() {
     map.addSource("malls", empty());
     map.addLayer({ id: "malls", type: "circle", source: "malls", paint: {      // discs about 110 m across the middle
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, 2.2, 20, 2250],
-      "circle-color": "#7fb0ee", "circle-opacity": 0.5 } }, under);
+      "circle-color": "#7fb0ee", "circle-opacity": 0.4 } }, under);
     map.addSource("routes", empty());
     map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": "#eb6834", "line-opacity": 0.85, "line-width": 2.6, "line-dasharray": [2, 1.4] } });
     map.addSource("marks", empty());
@@ -738,7 +738,7 @@ function makeMap() {
     map.addSource("temples", empty());
     map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // plum discs, about 80 m across the middle
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, 1.6, 20, 1640],
-      "circle-color": "#9c4f96", "circle-opacity": 0.4 } }, under);
+      "circle-color": "#9c4f96", "circle-opacity": 0.32 } }, under);
     map.addSource("places", empty());
     // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
