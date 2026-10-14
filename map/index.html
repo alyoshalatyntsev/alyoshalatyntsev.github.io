@@ -43,7 +43,9 @@
   .chip.off { color: #a3a29c; }
   .chip.off .dot { background: #d6d5d0; }
   #opts { display: flex; gap: 5px; margin-top: 6px; }
-  h2 { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #7b7a74; margin: 8px 9px 2px; font-weight: 600; }
+  h2 { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #7b7a74; margin: 8px 9px 2px; font-weight: 600;
+       cursor: pointer; user-select: none; }
+  h2 .tri { display: inline-block; width: 10px; font-size: 9px; }
   .item { margin: 2px 7px; border-radius: 4px; cursor: pointer; border-left: 3px solid var(--c); overflow: hidden; user-select: none; }
   .row { display: flex; align-items: center; gap: 6px; padding: 2px 6px; }
   .row b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -257,7 +259,8 @@ function eventState(p, d, m) {
 
 // ---- state ----
 let CATEGORIES = {}, PLACES = [], LOGOS = {}, AREAS = [], ROUTES = [], MALLS = [], TEMPLES = [], PHOTOS = {}, byId = {}, order = [];
-let cats = null, expanded = null, mode = null, when = "any";   // when: "any" | "now" | "span"
+let cats = null, expanded = null, mode = null, when = "any";
+const folded = new Set(JSON.parse(localStorage.getItem("mapFolded") || "[]"));   // types whose list is folded up   // when: "any" | "now" | "span"
 let map = null, ready = false, popup = null;
 const catKey = p => p.category in CATEGORIES ? p.category : "other";
 const label = p => p.name + (p.explore ? " ?" : "");
@@ -455,11 +458,26 @@ function lines() {
   $("dual").style.setProperty("--b", (hi / 23 * 100) + "%");
 }
 
+// opening hours as text for a tooltip: days with the same hours run together, e.g. "Mon closed / Tue-Sun 10:00-24:00"
+function hoursText(p) {
+  if (p.hours == null) return "";
+  if (!Array.isArray(p.hours)) return "Every day " + p.hours.replace(/,/g, ", ");
+  const D = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], out = [];
+  for (let i = 0; i < 7;) {
+    let j = i;
+    while (j + 1 < 7 && p.hours[j + 1] === p.hours[i]) j++;
+    out.push((i === j ? D[i] : D[i] + "-" + D[j]) + " " + p.hours[i].replace(/,/g, ", "));
+    i = j + 1;
+  }
+  return out.join("\n");
+}
+
 function item(p, title, sub, logoKey, dim, single, double) {
   const d = document.createElement("div"), isOpenTab = expanded === p.id && !p.chainSummary;
   d.className = "item" + (dim ? " dim" : "") + (isOpenTab ? " open" : "") + (p.explore ? " explore" : "");
   d.style.setProperty("--c", color(p));
   d.style.background = band(p, at().day);
+  if (hoursText(p)) d.title = hoursText(p);
   d.innerHTML = "<div class='row'>" + logo(p, logoKey) + "<b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
   if (isOpenTab) {
     const m = document.createElement("div");
@@ -520,8 +538,15 @@ function render() {
     const here = shown.filter(p => catKey(p) === key);
     if (!here.length) continue;
     const h = document.createElement("h2");
-    h.textContent = CATEGORIES[key].label;
+    h.innerHTML = "<span class='tri'>" + (folded.has(key) ? "&#9656;" : "&#9662;") + "</span>" + esc(CATEGORIES[key].label)
+      + (folded.has(key) ? " <span style='text-transform:none;letter-spacing:0'>(" + here.length + ")</span>" : "");
+    h.onclick = () => {
+      folded.has(key) ? folded.delete(key) : folded.add(key);
+      localStorage.setItem("mapFolded", JSON.stringify([...folded]));
+      render();
+    };
     list.appendChild(h);
+    if (folded.has(key)) continue;
     for (const p of here.filter(p => !p.chain).sort((x, y) => x.name.localeCompare(y.name)))
       list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, dim.has(p.id), () => centre(p), () => zoomIn(p)));
     const chains = {};
@@ -746,7 +771,7 @@ function makeMap() {
     map.addSource("glow", empty());
     map.addLayer({ id: "glow", type: "circle", source: "glow", paint: {   // twice the size of a place's dot
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["*", 5, ["+", 1, ["get", "k"]]], 14, ["*", 7.5, ["+", 1, ["get", "k"]]]],
-      "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.45, 0.05],
+      "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.25, 0.05],
       "circle-opacity": ["case", ["get", "live"], 0.85, 0.5] } });
     map.addSource("temples", empty());
     map.addLayer({ id: "temples", type: "circle", source: "temples", filter: ["!", ["get", "outer"]], paint: {   // plum discs, about 80 m across (half for small temples)
@@ -790,7 +815,7 @@ function makeMap() {
     }
     ready = true;
     (function pulse(t) {   // events on now glow gently
-      if (map.getLayer("glow")) map.setPaintProperty("glow", "circle-opacity", ["case", ["get", "live"], 0.8 + 0.2 * Math.sin(t / 450), 0.5]);
+      if (map.getLayer("glow")) map.setPaintProperty("glow", "circle-opacity", ["case", ["get", "live"], 0.6 + 0.35 * Math.sin(t * Math.PI / 1000), 0.5]);
       requestAnimationFrame(pulse);
     })(0);
     if (!$("mallsOn").classList.contains("on")) map.setLayoutProperty("malls", "visibility", "none");
