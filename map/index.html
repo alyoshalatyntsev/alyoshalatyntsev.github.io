@@ -814,7 +814,7 @@ function makeMap() {
       map.on("mouseleave", id, () => { if (!mode) map.getCanvas().style.cursor = ""; });
     }
     ready = true;
-    (function pulse(t) {   // events on now glow gently
+    (function pulse(t) {   // events on now pulse slowly, like a recording light
       if (map.getLayer("glow")) map.setPaintProperty("glow", "circle-opacity", ["case", ["get", "live"], 0.6 + 0.35 * Math.sin(t * Math.PI / 1000), 0.5]);
       requestAnimationFrame(pulse);
     })(0);
