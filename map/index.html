@@ -61,6 +61,8 @@
   .more { padding: 2px 6px 6px; background: rgba(255,255,255,.74); font-size: 12px; color: #44433f; cursor: text; }
   .more img { width: 100%; border-radius: 4px; display: block; margin-bottom: 4px; }
   #note { margin: 8px 9px; color: #7b7a74; font-size: 12px; }
+  #tip { display: none; position: fixed; z-index: 30; white-space: pre; background: #2b2b2a; color: #fff; font-size: 12px;
+         line-height: 1.45; padding: 5px 8px; border-radius: 5px; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
   #forget { display: block; margin: 12px 9px 8px; color: #a3a29c; font-size: 11px; }
   #toggle { display: none; position: absolute; top: 10px; left: 10px; z-index: 5; padding: 8px 13px; background: #fff;
             border: 0; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); font: inherit; font-weight: 600; }
@@ -472,12 +474,30 @@ function hoursText(p) {
   return out.join("\n");
 }
 
+// the opening times pop up 0.3 s after the mouse rests on a tab (the browser's own tooltip waits too long)
+const tip = document.createElement("div");
+tip.id = "tip";
+document.body.appendChild(tip);
+function hoverHours(el, text) {
+  let timer;
+  el.onmouseenter = e => {
+    timer = setTimeout(() => {
+      tip.textContent = text;
+      const r = el.getBoundingClientRect();
+      tip.style.left = (r.right + 8) + "px";
+      tip.style.top = r.top + "px";
+      tip.style.display = "block";
+    }, 300);
+  };
+  el.onmouseleave = () => { clearTimeout(timer); tip.style.display = "none"; };
+}
+
 function item(p, title, sub, logoKey, dim, single, double) {
   const d = document.createElement("div"), isOpenTab = expanded === p.id && !p.chainSummary;
   d.className = "item" + (dim ? " dim" : "") + (isOpenTab ? " open" : "") + (p.explore ? " explore" : "");
   d.style.setProperty("--c", color(p));
   d.style.background = band(p, at().day);
-  if (hoursText(p)) d.title = hoursText(p);
+  if (hoursText(p)) hoverHours(d, hoursText(p));
   d.innerHTML = "<div class='row'>" + logo(p, logoKey) + "<b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
   if (isOpenTab) {
     const m = document.createElement("div");
