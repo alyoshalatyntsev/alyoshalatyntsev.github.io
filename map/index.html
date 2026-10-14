@@ -124,7 +124,6 @@
         <button class="tog" id="zhOn">中文</button>
         <button class="tog" id="blocksOn">Blocks</button>
         <button class="tog on" id="mallsOn">Malls</button>
-        <button class="tog on" id="hospOn">Hospitals</button>
 
       </div>
     </div>
@@ -343,10 +342,6 @@ $("q").oninput = () => render();
 $("zhOn").onclick = () => { $("zhOn").classList.toggle("on"); render(); };
 $("mallsOn").onclick = () => { $("mallsOn").classList.toggle("on"); if (ready) map.setLayoutProperty("malls", "visibility", $("mallsOn").classList.contains("on") ? "visible" : "none"); };
 $("blocksOn").onclick = () => blocks(!$("blocksOn").classList.contains("on"));
-$("hospOn").onclick = () => {
-  $("hospOn").classList.toggle("on");
-  if (ready) map.setFilter("areas", $("hospOn").classList.contains("on") ? null : ["!=", ["get", "kind"], "hospital"]);
-};
 
 setInterval(() => { if (when !== "span") render(); }, 5 * 60000);
 
