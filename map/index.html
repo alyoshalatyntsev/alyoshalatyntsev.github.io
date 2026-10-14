@@ -152,8 +152,10 @@ const DATA = "https://api.github.com/repos/alyoshalatyntsev/beijing-map-data/con
 const LOCAL = location.hostname === "localhost";   // the data repo served from disk, for testing
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-// area colours: Google Maps-like yellows for somewhat/very busy, greens for parks and palaces, grey for places to avoid
-const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75], grey: ["#bdbdb9", 0.6] };
+// area colours: Google Maps-like yellows for somewhat/very busy, greens for parks and palaces, grey for places to avoid,
+// pale lilac for campuses (drawn underneath the rest)
+const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75], grey: ["#bdbdb9", 0.6],
+               campus: ["#e6e0f2", 0.75] };
 const FILES = ["places.json", "chains.json", "logos.json", "areas.json", "malls.json"];
 
 function askToken(msg) {
