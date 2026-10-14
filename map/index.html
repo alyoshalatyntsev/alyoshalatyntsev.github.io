@@ -736,9 +736,9 @@ function makeMap() {
       "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.45, 0.15],
       "circle-opacity": ["case", ["get", "live"], 0.85, 0.35] } });
     map.addSource("temples", empty());
-    map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // discs about 80 m across the middle
+    map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // plum discs, about 80 m across the middle
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, 1.6, 20, 1640],
-      "circle-color": "#d9825b", "circle-opacity": 0.45 } }, under);
+      "circle-color": "#9c4f96", "circle-opacity": 0.4 } }, under);
     map.addSource("places", empty());
     // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
