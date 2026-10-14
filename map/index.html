@@ -231,6 +231,23 @@ function isOpen(p, d, a, b) {
     || spans(dayHours(p, (d + 6) % 7)).some(([s, e]) => covers(s, e, a + 1440, b + 1440));
 }
 const now = () => { const t = new Date(); return { day: (t.getDay() + 6) % 7, min: t.getHours() * 60 + t.getMinutes() }; };
+// is an event on at minute m of day d (Monday = 0), or how many minutes until the next one starts (within 6 hours)
+function eventState(p, d, m) {
+  if (!p.events) return null;
+  let live = null, soon = null;
+  const today = new Date();
+  for (const e of p.events) for (const k of [-1, 0, 1]) {
+    const date = new Date(today.getTime() + k * 864e5), dd = (d + 7 + k) % 7;
+    const iso = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    if (e.days ? !e.days.includes(dd) : e.date !== iso) continue;
+    const s0 = toMin(e.start) + 1440 * k;
+    let e0 = toMin(e.end) + 1440 * k;
+    if (e0 <= s0) e0 += 1440;
+    if (s0 <= m && m < e0) live = e;
+    else if (s0 > m && s0 - m <= 360 && (soon == null || s0 - m < soon.wait)) soon = { e, wait: s0 - m };
+  }
+  return live ? { live } : soon;
+}
 
 // ---- state ----
 let CATEGORIES = {}, PLACES = [], LOGOS = {}, AREAS = [], ROUTES = [], MALLS = [], PHOTOS = {}, byId = {}, order = [];
@@ -343,12 +360,25 @@ function hoursLine(p) {
   return (open ? "Open" : "Closed") + w + " · today " + esc(today.replace(/,/g, ", "));
 }
 
+function eventLine(p) {
+  const t = at(), e = eventState(p, t.day, t.a);
+  let h = "";
+  if (e && e.live) h += "<div style='color:#c23a39'>On now: " + esc(e.live.title) + " until " + esc(e.live.end) + "</div>";
+  else if (e) h += "<div style='color:#c23a39'>" + esc(e.e.title) + " at " + esc(e.e.start) + "</div>";
+  const D = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  for (const x of p.events || [])
+    h += "<small>" + esc(x.title) + ": " + (x.days ? x.days.map(i => D[i]).join(", ") : esc(x.date)) + " " + esc(x.start) + "-" + esc(x.end)
+      + (x.note ? " (" + esc(x.note) + ")" : "") + "</small>";
+  return h;
+}
+
 function showPopup(p) {
   let h = "<div class='pop'>";
   if (PHOTOS[p.id]) h += "<img class='photo' alt='' src='" + PHOTOS[p.id] + "'>";
   h += "<b>" + esc(p.name) + "</b>";
   if (p.name_zh) h += "<small>" + esc(p.name_zh) + "</small>";
   if (hoursLine(p)) h += "<div>" + hoursLine(p) + "</div>";
+  h += eventLine(p);
   if (p.address) h += "<small>" + esc(p.address) + "</small>";
   if (p.located === "approx") h += "<small><i>approximate position</i></small>";
   if (p.notes) h += "<small>" + esc(p.notes) + "</small>";
@@ -447,6 +477,10 @@ function render() {
   // not open at the chosen time: greyed out, in the list and on the map, never removed
   const dim = new Set(when === "any" ? [] : shown.filter(p => isOpen(p, t.day, t.a, t.b) === false).map(p => p.id));
   if (ready) areaShapes();
+  if (ready) map.getSource("glow").setData(fc(shown.map(p => [p, eventState(p, t.day, t.a)]).filter(([, e]) => e).map(([p, e]) => ({
+    type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
+    // on now: a full glowing circle; within 6 hours: faint, growing from small as the start gets near
+    properties: { live: !!e.live, k: e.live ? 1 : 0.3 + 0.7 * (1 - e.wait / 360) } }))));
   if (ready) map.getSource("places").setData(fc(shown.map(p => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
     properties: { id: p.id, name: label(p), color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
@@ -676,6 +710,11 @@ function makeMap() {
     map.addSource("marks", empty());
     map.addLayer({ id: "marks", type: "symbol", source: "marks", layout: { "text-field": "?", "text-font": ["Noto Sans Bold"], "text-size": 30 },
       paint: { "text-color": "#3f8f84", "text-halo-color": "#ffffff", "text-halo-width": 2 } });
+    map.addSource("glow", empty());
+    map.addLayer({ id: "glow", type: "circle", source: "glow", paint: {   // twice the size of a place's dot
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["*", 10, ["get", "k"]], 14, ["*", 15, ["get", "k"]]],
+      "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.45, 0.15],
+      "circle-opacity": ["case", ["get", "live"], 0.85, 0.35] } });
     map.addSource("places", empty());
     // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
@@ -703,6 +742,10 @@ function makeMap() {
       map.on("mouseleave", id, () => { if (!mode) map.getCanvas().style.cursor = ""; });
     }
     ready = true;
+    (function pulse(t) {   // events on now glow gently
+      if (map.getLayer("glow")) map.setPaintProperty("glow", "circle-opacity", ["case", ["get", "live"], 0.8 + 0.2 * Math.sin(t / 450), 0.35]);
+      requestAnimationFrame(pulse);
+    })(0);
     if (!$("mallsOn").classList.contains("on")) map.setLayoutProperty("malls", "visibility", "none");
     layers();
     render();
