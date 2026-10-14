@@ -731,7 +731,7 @@ function click(e) {
   const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "malls", "areas"] })[0];
   if (!named) return;
   const a = named.layer.id === "areas" ? AREAS[named.properties.i] : null;
-  const KIND = { govt: "Government", traffic: "Traffic restrictions", stadium: "Stadium", hospital: "Hospital" };
+  const KIND = { govt: "Government", traffic: "Traffic restrictions", stadium: "Stadium", hospital: "Hospital", quiet: "Quiet, not much there" };
   popup.setLngLat(e.lngLat).setHTML("<div class='pop'><b>" + esc(named.properties.name) + "</b>"
     + (a && a.kind && KIND[a.kind] !== named.properties.name ? "<small>" + KIND[a.kind] + "</small>" : "")
     + (a && hoursLine(a) ? "<div>" + hoursLine(a) + "</div>" : "") + "</div>").addTo(map);
