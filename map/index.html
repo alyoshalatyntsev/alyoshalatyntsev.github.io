@@ -270,7 +270,7 @@ function eventState(p, d, m) {
 }
 
 // ---- state ----
-let CATEGORIES = {}, PLACES = [], LOGOS = {}, AREAS = [], ROUTES = [], MALLS = [], TEMPLES = [], PHOTOS = {}, byId = {}, order = [];
+let CATEGORIES = {}, PLACES = [], LOGOS = {}, AREAS = [], ROUTES = [], LABELS = [], MALLS = [], TEMPLES = [], PHOTOS = {}, byId = {}, order = [];
 let cats = null, expanded = null, mode = null, when = "any";
 const folded = new Set(JSON.parse(localStorage.getItem("mapFolded") || "[]"));   // types whose list is folded up   // when: "any" | "now" | "span"
 let map = null, ready = false, popup = null;
@@ -286,7 +286,7 @@ const fc = features => ({ type: "FeatureCollection", features });
 function setData(d) {
   CATEGORIES = d[0].categories;
   PLACES = d[0].places.concat(d[1].places || []).filter(p => p.lat != null);
-  LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; ROUTES = (d[3] || {}).paths || []; MALLS = (d[4] || {}).malls || []; TEMPLES = (d[5] || {}).temples || [];
+  LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; ROUTES = (d[3] || {}).paths || []; LABELS = (d[3] || {}).labels || []; MALLS = (d[4] || {}).malls || []; TEMPLES = (d[5] || {}).temples || [];
   // temples are listed (English name, picture, hours) but drawn on the map only as discs
   for (const t of TEMPLES) PLACES.push({ id: "temple:" + t.uid, name: t.en || t.name, name_zh: t.name, category: "temple",
     hours: t.hours == null ? null : t.hours, lat: t.lat, lon: t.lon, noMarker: true, small: t.small, outer: t.outer });
@@ -619,6 +619,7 @@ function layers() {   // (re)fill the area and mall layers from the data
   if (!ready) return;
   areaShapes();
   map.getSource("marks").setData(fc(AREAS.filter(a => a.mark).map(a => ({ type: "Feature", properties: { name: a.name }, geometry: { type: "Point", coordinates: a.mark } }))));
+  map.getSource("labels").setData(fc(LABELS.map(l => ({ type: "Feature", properties: { text: l.text }, geometry: { type: "Point", coordinates: [l.lon, l.lat] } }))));
   map.getSource("routes").setData(fc(ROUTES.map(r => ({ type: "Feature", properties: { name: r.name }, geometry: { type: "LineString", coordinates: r.path } }))));
   map.getSource("malls").setData(fc(MALLS.map(m => ({ type: "Feature", properties: { name: m.name }, geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
 }
@@ -819,6 +820,10 @@ function makeMap() {
       "circle-color": "#7fb0ee", "circle-opacity": 0.4 } }, under);
     map.addSource("routes", empty());
     map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": "#eb6834", "line-opacity": 0.85, "line-width": 2.6, "line-dasharray": [2, 1.4] } });
+    map.addSource("labels", empty());      // district names: just words, nothing happens on a tap
+    map.addLayer({ id: "labels", type: "symbol", source: "labels", minzoom: 12, layout: { "text-field": ["get", "text"], "text-font": ["Noto Sans Italic"],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 12, 12, 16, 17], "text-letter-spacing": 0.08 },
+      paint: { "text-color": "#8a6f52", "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
     map.addSource("marks", empty());
     map.addLayer({ id: "marks", type: "symbol", source: "marks", layout: { "text-field": "?", "text-font": ["Noto Sans Bold"], "text-size": 30 },
       paint: { "text-color": "#3f8f84", "text-halo-color": "#ffffff", "text-halo-width": 2 } });
