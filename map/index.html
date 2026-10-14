@@ -124,6 +124,7 @@
         <button class="tog" id="zhOn">中文</button>
         <button class="tog" id="blocksOn">Blocks</button>
         <button class="tog on" id="mallsOn">Malls</button>
+        <button class="tog on" id="hospOn">Hospitals</button>
 
       </div>
     </div>
@@ -342,6 +343,10 @@ $("q").oninput = () => render();
 $("zhOn").onclick = () => { $("zhOn").classList.toggle("on"); render(); };
 $("mallsOn").onclick = () => { $("mallsOn").classList.toggle("on"); if (ready) map.setLayoutProperty("malls", "visibility", $("mallsOn").classList.contains("on") ? "visible" : "none"); };
 $("blocksOn").onclick = () => blocks(!$("blocksOn").classList.contains("on"));
+$("hospOn").onclick = () => {
+  $("hospOn").classList.toggle("on");
+  if (ready) map.setFilter("areas", $("hospOn").classList.contains("on") ? null : ["!=", ["get", "kind"], "hospital"]);
+};
 
 setInterval(() => { if (when !== "span") render(); }, 5 * 60000);
 
@@ -556,7 +561,7 @@ function render() {
 // ---- map ----
 function areaShapes() {
   const t = at();
-  map.getSource("areas").setData(fc(AREAS.map((a, i) => poly([a.polygon].concat(a.holes || []), { i, name: a.name,
+  map.getSource("areas").setData(fc(AREAS.map((a, i) => poly([a.polygon].concat(a.holes || []), { i, name: a.name, kind: a.kind || "",
     color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1],
     shut: when !== "any" && isOpen(a, t.day, t.a, t.b) === false }))));
 }
@@ -686,7 +691,9 @@ function click(e) {
   const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "malls", "areas"] })[0];
   if (!named) return;
   const a = named.layer.id === "areas" ? AREAS[named.properties.i] : null;
+  const KIND = { govt: "Government", traffic: "Traffic restrictions", stadium: "Stadium", hospital: "Hospital" };
   popup.setLngLat(e.lngLat).setHTML("<div class='pop'><b>" + esc(named.properties.name) + "</b>"
+    + (a && a.kind && KIND[a.kind] !== named.properties.name ? "<small>" + KIND[a.kind] + "</small>" : "")
     + (a && hoursLine(a) ? "<div>" + hoursLine(a) + "</div>" : "") + "</div>").addTo(map);
 }
 
