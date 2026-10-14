@@ -555,7 +555,8 @@ function layers() {   // (re)fill the area and mall layers from the data
   areaShapes();
   map.getSource("marks").setData(fc(AREAS.filter(a => a.mark).map(a => ({ type: "Feature", properties: { name: a.name }, geometry: { type: "Point", coordinates: a.mark } }))));
   map.getSource("routes").setData(fc(ROUTES.map(r => ({ type: "Feature", properties: { name: r.name }, geometry: { type: "LineString", coordinates: r.path } }))));
-  map.getSource("temples").setData(fc(TEMPLES.map(m => ({ type: "Feature", properties: { name: m.name }, geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
+  map.getSource("temples").setData(fc(TEMPLES.map(m => ({ type: "Feature", properties: { name: m.name, k: m.small ? 0.5 : 1 },
+    geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
   map.getSource("malls").setData(fc(MALLS.map(m => ({ type: "Feature", properties: { name: m.name }, geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
 }
 
@@ -736,8 +737,8 @@ function makeMap() {
       "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.45, 0.15],
       "circle-opacity": ["case", ["get", "live"], 0.85, 0.35] } });
     map.addSource("temples", empty());
-    map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // plum discs, about 80 m across the middle
-      "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, 1.6, 20, 1640],
+    map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // plum discs, about 80 m across the middle (half that for small temples)
+      "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, ["*", 1.6, ["get", "k"]], 20, ["*", 1640, ["get", "k"]]],
       "circle-color": "#9c4f96", "circle-opacity": 0.32 } }, under);
     map.addSource("places", empty());
     // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
