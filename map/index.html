@@ -153,9 +153,9 @@ const LOCAL = location.hostname === "localhost";   // the data repo served from 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // area colours: Google Maps-like yellows for somewhat/very busy, greens for parks and palaces, grey for places to avoid,
-// pale lilac for campuses (drawn underneath the rest)
+// pale lilac for campuses (drawn underneath the rest), pale aqua with a ? for areas still to explore
 const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75], grey: ["#bdbdb9", 0.6],
-               campus: ["#e6e0f2", 0.75] };
+               campus: ["#e6e0f2", 0.75], explore: ["#cdeee8", 0.65] };
 const FILES = ["places.json", "chains.json", "logos.json", "areas.json", "malls.json"];
 
 function askToken(msg) {
@@ -233,10 +233,11 @@ function isOpen(p, d, a, b) {
 const now = () => { const t = new Date(); return { day: (t.getDay() + 6) % 7, min: t.getHours() * 60 + t.getMinutes() }; };
 
 // ---- state ----
-let CATEGORIES = {}, PLACES = [], LOGOS = {}, AREAS = [], MALLS = [], PHOTOS = {}, byId = {}, order = [];
+let CATEGORIES = {}, PLACES = [], LOGOS = {}, AREAS = [], ROUTES = [], MALLS = [], PHOTOS = {}, byId = {}, order = [];
 let cats = null, expanded = null, mode = null, when = "any";   // when: "any" | "now" | "span"
 let map = null, ready = false, popup = null;
 const catKey = p => p.category in CATEGORIES ? p.category : "other";
+const label = p => p.name + (p.explore ? " ?" : "");
 const color = p => CATEGORIES[catKey(p)].color;
 const poly = (ring, props) => ({ type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } });
 const fc = features => ({ type: "FeatureCollection", features });
@@ -244,7 +245,7 @@ const fc = features => ({ type: "FeatureCollection", features });
 function setData(d) {
   CATEGORIES = d[0].categories;
   PLACES = d[0].places.concat(d[1].places || []).filter(p => p.lat != null);
-  LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; MALLS = (d[4] || {}).malls || [];
+  LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; ROUTES = (d[3] || {}).paths || []; MALLS = (d[4] || {}).malls || [];
   byId = {};
   for (const p of PLACES) byId[p.id] = p;
   if (order.join() !== Object.keys(CATEGORIES).join()) {
@@ -445,9 +446,10 @@ function render() {
   const shown = PLACES.filter(p => cats.has(catKey(p)) && (!q || text(p).includes(q)));
   // not open at the chosen time: greyed out, in the list and on the map, never removed
   const dim = new Set(when === "any" ? [] : shown.filter(p => isOpen(p, t.day, t.a, t.b) === false).map(p => p.id));
+  if (ready) areaShapes();
   if (ready) map.getSource("places").setData(fc(shown.map(p => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id) } }))));
+    properties: { id: p.id, name: label(p), color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
 
   const list = $("list"), scroll = list.scrollTop;
   list.textContent = "";
@@ -458,7 +460,7 @@ function render() {
     h.textContent = CATEGORIES[key].label;
     list.appendChild(h);
     for (const p of here.filter(p => !p.chain).sort((x, y) => x.name.localeCompare(y.name)))
-      list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, dim.has(p.id), () => centre(p), () => zoomIn(p)));
+      list.appendChild(item(p, label(p), zh ? p.name_zh : "", null, dim.has(p.id), () => centre(p), () => zoomIn(p)));
     const chains = {};
     for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
     for (const c in chains) {
@@ -489,10 +491,17 @@ function render() {
 }
 
 // ---- map ----
+function areaShapes() {
+  const t = at();
+  map.getSource("areas").setData(fc(AREAS.map((a, i) => poly(a.polygon, { i, name: a.name,
+    color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1],
+    shut: when !== "any" && isOpen(a, t.day, t.a, t.b) === false }))));
+}
 function layers() {   // (re)fill the area and mall layers from the data
   if (!ready) return;
-  map.getSource("areas").setData(fc(AREAS.map(a =>
-    poly(a.polygon, { name: a.name, color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1] }))));
+  areaShapes();
+  map.getSource("marks").setData(fc(AREAS.filter(a => a.mark).map(a => ({ type: "Feature", properties: { name: a.name }, geometry: { type: "Point", coordinates: a.mark } }))));
+  map.getSource("routes").setData(fc(ROUTES.map(r => ({ type: "Feature", properties: { name: r.name }, geometry: { type: "LineString", coordinates: r.path } }))));
   map.getSource("malls").setData(fc(MALLS.map(m => ({ type: "Feature", properties: { name: m.name }, geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
 }
 
@@ -609,8 +618,11 @@ function click(e) {
   if (mode) return;
   const dot = map.queryRenderedFeatures(e.point, { layers: ["dots", "rings"] })[0];
   if (dot) return showPopup(byId[dot.properties.id]);
-  const named = map.queryRenderedFeatures(e.point, { layers: ["malls", "areas"] })[0];
-  if (named) popup.setLngLat(e.lngLat).setHTML("<div class='pop'>" + esc(named.properties.name) + "</div>").addTo(map);
+  const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "malls", "areas"] })[0];
+  if (!named) return;
+  const a = named.layer.id === "areas" ? AREAS[named.properties.i] : null;
+  popup.setLngLat(e.lngLat).setHTML("<div class='pop'><b>" + esc(named.properties.name) + "</b>"
+    + (a && hoursLine(a) ? "<div>" + hoursLine(a) + "</div>" : "") + "</div>").addTo(map);
 }
 
 function makeMap() {
@@ -653,11 +665,17 @@ function makeMap() {
     const empty = () => ({ type: "geojson", data: fc([]) });
     // coloured areas and malls, under the roads
     map.addSource("areas", empty());
-    map.addLayer({ id: "areas", type: "fill", source: "areas", paint: { "fill-color": ["get", "color"], "fill-opacity": ["get", "opacity"] } }, under);
+    map.addLayer({ id: "areas", type: "fill", source: "areas", paint: {
+      "fill-color": ["case", ["get", "shut"], "#d6d5d0", ["get", "color"]], "fill-opacity": ["get", "opacity"] } }, under);
     map.addSource("malls", empty());
     map.addLayer({ id: "malls", type: "circle", source: "malls", paint: {      // discs about 110 m across the middle
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, 2.2, 20, 2250],
       "circle-color": "#7fb0ee", "circle-opacity": 0.5 } }, under);
+    map.addSource("routes", empty());
+    map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": "#2b2b2a", "line-opacity": 0.6, "line-width": 2.2, "line-dasharray": [2, 1.5] } });
+    map.addSource("marks", empty());
+    map.addLayer({ id: "marks", type: "symbol", source: "marks", layout: { "text-field": "?", "text-font": ["Noto Sans Bold"], "text-size": 30 },
+      paint: { "text-color": "#3f8f84", "text-halo-color": "#ffffff", "text-halo-width": 2 } });
     map.addSource("places", empty());
     // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
@@ -667,8 +685,9 @@ function makeMap() {
     } });
     map.addLayer({ id: "dots", type: "circle", source: "places", filter: ["!", ["get", "chain"]], paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 7.5],
-      "circle-color": ["case", ["get", "shut"], "#c4c3be", ["get", "color"]], "circle-opacity": ["case", ["get", "faint"], 0.4, 1],
-      "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+      "circle-color": ["case", ["get", "shut"], "#c4c3be", ["get", "explore"], "#ffffff", ["get", "color"]],
+      "circle-opacity": ["case", ["get", "faint"], 0.4, 1],
+      "circle-stroke-color": ["case", ["get", "explore"], ["get", "color"], "#ffffff"], "circle-stroke-width": ["case", ["get", "explore"], 2.5, 2],
     } });
     map.addLayer({ id: "labels", type: "symbol", source: "places", minzoom: 11.5, filter: ["!", ["get", "chain"]], layout: {
       "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12,
