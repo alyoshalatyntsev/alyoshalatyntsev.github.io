@@ -174,7 +174,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // area colours: Google Maps-like yellows for somewhat/very busy, greens for parks and palaces, grey for places to avoid,
 // pale lilac for campuses (drawn underneath the rest), pale aqua with a ? for areas still to explore
-const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75], grey: ["#bdbdb9", 0.6], mixed: ["#e2dbc2", 0.8],
+const AREA = { busy: ["#fdefc3", 0.8], very_busy: ["#fbd766", 0.7], green: ["#cfe8c3", 0.8], green_dark: ["#9bd19a", 0.75], grey: ["#bdbdb9", 0.6], mixed: ["#cfc8ad", 0.75],
                campus: ["#e6e0f2", 0.75], explore: ["#cdeee8", 0.65] };
 const FILES = ["places.json", "chains.json", "logos.json", "areas.json", "malls.json", "temples.json"];
 
@@ -277,7 +277,7 @@ let map = null, ready = false, popup = null;
 const catKey = p => p.category in CATEGORIES ? p.category : "other";
 const label = p => p.name + (p.explore ? " ?" : "");
 const color = p => p.tint || CATEGORIES[catKey(p)].color;
-const TINT = { green: "#5aa469", green_dark: "#3d8b4f", busy: "#e0a800", very_busy: "#d08a00", grey: "#8b8b86", mixed: "#a8996a", campus: "#9d8fc7", explore: "#3f8f84" };
+const TINT = { green: "#5aa469", green_dark: "#3d8b4f", busy: "#e0a800", very_busy: "#d08a00", grey: "#8b8b86", mixed: "#958c6c", campus: "#9d8fc7", explore: "#3f8f84" };
 // a polygon from one ring, or from a list of rings (outline first, then holes)
 const poly = (rings, props) => ({ type: "Feature", properties: props,
   geometry: { type: "Polygon", coordinates: typeof rings[0][0] === "number" ? [rings] : rings } });
