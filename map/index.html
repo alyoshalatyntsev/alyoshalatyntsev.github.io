@@ -255,7 +255,8 @@ let cats = null, expanded = null, mode = null, when = "any";   // when: "any" | 
 let map = null, ready = false, popup = null;
 const catKey = p => p.category in CATEGORIES ? p.category : "other";
 const label = p => p.name + (p.explore ? " ?" : "");
-const color = p => CATEGORIES[catKey(p)].color;
+const color = p => p.tint || CATEGORIES[catKey(p)].color;
+const TINT = { green: "#5aa469", green_dark: "#3d8b4f", busy: "#e0a800", very_busy: "#d08a00", grey: "#8b8b86", campus: "#9d8fc7", explore: "#3f8f84" };
 const poly = (ring, props) => ({ type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } });
 const fc = features => ({ type: "FeatureCollection", features });
 
@@ -263,6 +264,15 @@ function setData(d) {
   CATEGORIES = d[0].categories;
   PLACES = d[0].places.concat(d[1].places || []).filter(p => p.lat != null);
   LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; ROUTES = (d[3] || {}).paths || []; MALLS = (d[4] || {}).malls || [];
+  // areas with opening hours (parks, palaces, temples) are listed under Landmark, in their own colour
+  const seenArea = {};
+  for (const a of AREAS) {
+    if (!a.hours || seenArea[a.id]) continue;
+    const pieces = AREAS.filter(b => b.id === a.id), pts = pieces.flatMap(b => b.polygon);
+    seenArea[a.id] = true;
+    PLACES.push({ id: "area:" + a.id, name: a.name, category: "landmark", hours: a.hours, isArea: true, tint: TINT[a.level],
+      lon: pts.reduce((x, p) => x + p[0], 0) / pts.length, lat: pts.reduce((x, p) => x + p[1], 0) / pts.length });
+  }
   byId = {};
   for (const p of PLACES) byId[p.id] = p;
   if (order.join() !== Object.keys(CATEGORIES).join()) {
@@ -481,7 +491,7 @@ function render() {
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
     // on now: a full glowing circle; within 6 hours: faint, growing from small as the start gets near
     properties: { live: !!e.live, k: e.live ? 1 : 0.3 + 0.7 * (1 - e.wait / 360) } }))));
-  if (ready) map.getSource("places").setData(fc(shown.map(p => ({
+  if (ready) map.getSource("places").setData(fc(shown.filter(p => !p.isArea).map(p => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
     properties: { id: p.id, name: label(p), color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
 
