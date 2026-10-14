@@ -745,9 +745,9 @@ function makeMap() {
       paint: { "text-color": "#3f8f84", "text-halo-color": "#ffffff", "text-halo-width": 2 } });
     map.addSource("glow", empty());
     map.addLayer({ id: "glow", type: "circle", source: "glow", paint: {   // twice the size of a place's dot
-      "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["*", 10, ["get", "k"]], 14, ["*", 15, ["get", "k"]]],
-      "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.45, 0.15],
-      "circle-opacity": ["case", ["get", "live"], 0.85, 0.35] } });
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["*", 5, ["+", 1, ["get", "k"]]], 14, ["*", 7.5, ["+", 1, ["get", "k"]]]],
+      "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.45, 0.05],
+      "circle-opacity": ["case", ["get", "live"], 0.85, 0.5] } });
     map.addSource("temples", empty());
     map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // plum discs, about 80 m across the middle (half that for small temples)
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, ["*", 1.6, ["get", "k"]], 20, ["*", 1640, ["get", "k"]]],
@@ -784,7 +784,7 @@ function makeMap() {
     }
     ready = true;
     (function pulse(t) {   // events on now glow gently
-      if (map.getLayer("glow")) map.setPaintProperty("glow", "circle-opacity", ["case", ["get", "live"], 0.8 + 0.2 * Math.sin(t / 450), 0.35]);
+      if (map.getLayer("glow")) map.setPaintProperty("glow", "circle-opacity", ["case", ["get", "live"], 0.8 + 0.2 * Math.sin(t / 450), 0.5]);
       requestAnimationFrame(pulse);
     })(0);
     if (!$("mallsOn").classList.contains("on")) map.setLayoutProperty("malls", "visibility", "none");
