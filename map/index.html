@@ -718,7 +718,7 @@ function makeMap() {
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, 2.2, 20, 2250],
       "circle-color": "#7fb0ee", "circle-opacity": 0.5 } }, under);
     map.addSource("routes", empty());
-    map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": "#2b2b2a", "line-opacity": 0.6, "line-width": 2.2, "line-dasharray": [2, 1.5] } });
+    map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": "#eb6834", "line-opacity": 0.85, "line-width": 2.6, "line-dasharray": [2, 1.4] } });
     map.addSource("marks", empty());
     map.addLayer({ id: "marks", type: "symbol", source: "marks", layout: { "text-field": "?", "text-font": ["Noto Sans Bold"], "text-size": 30 },
       paint: { "text-color": "#3f8f84", "text-halo-color": "#ffffff", "text-halo-width": 2 } });
