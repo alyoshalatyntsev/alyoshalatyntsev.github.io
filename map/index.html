@@ -66,7 +66,17 @@
   #forget { display: block; margin: 12px 9px 8px; color: #a3a29c; font-size: 11px; }
   #toggle { display: none; position: absolute; top: 10px; left: 10px; z-index: 5; padding: 8px 13px; background: #fff;
             border: 0; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); font: inherit; font-weight: 600; }
-  .me { width: 14px; height: 14px; border-radius: 50%; background: #2a78d6; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(42,120,214,.5), 0 0 0 8px rgba(42,120,214,.15); }
+  /* my location: white disc with a deep blue dot and a pulsing ring; with a compass, an arrow and a beam the way I face */
+  .me { width: 96px; height: 96px; pointer-events: none; }
+  .me .beam { position: absolute; inset: 0; border-radius: 50%; display: none;
+    background: conic-gradient(from -28deg, rgba(26,86,219,.5) 0deg 56deg, transparent 56deg);
+    -webkit-mask: radial-gradient(circle closest-side, #000 25%, transparent 100%); mask: radial-gradient(circle closest-side, #000 25%, transparent 100%); }
+  .me .pin { position: absolute; left: 37px; top: 37px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.45); }
+  .me .pin::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid rgba(26,86,219,.55); animation: mepulse 2s ease-out infinite; }
+  .me svg { position: absolute; left: 0; top: 0; width: 22px; height: 22px; }
+  .me .arrow, .me.hd .dot { display: none; }
+  .me.hd .arrow, .me.hd .beam { display: block; }
+  @keyframes mepulse { from { transform: scale(.75); opacity: 1; } to { transform: scale(1.7); opacity: 0; } }
   .pin { width: 12px; height: 12px; border-radius: 50%; background: #2b2b2a; border: 3px solid #fff; box-shadow: 0 0 0 1px #2b2b2a; }
   .pop { font: 13px/1.35 "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
   .pop img.photo { width: 100%; border-radius: 6px; display: block; margin-bottom: 6px; }
@@ -758,15 +768,39 @@ function makeMap() {
   map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
   popup = new maplibregl.Popup({ offset: 12, maxWidth: "260px" });
 
-  // my location: a dot that never moves the camera; the button goes there
-  let me = null, meMarker = null;
+  // my location: never moves the camera; the button goes there. Facing comes from the compass, or from GPS while moving.
+  let me = null, meMarker = null, heading = null, compassAt = 0;
+  const meEl = document.createElement("div");
+  meEl.className = "me";
+  meEl.innerHTML = "<div class='beam'></div><div class='pin'><svg viewBox='0 0 22 22'><circle class='dot' cx='11' cy='11' r='7' fill='#1a56db'/>" +
+    "<path class='arrow' d='M11 3 L17.5 18 L11 14.5 L4.5 18 Z' fill='#1a56db'/></svg></div>";
+  const face = h => {
+    if (h == null || isNaN(h)) return;
+    heading = heading == null ? h : heading + (((h - heading) % 360 + 540) % 360 - 180) * 0.35;   // smooth the jitter
+    meEl.classList.add("hd");
+    if (meMarker) meMarker.setRotation(heading);
+  };
+  const screenAngle = () => (screen.orientation ? screen.orientation.angle : window.orientation) || 0;
+  const orient = e => {
+    let h = null;
+    if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;                 // iPhone
+    else if ((e.absolute || e.type === "deviceorientationabsolute") && e.alpha != null) h = 360 - e.alpha;   // Android
+    if (h == null) return;
+    compassAt = Date.now();
+    face((h + screenAngle()) % 360);
+  };
+  addEventListener("ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation", orient);
+  const askCompass = () => {      // iPhone asks permission once, on a tap
+    if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission)
+      DeviceOrientationEvent.requestPermission().then(r => { if (r === "granted") addEventListener("deviceorientation", orient); }).catch(() => {});
+  };
+  document.addEventListener("click", askCompass, { once: true });
   if (navigator.geolocation) navigator.geolocation.watchPosition(pos => {
     me = [pos.coords.longitude, pos.coords.latitude];
+    if (Date.now() - compassAt > 3000 && pos.coords.heading != null && pos.coords.speed > 0.8) face(pos.coords.heading);
     if (meMarker) return meMarker.setLngLat(me);
-    const el = document.createElement("div");
-    el.className = "me";
-    meMarker = new maplibregl.Marker({ element: el }).setLngLat(me).addTo(map);
-  }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
+    meMarker = new maplibregl.Marker({ element: meEl, rotationAlignment: "map" }).setLngLat(me).setRotation(heading || 0).addTo(map);
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 0 });
   map.addControl(button("&#9678;", "My location", () => { if (me) map.easeTo({ center: me, zoom: Math.max(map.getZoom(), 14) }); }), "top-right");
 
   map.on("click", click);
