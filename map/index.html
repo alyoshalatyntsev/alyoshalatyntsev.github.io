@@ -257,7 +257,9 @@ const catKey = p => p.category in CATEGORIES ? p.category : "other";
 const label = p => p.name + (p.explore ? " ?" : "");
 const color = p => p.tint || CATEGORIES[catKey(p)].color;
 const TINT = { green: "#5aa469", green_dark: "#3d8b4f", busy: "#e0a800", very_busy: "#d08a00", grey: "#8b8b86", campus: "#9d8fc7", explore: "#3f8f84" };
-const poly = (ring, props) => ({ type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } });
+// a polygon from one ring, or from a list of rings (outline first, then holes)
+const poly = (rings, props) => ({ type: "Feature", properties: props,
+  geometry: { type: "Polygon", coordinates: typeof rings[0][0] === "number" ? [rings] : rings } });
 const fc = features => ({ type: "FeatureCollection", features });
 
 function setData(d) {
@@ -493,7 +495,7 @@ function render() {
     properties: { live: !!e.live, k: e.live ? 1 : 0.3 + 0.7 * (1 - e.wait / 360) } }))));
   if (ready) map.getSource("places").setData(fc(shown.filter(p => !p.isArea).map(p => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-    properties: { id: p.id, name: label(p), color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
+    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
 
   const list = $("list"), scroll = list.scrollTop;
   list.textContent = "";
@@ -537,7 +539,7 @@ function render() {
 // ---- map ----
 function areaShapes() {
   const t = at();
-  map.getSource("areas").setData(fc(AREAS.map((a, i) => poly(a.polygon, { i, name: a.name,
+  map.getSource("areas").setData(fc(AREAS.map((a, i) => poly([a.polygon].concat(a.holes || []), { i, name: a.name,
     color: (AREA[a.level] || AREA.busy)[0], opacity: (AREA[a.level] || AREA.busy)[1],
     shut: when !== "any" && isOpen(a, t.day, t.a, t.b) === false }))));
 }
@@ -734,14 +736,18 @@ function makeMap() {
     } });
     map.addLayer({ id: "dots", type: "circle", source: "places", filter: ["!", ["get", "chain"]], paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 7.5],
-      "circle-color": ["case", ["get", "shut"], "#c4c3be", ["get", "explore"], "#ffffff", ["get", "color"]],
+      "circle-color": ["case", ["get", "explore"], "#ffffff", ["get", "shut"], "#c4c3be", ["get", "color"]],
       "circle-opacity": ["case", ["get", "faint"], 0.4, 1],
-      "circle-stroke-color": ["case", ["get", "explore"], ["get", "color"], "#ffffff"], "circle-stroke-width": ["case", ["get", "explore"], 2.5, 2],
+      "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
     } });
     map.addLayer({ id: "labels", type: "symbol", source: "places", minzoom: 11.5, filter: ["!", ["get", "chain"]], layout: {
       "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12,
       "text-variable-anchor": ["left", "right", "top", "bottom"], "text-radial-offset": 0.9, "text-justify": "auto",
     }, paint: { "text-color": ["case", ["get", "shut"], "#a3a29c", "#2b2b2a"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
+    map.addLayer({ id: "explore-q", type: "symbol", source: "places", filter: ["get", "explore"], layout: {
+      "text-field": "?", "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 10, 15, 14, 21],
+      "text-allow-overlap": true, "text-ignore-placement": true },
+      paint: { "text-color": ["case", ["get", "shut"], "#a3a29c", ["get", "color"]], "text-halo-color": "#ffffff", "text-halo-width": 2 } });
     map.addSource("sketch", empty());
     map.addLayer({ id: "sketch-fill", type: "fill", source: "sketch", filter: ["==", ["geometry-type"], "Polygon"], paint: { "fill-color": "#2b2b2a", "fill-opacity": 0.15 } });
     map.addLayer({ id: "sketch-line", type: "line", source: "sketch", filter: ["!=", ["geometry-type"], "Point"], paint: { "line-color": "#2b2b2a", "line-width": 2 } });
