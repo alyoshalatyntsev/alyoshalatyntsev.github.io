@@ -49,7 +49,8 @@
   .row b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row small { color: #55544f; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 10 0; }
   .item.dim { border-left-color: #d6d5d0; filter: grayscale(1); }
-  .item.explore .row b { color: #9a9993; font-weight: 500; }
+  .item.explore { border-left-style: dashed; opacity: .72; }
+  .item.explore .row b { color: #8b8a85; font-weight: 500; font-style: italic; }
   .item.dim .row b, .item.dim .row small { color: #a3a29c; }
   .item.dim .logo { opacity: .4; }
   .item.open .row b, .more { user-select: text; }
@@ -123,7 +124,7 @@
         <button class="tog" id="zhOn">中文</button>
         <button class="tog" id="blocksOn">Blocks</button>
         <button class="tog on" id="mallsOn">Malls</button>
-        <button class="tog on" id="templesOn">Temples</button>
+
       </div>
     </div>
     <div id="grip"></div>
@@ -271,6 +272,9 @@ function setData(d) {
   CATEGORIES = d[0].categories;
   PLACES = d[0].places.concat(d[1].places || []).filter(p => p.lat != null);
   LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; ROUTES = (d[3] || {}).paths || []; MALLS = (d[4] || {}).malls || []; TEMPLES = (d[5] || {}).temples || [];
+  // temples are listed (English name, picture, hours) but drawn on the map only as discs
+  for (const t of TEMPLES) PLACES.push({ id: "temple:" + t.uid, name: t.en || t.name, name_zh: t.name, category: "temple",
+    hours: t.hours == null ? null : t.hours, lat: t.lat, lon: t.lon, noMarker: true, small: t.small });
   // areas with opening hours (parks, palaces, temples) are listed under Landmark, in their own colour
   const seenArea = {};
   for (const a of AREAS) {
@@ -300,7 +304,11 @@ async function start() {
   try {
     const fresh = await Promise.all(FILES.map(get));
     if (JSON.stringify(fresh) !== JSON.stringify(old.map(o => o ? o.data : {}))) setData(fresh);
-    get("photos.json").then(p => { PHOTOS = p; }).catch(() => {});   // pictures of the inside, loaded last
+    get("photos.json").then(p => { PHOTOS = Object.assign(p, PHOTOS); }).catch(() => {});   // pictures of the inside, loaded last
+    get("temple_photos.json").then(p => {
+      for (const uid in p) PHOTOS["temple:" + uid] = LOGOS["temple:" + uid] = p[uid];
+      render();
+    }).catch(() => {});
   } catch (e) {
     if (e === 401 || e === 403 || e === 404) askToken(e === 401 ? "That token was not accepted." : "That token cannot read the map data.");
     else if (!PLACES.length) askToken("Could not reach GitHub. Try again.");
@@ -334,7 +342,7 @@ $("q").oninput = () => render();
 $("zhOn").onclick = () => { $("zhOn").classList.toggle("on"); render(); };
 $("mallsOn").onclick = () => { $("mallsOn").classList.toggle("on"); if (ready) map.setLayoutProperty("malls", "visibility", $("mallsOn").classList.contains("on") ? "visible" : "none"); };
 $("blocksOn").onclick = () => blocks(!$("blocksOn").classList.contains("on"));
-$("templesOn").onclick = () => { $("templesOn").classList.toggle("on"); if (ready) map.setLayoutProperty("temples", "visibility", $("templesOn").classList.contains("on") ? "visible" : "none"); };
+
 setInterval(() => { if (when !== "span") render(); }, 5 * 60000);
 
 // type chips: click toggles one, shift+click (or long press) shows only that one
@@ -500,7 +508,9 @@ function render() {
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
     // on now: a full glowing circle; within 6 hours: faint, growing from small as the start gets near
     properties: { live: !!e.live, k: e.live ? 1 : 0.3 + 0.7 * (1 - e.wait / 360) } }))));
-  if (ready) map.getSource("places").setData(fc(shown.filter(p => !p.isArea).map(p => ({
+  if (ready) map.getSource("temples").setData(fc(shown.filter(p => p.category === "temple").map(p => ({ type: "Feature",
+    properties: { id: p.id, k: p.small ? 0.5 : 1, shut: dim.has(p.id) }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } }))));
+  if (ready) map.getSource("places").setData(fc(shown.filter(p => !p.isArea && !p.noMarker).map(p => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
     properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
 
@@ -513,7 +523,7 @@ function render() {
     h.textContent = CATEGORIES[key].label;
     list.appendChild(h);
     for (const p of here.filter(p => !p.chain).sort((x, y) => x.name.localeCompare(y.name)))
-      list.appendChild(item(p, label(p), zh ? p.name_zh : "", null, dim.has(p.id), () => centre(p), () => zoomIn(p)));
+      list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, dim.has(p.id), () => centre(p), () => zoomIn(p)));
     const chains = {};
     for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
     for (const c in chains) {
@@ -555,8 +565,6 @@ function layers() {   // (re)fill the area and mall layers from the data
   areaShapes();
   map.getSource("marks").setData(fc(AREAS.filter(a => a.mark).map(a => ({ type: "Feature", properties: { name: a.name }, geometry: { type: "Point", coordinates: a.mark } }))));
   map.getSource("routes").setData(fc(ROUTES.map(r => ({ type: "Feature", properties: { name: r.name }, geometry: { type: "LineString", coordinates: r.path } }))));
-  map.getSource("temples").setData(fc(TEMPLES.map(m => ({ type: "Feature", properties: { name: m.name, k: m.small ? 0.5 : 1 },
-    geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
   map.getSource("malls").setData(fc(MALLS.map(m => ({ type: "Feature", properties: { name: m.name }, geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
 }
 
@@ -673,7 +681,9 @@ function click(e) {
   if (mode) return;
   const dot = map.queryRenderedFeatures(e.point, { layers: ["dots", "rings"] })[0];
   if (dot) return showPopup(byId[dot.properties.id]);
-  const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "temples", "malls", "areas"] })[0];
+  const temple = map.queryRenderedFeatures(e.point, { layers: ["temples"] })[0];
+  if (temple) return showPopup(byId[temple.properties.id]);
+  const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "malls", "areas"] })[0];
   if (!named) return;
   const a = named.layer.id === "areas" ? AREAS[named.properties.i] : null;
   popup.setLngLat(e.lngLat).setHTML("<div class='pop'><b>" + esc(named.properties.name) + "</b>"
@@ -739,7 +749,7 @@ function makeMap() {
     map.addSource("temples", empty());
     map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // plum discs, about 80 m across the middle (half that for small temples)
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, ["*", 1.6, ["get", "k"]], 20, ["*", 1640, ["get", "k"]]],
-      "circle-color": "#9c4f96", "circle-opacity": 0.32 } }, under);
+      "circle-color": ["case", ["get", "shut"], "#b8b7b2", "#9c4f96"], "circle-opacity": 0.32 } }, under);
     map.addSource("places", empty());
     // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
