@@ -274,7 +274,7 @@ function setData(d) {
   LOGOS = d[2] || {}; AREAS = (d[3] || {}).areas || []; ROUTES = (d[3] || {}).paths || []; MALLS = (d[4] || {}).malls || []; TEMPLES = (d[5] || {}).temples || [];
   // temples are listed (English name, picture, hours) but drawn on the map only as discs
   for (const t of TEMPLES) PLACES.push({ id: "temple:" + t.uid, name: t.en || t.name, name_zh: t.name, category: "temple",
-    hours: t.hours == null ? null : t.hours, lat: t.lat, lon: t.lon, noMarker: true, small: t.small });
+    hours: t.hours == null ? null : t.hours, lat: t.lat, lon: t.lon, noMarker: true, small: t.small, outer: t.outer });
   // areas with opening hours (parks, palaces, temples) are listed under Landmark, in their own colour
   const seenArea = {};
   for (const a of AREAS) {
@@ -509,7 +509,7 @@ function render() {
     // on now: a full glowing circle; within 6 hours: faint, growing from small as the start gets near
     properties: { live: !!e.live, k: e.live ? 1 : 0.3 + 0.7 * (1 - e.wait / 360) } }))));
   if (ready) map.getSource("temples").setData(fc(shown.filter(p => p.category === "temple").map(p => ({ type: "Feature",
-    properties: { id: p.id, k: p.small ? 0.5 : 1, shut: dim.has(p.id) }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } }))));
+    properties: { id: p.id, k: p.small ? 0.5 : 1, shut: dim.has(p.id), outer: !!p.outer }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } }))));
   if (ready) map.getSource("places").setData(fc(shown.filter(p => !p.isArea && !p.noMarker).map(p => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
     properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
@@ -681,7 +681,7 @@ function click(e) {
   if (mode) return;
   const dot = map.queryRenderedFeatures(e.point, { layers: ["dots", "rings"] })[0];
   if (dot) return showPopup(byId[dot.properties.id]);
-  const temple = map.queryRenderedFeatures(e.point, { layers: ["temples"] })[0];
+  const temple = map.queryRenderedFeatures(e.point, { layers: ["temples", "temples-outer"] })[0];
   if (temple) return showPopup(byId[temple.properties.id]);
   const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "malls", "areas"] })[0];
   if (!named) return;
@@ -749,9 +749,15 @@ function makeMap() {
       "circle-color": "#e34948", "circle-blur": ["case", ["get", "live"], 0.45, 0.05],
       "circle-opacity": ["case", ["get", "live"], 0.85, 0.5] } });
     map.addSource("temples", empty());
-    map.addLayer({ id: "temples", type: "circle", source: "temples", paint: {   // plum discs, about 80 m across the middle (half that for small temples)
+    map.addLayer({ id: "temples", type: "circle", source: "temples", filter: ["!", ["get", "outer"]], paint: {   // plum discs, about 80 m across (half for small temples)
       "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 10, ["*", 1.6, ["get", "k"]], 20, ["*", 1640, ["get", "k"]]],
       "circle-color": ["case", ["get", "shut"], "#b8b7b2", "#9c4f96"], "circle-opacity": 0.32 } }, under);
+    // temples outside the 5th Ring stay a few pixels wide when zoomed out, so they can be found
+    map.addLayer({ id: "temples-outer", type: "circle", source: "temples", filter: ["get", "outer"], paint: {
+      "circle-radius": ["interpolate", ["exponential", 2], ["zoom"], 8, ["*", 4.5, ["+", 0.5, ["get", "k"]]], 11, ["*", 4.5, ["+", 0.5, ["get", "k"]]],
+                        14, ["*", 25.6, ["get", "k"]], 20, ["*", 1640, ["get", "k"]]],
+      "circle-color": ["case", ["get", "shut"], "#b8b7b2", "#9c4f96"],
+      "circle-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0.6, 13, 0.32] } }, under);
     map.addSource("places", empty());
     // chain branches: thin coloured ring, not filled; anything shut at the chosen time is grey
     map.addLayer({ id: "rings", type: "circle", source: "places", filter: ["get", "chain"], paint: {
