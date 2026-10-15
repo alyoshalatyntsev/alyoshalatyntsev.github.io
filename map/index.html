@@ -36,6 +36,7 @@
   #listWrap { position: relative; flex: 1; min-height: 0; }
   #list { height: 100%; overflow-y: auto; }
   .tline { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(43,43,42,.6); pointer-events: none; z-index: 3; display: none; }
+  .tline.span { width: 2px; margin-left: -1px; background: rgba(42,120,214,.55); }   /* the chosen interval, blue like the slider */
   #bottom { padding: 6px 8px 8px; border-top: 1px solid #ecebe7; }
   #chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .chip { border: 1px solid #cfcec9; border-radius: 999px; padding: 1px 8px 1px 6px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; user-select: none; }
@@ -131,7 +132,7 @@
         <div class="dual" id="dual"><input id="s1" type="range" min="0" max="23" step="1"><input id="s2" type="range" min="0" max="23" step="1"></div>
       </div>
     </div>
-    <div id="listWrap"><div id="list"></div><div class="tline" id="tl1"></div><div class="tline" id="tl2"></div></div>
+    <div id="listWrap"><div id="list"></div><div class="tline" id="tlNow"></div><div class="tline span" id="tl1"></div><div class="tline span" id="tl2"></div></div>
     <div id="bottom">
       <div id="chips" title="Click: show or hide a type. Shift+click: only that type."></div>
       <div id="opts">
@@ -449,17 +450,20 @@ function band(p, day) {
   return "linear-gradient(to right, " + stops.join(", ") + ")";
 }
 
-// one continuous vertical line down the list at the chosen time (two for a span);
+// a vertical line down the list at the time now, and two blue ones at the ends of a chosen interval;
 // the slider sits on the same 0h-24h scale as the tabs: its ends are 00:15 and 23:15
 function lines() {
-  const it = $("list").querySelector(".item"), t = at(), ts = t.a === t.b ? [t.a] : [t.a, t.b];
-  ["tl1", "tl2"].forEach((id, i) => {
+  const it = $("list").querySelector(".item"), t = at(), n = now().min;
+  const put = (id, min) => {
     const el = $(id);
-    if (!it || i >= ts.length) return void (el.style.display = "none");
+    if (!it || min == null) return void (el.style.display = "none");
     const r = it.getBoundingClientRect(), w = $("listWrap").getBoundingClientRect();
     el.style.display = "block";
-    el.style.left = (r.left - w.left + 3 + (r.width - 3) * ts[i] / 1440) + "px";
-  });
+    el.style.left = (r.left - w.left + 3 + (r.width - 3) * min / 1440) + "px";
+  };
+  put("tlNow", n);
+  put("tl1", when === "span" ? t.a : null);
+  put("tl2", when === "span" ? t.b : null);
   if (it) {
     const r = it.getBoundingClientRect(), w = $("spanBox").getBoundingClientRect(), wd = r.width - 3;
     $("dual").style.marginLeft = (r.left - w.left + 3 + wd * 15 / 1440 - 7 - 1) + "px";
