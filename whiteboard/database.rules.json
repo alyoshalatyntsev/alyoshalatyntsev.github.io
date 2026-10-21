@@ -78,10 +78,10 @@
     },
     "whiteboards": {
       "$room": {
-        ".read": "$room.matches(/^[a-f0-9]{32}$/) && (!data.hasChild('lastActive') || data.child('lastActive').val() > now - 86400000)",
+        ".read": "$room.matches(/^[a-f0-9]{32}$/) && (!data.hasChild('lastActive') || data.child('lastActive').val() > now - 31536000000)",
         "objects": {
           "$id": {
-            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $id.length <= 40 && newData.parent().parent().child('lastActive').isNumber() && newData.parent().parent().child('lastActive').val() > now - 86400000",
+            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $id.length <= 40 && newData.parent().parent().child('lastActive').isNumber() && newData.parent().parent().child('lastActive').val() > now - 31536000000",
             ".validate": "newData.hasChildren(['kind', 'color', 'width', 'opacity']) && (newData.child('kind').val() === 'text' ? newData.hasChildren(['text', 'x', 'y']) : newData.hasChild('chunks'))",
             "kind": {
               ".validate": "newData.val() === 'pen' || newData.val() === 'highlight' || newData.val() === 'text'"
@@ -149,7 +149,7 @@
         },
         "cursors": {
           "$client": {
-            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $client.matches(/^[a-f0-9]{32}$/) && (!newData.exists() || (root.child('whiteboards').child($room).child('lastActive').isNumber() && root.child('whiteboards').child($room).child('lastActive').val() > now - 86400000))",
+            ".write": "$room.matches(/^[a-f0-9]{32}$/) && $client.matches(/^[a-f0-9]{32}$/) && (!newData.exists() || (root.child('whiteboards').child($room).child('lastActive').isNumber() && root.child('whiteboards').child($room).child('lastActive').val() > now - 31536000000))",
             ".validate": "newData.hasChildren(['name', 'animal', 'emoji', 'color', 'x', 'y', 'updated']) && newData.child('name').isString() && newData.child('name').val().length <= 32 && newData.child('animal').isString() && newData.child('animal').val().length <= 20 && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8 && newData.child('color').isString() && newData.child('color').val().matches(/^#[a-fA-F0-9]{6}$/) && newData.child('x').isNumber() && newData.child('x').val() >= -1e15 && newData.child('x').val() <= 1e15 && newData.child('y').isNumber() && newData.child('y').val() >= -1e15 && newData.child('y').val() <= 1e15 && newData.child('updated').val() === now",
             "$other": {
               ".validate": false
@@ -180,25 +180,25 @@
         "$other": {
           ".validate": false
         },
-        ".write": "$room.matches(/^[a-f0-9]{32}$/) && !newData.exists() && ((data.child('lastActive').isNumber() && data.child('lastActive').val() <= now - 86400000) || (!data.exists() && root.child('whiteboardExpiry').child($room).isNumber() && root.child('whiteboardExpiry').child($room).val() <= now - 86400000))",
+        ".write": "$room.matches(/^[a-f0-9]{32}$/) && !newData.exists() && ((data.child('lastActive').isNumber() && data.child('lastActive').val() <= now - 31536000000) || (!data.exists() && root.child('whiteboardExpiry').child($room).isNumber() && root.child('whiteboardExpiry').child($room).val() <= now - 31536000000))",
         "lastActive": {
-          ".write": "$room.matches(/^[a-f0-9]{32}$/) && newData.isNumber() && newData.val() === now && (!data.exists() || data.val() > now - 86400000)",
+          ".write": "$room.matches(/^[a-f0-9]{32}$/) && newData.isNumber() && newData.val() === now && (!data.exists() || data.val() > now - 31536000000)",
           ".validate": "newData.isNumber() && newData.val() === now && newData.parent().parent().parent().child('whiteboardExpiry').child($room).val() === newData.val()"
         }
       }
     },
     "whiteboardExpiry": {
       ".indexOn": ".value",
-      ".read": "query.orderByValue && query.endAt === root.child('whiteboardCleanupCutoff').val() && query.limitToFirst === 100 && root.child('whiteboardCleanupCutoff').isNumber() && root.child('whiteboardCleanupCutoff').val() <= now - 86400000",
+      ".read": "query.orderByValue && query.endAt === root.child('whiteboardCleanupCutoff').val() && query.limitToFirst === 100 && root.child('whiteboardCleanupCutoff').isNumber() && root.child('whiteboardCleanupCutoff').val() <= now - 31536000000",
       "$room": {
         ".read": "$room.matches(/^[a-f0-9]{32}$/)",
-        ".write": "$room.matches(/^[a-f0-9]{32}$/) && ((!newData.exists() && data.isNumber() && data.val() <= now - 86400000) || (newData.isNumber() && newData.val() === now && newData.parent().parent().child('whiteboards').child($room).child('lastActive').val() === newData.val()))",
+        ".write": "$room.matches(/^[a-f0-9]{32}$/) && ((!newData.exists() && data.isNumber() && data.val() <= now - 31536000000) || (newData.isNumber() && newData.val() === now && newData.parent().parent().child('whiteboards').child($room).child('lastActive').val() === newData.val()))",
         ".validate": "newData.isNumber() && newData.val() === now"
       }
     },
     "whiteboardCleanupCutoff": {
       ".read": true,
-      ".write": "newData.isNumber() && newData.val() <= now - 86400000 && newData.val() > now - 86460000",
+      ".write": "newData.isNumber() && newData.val() <= now - 31536000000 && newData.val() > now - 31536060000",
       ".validate": "newData.isNumber()"
     }
   }

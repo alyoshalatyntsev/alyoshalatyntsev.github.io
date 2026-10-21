@@ -27,7 +27,7 @@
   }
   try { localStorage.setItem(lastRoomKey, location.hash.slice(1)); } catch {}
   const room = location.hash.slice(1), cacheKey = 'whiteboard-local-' + room, viewKey = 'whiteboard-view-' + room, historyKey = 'whiteboard-history-' + room;
-  const TTL = 24 * 60 * 60 * 1000;
+  const TTL = BoardExpiry.TTL, HISTORY_LIMIT = 1000, HISTORY_CHARS = 2500000;
   let sequence = 0;
   const objectId = () => local ? Date.now().toString(36).padStart(10, '0') + '-' + String(sequence++).padStart(6, '0') + '-' + uid().slice(0, 16) : ref.push().key;
   const settings = { pen: { color: palette[0], width: 3, opacity: 1 }, highlight: { color: palette[8], width: 16, opacity: .4 }, text: { color: palette[0], width: 30, opacity: 1 }, erase: { width: 9 } };
@@ -55,18 +55,44 @@
   let cursorCollection, cursorRef, cursorId, cursorProfile, cursorPoint = null, cursorTimer = 0, cursorRegistration = null, cursorArmed = false, lastCursorSend = 0, lastCursorScreen = null;
   try {
     const saved = JSON.parse(localStorage.getItem(historyKey));
-    if (saved && Date.now() - saved.updated < TTL && Array.isArray(saved.undo) && Array.isArray(saved.redo)) { historyStack = saved.undo.slice(-50); redoStack = saved.redo.slice(-50); historyInitialized = true; }
+    if (saved && Date.now() - saved.updated < TTL && Array.isArray(saved.undo) && Array.isArray(saved.redo)) { historyStack = saved.undo.slice(-HISTORY_LIMIT); redoStack = saved.redo.slice(-HISTORY_LIMIT); historyInitialized = true; }
   } catch {}
+  function updateHistoryUI() { $('undo').disabled = !ready || !historyStack.length; $('redo').disabled = !ready || !redoStack.length; }
+  function evictHistory() {
+    // Every board on this browser shares one storage quota: drop the least recently used other board's history.
+    let oldest = null, time = Infinity;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith('whiteboard-history-') || key === historyKey) continue;
+      let updated = 0; try { updated = JSON.parse(localStorage.getItem(key)).updated || 0; } catch {}
+      if (updated < time) { time = updated; oldest = key; }
+    }
+    if (oldest) localStorage.removeItem(oldest);
+    return !!oldest;
+  }
   function saveHistory() {
+    updateHistoryUI();
     try {
-      const data = { updated: Date.now(), undo: historyStack.slice(-50), redo: redoStack.slice(-50) };
-      let json = JSON.stringify(data);
-      while (json.length > 1500000 && (data.undo.length || data.redo.length)) { if (data.undo.length) data.undo.shift(); else data.redo.shift(); json = JSON.stringify(data); }
-      localStorage.setItem(historyKey, json);
+      const undo = historyStack.slice(-HISTORY_LIMIT), redo = redoStack.slice(-HISTORY_LIMIT);
+      const trim = () => {
+        const sizes = [...undo, ...redo].map(action => JSON.stringify(action).length + 1);
+        let total = sizes.reduce((a, b) => a + b, 0), drop = 0;
+        while (total > HISTORY_CHARS && drop < sizes.length) total -= sizes[drop++];
+        const fromUndo = Math.min(drop, undo.length); undo.splice(0, fromUndo); redo.splice(0, drop - fromUndo);
+      };
+      trim();
+      for (;;) {
+        try { localStorage.setItem(historyKey, JSON.stringify({ updated: Date.now(), undo, redo })); return; } catch {}
+        if (evictHistory()) continue;
+        if (!undo.length && !redo.length) return;
+        // Still over quota: keep the most recent three quarters and try again.
+        const drop = Math.ceil((undo.length + redo.length) / 4), fromUndo = Math.min(drop, undo.length);
+        undo.splice(0, fromUndo); redo.splice(0, drop - fromUndo);
+      }
     } catch {}
   }
   function seedHistory() {
-    if (!historyInitialized) { historyStack = entries().slice(-50).map(([id]) => [[id, { hidden: true }]]); historyInitialized = true; saveHistory(); }
+    if (!historyInitialized) { historyStack = entries().slice(-HISTORY_LIMIT).map(([id]) => [[id, { hidden: true }]]); historyInitialized = true; saveHistory(); }
   }
   if (local) try { for (const [id, obj] of Object.entries(JSON.parse(localStorage.getItem(cacheKey) || '{}'))) objects.set(id, obj); } catch {}
   function persistNow() {
@@ -79,7 +105,7 @@
     const waiting = !local && !failed && (!ready || !connected);
     $('connection-overlay').hidden = !waiting;
     if (waiting) $('connection-overlay').textContent = everConnected ? 'Reconnecting…' : 'Connecting…';
-    $('export-pdf').disabled = !ready || exporting;
+    $('export-pdf').disabled = !ready || exporting; updateHistoryUI();
     $('status').className = 'sr-only' + (failed ? ' error' : connected ? ' live' : '');
     if (ready && connected) $('message').hidden = true;
   }
@@ -358,20 +384,22 @@
   }
   function layoutTextFormat() {
     const selectedTextObject = selectedText(), obj = editing?.obj || selectedTextObject?.[1], bar = $('text-format');
-    if (!obj) { bar.hidden = true; return; }
+    if (!obj) { bar.hidden = true; hideTextPalette(); return; }
     const b = editing ? Text.layout({ ...obj, boxW: editing.displayWidth }, ctx).bounds.map((v, i) => v + (i % 2 ? obj.dy || 0 : obj.dx || 0)) : boundsFor(...selectedTextObject);
     const topLeft = screen([b[0], b[1]]), bottomRight = screen([b[2], b[3]]);
-    if (bottomRight[0] < 0 || bottomRight[1] < 0 || topLeft[0] > screenW || topLeft[1] > screenH) { bar.hidden = true; return; }
+    if (bottomRight[0] < 0 || bottomRight[1] < 0 || topLeft[0] > screenW || topLeft[1] > screenH) { bar.hidden = true; hideTextPalette(); return; }
     bar.hidden = false;
     if (document.activeElement !== $('text-font')) $('text-font').value = obj.font || 'sans';
     if (document.activeElement !== $('text-size')) $('text-size').value = String(Number((obj.width * view.zoom).toFixed(1)));
-    if (document.activeElement !== $('text-color')) $('text-color').value = obj.color;
+    $('text-color').style.setProperty('--ink', obj.color);
+    $('text-palette').querySelectorAll('.swatch').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === obj.color)));
     if (document.activeElement !== $('text-align')) $('text-align').value = obj.align || 'left';
     bar.querySelectorAll('[data-text-style]').forEach(button => button.setAttribute('aria-pressed', String(!!obj[button.dataset.textStyle])));
     const width = bar.offsetWidth, height = bar.offsetHeight;
     bar.style.left = Math.max(8, Math.min(screenW - width - 8, topLeft[0])) + 'px';
     const above = topLeft[1] - height - 12;
     bar.style.top = Math.max(8, Math.min(screenH - height - 8, above >= 8 ? above : bottomRight[1] + 12)) + 'px';
+    placeTextPalette();
   }
   function drawSelection() {
     clear(overlay); transform(overlay);
@@ -412,7 +440,7 @@
       overlay.lineWidth = 1.2; overlay.fill(); overlay.stroke();
     }
   }
-  function remember(action) { historyStack.push(action); if (historyStack.length > 50) historyStack.shift(); redoStack = []; historyInitialized = true; saveHistory(); }
+  function remember(action) { historyStack.push(action); if (historyStack.length > HISTORY_LIMIT) historyStack.shift(); redoStack = []; historyInitialized = true; saveHistory(); }
   function write(id, obj) { objects.set(id, obj); changed(); if (!local) track(ref.child(id).set(obj)); }
   function patchMany(updates, record = true) {
     const before = [], wire = {};
@@ -482,6 +510,10 @@
       }
       dirty = true;
     } else if (done && !cancel && ['rect', 'lasso'].includes(done.kind)) completeSelection();
+    else if (done?.kind === 'textTap' && !cancel) {
+      const obj = objects.get(done.id);
+      if (isVisible(obj) && obj.kind === 'text') { beginText(done.id, obj, done.at); lastTextDoubleClick = { x: done.at[0], y: done.at[1], time: performance.now() }; }
+    }
     else if (done?.kind === 'textBox' && !cancel) {
       const b = pointBounds([done.start, done.end]);
       tool = 'select'; updateToolUI();
@@ -655,9 +687,9 @@
   $('editor').addEventListener('input', () => { if (editing) { editing.obj = { ...editing.obj, text: $('editor').value }; layoutEditor(); } });
   $('editor').addEventListener('scroll', () => { if ($('editor').scrollLeft) $('editor').scrollLeft = 0; });
   let textFormatPointer = false;
-  $('text-format').addEventListener('pointerdown', () => { textFormatPointer = true; }, { capture: true });
+  for (const id of ['text-format', 'text-palette']) $(id).addEventListener('pointerdown', () => { textFormatPointer = true; }, { capture: true });
   for (const event of ['pointerup', 'pointercancel']) addEventListener(event, () => setTimeout(() => { textFormatPointer = false; }, 0));
-  $('editor').addEventListener('blur', () => { queueMicrotask(() => { if (editing && !textFormatPointer && !gesture?.kind.startsWith('edit') && !document.activeElement.closest('#text-edit, #options, #toolbar, #text-format')) commitText(); }); });
+  $('editor').addEventListener('blur', () => { queueMicrotask(() => { if (editing && !textFormatPointer && !gesture?.kind.startsWith('edit') && !document.activeElement.closest('#text-edit, #options, #toolbar, #text-format, #text-palette')) commitText(); }); });
   $('editor').addEventListener('pointerdown', e => {
     if (lastTextDoubleClick && performance.now() - lastTextDoubleClick.time < 650 && Math.hypot(e.clientX - lastTextDoubleClick.x, e.clientY - lastTextDoubleClick.y) < 16) {
       e.preventDefault(); $('editor').focus(); $('editor').select(); lastTextDoubleClick = null;
@@ -679,6 +711,12 @@
   function startResize(id, handle, p) {
     const original = objects.get(id); gesture = { kind: 'resize', id, handle, start: p, anchor: Text.handles(boundsFor(id, original), view.zoom)[handle], original, preview: original, timer: setInterval(sendGesture, 100) }; dirty = true;
   }
+  let lastTap = null;
+  function noteTap(e, hit) { lastTap = e.pointerType !== 'mouse' && objects.get(hit)?.kind === 'text' ? { id: hit, x: e.clientX, y: e.clientY, time: performance.now() } : null; }
+  function isDoubleTap(e, hit) {
+    const tap = lastTap; lastTap = null;
+    return !!tap && e.pointerType !== 'mouse' && hit === tap.id && objects.get(hit)?.kind === 'text' && performance.now() - tap.time < 500 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 32;
+  }
   function touchState() {
     const p = [...touches.values()].slice(0, 2); return { centre: [(p[0][0] + p[1][0]) / 2, (p[0][1] + p[1][1]) / 2], distance: Math.max(1, Ink.distance(...p)) };
   }
@@ -691,7 +729,7 @@
       if (pinch || touches.size > 2) return;
     }
     if (pointer !== null) return;
-    hideOptions(); commitText();
+    hideOptions(); hideTextPalette(); commitText();
     if (['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) document.activeElement.blur();
     zoomMotion = null;
     const p = world(e); pointer = e.pointerId; canvas.setPointerCapture(pointer);
@@ -704,13 +742,18 @@
     if (handle) { if (tool === 'text') { tool = 'select'; updateToolUI(); } startResize(handle.id, handle.handle, p); renderSoon(); return; }
     if (tool === 'text' && !freehand) {
       const hit = hitAt(p);
-      selected.clear();
+      selected.clear(); noteTap(e, hit);
       if (hit) { selected.add(hit); tool = 'select'; updateToolUI(); startMove(p); }
       else gesture = { kind: 'textBox', start: p, end: p };
       renderSoon(); return;
     }
     if (selecting) {
       const hit = freehand ? null : hitAt(p);
+      if (!freehand && isDoubleTap(e, hit)) {
+        // Touch browsers skip dblclick on this canvas, so a second tap on text reopens it; the editor opens on release.
+        selected.clear(); selected.add(hit); gesture = { kind: 'textTap', id: hit, at: [e.clientX, e.clientY] }; renderSoon(); return;
+      }
+      if (!freehand) noteTap(e, hit);
       if (!e.shiftKey && (!hit || !selected.has(hit))) selected.clear();
       if (hit) { selected.add(hit); startMove(p); }
       else gesture = freehand ? { kind: 'lasso', points: [p], returnTool: tool === 'lasso' ? 'select' : tool } : { kind: 'rect', start: p, end: p };
@@ -765,6 +808,7 @@
     }
     movePointer(e);
     publishCursor(e);
+    hover = e.pointerType === 'mouse' && e.target === canvas ? [e.clientX, e.clientY] : e.pointerType === 'mouse' ? null : hover;
     if (pointer === null && e.target === canvas && !editing) {
       const handle = ['select', 'text'].includes(tool) && handleAt(world(e));
       canvas.style.cursor = space || tool === 'hand' ? 'grab' : handle ? Text.cursor(handle.handle) : tool === 'text' ? 'text' : tool === 'select' ? hitAt(world(e)) ? 'move' : 'default' : 'crosshair';
@@ -779,15 +823,44 @@
   canvas.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) finish(!active); touches.delete(e.pointerId); if (!touches.size) pinch = null; });
   canvas.addEventListener('auxclick', e => e.preventDefault()); canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
   canvas.addEventListener('dblclick', e => {
-    if (tool !== 'select') return;
+    if (tool !== 'select' || editing) return;
     const p = world(e), id = hitAt(p), obj = objects.get(id);
     if (obj?.kind === 'text') { finish(); beginText(id, obj, [e.clientX, e.clientY]); lastTextDoubleClick = { x: e.clientX, y: e.clientY, time: performance.now() }; }
   });
+  function zoomNow(factor, at) {
+    zoomMotion = null;
+    const anchor = [view.x + at[0] / view.zoom, view.y + at[1] / view.zoom];
+    view.zoom = clampZoom(view.zoom * factor); view.x = anchor[0] - at[0] / view.zoom; view.y = anchor[1] - at[1] / view.zoom;
+    cameraChanged();
+  }
+  let wheelMode = null, wheelTime = 0, safariPinch = null;
+  function wheelKind(e) {
+    // Touchpad pinches arrive as ctrl+wheel in Chrome, Edge and Firefox on macOS and Windows.
+    if (e.ctrlKey) return 'pinch';
+    // One scroll, including its momentum tail, keeps the kind it started with.
+    if (wheelMode && performance.now() - wheelTime < 300) return wheelMode;
+    if (e.deltaMode !== 0) return 'zoom';
+    if (e.deltaX) return 'pan';
+    // Mouse notches report legacy wheelDelta in multiples of 120; touchpads report three times the pixel delta.
+    if (e.wheelDeltaY) return Math.abs(e.wheelDeltaY + 3 * e.deltaY) < 1 || e.wheelDeltaY % 120 ? 'pan' : 'zoom';
+    return Number.isInteger(e.deltaY) && Math.abs(e.deltaY) >= 50 ? 'zoom' : 'pan';
+  }
   $('paper').addEventListener('wheel', e => {
-    e.preventDefault(); if (active || gesture) return;
-    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? screenH : 1;
-    zoomAt(Math.exp(-Math.max(-500, Math.min(500, e.deltaY * unit)) * .002), [e.clientX, e.clientY]);
+    e.preventDefault(); if (active || gesture || safariPinch) return;
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? screenH : 1, kind = wheelKind(e);
+    const dx = e.deltaX * unit, dy = Math.max(-500, Math.min(500, e.deltaY * unit));
+    if (kind !== 'pinch') { wheelMode = kind; wheelTime = performance.now(); }
+    if (kind === 'pan') { zoomMotion = null; view.x += dx / view.zoom; view.y += e.deltaY * unit / view.zoom; cameraChanged(); }
+    else if (kind === 'pinch') zoomNow(Math.exp(-dy * .01), [e.clientX, e.clientY]);
+    else zoomAt(Math.exp(-dy * .002), [e.clientX, e.clientY]);
   }, { passive: false });
+  // Safari on macOS reports trackpad pinches as gesture events rather than ctrl+wheel; touch screens pinch through pointer events.
+  addEventListener('gesturestart', e => { e.preventDefault(); if (!touches.size) safariPinch = 1; });
+  addEventListener('gesturechange', e => {
+    e.preventDefault(); if (!safariPinch || touches.size || active || gesture) return;
+    zoomNow(e.scale / safariPinch, Number.isFinite(e.clientX) ? [e.clientX, e.clientY] : [screenW / 2, screenH / 2]); safariPinch = e.scale;
+  });
+  addEventListener('gestureend', e => { e.preventDefault(); safariPinch = null; });
   function setHint() { canvas.style.cursor = gesture?.kind === 'pan' ? 'grabbing' : space || tool === 'hand' ? 'grab' : tool === 'text' ? 'text' : tool === 'select' ? 'default' : 'crosshair'; }
   function updateToolUI() { document.querySelectorAll('[data-tool]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.tool === tool))); setHint(); }
   function selectTool(next, preserve = false) {
@@ -801,6 +874,7 @@
   function updateSettingsUI() {
     const ink = settings[inkTool], erasing = inkTool === 'erase';
     $('colors').hidden = $('custom-row').hidden = $('opacity-row').hidden = erasing;
+    if (inkTool === 'text') $('custom-row').hidden = true;
     if (!erasing) $('custom-color').value = ink.color;
     const widths = widthSteps(); $('width').max = widths.length - 1;
     $('width').value = widths.reduce((best, value, i) => Math.abs(value - ink.width) < Math.abs(widths[best] - ink.width) ? i : best, 0);
@@ -859,7 +933,24 @@
     else renderSoon();
   };
   $('text-size').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
-  $('text-color').onchange = e => changeTextFormat('color', e.target.value);
+  // Text colours come from the same palette as the pens, not a free colour wheel.
+  function hideTextPalette() { if (!$('text-palette').hidden) { $('text-palette').hidden = true; $('text-color').setAttribute('aria-expanded', 'false'); } }
+  function placeTextPalette() {
+    const panel = $('text-palette'); if (panel.hidden) return;
+    const button = $('text-color').getBoundingClientRect();
+    panel.style.left = Math.max(8, Math.min(screenW - panel.offsetWidth - 8, button.left - 10)) + 'px';
+    const below = button.bottom + 8;
+    panel.style.top = (below + panel.offsetHeight <= screenH - 8 ? below : Math.max(8, button.top - panel.offsetHeight - 8)) + 'px';
+  }
+  $('text-color').onclick = () => {
+    const panel = $('text-palette'); panel.hidden = !panel.hidden;
+    $('text-color').setAttribute('aria-expanded', String(!panel.hidden)); placeTextPalette();
+  };
+  palette.forEach((color, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.dataset.color = color; b.style.setProperty('--ink', color); b.title = names[i]; b.setAttribute('aria-label', names[i]);
+    b.onclick = () => { changeTextFormat('color', color); hideTextPalette(); if (editing) $('editor').focus({ preventScroll: true }); };
+    $('text-palette').append(b);
+  });
   $('text-align').onchange = e => changeTextFormat('align', e.target.value);
   document.querySelectorAll('[data-text-style]').forEach(button => button.onclick = () => {
     const obj = editing?.obj || selectedText()?.[1]; if (obj) changeTextFormat(button.dataset.textStyle, !obj[button.dataset.textStyle]);
@@ -947,7 +1038,80 @@
     const from = redo ? redoStack : historyStack, to = redo ? historyStack : redoStack, action = from.pop();
     if (action) { const inverse = patchMany(action, false); if (inverse.length) to.push(inverse); } renderSoon(); persistNow();
   }
+  for (const [id, redo] of [['undo', false], ['redo', true]]) {
+    // Keep focus in an open text box so the edit commits through undo() rather than a blur race.
+    $(id).onpointerdown = e => { if (e.button === 0) e.preventDefault(); };
+    $(id).onclick = () => { hideOptions(); undo(redo); };
+  }
   $('deselect').onclick = () => { selected.clear(); renderSoon(); };
+  // Copy and paste: objects travel as a custom clipboard type (with their text as plain text), and an in-page copy covers browsers that drop either.
+  const CLIP_TYPE = 'application/x-whiteboard+json', editable = target => !!target?.closest?.('textarea, input, select, #text-format, #text-palette');
+  let clipboard = null, clipboardText = '', pasteCount = 0, hover = null, clipboardTimer = 0, clipboardEventSeen = false;
+  function copySelection() {
+    finish();
+    const items = entries().filter(([id]) => selected.has(id)).map(([, obj]) => ({ ...obj }));
+    if (!items.length) return null;
+    clipboard = items; pasteCount = 0;
+    clipboardText = items.filter(obj => obj.kind === 'text').map(obj => obj.text).join('\n\n');
+    return { json: JSON.stringify({ objects: items }), text: clipboardText };
+  }
+  function deleteSelection() { if (selected.size) $('delete-selection').click(); }
+  function pasteObjects(items) {
+    if (!ready || !Array.isArray(items)) return;
+    const valid = items.filter(obj => obj && typeof obj === 'object' && ['pen', 'highlight', 'text'].includes(obj.kind)).map(({ hidden, ...obj }) => obj);
+    if (!valid.length) return;
+    finish(); commitText();
+    const b = pointBounds(valid.flatMap(obj => { const b = boundsFor(null, obj); return [[b[0], b[1]], [b[2], b[3]]]; }));
+    const centre = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+    let shift;
+    if (hover) shift = [view.x + hover[0] / view.zoom - centre[0], view.y + hover[1] / view.zoom - centre[1]];
+    else if (onScreen(b)) { pasteCount++; shift = [24 * pasteCount / view.zoom, 24 * pasteCount / view.zoom]; }
+    else shift = [view.x + screenW / 2 / view.zoom - centre[0], view.y + screenH / 2 / view.zoom - centre[1]];
+    selected.clear(); const ids = [];
+    for (const obj of valid) {
+      const id = objectId(); ids.push(id); selected.add(id);
+      write(id, { ...obj, dx: (obj.dx || 0) + shift[0], dy: (obj.dy || 0) + shift[1] });
+    }
+    remember(ids.map(id => [id, { hidden: true }]));
+    hideOptions(); tool = 'select'; updateToolUI(); renderSoon(); persistNow();
+  }
+  function pasteText(text) {
+    text = text.replace(/\r\n?/g, '\n').slice(0, 2000);
+    if (!ready || !text.trim()) return;
+    finish(); commitText();
+    const at = hover || [screenW / 2, screenH / 2];
+    const obj = { kind: 'text', ...settings.text, width: settings.text.width / view.zoom, x: view.x + at[0] / view.zoom, y: view.y + at[1] / view.zoom, text };
+    if (Text.layout(obj, ctx).width > 640 / view.zoom) obj.boxW = 640 / view.zoom;
+    const id = objectId(); write(id, obj); remember([[id, { hidden: true }]]);
+    selected.clear(); selected.add(id); hideOptions(); tool = 'select'; updateToolUI(); renderSoon(); persistNow();
+  }
+  for (const kind of ['copy', 'cut']) addEventListener(kind, e => {
+    if (editable(e.target)) return;
+    clipboardEventSeen = true;
+    const copied = copySelection(); if (!copied) return;
+    e.preventDefault(); e.clipboardData.setData('text/plain', copied.text); e.clipboardData.setData(CLIP_TYPE, copied.json);
+    if (kind === 'cut') deleteSelection();
+  });
+  addEventListener('paste', e => {
+    if (editable(e.target)) return;
+    clipboardEventSeen = true; e.preventDefault();
+    const data = e.clipboardData, text = data?.getData('text/plain') || '';
+    let items = null; try { items = JSON.parse(data?.getData(CLIP_TYPE) || 'null')?.objects; } catch {}
+    if (Array.isArray(items)) pasteObjects(items);
+    else if (clipboard && text === clipboardText) pasteObjects(clipboard);
+    else if (text) pasteText(text);
+  });
+  function clipboardKey(key) {
+    // Safari can skip clipboard events when no page text is selected; fall back to the in-page clipboard.
+    clipboardEventSeen = false; clearTimeout(clipboardTimer);
+    if (key !== 'v' && selected.size) copySelection();
+    clipboardTimer = setTimeout(() => {
+      if (clipboardEventSeen) return;
+      if (key === 'x') { if (clipboard) navigator.clipboard?.writeText(clipboardText).catch(() => {}); deleteSelection(); }
+      else if (key === 'c') { if (clipboard) navigator.clipboard?.writeText(clipboardText).catch(() => {}); }
+      else if (clipboard) pasteObjects(clipboard);
+    }, 60);
+  }
   $('delete-selection').onclick = () => { if (ready) { commitText(); patchMany([...selected].map(id => [id, { hidden: true }])); selected.clear(); renderSoon(); persistNow(); } };
   function fileSnapshot() { finish(); commitText(); hideOptions(); return entries().map(([, obj]) => obj); }
   function notice(text) { $('message').textContent = text; $('message').hidden = false; setTimeout(() => { $('message').hidden = true; }, 5000); }
@@ -988,20 +1152,27 @@
       return;
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); finish(); commitText(); persistNow(); return; }
+    if (e.key === 'Escape' && !$('text-palette').hidden) { e.preventDefault(); hideTextPalette(); return; }
     if (e.key === 'Escape') { e.preventDefault(); finish(true); commitText(); selected.clear(); hideOptions(); tool = 'select'; updateToolUI(); renderSoon(); return; }
-    if (e.target.closest('#text-format')) return;
+    if (e.target.closest('#text-format, #text-palette')) return;
     if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) {
       if (e.target === $('editor') && (e.key === 'Escape' || e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); commitText(); hideOptions(); }
       else if (e.key === 'Escape') { hideOptions(); e.target.blur(); }
       return;
     }
     const cmd = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
-    if (cmd && key === 'z') { e.preventDefault(); undo(e.shiftKey); }
+    if (cmd && ['c', 'x', 'v'].includes(key) && !e.shiftKey && !e.altKey) clipboardKey(key);
+    else if (cmd && key === 'z') { e.preventDefault(); undo(e.shiftKey); }
     else if (cmd && key === 'y') { e.preventDefault(); undo(true); }
     else if (cmd && key === 'a') { e.preventDefault(); finish(); commitText(); selected.clear(); for (const [id] of entries()) selected.add(id); tool = 'select'; updateToolUI(); renderSoon(); }
     else if (['=', '+', '-'].includes(key)) { e.preventDefault(); if (!gesture && !active) zoomAt(key === '-' ? 1 / 1.25 : 1.25); }
     else if (cmd && key === '0') { e.preventDefault(); finish(); fit(); }
     else if (key === ' ') { e.preventDefault(); space = true; setHint(); }
+    else if (e.key.startsWith('Arrow') && !cmd && !e.altKey) {
+      e.preventDefault(); if (gesture || active) return;
+      const step = (e.shiftKey ? 400 : 100) / view.zoom, [dx, dy] = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key] || [0, 0];
+      zoomMotion = null; view.x += dx * step; view.y += dy * step; cameraChanged();
+    }
     else if (['Delete', 'Backspace'].includes(e.key) && selected.size) { e.preventDefault(); $('delete-selection').click(); }
     else if (e.key === 'Escape') { finish(true); commitText(); selected.clear(); hideOptions(); renderSoon(); }
     else if (!cmd && !e.altKey) {
@@ -1019,9 +1190,9 @@
   function expiredBoard() {
     clearInterval(active?.timer); clearInterval(gesture?.timer); active = gesture = editing = null; pointer = null;
     $('text-edit').hidden = true; selected.clear(); objects.clear(); historyStack = []; redoStack = []; historyInitialized = true;
-    dirty = orderDirty = true; renderSoon();
+    dirty = orderDirty = true; renderSoon(); updateHistoryUI();
     for (const key of [cacheKey, historyKey, viewKey, 'whiteboard-activity-' + room]) try { localStorage.removeItem(key); } catch {}
-    notice('Board cleared after 24 hours of inactivity.');
+    notice('Board cleared after a year of inactivity.');
   }
   function listenActivity() {
     for (const event of ['pointerdown', 'keydown', 'input', 'wheel']) addEventListener(event, e => { if (ready && e.isTrusted) expiry?.touch(); }, { capture: true, passive: true });

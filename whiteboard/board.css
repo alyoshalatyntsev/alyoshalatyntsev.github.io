@@ -30,7 +30,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid #0078d4; outline-
 #text-font { width: 72px; } #text-align { width: 76px; }
 #text-size { width: 48px; padding: 0 4px; text-align: center; font-variant-numeric: tabular-nums; }
 #text-size::-webkit-inner-spin-button, #text-size::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-#text-format input[type="color"] { width: 27px; height: 27px; padding: 2px; border: 0; border-radius: 6px; }
+#text-format #text-color { width: 29px; min-width: 29px; padding: 0; display: grid; place-items: center; }
+.text-color-chip { width: 18px; height: 18px; border: 1px solid #0000002e; border-radius: 4px; background: var(--ink, #111); }
+#text-palette { position: fixed; z-index: 6; display: grid; grid-template-columns: repeat(8, 24px); gap: 6px; padding: 10px; border: 1px solid #d8dce2; border-radius: 12px; background: #fff; box-shadow: 0 5px 18px #0000001a; }
 #text-format button { min-width: 29px; padding: 0 5px; font-size: 15px; }
 #text-format button:hover, #text-format button[aria-pressed="true"] { background: #eaf2ff; color: #1264b4; }
 .text-format-divider { flex: none; width: 1px; height: 21px; margin: 0 2px; background: #e2e6eb; }

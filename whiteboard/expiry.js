@@ -1,12 +1,13 @@
 (() => {
   'use strict';
-  const TTL = 24 * 60 * 60 * 1000;
+  const TTL = 365 * 24 * 60 * 60 * 1000;
   function watch({ room, db, onExpire, onError }) {
     const key = 'whiteboard-activity-' + room, root = db?.ref(), boardPath = 'whiteboards/' + room, indexPath = 'whiteboardExpiry/' + room;
     let last = 0, offset = 0, timer, debounce, lastSent = 0, clearing = false;
     const now = () => Date.now() + offset;
     const expired = () => last > 0 && now() >= last + TTL;
-    function schedule() { clearTimeout(timer); if (last) timer = setTimeout(() => clear().catch(onError), Math.max(1000, last + TTL - now() + 100)); }
+    // setTimeout overflows past 2^31 - 1 ms (about 24.8 days), so long waits re-arm in steps.
+    function schedule() { clearTimeout(timer); if (last) timer = setTimeout(() => expired() ? clear().catch(onError) : schedule(), Math.min(2 ** 31 - 1, Math.max(1000, last + TTL - now() + 100))); }
     function receive(value) {
       if (typeof value === 'number') { last = value; try { localStorage.setItem(key, String(value)); } catch {} schedule(); }
       else if (last && !clearing) { last = 0; clearTimeout(timer); onExpire(); }
