@@ -1,155 +1,140 @@
-<!-- main website -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Alyosha Latyntsev, Chern Instructor at BIMSA. Research in geometric representation theory, cohomological Hall algebras, quantum groups and algebraic geometry.">
     <title>Alyosha Latyntsev</title>
+    <link rel="icon" href="data:,">
+    <link rel="preload" as="image" type="image/avif"
+          href="assets/shimashima-121-site.avif"
+          imagesrcset="assets/shimashima-121-site.avif 1x, assets/shimashima-121-site@2x.avif 2x"
+          onerror="document.documentElement.classList.add('background-fallback')">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-image: url('shimashima6_5.jpg');
-            background-repeat: repeat; 
-            background-size: 600px;
-            background-color: white;
             margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: rgba(255, 255, 255, 0.9);
+            font-family: Arial, sans-serif;
             color: black;
-            text-align: left;
-            padding-top: 2em;
-            padding-bottom: 2em;
-            padding-left: 4em;
-            padding-right: 4em;
-        }    
+            background: #144E78 url('assets/shimashima-121-site.webp') repeat;
+            background-image: image-set(
+                url('assets/shimashima-121-site.avif') type('image/avif') 1x,
+                url('assets/shimashima-121-site@2x.avif') type('image/avif') 2x,
+                url('assets/shimashima-121-site.webp') type('image/webp') 1x);
+            background-size: 600px;
+        }
+
+        .background-fallback body {
+            background-image: url('assets/shimashima-121-site.webp');
+        }
+
+        header {
+            padding: 2em 4em;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
         main {
-            margin: 0 5%;
-            margin-bottom: 2em;
+            margin: 0 5% 2em;
         }
-        .clipboard-icon::after {
-            content: "";
+
+        a {
+            color: rgb(9, 9, 133);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid rgb(9, 9, 133);
+            outline-offset: 3px;
+        }
+
+        .purple-box {
+            margin-top: 1em;
+            padding: 0.5em 1em;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .intro {
+            padding-bottom: 1.5em;
+        }
+
+        .section-heading {
+            text-align: center;
+        }
+
+        .green-column {
             display: inline-block;
-            width: 16pt;
-            height: 16pt;
-            background-image: url('clipboard.png');
-            background-size: contain;
-            margin-left: 5px;
-            vertical-align: middle;
+            box-sizing: border-box;
+            width: 100%;
+            padding: 1.5em 1em;
+            background-color: white;
+            column-count: 2;
+            column-gap: 2em;
+            overflow: hidden;
         }
+
+        .research-topic {
+            text-align: center;
+        }
+
+        .research-topic span {
+            font-variant: small-caps;
+            font-size: 18px;
+        }
+
+        .gray-text {
+            color: #777777;
+        }
+
+        .notes-box {
+            padding: 1em;
+            background-color: white;
+        }
+
         .clipboard-icon-container {
             display: flex;
             align-items: center;
         }
+
+        .clipboard-icon {
+            width: 16pt;
+            height: 16pt;
+            padding: 0;
+            margin-left: 5px;
+            border: 0;
+            background: transparent url('assets/clipboard.webp') center / contain no-repeat;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
         .popup {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
             padding: 10px;
             border-radius: 5px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
             z-index: 1000;
         }
-        .green-column {
-            width: calc(100% - 2em);
-            display: inline-block;
-            margin-right: 2%;
-            padding: 1em;
-            padding-top: 1.5em;
-            padding-bottom: 1.5em;
-            /* background-color: rgb(247, 255, 240);  */
-            background-color: rgb(255, 255, 255); 
-            color: black;
-            column-count: 2;
-            column-gap: 2em;
-            margin-top: 0;
-            margin-bottom: 0;
-            overflow: hidden;
+
+        .popup:empty {
+            display: none;
         }
-        .orange-box {
-            /* background-color: rgb(247, 255, 240);  */
-            background-color: rgb(255, 255, 255); 
-            color: black;
-            padding: 1em;
-            margin-top: 0em;
-            margin-bottom: 4em;
-        }
-        .purple-box {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: black;
-            margin-top: 1em;
-            padding-top: 0.5em;
-            padding-bottom: 0.5em;
-            padding-left: 1em;
-            padding-right: 1em;
-        }
-        .text-flow-container {
-            column-width: 100%;
-            row-gap: 10px;
-            column-gap: 10px;
-            margin: 10px;
-            display: flex;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-        .rectangle-text {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            width: calc(100% - 37px);
-            height: 100%;
-            font-size: 12px;
-            text-align: left;
-            color: black;
-            margin-left: auto;
-        }        
-        .red-rectangle {
-            width: 120px;
-            height: 40px; 
-            background-color: rgba(255, 0, 0, 0.0);
-            border: 2px solid rgba(255, 0, 0, 0.2);
-            display: inline-block;
-            margin-bottom: 00px;
-            position: relative;
-        }
-        .red-rectangle::before {
-            content: "";
-            width: 25px;
-            height: 32px;
-            background-image: url('fileicon.png');
-            background-size: cover;
-            position: absolute;
-            top: 50%;
-            left: 6px;
-            transform: translateY(-50%);
-        }
-        .box {
-            margin-bottom: 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            padding: 0.5em;
-            text-align: center;
-        }
-        .inline-div {
-            display: inline;
-        }
-        a {
-            text-decoration: none;
-            color: rgb(9, 9, 133);
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .gray-text {
-            color: #777777;
+
+        @media (max-width: 600px) {
+            header {
+                padding-right: 5%;
+                padding-left: 5%;
+            }
+
+            .green-column {
+                column-count: 1;
+            }
         }
     </style>
 </head>
@@ -159,252 +144,118 @@
     </header>
 
     <main>
-        <div class="box purple-box">
-            <p>
-                I am a mathematician interested in geometric representation theory, a postdoc in <a href="https://sites.google.com/view/vivek-shende/">Vivek Shende's</a> group at the <a href="https://www.sdu.dk/en/qm">Centre for Quantum Mathematics</a>, Syddansk Universitet. Before that I was a PhD student at  <a href="https://www.maths.ox.ac.uk/">Oxford</a> under <a href="https://people.maths.ox.ac.uk/joyce/">Dominic Joyce</a> and an undergrad at <a href="https://www.damtp.cam.ac.uk/">Cambridge</a>.
-                <div class="clipboard-icon-container">
-                    <p>Email: alyoshalatyntsev@gmail.com</p><div class="clipboard-icon inline-div" onclick="copyToClipboard('alyoshalatyntsev@gmail.com')"></div>
-                </div>
-                <!-- <p><a href="AlyoshaLatyntsevCV.pdf">CV</a></p> -->
-            </p>
-        </div>
+        <div class="purple-box intro">
+            <p>I am a mathematician interested in geometric representation theory.</p>
+            <div class="clipboard-icon-container">
+                <p>Email: <span id="email">alyoshalatyntsev@gmail.com</span></p>
+                <button class="clipboard-icon" type="button" aria-label="Copy email address" title="Copy email address"></button>
 
-        
-        <!-- RESEARCH -->
-        <div class="box purple-box">
-            <h2 style="text-align: center;">Research</h2>
-        </div>
-        <div class="box green-column">
-
-
-
-
-            
-            <div style="text-align: center;">
-                <span style="font-variant: small-caps; font-size: 18px;">Cohomological Hall algebras</span><br><br>
             </div>
+            <p>I am a <a href="https://www.bimsa.cn/detail/alatyntse.html">Chern Instructor</a> at <a href="https://www.bimsa.cn/">BIMSA</a> (affiliated with <a href="https://www.tsinghua.edu.cn/en/">Tsinghua University</a>). Before that I was a postdoc in <a href="https://sites.google.com/view/vivek-shende/">Vivek Shende's</a> group at the <a href="https://www.sdu.dk/en/qm">Centre for Quantum Mathematics</a>, Syddansk Universitet, before that a PhD student at <a href="https://www.maths.ox.ac.uk/">Oxford</a> under <a href="https://people.maths.ox.ac.uk/joyce/">Dominic Joyce</a> and an undergrad at <a href="https://www.damtp.cam.ac.uk/">Cambridge</a>.</p>
+        </div>
 
-
-            <b><a href="https://arxiv.org/abs/2110.14356">Cohomological Hall algebras and vertex algebras</a></b> <br>
-            Take the moduli stack of objects in a one-dimensional category, e.g. representations of a quiver or coherent sheaves on a curve. It has the structure of a <i>vertex quantum group</i>! The structure maps being the CoHA and Joyce's vertex coproduct.
-            <br>
-            <br>
-
-            <b><a href="https://www.arxiv.org/abs/2501.06643">Orthosymplectic modules of cohomological Hall algebras</a></b> <br>
-            Define CoHAs for <i>orthosymplectic</i> gauge groups, with their vertex/CoHAM structure which forms a vertex Yetter-Drinfeld module. Examples: quivers with potential, of preprojective algberas, and of dimension zero sheaves on a smooth proper surface. Give shuffle formulas.
-            
-            Develop a theory of factorisation algebras over ``orthosymplectic spacetimes'' which these are examples of. 
-
-            Joint with <a href="https://math.columbia.edu/~samdehority/">S. de Hority.</a>
-
-            <p class="gray-text"> <b>Vertex quantum groups for deformed CY3 completions and the Drinfeld coproduct on Yangians</b> <br>
-                We contruct a vertex bialgebra structure on the critical cohomology of local CY3 categories and deformed versions thereof. We take their Drinfeld doubles. We show that this recovers Joyce-Liu's vertex algebra, and identify it with the Drinfeld coproduct on (affine) Yangians. Joint with <a href="https://sites.google.com/view/jindalshiv/">S. Jindal</a> and <a href="https://sarkbr.github.io">S. Kaubrys</a>.</p>
-                
-                
-
-
-
-
-                <div style="text-align: center;">
-                    <br><span style="font-variant: small-caps; font-size: 18px;">Quantum groups and factorisation algebras</span><br><br>
+        <section aria-labelledby="research-heading">
+            <div class="purple-box">
+                <h2 class="section-heading" id="research-heading">Research</h2>
+            </div>
+            <div class="green-column" id="research">
+                <div class="research-topic">
+                    <span>Cohomological Hall algebras</span><br><br>
                 </div>
 
-            <a href="https://arxiv.org/abs/2312.07274"><b>Factorisation quantum groups</b></a><br>
+                <strong><a href="https://arxiv.org/abs/2110.14356">Cohomological Hall algebras and vertex algebras</a></strong><br>
+                Take the moduli stack of objects in a one-dimensional category, e.g. representations of a quiver or coherent sheaves on a curve. It has the structure of a <em>vertex quantum group</em>! The structure maps being the CoHA and Joyce's vertex coproduct.
+                <br><br>
 
-            What is the structure on A-Mod when A is a Yangian, affine quantum group, ... ? This paper develops the axiomatics of "braided factorisation categories", "factorisation quantum groups", etc., which are analogues of the standard notions but "factorisably over the Ran space". We prove that these structures are controlled by <i>spectral R(z)-matrices</i>, and generalise previous work on q-vertex algebras, deformed chiral algebras and meromorphic tensor categories. This gives a mathematicisation of Costello-Witten-Yamikaze's work on 4d Chern-Simons theory.
-            <br> 
+                <strong><a href="https://www.arxiv.org/abs/2501.06643">Orthosymplectic modules of cohomological Hall algebras</a></strong><br>
+                Define CoHAs for <em>orthosymplectic</em> gauge groups, with their vertex/CoHAM structure which forms a vertex Yetter-Drinfeld module. Examples: quivers with potential, of preprojective algebras, and of dimension zero sheaves on a smooth proper surface. Give shuffle formulas.
+                Develop a theory of factorisation algebras over "orthosymplectic spacetimes" which these are examples of.
+                Joint with <a href="https://math.columbia.edu/~samdehority/">S. DeHority.</a>
 
+                <p><strong><a href="https://arxiv.org/abs/2603.21707">Critical CoHAs, vertex coalgebras and Deformed Drinfeld coproducts</a></strong><br>
+                    We construct a vertex coproduct on the critical cohomological Hall algebra of a quiver with potential and show that it forms a vertex bialgebra. We extend the CoHA by a Cartan part via vertex algebraic bosonisation. For ADE quivers, the vertex coproduct recovers Drinfeld's deformed coproduct on the Yangian. Joint with <a href="https://sites.google.com/view/jindalshiv/">S. Jindal</a> and <a href="https://sarkbr.github.io/">S. Kaubrys</a>.</p>
 
-            <br>
-            <p class="gray-text"><b>Factorisation bosonisation</b> <br>
-                We show how the geometric representation theorists' "adding in the affine Cartan", e.g. to CoHAs, is in fact an example of Majid's bosonisation-transmutation for quantum groups, applied to <i>factorisation algebras</i>.  
+                <div class="research-topic">
+                    <br><span>Quantum groups and factorisation algebras</span><br><br>
+                </div>
 
-                Joint with <a href="https://math.columbia.edu/~samdehority/">S. de Hority.</a></p>
+                <strong><a href="https://arxiv.org/abs/2312.07274">Factorisation quantum groups</a></strong><br>
+                What is the structure on A-Mod when A is a Yangian, affine quantum group, ... ? This paper develops the axiomatics of "braided factorisation categories", "factorisation quantum groups", etc., which are analogues of the standard notions but "factorisably over the Ran space". We prove that these structures are controlled by <em>spectral R(z)-matrices</em>, and generalise previous work on q-vertex algebras, deformed chiral algebras and meromorphic tensor categories. This gives a mathematicisation of Costello-Witten-Yamazaki's work on 4d Chern-Simons theory.
+                <br><br>
 
+                <p class="gray-text"><strong>Factorisation bosonisation</strong><br>
+                    We show how the geometric representation theorists' "adding in the affine Cartan", e.g. to CoHAs, is in fact an example of Majid's bosonisation-transmutation for quantum groups, applied to <em>factorisation algebras</em>.
+                    Joint with <a href="https://math.columbia.edu/~samdehority/">S. DeHority.</a></p>
 
+                <p class="gray-text"><strong>Chiral centres</strong><br>
+                    Give an operadic definition of a vertex algebra "Drinfeld centre", so recovering in a basis-free way the doubling constructions of Yangians, CoHAs, shuffle algebras.
+                    Joint with W. Niu.</p>
 
-            <p style="color: gray;"> <b>Chiral centres</b> <br>
-                
-                Give an operadic definition of a vertex algebra "Drinfeld centre", so recovering in a basis-free way the doubling constructions of Yangians, CoHAs, shuffle algebras.  
+                <div class="research-topic">
+                    <br><span>Algebraic geometry</span><br>
+                </div>
 
-                Joint with W. Niu.
-            </p>
-            
+                <p class="gray-text"><strong>Virtual Euler classes for Artin stacks</strong><br>
+                    Develops the theory of Euler classes for singular vector bundles on Artin stacks, valued in arbitrary sheaves (e.g. Borel-Moore, vanishing cycle, Joyce sheaves). Gets new torus localisation formulas in situations necessary for computations of CoHAs.</p>
 
-                
-
-
-            <div style="text-align: center;">
-                <br><span style="font-variant: small-caps; font-size: 18px;">Algebraic geometry</span><br>
+                <strong><a href="https://arxiv.org/abs/2207.01652">Virtual localization revisited</a></strong> and <strong><a href="https://arxiv.org/abs/2407.08747">The stacky concentration theorem</a></strong><br>
+                We generalise Atiyah-Bott's localisation formula so that it is powerful enough to deal e.g. with moduli stacks: instead of manifolds, we consider ~arbitrary Artin stacks, and instead of localising along torus-equivariant classes, we localise along Chern classes of line bundles. In this setting, we show when the localised cohomology is concentrated on a closed substack, and give a generalisation of Graber-Pandharipande's formula for the virtual fundamental class in terms of the class of the closed substack.
+                Joint with <a href="https://dhyan-aranha.github.io/">D. Aranha</a>, <a href="https://www.preschema.com/">A. Khan</a>, <a href="https://sites.google.com/view/hyeonjunpark/">H. Park</a>, and <a href="https://charanyaravi.github.io/">C. Ravi</a>.
+                <br><br>
             </div>
+        </section>
 
-            <p style="color: gray;"> <b>Virtual Euler classes for Artin stacks</b>  <br>
-                Develops the theory of Euler classes for singular vector bundles on Artin stacks, valued in arbitrary sheaves (e.g. Borel-Moore, vanishing cycle, Joyce sheaves). Gets new a torus localisation formulas in situations necessary for computations of CoHAs.
-            </p>
-            
-            <a href="https://arxiv.org/abs/2207.01652"><b>Virtual localization revisited
-            </b></a> and <a href="https://arxiv.org/abs/2407.08747"><b>The stacky concentration theorem
-            </b></a> <br>
+        <section aria-labelledby="notes-heading">
+            <div class="purple-box">
+                <h2 class="section-heading" id="notes-heading">Notes</h2>
+            </div>
+            <div class="notes-box">
+                <!-- Add notes as ordinary HTML links here when their PDFs are available. -->
+            </div>
+        </section>
 
-            We generalise Atiyah-Bott's localisation formula so that it is powerful enough to deal e.g. with moduli stacks: instead of manifolds, we consider ~arbitrary Artin stacks, and instead of localising along torus-equivariant classes, we localise along chern classes of line bundles. In this setting, we show when the localised cohomology is concentrated on a closed substack, and give a generalisation of Graber-Panharipande's formula for the virtual fundamental class in terms of the class of the closed substack.
+        <section aria-labelledby="teaching-heading">
+            <div class="purple-box">
+                <h2 class="section-heading" id="teaching-heading">Organisation &amp; Teaching</h2>
+            </div>
+            <div class="green-column">
+                <em><a href="https://odin.sdu.dk/sitecore/index.php?a=searchfagbesk&internkode=mm547&lang=en">Ordinary Differential equations.</a></em> SDU course, autumn 2024.
+                <br><br>
 
-            Joint with <a href="https://dhyan-aranha.github.io/">D. Aranha</a>, <a href="https://www.preschema.com/">A. Khan</a>, H. Park, and <a href="https://charanyaravi.github.io/">C. Ravi</a>.
-            
-            <br> <br> 
-            
+                <em><a href="https://guillaumelaplante-anfossi.github.io/deformation.html">Deformation quantisation.</a></em> Seminar, SDU, winter 2024 - spring 2025.
+                <br><br>
 
+                <em>Spectral Graph Theory</em> and <em>Percolation and Phase Change Phenomena.</em> Two courses for high school students - Mattekollo, summer 2024.
+                <br><br>
 
-        </div>
+                <em>Factorisation algebras,</em> organiser. Online reading group, spring - winter 2023.
+                <br><br>
 
-
-
-
-        
-<!-- Notes -->
-<div class="box purple-box">
-    <h2 style="text-align: center;">Notes</h2>
-</div>
-<div class="box orange-box">
-
-
-    <div id="table-container">
-        <table id="myTable">
-            <thead>
-                <!-- <tr>
-                    <th>Link</th>
-                    <th>Topic</th>
-                    <th>Date</th>
-                </tr> -->
-            </thead>
-            <tbody id="tableBody">
-                <!-- Data will be populated here -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Add CSS for table column widths -->
-<style>
-#myTable {
-    width: 100%;
-    border-collapse: collapse;
-}
-#myTable th, #myTable td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left; 
-}
-#myTable th, #myTable td {
-    width: 50%;
-}
-
-</style>
-<!-- Include the SheetJS library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Load the ODS file
-        fetch('pdfs/List%20of%20pdfs.ods')
-            .then(response => response.arrayBuffer())
-            .then(data => {
-                var workbook = XLSX.read(data, { type: 'array' });
-                var sheet = workbook.Sheets[workbook.SheetNames[0]];
-                var rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                // Populate table with rowData
-                var tableBody = document.querySelector('#tableBody');
-                rows.forEach(function(row, index) {
-                    if (index > 0) { // Skip header row
-                        var tr = document.createElement('tr');
-                        var linkType = row[2] === 'Long' ? 'Long' : 'Short';
-                        var href = `pdfs/${linkType}/${row[1]}.pdf`;
-
-                        if (row[3] === 'yes') {
-                            tr.innerHTML = `<td><a href="${href}"><b>${row[1]}</b><span style="font-size: smaller;"> (${row[4]} pp.)</span></a> </td><td>${row[5]}</td>`;
-                        } else {
-                            tr.innerHTML = `<td><span style="color: gray;"><b>${row[1]}</b><span style="font-size: smaller;"> (${row[4]} pp.)</span></span></td><td>${row[5]}</td>`;
-                        }
-
-                        // Alternate row colors
-                        if (index % 2 === 0) {
-                            tr.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                        } else {
-                            tr.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
-                        }
-
-                        tableBody.appendChild(tr);
-                    }
-                });
-            })
-            .catch(error => console.error('Error loading or parsing ODS file:', error));
-    });
-</script>
-
-
-
-
-
-
-
-
-<!--*********************** -->
-<!-- SEMINARS AND TEACHING -->
-<!--*********************** -->
-
-<div class="box purple-box">
-    <h2 style="text-align: center;">Organisation & Teaching</h2>
-</div>
-<div class="box green-column">
-
-        
-       <i><a href="https://odin.sdu.dk/sitecore/index.php?a=searchfagbesk&internkode=mm547&lang=en"> 
-        Ordinary Differential equations.</a></i> SDU course, autumn 2024.
-       <br><br>
-
-    <i><a href="https://guillaumelaplante-anfossi.github.io/deformation.html">Deformation quantisation.</a></i> Seminar, SDU, winter 2024 - spring 2025.   
-       <br><br>
-
-       <i>Spectral Graph Theory</i> and <i>Percolation and Phase Change Phenomena.</i> Two courses for high school students - Mattekollo, summer 2024. <br><br>
-
-        <i>Factorisation algebras,</i> organiser. Online reading group, spring - winter 2023. <br><br>
-
-        <i>W algebras.</i> Course for PhD students at SDU, spring - winter 2023.
-
-        <br> <br>
-    </p>
-</div>
+                <em>W algebras.</em> Course for PhD students at SDU, spring - winter 2023.
+                <br><br>
+            </div>
+        </section>
     </main>
 
+    <div class="popup" role="status" aria-live="polite"></div>
+    <script>
+        const copyButton = document.querySelector('.clipboard-icon');
+        const copyStatus = document.querySelector('.popup');
+        let statusTimeout;
 
-
-</main>
-<script>
-/*function loadDynamicBackground() {
-    const currentDate = new Date();
-    const currentWeek = Math.ceil(currentDate.getDate() / 7); // Calculate the week within the current month
-    const backgroundImageNumber = (currentWeek % 6) + 1; // Calculate image number from 1 to 6
-    document.body.style.backgroundImage = `url('shimashima${backgroundImageNumber}.jpg')`;
-}
-
-window.onload = loadDynamicBackground; // Call the function when the page loads*/
-
-function copyToClipboard(text) {
-    const tempInput = document.createElement('input');
-    tempInput.value = text;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-    
-    const popup = document.createElement('div');
-    popup.textContent = 'Copied to Clipboard';
-    popup.className = 'popup';
-    document.body.appendChild(popup);
-    
-    setTimeout(() => {
-        document.body.removeChild(popup);
-    }, 300); // Remove the popup after 2 seconds
-}
-</script>
+        copyButton.addEventListener('click', async () => {
+            const email = document.getElementById('email').textContent;
+            try {
+                await navigator.clipboard.writeText(email);
+                copyStatus.textContent = 'Copied to Clipboard';
+            } catch {
+                copyStatus.textContent = 'Please select and copy the email address.';
+            }
+            clearTimeout(statusTimeout);
+            statusTimeout = setTimeout(() => {
+                copyStatus.textContent = '';
+            }, 1500);
+        });
+    </script>
 </body>
 </html>
