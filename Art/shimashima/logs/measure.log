@@ -1,0 +1,643 @@
+/Users/alyosha/PrCheng/art/shimashima/code/measure.py:185: RuntimeWarning: Mean of empty slice
+  "share_long_ones_upright_within_30deg": round(float((steep[np.array(elong) > 2] < 30).mean()), 2),
+/Users/alyosha/Library/Application Support/geodaetisk-map/venv/lib/python3.14/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/Users/alyosha/PrCheng/art/shimashima/code/measure.py:186: RuntimeWarning: Mean of empty slice
+  "share_long_ones_flat_within_30deg": round(float((steep[np.array(elong) > 2] > 60).mean()), 2)}
+{
+ "source": "shimashima6_100.jpg",
+ "tile_px": [
+  1344,
+  4248
+ ],
+ "px_per_mm_if_300dpi": 11.81,
+ "colours": {
+  "paper": {
+   "mean": [
+    232.3,
+    231.4,
+    225.8
+   ],
+   "sd": [
+    4.1,
+    3.8,
+    4.0
+   ],
+   "hex": "#E8E7E2",
+   "pixels": 37360
+  },
+  "pale_band_in_bud": {
+   "mean": [
+    177.8,
+    208.5,
+    177.1
+   ],
+   "sd": [
+    9.7,
+    6.9,
+    8.2
+   ],
+   "hex": "#B2D1B1",
+   "pixels": 14760,
+   "median": [
+    178.0,
+    210.0,
+    178.0
+   ]
+  },
+  "stem": {
+   "mean": [
+    134.5,
+    184.8,
+    171.0
+   ],
+   "sd": [
+    29.5,
+    21.6,
+    16.5
+   ],
+   "hex": "#86B9AB",
+   "pixels": 340459,
+   "spread": {
+    "dark": [
+     62.0,
+     131.8000030517578,
+     132.5
+    ],
+    "middle": [
+     141.5,
+     189.89999389648438,
+     174.6999969482422
+    ],
+    "light": [
+     172.0,
+     212.1999969482422,
+     191.0
+    ],
+    "share_of_variance_on_the_line": 0.97
+   }
+  },
+  "ground": {
+   "mean": [
+    25.0,
+    64.2,
+    110.8
+   ],
+   "sd": [
+    10.9,
+    15.8,
+    15.7
+   ],
+   "hex": "#19406F",
+   "pixels": 4343624,
+   "spread": {
+    "dark": [
+     9.399999618530273,
+     40.400001525878906,
+     87.30000305175781
+    ],
+    "middle": [
+     23.299999237060547,
+     61.70000076293945,
+     108.30000305175781
+    ],
+    "light": [
+     52.099998474121094,
+     105.80000305175781,
+     151.8000030517578
+    ],
+    "share_of_variance_on_the_line": 0.96
+   }
+  },
+  "overprint_test": {
+   "stem dark end = pale green under part-strength ground blue": {
+    "strength": 0.4,
+    "predicted": [
+     70.9,
+     122.9,
+     132.0
+    ],
+    "measured": [
+     62.0,
+     131.8,
+     132.5
+    ],
+    "worst_channel_error": 8.9
+   },
+   "stem light end = pale green under part-strength ground blue": {
+    "strength": 0.0,
+    "predicted": [
+     177.8,
+     208.5,
+     177.1
+    ],
+    "measured": [
+     172.0,
+     212.2,
+     191.0
+    ],
+    "worst_channel_error": 13.9
+   },
+   "ground's light flecks = paper under part-strength ground blue": {
+    "strength": 0.6,
+    "predicted": [
+     58.5,
+     104.7,
+     145.3
+    ],
+    "measured": [
+     52.1,
+     105.8,
+     151.8
+    ],
+    "worst_channel_error": 6.5
+   },
+   "ground's light flecks = pale green under part-strength ground blue": {
+    "strength": 0.4,
+    "predicted": [
+     70.9,
+     122.9,
+     132.0
+    ],
+    "measured": [
+     52.1,
+     105.8,
+     151.8
+    ],
+    "worst_channel_error": 19.8
+   }
+  },
+  "website_version": {
+   "what": "shimashima6_5.jpg is this scan turned 180 degrees, recoloured, then saved at JPEG quality 5",
+   "recolour_matrix_rows_R_G_B_1": [
+    [
+     1.763,
+     -0.04,
+     0.013
+    ],
+    [
+     -0.834,
+     1.058,
+     -0.014
+    ],
+    [
+     0.09,
+     0.02,
+     0.993
+    ],
+    [
+     2.858,
+     -7.218,
+     3.113
+    ]
+   ]
+  }
+ },
+ "ground": {
+  "contrast_by_size": [
+   {
+    "finer_than_px": 1.8,
+    "contrast": 3.6,
+    "across_over_down": 0.97
+   },
+   {
+    "finer_than_px": 3.5,
+    "contrast": 4.02,
+    "across_over_down": 0.96
+   },
+   {
+    "finer_than_px": 7.0,
+    "contrast": 4.19,
+    "across_over_down": 0.94
+   },
+   {
+    "finer_than_px": 14.0,
+    "contrast": 3.39,
+    "across_over_down": 0.98
+   },
+   {
+    "finer_than_px": 27.5,
+    "contrast": 2.3,
+    "across_over_down": 1.11
+   },
+   {
+    "finer_than_px": 55.0,
+    "contrast": 1.63,
+    "across_over_down": 1.26
+   },
+   {
+    "finer_than_px": 112.5,
+    "contrast": 1.24,
+    "across_over_down": 1.31
+   },
+   {
+    "coarser_than_px": 112.5,
+    "contrast": 2.59
+   }
+  ],
+  "alikeness_at_distance_px_(across, down)": {
+   "1": [
+    0.912,
+    0.903
+   ],
+   "2": [
+    0.7,
+    0.672
+   ],
+   "4": [
+    0.288,
+    0.246
+   ],
+   "8": [
+    0.004,
+    0.026
+   ],
+   "16": [
+    -0.03,
+    0.024
+   ],
+   "32": [
+    0.011,
+    0.038
+   ],
+   "64": [
+    -0.001,
+    0.027
+   ],
+   "128": [
+    -0.002,
+    0.021
+   ]
+  },
+  "light_flecks": {
+   "per_cm2": 11.2,
+   "share_of_ground": 0.0163,
+   "area_px_quartiles": [
+    8.0,
+    12.0,
+    20.0,
+    46.0
+   ],
+   "length_over_width_median": 1.56,
+   "share_long_ones_upright_within_30deg": 0.31,
+   "share_long_ones_flat_within_30deg": 0.41
+  },
+  "dark_specks": {
+   "per_cm2": 0.0,
+   "share_of_ground": 0.0,
+   "area_px_quartiles": [
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "length_over_width_median": 1.33,
+   "share_long_ones_upright_within_30deg": NaN,
+   "share_long_ones_flat_within_30deg": NaN
+  },
+  "block_96px_means_sd": 2.78,
+  "pixel_sd": 14.08
+ },
+ "stems": {
+  "mottle_contrast_by_size": [
+   {
+    "finer_than_px": 1.8,
+    "contrast": 5.2,
+    "across_over_down": 0.99
+   },
+   {
+    "finer_than_px": 3.5,
+    "contrast": 5.74,
+    "across_over_down": 1.0
+   },
+   {
+    "finer_than_px": 7.0,
+    "contrast": 5.87,
+    "across_over_down": 1.0
+   },
+   {
+    "finer_than_px": 14.0,
+    "contrast": 4.83,
+    "across_over_down": 1.09
+   },
+   {
+    "coarser_than_px": 14.0,
+    "contrast": 12.8
+   }
+  ],
+  "alikeness_at_distance_px_(across, down)": {
+   "1": [
+    0.747,
+    0.749
+   ],
+   "2": [
+    0.353,
+    0.357
+   ],
+   "3": [
+    0.152,
+    0.15
+   ],
+   "4": [
+    0.081,
+    0.069
+   ],
+   "6": [
+    -0.001,
+    0.004
+   ],
+   "8": [
+    -0.035,
+    -0.007
+   ],
+   "12": [
+    -0.016,
+    0.009
+   ]
+  },
+  "share_darker_than_midway": 0.252,
+  "pixel_sd": 23.13,
+  "edge_roughness_px_sd": 0.91,
+  "edge_roughness_runs_alike_for_px": 6.0,
+  "left_right_edge_correlation": -0.05,
+  "centre_line_wander_px_sd": 0.73,
+  "lean_px_per_1000": [
+   -16.5,
+   -15.2,
+   -12.1,
+   -11.0,
+   -10.4,
+   -9.1,
+   -8.6,
+   -6.2,
+   -5.2,
+   -4.6,
+   -3.9,
+   -3.0,
+   -1.6,
+   -0.6,
+   -0.2,
+   0.4,
+   1.4,
+   1.7,
+   1.7,
+   2.3,
+   3.7,
+   3.7,
+   4.1,
+   5.9,
+   7.2,
+   8.4,
+   11.1,
+   11.1,
+   11.7,
+   28.8
+  ],
+  "body_width_px": {
+   "min": 16.0,
+   "median": 28.0,
+   "max": 38.0
+  },
+  "width_about_its_taper_sd_px_by_window_px": {
+   "10": 1.8,
+   "30": 1.5,
+   "100": 1.16,
+   "300": 0.81
+  },
+  "patchiness_100px_segment_means_sd": 11.54,
+  "brightness_along_stem_sd_by_window_px": {
+   "1": 18.12,
+   "10": 15.57,
+   "30": 13.85,
+   "100": 12.03,
+   "300": 12.71
+  },
+  "mean_brightness_by_stem": {
+   "0": 169.7,
+   "1": 174.2,
+   "2": 153.5,
+   "3": 178.2,
+   "6": 173.0,
+   "7": 180.1,
+   "8": 153.5,
+   "9": 177.9,
+   "11": 157.2,
+   "12": 165.2,
+   "14": 168.7,
+   "15": 179.9,
+   "16": 167.9,
+   "17": 172.6,
+   "18": 163.5,
+   "19": 159.5
+  },
+  "tips": {
+   "top": {
+    "count": 11,
+    "width_share_at_px_from_end": {
+     "0": 0.21,
+     "2": 0.41,
+     "5": 0.63,
+     "10": 0.78,
+     "20": 0.89,
+     "40": 0.94,
+     "80": 1.0,
+     "150": 1.0
+    }
+   },
+   "bottom": {
+    "count": 8,
+    "width_share_at_px_from_end": {
+     "0": 0.13,
+     "2": 0.42,
+     "5": 0.63,
+     "10": 0.71,
+     "20": 0.9,
+     "40": 1.02,
+     "80": 1.04,
+     "150": 1.05
+    }
+   }
+  },
+  "edge_step_20_to_80_px": 2.44
+ },
+ "buds": {
+  "count": 19,
+  "paper_pixel_sd": 3.82,
+  "pale_band_pixel_sd": 7.59,
+  "paper_contrast_by_size": [
+   {
+    "finer_than_px": 1.8,
+    "contrast": 1.17,
+    "across_over_down": 0.85
+   },
+   {
+    "finer_than_px": 3.5,
+    "contrast": 1.2,
+    "across_over_down": 0.79
+   },
+   {
+    "finer_than_px": 7.0,
+    "contrast": 1.03,
+    "across_over_down": 0.76
+   },
+   {
+    "coarser_than_px": 7.0,
+    "contrast": 2.1
+   }
+  ],
+  "brightness_across_edge_px_from_oval": {
+   "-10": 228.3,
+   "-9": 227.8,
+   "-8": 226.9,
+   "-7": 226.1,
+   "-6": 225.1,
+   "-5": 222.8,
+   "-4": 220.4,
+   "-3": 216.3,
+   "-2": 203.1,
+   "-1": 179.1,
+   "0": 145.5,
+   "1": 115.2,
+   "2": 88.5,
+   "3": 72.5,
+   "4": 65.0,
+   "5": 62.3,
+   "6": 62.7,
+   "7": 62.1,
+   "8": 60.7,
+   "9": 61.3,
+   "10": 61.4,
+   "11": 63.1,
+   "12": 63.5
+  },
+  "edge_step_20_to_80_px": 3.38,
+  "length": {
+   "min": 86.4,
+   "median": 112.4,
+   "max": 134.2
+  },
+  "width": {
+   "min": 61.7,
+   "median": 70.2,
+   "max": 78.3
+  },
+  "tilt": {
+   "min": -36.7,
+   "median": -15.6,
+   "max": 33.3
+  },
+  "offset": {
+   "min": -24.5,
+   "median": -10.5,
+   "max": 38.6
+  }
+ }
+}
+{
+ "ground-tile.png": {
+  "size": [
+   1110,
+   976
+  ],
+  "made_from": "10 clean strips of ground 1024 px tall, each levelled to the mean ground colour, cross-faded over 24 px; wraps both ways",
+  "mean": [
+   24.899999618530273,
+   64.0999984741211,
+   110.69999694824219
+  ],
+  "pixel_sd_lum": 13.83
+ },
+ "ground-patch-largest.png": {
+  "size": [
+   230,
+   1024
+  ],
+  "at_tile_xy": [
+   1108,
+   576
+  ],
+  "made_from": "untouched scan"
+ },
+ "stem-strips-straightened.png": {
+  "what": "the eight longest clean runs of stem, straightened, 49 px wide with ground either side",
+  "stems": [
+   8,
+   0,
+   2,
+   12,
+   0,
+   12,
+   16,
+   11
+  ]
+ },
+ "stem-fill-thin.png": {
+  "size": [
+   252,
+   252
+  ],
+  "mean": [
+   150.0,
+   194.6999969482422,
+   176.6999969482422
+  ],
+  "pixel_sd_lum": 14.23
+ },
+ "stem-fill-middling.png": {
+  "size": [
+   252,
+   252
+  ],
+  "mean": [
+   133.39999389648438,
+   184.3000030517578,
+   170.8000030517578
+  ],
+  "pixel_sd_lum": 17.78
+ },
+ "stem-fill-thick.png": {
+  "size": [
+   252,
+   252
+  ],
+  "mean": [
+   116.5999984741211,
+   172.89999389648438,
+   164.1999969482422
+  ],
+  "pixel_sd_lum": 20.48
+ },
+ "stem-fill-*.png": {
+  "size": [
+   252,
+   252
+  ],
+  "made_from": "each is 784 squares of 12 px drawn at random from one third of the 777 squares cut from the middles of straight stems (sorted by brightness), cross-faded over 3 px; wraps both ways"
+ },
+ "ribbons/*.png": {
+  "what": "real stretches of stem, 64 px wide, with a clear background: the body runs, and the first or last 180 px of stems that end free. Straightened only for lean, so every bend, bulge and thin patch of ink is as printed",
+  "body": 30,
+  "body_px_in_all": 16948,
+  "head": 10,
+  "foot": 5
+ },
+ "paper-tile.png": {
+  "size": [
+   150,
+   152
+  ],
+  "made_from": "5 small rectangles of bare paper from inside the buds; too small a sample to show more than the grain",
+  "mean": [
+   232.39999389648438,
+   231.39999389648438,
+   225.89999389648438
+  ],
+  "pixel_sd_lum": 3.54
+ },
+ "buds/bud-NN.png": {
+  "count": 19,
+  "what": "every bud cut out at scan size with a clear background, numbered down the page, with the stem's pale band through it"
+ },
+ "plate-*.png": "the tile split into three masks: stems (pale green and its mottle), bare paper (the buds), ground (dark blue)",
+ "tile.jpg": "the one repeating tile, untouched: scan columns 357 to 1701, turned the way up the website shows it"
+}
