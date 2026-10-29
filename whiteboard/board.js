@@ -336,30 +336,6 @@
     cameraChanged(); updateResetView(); notice(`${summons.emoji} ${summons.name} brought you to their view.`);
   }
   $('summon').hidden = local;
-  $('jump').hidden = local;
-  function hideJumpMenu() { $('jump-menu').hidden = true; $('jump').setAttribute('aria-expanded', 'false'); }
-  function jumpTo(id) {
-    const cursor = remoteCursors.get(id); hideJumpMenu();
-    if (!cursor) { notice('They have left the board.'); return; }
-    zoomMotion = null; view.x = cursor.x - screenW / 2 / view.zoom; view.y = cursor.y - screenH / 2 / view.zoom;
-    cameraChanged(); updateResetView();
-  }
-  $('jump').onclick = () => {
-    $('jump').blur();
-    const menu = $('jump-menu'), people = [...remoteCursors];
-    if (!menu.hidden) { hideJumpMenu(); return; }
-    if (!people.length) { notice('No one else is drawing on this board right now.'); return; }
-    if (people.length === 1) { jumpTo(people[0][0]); return; }
-    menu.replaceChildren(...people.map(([id, cursor]) => {
-      const item = document.createElement('button'), dot = document.createElement('span');
-      item.type = 'button'; item.setAttribute('role', 'menuitem'); dot.className = 'jump-dot'; item.style.setProperty('--cursor-color', cursor.color);
-      item.append(dot, cursor.name); item.onclick = () => jumpTo(id); return item;
-    }));
-    const r = $('jump').getBoundingClientRect(), toolbar = $('toolbar').getBoundingClientRect();
-    menu.style.left = toolbar.right + 8 + 'px'; menu.style.top = Math.min(r.top, innerHeight - 8 - people.length * 32) + 'px';
-    menu.hidden = false; $('jump').setAttribute('aria-expanded', 'true');
-  };
-  addEventListener('pointerdown', e => { if (!$('jump-menu').hidden && !e.target.closest('#jump-menu, #jump')) hideJumpMenu(); }, { capture: true });
   $('summon').onclick = () => {
     $('summon').blur();
     if (!summonRef || !cursorProfile || !connected || !ready) { notice('Not connected yet.'); return; }
@@ -1212,7 +1188,6 @@
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); finish(); commitText(); persistNow(); return; }
     if (e.key === 'Escape' && !$('text-palette').hidden) { e.preventDefault(); hideTextPalette(); return; }
-    if (e.key === 'Escape' && !$('jump-menu').hidden) { e.preventDefault(); hideJumpMenu(); return; }
     if (e.key === 'Escape') { e.preventDefault(); finish(true); commitText(); selected.clear(); hideOptions(); tool = 'select'; updateToolUI(); renderSoon(); return; }
     if (e.target.closest('#text-format, #text-palette')) return;
     if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) {
