@@ -1,10 +1,13 @@
 <!doctype html>
-<html lang="en" data-version="20261021-1">
+<html lang="en" data-version="20261029-1">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only light">
+  <meta name="darkreader-lock">
+  <script>try { if (localStorage.getItem('whiteboard-theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch {}</script>
   <title> </title>
-  <link rel="stylesheet" href="board.css?v=dc5ddaa16715de00">
+  <link rel="stylesheet" href="board.css?v=b0fdd62f02d9413d">
 </head>
 <body>
   <div id="paper">
@@ -60,8 +63,10 @@
     <button id="undo" aria-label="Undo" title="Undo · ⌘Z or Ctrl+Z" disabled><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M8 6 4 10l4 4 M4 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
     <button id="redo" aria-label="Redo" title="Redo · ⇧⌘Z or Ctrl+Y" disabled><svg viewBox="0 0 22 24" aria-hidden="true"><path d="m14 6 4 4-4 4 M18 10H9a5 5 0 0 0 0 10h3"/></svg></button>
     <span class="tool-divider" aria-hidden="true"></span>
+    <button id="summon" aria-label="Bring everyone to my view" title="Bring everyone to my view"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M4 9V6h3 M15 6h3v3 M18 15v3h-3 M7 18H4v-3"/><circle cx="11" cy="12" r="2" fill="currentColor" stroke="none"/></svg></button>
     <button id="export-pdf" aria-label="Export PDF" title="Export PDF · choose a folder"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M5 3h8l4 4v5 M13 3v5h4 M4 17h14v4H4 M11 11v6 M8 14l3 3 3-3"/></svg></button>
     <button id="new-board" aria-label="New board" title="New board · keep this board and start another"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M11 5v14M4 12h14" stroke-width="2"/></svg></button>
+    <button id="theme" aria-label="Dark mode" title="Dark mode"><svg viewBox="0 0 22 24" aria-hidden="true"><circle cx="11" cy="12" r="6.5"/><path d="M11 5.5a6.5 6.5 0 0 1 0 13Z" fill="currentColor" stroke="none"/></svg></button>
     <span id="status" class="sr-only" role="status">Connecting</span>
   </div>
   <div id="tool-tooltip" role="tooltip" hidden></div>
@@ -76,7 +81,7 @@
   <script>
     (async () => {
       const version = document.documentElement.dataset.version;
-      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"dc5ddaa16715de00","ink.js":"720d1b271c39c2b5","text.js":"8382c4ed94aaff40","files.js":"8e8b933e645c61e1","expiry.js":"703c3bc4b133932c","board.js":"1242c535e7676250"};
+      let assets = /* ASSET_FINGERPRINTS */ {"board.css":"b0fdd62f02d9413d","ink.js":"720d1b271c39c2b5","text.js":"8382c4ed94aaff40","files.js":"8e8b933e645c61e1","expiry.js":"703c3bc4b133932c","board.js":"fb82ed591fc3af0c"};
       const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 1500);
       try {
         const response = await fetch('release.json?check=' + Date.now(), { cache: 'no-store', signal: controller.signal });

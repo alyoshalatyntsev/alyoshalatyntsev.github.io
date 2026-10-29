@@ -52,7 +52,7 @@
   let zoomMotion = null, lastLiveBounds = null, eraserVisual = null, eraserTimer = 0, lastTextDoubleClick = null;
   const pendingWrites = new Set();
   const remoteCursors = new Map(), cursorElements = new Map();
-  let cursorCollection, cursorRef, cursorId, cursorProfile, cursorPoint = null, cursorTimer = 0, cursorRegistration = null, cursorArmed = false, lastCursorSend = 0, lastCursorScreen = null;
+  let cursorCollection, cursorRef, summonRef = null, cursorId, cursorProfile, cursorPoint = null, cursorTimer = 0, cursorRegistration = null, cursorArmed = false, lastCursorSend = 0, lastCursorScreen = null;
   try {
     const saved = JSON.parse(localStorage.getItem(historyKey));
     if (saved && Date.now() - saved.updated < TTL && Array.isArray(saved.undo) && Array.isArray(saved.redo)) { historyStack = saved.undo.slice(-HISTORY_LIMIT); redoStack = saved.redo.slice(-HISTORY_LIMIT); historyInitialized = true; }
@@ -315,7 +315,34 @@
     cursorCollection.on('child_added', receiveCursor, error => console.warn('Cursor updates:', error));
     cursorCollection.on('child_changed', receiveCursor, error => console.warn('Cursor updates:', error));
     cursorCollection.on('child_removed', snapshot => { removeCursor(snapshot.key); renderSoon(); }, error => console.warn('Cursor updates:', error));
+    startSummons(db);
   }
+  function startSummons(db) {
+    let offset = 0, first = true;
+    db.ref('.info/serverTimeOffset').on('value', snapshot => { offset = snapshot.val() || 0; });
+    summonRef = db.ref(`whiteboards/${room}/summon`);
+    summonRef.on('value', snapshot => {
+      const summons = snapshot.val(), initial = first; first = false;
+      // Follow only summonses made while this tab is open, not one left over from an earlier visit.
+      if (initial || !summons || summons.from === cursorId || Date.now() + offset - summons.at > 15000) return;
+      followSummons(summons);
+    }, error => console.warn('Summons:', error));
+  }
+  function followSummons(summons) {
+    // Let a stroke or drag in progress finish, so the jump does not stretch it across the board.
+    if (pointer !== null) { setTimeout(() => followSummons(summons), 200); return; }
+    const { x0, y0, x1, y1 } = summons, zoom = clampZoom(Math.min(screenW / Math.max(1, x1 - x0), screenH / Math.max(1, y1 - y0)));
+    zoomMotion = null; Object.assign(view, { zoom, x: (x0 + x1) / 2 - screenW / 2 / zoom, y: (y0 + y1) / 2 - screenH / 2 / zoom });
+    cameraChanged(); updateResetView(); notice(`${summons.emoji} ${summons.name} brought you to their view.`);
+  }
+  // Shown once the summon rule in database.rules.json is deployed.
+  $('summon').hidden = true;
+  $('summon').onclick = () => {
+    $('summon').blur();
+    if (!summonRef || !cursorProfile || !connected || !ready) { notice('Not connected yet.'); return; }
+    summonRef.set({ from: cursorId, name: cursorProfile.name, emoji: cursorProfile.emoji, x0: view.x, y0: view.y, x1: view.x + screenW / view.zoom, y1: view.y + screenH / view.zoom, at: firebase.database.ServerValue.TIMESTAMP })
+      .then(() => notice('Everyone on this board now sees your view.'), error => notice('Could not share your view: ' + error.message));
+  };
   function publishCursor(event) {
     if (local || !cursorRef || !event.isTrusted) return;
     const point = world(event), screenPoint = [event.clientX, event.clientY];
@@ -1133,6 +1160,17 @@
     } catch (error) { if (error.name !== 'AbortError') notice(error.message); }
     finally { exporting = false; status(); }
   };
+  function updateThemeUI() {
+    const label = document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode';
+    $('theme').setAttribute('aria-label', label); $('theme').title = label;
+  }
+  $('theme').onclick = () => {
+    const dark = document.documentElement.dataset.theme !== 'dark';
+    if (dark) document.documentElement.dataset.theme = 'dark'; else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem('whiteboard-theme', dark ? 'dark' : 'light'); } catch {}
+    updateThemeUI(); $('theme').blur();
+  };
+  updateThemeUI();
   $('new-board').onclick = async () => {
     if (!ready || $('new-board').disabled) return;
     const button = $('new-board'); button.disabled = true;
