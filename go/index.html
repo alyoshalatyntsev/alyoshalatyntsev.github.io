@@ -506,19 +506,8 @@ function stone(x, y, c, parent, opacity) {
   el('circle', { cx: x, cy: y, r: 0.47, fill: c === 'b' ? '#111' : '#fafafa', stroke: '#000', 'stroke-width': 0.03 }, g);
 }
 
-// The tab icon gets a green dot, and the title says so, while it is your move in the real game.
-let tabTurn = null;
-function updateTab(turn) {
-  if (turn === tabTurn) return; tabTurn = turn;
-  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
-  const disc = (cx, cy, r, fill, line) => { x.beginPath(); x.arc(cx, cy, r, 0, 2 * Math.PI); x.fillStyle = fill; x.fill(); if (line) { x.lineWidth = line[1]; x.strokeStyle = line[0]; x.stroke(); } };
-  x.fillStyle = '#dcb35c'; if (x.roundRect) { x.beginPath(); x.roundRect(0, 0, 64, 64, 12); x.fill(); } else x.fillRect(0, 0, 64, 64);
-  disc(24, 26, 16, '#111'); disc(40, 40, 16, '#fafafa', ['#111', 2.5]);
-  if (turn) disc(50, 14, 13, '#2e7d32', ['#fff', 4]);
-  let link = document.querySelector('link[rel="icon"]');
-  if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.append(link); }
-  link.href = c.toDataURL('image/png'); document.title = turn ? '● Your turn · Go' : 'Go';
-}
+// The title says so while it is your move in the real game.
+function updateTab(turn) { document.title = turn ? 'Your turn · Go' : 'Go'; }
 function render() {
   if (!G) return;
   const n = G.size, V = n + 1;
