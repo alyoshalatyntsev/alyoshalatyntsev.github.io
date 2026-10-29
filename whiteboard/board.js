@@ -335,8 +335,7 @@
     zoomMotion = null; Object.assign(view, { zoom, x: (x0 + x1) / 2 - screenW / 2 / zoom, y: (y0 + y1) / 2 - screenH / 2 / zoom });
     cameraChanged(); updateResetView(); notice(`${summons.emoji} ${summons.name} brought you to their view.`);
   }
-  // Shown once the summon rule in database.rules.json is deployed.
-  $('summon').hidden = true;
+  $('summon').hidden = local;
   $('jump').hidden = local;
   function hideJumpMenu() { $('jump-menu').hidden = true; $('jump').setAttribute('aria-expanded', 'false'); }
   function jumpTo(id) {

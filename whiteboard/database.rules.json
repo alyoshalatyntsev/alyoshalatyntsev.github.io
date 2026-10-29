@@ -177,6 +177,37 @@
             }
           }
         },
+        "summon": {
+          ".write": "$room.matches(/^[a-f0-9]{32}$/) && root.child('whiteboards').child($room).child('lastActive').isNumber() && root.child('whiteboards').child($room).child('lastActive').val() > now - 31536000000",
+          ".validate": "newData.hasChildren(['from', 'name', 'emoji', 'x0', 'y0', 'x1', 'y1', 'at']) && newData.child('from').isString() && newData.child('from').val().matches(/^[a-f0-9]{32}$/) && newData.child('name').isString() && newData.child('name').val().length <= 32 && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8 && newData.child('x0').isNumber() && newData.child('x0').val() >= -1e15 && newData.child('x0').val() <= 1e15 && newData.child('y0').isNumber() && newData.child('y0').val() >= -1e15 && newData.child('y0').val() <= 1e15 && newData.child('x1').isNumber() && newData.child('x1').val() >= -1e15 && newData.child('x1').val() <= 1e15 && newData.child('y1').isNumber() && newData.child('y1').val() >= -1e15 && newData.child('y1').val() <= 1e15 && newData.child('at').val() === now",
+          "$other": {
+            ".validate": false
+          },
+          "from": {
+            ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{32}$/)"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 32"
+          },
+          "emoji": {
+            ".validate": "newData.isString() && newData.val().length <= 8"
+          },
+          "x0": {
+            ".validate": "newData.isNumber() && newData.val() >= -1e15 && newData.val() <= 1e15"
+          },
+          "y0": {
+            ".validate": "newData.isNumber() && newData.val() >= -1e15 && newData.val() <= 1e15"
+          },
+          "x1": {
+            ".validate": "newData.isNumber() && newData.val() >= -1e15 && newData.val() <= 1e15"
+          },
+          "y1": {
+            ".validate": "newData.isNumber() && newData.val() >= -1e15 && newData.val() <= 1e15"
+          },
+          "at": {
+            ".validate": "newData.isNumber() && newData.val() === now"
+          }
+        },
         "$other": {
           ".validate": false
         },
