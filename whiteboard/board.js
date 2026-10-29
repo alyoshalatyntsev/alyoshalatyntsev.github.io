@@ -680,9 +680,6 @@
     }
     dirty = true; persistNow(); renderSoon();
   }
-  $('editor').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); e.stopImmediatePropagation(); commitText(); }
-  }, { capture: true });
   Text.bindLists($('editor'));
   $('editor').addEventListener('input', () => { if (editing) { editing.obj = { ...editing.obj, text: $('editor').value }; layoutEditor(); } });
   $('editor').addEventListener('scroll', () => { if ($('editor').scrollLeft) $('editor').scrollLeft = 0; });
@@ -733,7 +730,7 @@
     if (['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) document.activeElement.blur();
     zoomMotion = null;
     const p = world(e); pointer = e.pointerId; canvas.setPointerCapture(pointer);
-    const lasso = tool === 'lasso' || e.button === 1 && ['pen', 'highlight'].includes(tool);
+    const lasso = tool === 'lasso';
     if (space || tool === 'hand' || e.button === 1 && !lasso) { gesture = { kind: 'pan', start: [e.clientX, e.clientY], view: { ...view } }; setHint(); return; }
     if (expiry?.expired()) { pointer = null; expiry.clear().catch(fail); return; }
     if (!ready) { pointer = null; $('message').textContent = 'Connecting…'; $('message').hidden = false; return; }
@@ -823,9 +820,10 @@
   canvas.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) finish(!active); touches.delete(e.pointerId); if (!touches.size) pinch = null; });
   canvas.addEventListener('auxclick', e => e.preventDefault()); canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
   canvas.addEventListener('dblclick', e => {
-    if (tool !== 'select' || editing) return;
-    const p = world(e), id = hitAt(p), obj = objects.get(id);
-    if (obj?.kind === 'text') { finish(); beginText(id, obj, [e.clientX, e.clientY]); lastTextDoubleClick = { x: e.clientX, y: e.clientY, time: performance.now() }; }
+    if (!['select', 'text'].includes(tool) || editing) return;
+    // Ink drawn over a text box should not block editing it.
+    const p = world(e), [id, obj] = [...entries()].reverse().find(([id, obj]) => obj.kind === 'text' && inside(p, boundsFor(id, obj), 5 / view.zoom)) || [];
+    if (obj) { finish(); beginText(id, obj, [e.clientX, e.clientY]); lastTextDoubleClick = { x: e.clientX, y: e.clientY, time: performance.now() }; }
   });
   function zoomNow(factor, at) {
     zoomMotion = null;
