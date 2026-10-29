@@ -1025,10 +1025,13 @@
   const tooltip = $('tool-tooltip');
   let tooltipTimer = 0;
   function hideToolTip() { clearTimeout(tooltipTimer); tooltipTimer = 0; tooltip.hidden = true; }
+  // 1–9 then 0 press the visible toolbar buttons from the top down
+  const toolbarButtons = () => [...document.querySelectorAll('#toolbar button')].filter(button => !button.hidden);
   function showToolTip(button) {
     const parts = button.dataset.tooltip.split(' · '), shortcut = /^[A-Z]$/.test(parts[1] || '') ? parts.splice(1, 1)[0] : null;
+    const digit = '1234567890'[toolbarButtons().indexOf(button)];
     tooltip.replaceChildren(document.createTextNode(parts.shift()));
-    if (shortcut) { const key = document.createElement('strong'); key.textContent = shortcut; tooltip.append(' · ', key); }
+    [shortcut, digit].filter(Boolean).forEach((text, i) => { const key = document.createElement('strong'); key.textContent = text; tooltip.append(i ? ' or ' : ' · ', key); });
     if (parts.length) tooltip.append(' · ' + parts.join(' · '));
     tooltip.hidden = false;
     const bar = $('toolbar').getBoundingClientRect(), rect = button.getBoundingClientRect();
@@ -1212,7 +1215,9 @@
     else if (e.key === 'Escape') { finish(true); commitText(); selected.clear(); hideOptions(); renderSoon(); }
     else if (!cmd && !e.altKey) {
       const next = { g: 'hand', p: 'pen', h: 'highlight', t: 'text', e: 'erase', v: 'select', l: 'lasso' }[key];
+      const button = toolbarButtons()['1234567890'.indexOf(e.key)];
       if (next) { e.preventDefault(); if (e.shiftKey && settings[next]) openOptions(next, true); else { hideOptions(); selectTool(next); } }
+      else if (button) { e.preventDefault(); if (button.dataset.tool) { hideOptions(); selectTool(button.dataset.tool); } else if (!button.disabled) button.click(); }
     }
   });
   addEventListener('keyup', e => { if (e.key === ' ') { space = false; setHint(); } });
