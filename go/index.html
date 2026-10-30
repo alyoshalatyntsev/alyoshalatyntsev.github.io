@@ -69,7 +69,13 @@
   #dialog .row { display: flex; gap: 10px; flex-wrap: wrap; }
   #dialog button { background: #eee; }
   #dialog button.primary { background: #2e7d32; color: #fff; }
-  #dialog .row.many button { flex: 1 0 21%; padding: 10px 4px; font-size: 16px; }
+  #dialog .row.many button { flex: 1 0 15%; padding: 8px 2px; font-size: 16px; }
+  #dpic { font-size: 46px; line-height: 1.1; margin: -6px 0 6px; }
+  #dscale { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; color: #777; margin: -6px 2px 8px; }
+  #dscale i { flex: 1; height: 2px; background: linear-gradient(90deg, #ddd, #777); position: relative; }
+  #dscale i::after { content: ''; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left: 7px solid #777; border-right: 0; }
+  #dialog button .pic { display: block; font-size: 26px; line-height: 1.2; }
+  #dialog .row button.cancel { flex: 1 0 100%; margin-top: 6px; padding: 8px; background: none; box-shadow: none; color: #777; font-weight: 400; }
 </style>
 </head>
 <body>
@@ -96,7 +102,7 @@
     <div id="more">See more older games</div>
   </div>
 </div>
-<div id="dialog"><div class="box"><p id="dmsg"></p><div class="row" id="dbtns"></div></div></div>
+<div id="dialog"><div class="box"><div id="dpic"></div><p id="dmsg"></p><div id="dscale"></div><div class="row" id="dbtns"></div></div></div>
 
 <script>
 const CONFIG = {
@@ -442,17 +448,17 @@ function grunt() {
 // since the database rules only allow size, created and moves inside a game:
 // { a: -1, c: its colour, g: its game, bot: its rank, on: playing (or paused), run: the device that runs it, t }.
 // It runs in the browser of the device that added or last resumed it, while that device has its game open.
-const RANKS = ['20k', '15k', '10k', '8k', '6k', '4k', '2k', '1d', '3d', '5d'];
+// the strengths on offer, each with a picture of how good it is (these pictures appear nowhere else on the page)
+const RANKS = [['20k', '🍼'], ['15k', '🧸'], ['10k', '🎒'], ['8k', '📚'], ['6k', '🎓'], ['4k', '🥋'], ['2k', '🥉'], ['1d', '🥈'], ['3d', '🥇'], ['5d', '🏆']];
 const rob = { w: null, ready: null, state: '', pct: 0, err: '', busy: null, ver: 0, n: 0, asks: {} };
 function robots(g) { return D ? Object.entries(D.presence).filter(([, v]) => v.bot && v.g === g).map(([k, v]) => ({ ...v, k })) : []; }
 function pauseRobots(g, c) { for (const r of robots(g)) if (r.c === c && r.on) R.child(`presence/${r.k}/on`).set(false); }
 function addRobot(c) {
   if (!live) return;
-  const last = ls.get('goRobotRank') || '6k';
-  dialog(`Robot for ${NAME[c]}: how strong?`, [...RANKS.map(r => [r, () => {
-    ls.set('goRobotRank', r); pauseRobots(viewing, c); rob.err = '';
+  dialog(`How smart should ${NAME[c]}’s robot be?`, [...RANKS.map(([r, pic]) => [r, () => {
+    pauseRobots(viewing, c); rob.err = '';
     R.child('presence/bot-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).set({ a: -1, c, g: viewing, n: '', bot: r, on: true, run: me, t: TS });
-  }, r === last]), ['Cancel']]);
+  }, r === '10k', { pic }]), ['Cancel', null, false, { cls: 'cancel' }]], { pic: '🤖🧠', scale: ['less smart', 'smarter'] });   // 10k, a fairly easy one, is the suggestion
 }
 // tap a robot to pause it; tap a paused one to have it play again, from this device
 function toggleRobot(k) {
@@ -919,11 +925,16 @@ function flash(msg) {
   const sub = document.getElementById('sub'); sub.textContent = msg; sub.style.color = '#c62828'; flash.on = true;
   clearTimeout(flash.t); flash.t = setTimeout(() => { sub.style.color = ''; flash.on = false; render(); }, 2500);
 }
-function dialog(msg, buttons) {
+// extra: { pic: big emoji above the question, scale: [left, right] labels for a row of buttons that goes from one to the other }
+function dialog(msg, buttons, extra = {}) {
   document.getElementById('dmsg').textContent = msg;
+  const pic = document.getElementById('dpic'), scale = document.getElementById('dscale');
+  pic.textContent = extra.pic || ''; pic.style.display = extra.pic ? '' : 'none';
+  scale.innerHTML = extra.scale ? `<span>${esc(extra.scale[0])}</span><i></i><span>${esc(extra.scale[1])}</span>` : ''; scale.style.display = extra.scale ? '' : 'none';
   const row = document.getElementById('dbtns'); row.innerHTML = ''; row.classList.toggle('many', buttons.length > 5);
-  for (const [text, fn, primary] of buttons) {
-    const b = document.createElement('button'); b.textContent = text; if (primary) b.className = 'primary';
+  for (const [text, fn, primary, opt = {}] of buttons) {
+    const b = document.createElement('button'); b.textContent = text; b.className = (primary ? 'primary ' : '') + (opt.cls || '');
+    if (opt.pic) { const e = document.createElement('span'); e.className = 'pic'; e.textContent = opt.pic; b.prepend(e); }
     b.onclick = () => { document.getElementById('dialog').style.display = 'none'; fn && fn(); }; row.appendChild(b);
   }
   document.getElementById('dialog').style.display = 'flex';
