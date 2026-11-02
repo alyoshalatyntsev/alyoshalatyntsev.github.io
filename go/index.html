@@ -46,6 +46,7 @@
   #board { width: 100%; height: 100%; }
   #board * { pointer-events: none; }   /* the board is redrawn as the analysis runs: clicks must land on the svg itself, not on a line that is about to vanish */
   #estimate { text-align: center; font-size: 14px; color: #1565c0; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 4px; }
+  #counted { text-align: center; font-size: 14px; color: #3b2a14; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; }
   #buttons { display: flex; gap: 8px; margin-top: 8px; }
   button { flex: 1; font-size: 18px; padding: 14px 4px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; font-family: inherit; }
   button:active { transform: translateY(1px); }
@@ -96,6 +97,7 @@
   <div id="watchers"></div>
   <div id="boardwrap"><svg id="board"></svg></div>
   <div id="estimate"></div>
+  <div id="counted"></div>
   <div id="buttons">
     <button id="pass">Pass</button>
     <button id="undo">Undo</button>
@@ -178,6 +180,22 @@ function replay(g) {
     prev = board; board = r.board; caps[m.c] += r.captured;
   }
   return { board, caps, prev };
+}
+// the score as the board stands (area, no komi): stones, plus empty areas only one colour touches, once both colours are on the board
+function countNow(n, board) {
+  const pts = { b: 0, w: 0 }, seen = new Uint8Array(n * n);
+  for (const v of board) if (v) pts[v]++;
+  if (!pts.b || !pts.w) return pts;
+  for (let p = 0; p < n * n; p++) {
+    if (board[p] || seen[p]) continue;
+    const area = [p], by = new Set(); seen[p] = 1;
+    for (let i = 0; i < area.length; i++) for (const q of neighbours(n, area[i])) {
+      if (board[q]) by.add(board[q]);
+      else if (!seen[q]) { seen[q] = 1; area.push(q); }
+    }
+    if (by.size === 1) pts[[...by][0]] += area.length;
+  }
+  return pts;
 }
 
 // ---------- territory estimate: tree search over quick playouts, in a worker ----------
@@ -852,6 +870,9 @@ function render() {
   if (hasOwn) { let b = 0, w = 0; for (const v of own) { b += (1 + v) / 2; w += (1 - v) / 2; }
     est = `Black ≈ ${Math.round(b)}, White ≈ ${Math.round(w)} (no komi) · ${ownN} simulations`; }
   oneLine(document.getElementById('estimate'), est);
+  const now = cloud ? countNow(n, P.board) : null, ce = document.getElementById('counted');
+  ce.style.display = cloud ? '' : 'none';
+  oneLine(ce, now ? `Counted now: Black ${now.b}, White ${now.w}` : '');
 
   document.getElementById('pass').disabled = cloud || !live || !myColour;
   document.getElementById('undo').disabled = cloud ? at <= fork : !live || !toArr(G.moves).length;
@@ -863,8 +884,8 @@ function render() {
 }
 // keep a line of text on one line: shrink it until it fits
 function oneLine(e, text) {
-  if (e.textContent === text && e.clientWidth === oneLine.w) return;
-  e.textContent = text; e.style.fontSize = ''; oneLine.w = e.clientWidth;
+  if (e.textContent === text && e.clientWidth === e.lineW) return;
+  e.textContent = text; e.style.fontSize = ''; e.lineW = e.clientWidth;
   for (let f = 13.5; f >= 8 && e.scrollWidth > e.clientWidth; f -= 0.5) e.style.fontSize = f + 'px';
 }
 // fill a fixed-height box, shrinking the text until it all shows
@@ -874,7 +895,8 @@ function fit(e, html) {
   for (let f = 13.5; f >= 7 && (e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1); f -= 0.5) e.style.fontSize = f + 'px';
 }
 addEventListener('resize', () => {
-  const e = document.getElementById('estimate'); oneLine(e, e.textContent); drawTimeline();
+  for (const id of ['estimate', 'counted']) { const e = document.getElementById(id); oneLine(e, e.textContent); }
+  drawTimeline();
   for (const id of ['chipsb', 'chipsw', 'watchers']) { const b = document.getElementById(id); fit(b, b.html || ''); }
 });
 function chip(p) {
