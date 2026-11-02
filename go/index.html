@@ -58,8 +58,8 @@
   #newtile svg { width: 64px; height: 64px; opacity: .45; background: #dcb35c; border-radius: 4px; }
   #newtile .plus { font-size: 40px; font-weight: 300; line-height: 1; color: #555; }
   #newtile .nt { font-size: 20px; font-weight: 600; color: #444; }
-  .thumb { opacity: .5; cursor: pointer; background: rgba(255,255,255,.5); border-radius: 8px; padding: 5px; }
-  .thumb.live { opacity: 1; background: #fff; }
+  .thumb { opacity: .5; cursor: pointer; border-radius: 8px; padding: 5px; }
+  .thumb.live { opacity: 1; }
   .thumb svg { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 4px; }
   #more { display: none; margin-top: 14px; font-size: 15px; color: #666; font-weight: 600; cursor: pointer; }   /* like the Other games heading */
   .tl { font-size: 12px; color: #444; margin-top: 3px; line-height: 1.3; }
@@ -412,7 +412,12 @@ function everyone() { return Object.entries(D.presence).filter(([, v]) => !v.bot
 function others() { return everyone().filter(p => p.k !== tab); }
 function label(p) { const A = ANIMALS[p.a] || ANIMALS[0]; return A[0] + ' ' + esc(p.n || A[1]); }
 function who(k) { const p = D.presence[k]; return p ? label(p) : 'Someone'; }
-function sortedGames() { return Object.keys(D.games).sort((a, b) => (D.games[b].created || 0) - (D.games[a].created || 0)); }
+// when a game was last played: new moves carry a time t; moves made before that have none, so those games count from when they were created
+function lastPlayed(g) { const m = toArr(g.moves); for (let i = m.length - 1; i >= 0; i--) if (m[i].t) return m[i].t; return g.created || 0; }
+function sortedGames() { return Object.keys(D.games).sort((a, b) => lastPlayed(D.games[b]) - lastPlayed(D.games[a])); }
+// each game keeps one pale colour for its tile, picked from its id
+const PASTELS = ['#ffe4ea', '#ffe2e3', '#ffe5e2', '#ffe3d9', '#ffe7dc', '#ffe6d2', '#fde9d7', '#ffe9cd', '#f7ecd5', '#f6edcc', '#f0eed6', '#ebf1d0', '#e8f1da', '#e1f4d7', '#e0f3e0', '#d7f6e0', '#daf4e7', '#cff7eb', '#d6f4ef', '#ccf7f6', '#d5f4f7', '#cdf5ff', '#d7f2fd', '#d1f2ff', '#dcf0ff', '#daefff', '#e2edff', '#e4ebff', '#eaeaff', '#eee8ff', '#f2e8ff', '#f8e5ff', '#f8e6f9', '#ffe2f9', '#fee5f2', '#ffe1ee'];
+function gameColour(id) { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) | 0; return PASTELS[Math.abs(h) % PASTELS.length]; }
 
 // ---------- poke: tap someone's name and their page grunts ----------
 // The poke rides in the poker's own presence entry ({to: their tab, i: an id}), so it goes away with them.
@@ -503,7 +508,7 @@ async function robotPlay(r, key) {
     const list = toArr(cur);
     if (list.length !== len) return undefined;
     if (p >= 0) { const q = replay({ size: n, moves: list }); if (!play(n, q.board, q.prev, r.c, p)) return undefined; }
-    list.push({ c: r.c, p }); return list;
+    list.push({ c: r.c, p, t: TS }); return list;
   });
 }
 // the net gives how likely a human of that rank is to play each point, and who it thinks owns each point
@@ -570,7 +575,7 @@ function createGame(size) {
   writePresence();
 }
 // keep the 1000 most recent games with more than 4 stones (plus any game someone else is looking at);
-// a game takes about 1 KB, and the whole lot is downloaded each time the page opens
+// a game takes about 2 KB, and the whole lot is downloaded each time the page opens
 function prune(newId, leaving) {
   const busy = new Set(others().map(p => p.g));
   let kept = 0;
@@ -595,7 +600,7 @@ function submit(mv) {
       const r = replay({ size, moves: list });
       if (!play(size, r.board, r.prev, mv.c, mv.p)) return undefined;
     }
-    list.push(mv); return list;
+    list.push({ ...mv, t: TS }); return list;
   });
 }
 
@@ -867,11 +872,11 @@ function renderGrid() {
   document.getElementById('othersh').style.display = ids.length ? 'block' : 'none';
   for (const id of ids) {
     const g = D.games[id], n = g.size, b = replay(g).board, ppl = busy[id] || [];
-    const d = document.createElement('div'); d.className = 'thumb' + (ppl.length ? ' live' : ''); d.dataset.id = id;
+    const d = document.createElement('div'); d.className = 'thumb' + (ppl.length ? ' live' : ''); d.dataset.id = id; d.style.background = gameColour(id);
     const s = el('svg', { viewBox: `0 0 ${n + 1} ${n + 1}` }, d);
     drawGrid(n, s, 0.06);
     b.forEach((c, p) => { if (c) el('circle', { cx: 1 + p % n, cy: 1 + Math.floor(p / n), r: 0.46, fill: c === 'b' ? '#111' : '#fafafa', stroke: '#000', 'stroke-width': 0.04 }, s); });
-    const when = g.created ? new Date(g.created).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const last = lastPlayed(g), when = last ? new Date(last).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
     const t = document.createElement('div'); t.className = 'tl';
     t.innerHTML = `${n}×${n} · ${toArr(g.moves).length} moves<br>${when}${ppl.length ? '<br>' + ppl.map(label).join(' ') : ''}`;
     d.appendChild(t); grid.appendChild(d);
