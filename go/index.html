@@ -421,9 +421,16 @@ function who(k) { const p = D.presence[k]; return p ? label(p) : 'Someone'; }
 // when a game was last played: new moves carry a time t; moves made before that have none, so those games count from when they were created
 function lastPlayed(g) { const m = toArr(g.moves); for (let i = m.length - 1; i >= 0; i--) if (m[i].t) return m[i].t; return g.created || 0; }
 function sortedGames() { return Object.keys(D.games).sort((a, b) => lastPlayed(D.games[b]) - lastPlayed(D.games[a])); }
-// each game keeps one pale colour for its tile, picked from its id
-const PASTELS = ['#ffd5dd', '#fee6e7', '#ffcbc5', '#fed7cd', '#fee8de', '#feceae', '#ffdab7', '#ffe9cd', '#f2d69c', '#f0e2ad', '#f1efc9', '#d7e0a3', '#d6eab7', '#dff5d4', '#b9e8b9', '#bdf0cd', '#cff8e5', '#a0ebd6', '#acf1e7', '#c7f8f7', '#98e9f2', '#abeeff', '#d6f2fe', '#afe1ff', '#c9e5ff', '#e2eeff', '#c8d9fe', '#d9e0fe', '#eaebfe', '#dbd2ff', '#e9d9ff', '#f7e6ff', '#f5c8f7', '#ffd1f3', '#ffe4f2', '#ffc7db'];
-function gameColour(id) { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) | 0; return PASTELS[Math.abs(h) % PASTELS.length]; }
+// each game keeps one pale colour for its tile. Games take these in the order they were created, and each is about 150 degrees of hue
+// on from the last, so games within 6 of each other differ clearly: at least 110 degrees side by side and above or below, 70 for 5 apart.
+const PASTELS = ['#efde9d', '#dbeefe', '#fec0b3', '#a8f4fc', '#ffc4db', '#a7f1d2', '#f5e4fe', '#bddf93', '#dde3fe', '#ffcd9e', '#bde4ff', '#ffe4e1', '#73e6eb', '#ffd8eb', '#9eebc3', '#ead3fe', '#e4f2c6', '#c0cffe', '#fedec5', '#a8e0ff', '#fed1d0', '#bdf9f7', '#ffb7e3', '#bdf4cf', '#e1cdfe', '#dae6a5', '#e2ebff', '#ffc29b', '#c3ecfe', '#fec7ca', '#9af1e9', '#ffe1f6', '#9fe5ac', '#e8dffe', '#d9de94', '#ccdffe', '#fee5d9', '#82e0ff', '#fedade', '#8becdd', '#ffcaf8', '#d4f6d3', '#d2c9ff', '#ebe8ae', '#bddafe', '#ffd3c2', '#c9f4ff', '#ffbccb', '#aef6e4', '#f9c2fa', '#c2ecb6', '#e9e9ff', '#e0d380', '#d1e7fe', '#ffc9ba', '#99eefd', '#fee3eb', '#83e8c9', '#f7d8fe', '#bfe6a5', '#d8dbff'];
+// games of up to 4 moves can be deleted (see prune), so they don't use up a place in the order: deleting one leaves the others' colours alone
+function gameColours() {
+  const out = {}, L = PASTELS.length; let n = 0, short = 0;
+  for (const id of Object.keys(D.games).sort((a, b) => (D.games[a].created || 0) - (D.games[b].created || 0)))
+    out[id] = toArr(D.games[id].moves).length > 4 ? PASTELS[n++ % L] : PASTELS[(n + 30 + 7 * short++) % L];
+  return out;
+}
 
 // ---------- poke: tap someone's name and their page grunts ----------
 // The poke rides in the poker's own presence entry ({to: their tab, i: an id}), so it goes away with them.
@@ -880,14 +887,15 @@ function renderGrid() {
   const all = sortedGames().filter(id => id !== viewing), ids = all.slice(0, renderGrid.shown);
   document.getElementById('more').style.display = all.length > ids.length ? 'block' : 'none';
   const busy = {}; for (const p of others()) (busy[p.g] = busy[p.g] || []).push(p);
-  const key = ids.map(id => id + ':' + toArr(D.games[id].moves).length + ':' + (busy[id] || []).map(p => p.a + p.n).join()).join('|');
+  const cols = gameColours();
+  const key = ids.map(id => id + ':' + toArr(D.games[id].moves).length + ':' + cols[id] + ':' + (busy[id] || []).map(p => p.a + p.n).join()).join('|');
   if (key === renderGrid.key) return;
   renderGrid.key = key;
   const grid = document.getElementById('grid'); grid.innerHTML = '';
   document.getElementById('othersh').style.display = ids.length ? 'block' : 'none';
   for (const id of ids) {
     const g = D.games[id], n = g.size, b = replay(g).board, ppl = busy[id] || [];
-    const d = document.createElement('div'); d.className = 'thumb' + (ppl.length ? ' live' : ''); d.dataset.id = id; d.style.background = gameColour(id);
+    const d = document.createElement('div'); d.className = 'thumb' + (ppl.length ? ' live' : ''); d.dataset.id = id; d.style.background = cols[id];
     const bd = document.createElement('div'); bd.className = 'bd'; d.appendChild(bd);
     const s = el('svg', { viewBox: `0 0 ${n + 1} ${n + 1}` }, bd);
     drawGrid(n, s, 0.06);
