@@ -8,7 +8,7 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: #f3ede2; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color: #222; }
   #app { max-width: 720px; margin: 0 auto; padding: 10px 12px 40px; }
-  @media (min-width: 600px) { #app { max-width: max(440px, min(720px, calc(100vh - 290px))); } }
+  @media (min-width: 600px) { #app { max-width: max(440px, min(720px, calc(100vh - 312px))); } }
   #banner { font-size: 28px; font-weight: 700; text-align: center; padding: 14px 10px; border-radius: 14px; margin-bottom: 8px; }
   #banner.turn { background: #2e7d32; color: #fff; }
   #banner.wait { background: #d8d2c6; color: #555; }
@@ -18,30 +18,33 @@
   #notice { display: none; text-align: center; font-size: 15px; background: #fff3cd; border-radius: 10px; padding: 8px; margin-bottom: 8px; }
   #notice button { font-size: 14px; padding: 5px 10px; margin: 3px; border-radius: 8px; flex: none; }
   #bowls { display: flex; gap: 8px; margin-bottom: 6px; }
-  .bowl { flex: 1; background: rgba(255,255,255,.55); border: 3px solid transparent; border-radius: 12px; padding: 6px 8px; cursor: pointer; min-height: 62px; }
+  .bowl { flex: 1; min-width: 0; background: rgba(255,255,255,.55); border: 3px solid transparent; border-radius: 12px; padding: 6px 8px; cursor: pointer; }
   .bowl.mine { border-color: #2e7d32; background: #fff; }
-  .bhead { display: flex; align-items: center; gap: 6px; font-size: 16px; flex-wrap: wrap; }
+  .bhead { display: flex; align-items: center; gap: 6px; font-size: 16px; height: 24px; white-space: nowrap; overflow: hidden; }
   .stone { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #000; flex: none; }
   .stone.b { background: radial-gradient(circle at 35% 35%, #555, #000); }
   .stone.w { background: radial-gradient(circle at 35% 35%, #fff, #ccc); }
-  .cap { color: #666; font-size: 14px; margin-left: auto; }
-  .hint { color: #2e7d32; font-size: 13px; }
-  .chips { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
-  .chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; background: #eee8dc; font-size: 14px; white-space: nowrap; }
+  .cap { color: #666; font-size: 14px; margin-left: auto; flex: none; }
+  .hint { color: #2e7d32; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* fixed heights, so people coming and going never move the board: fit() shrinks the text instead */
+  @media (max-width: 420px) { .hint { display: none; } .bhead { gap: 5px; } .cap { font-size: 12.5px; } }   /* the banner says 'Tap Black or White' anyway */
+  .chips { margin-top: 4px; height: 42px; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 3px; font-size: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 99px; background: #eee8dc; font-size: 1em; line-height: 1.2; white-space: nowrap; }
   .chip.you { background: #ffd54f; font-weight: 700; cursor: pointer; }
   .chip.away { opacity: .5; }
   .chip.poke { cursor: pointer; }
   .chip.poked { filter: brightness(.7); }
-  .addbot { font-size: 13px; padding: 1px 7px; border-radius: 99px; background: #dbe7f6; color: #0d47a1; cursor: pointer; white-space: nowrap; }
+  .addbot { font-size: .93em; padding: 1px 7px; border-radius: 99px; background: #dbe7f6; color: #0d47a1; cursor: pointer; white-space: nowrap; }
   .chip.bot { background: #dbe7f6; cursor: pointer; }
   .chip.bot.paused { opacity: .5; }
-  .chip.bot small { font-size: 11px; color: #0d47a1; }
+  .chip.bot small { font-size: .8em; color: #0d47a1; }
   .chip .kill { margin-left: 2px; padding: 0 4px; border-radius: 99px; color: #555; font-weight: 700; }
   .chip .kill:hover { background: rgba(0,0,0,.12); }
-  #watchers { font-size: 14px; color: #555; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  #watchers { font-size: 14px; color: #555; margin-bottom: 6px; height: 22px; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; align-items: center; }
   #boardwrap { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }
   svg { display: block; }
   #board { width: 100%; height: 100%; }
+  #board * { pointer-events: none; }   /* the board is redrawn as the analysis runs: clicks must land on the svg itself, not on a line that is about to vanish */
   #estimate { text-align: center; font-size: 14px; color: #1565c0; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 4px; }
   #buttons { display: flex; gap: 8px; margin-top: 8px; }
   button { flex: 1; font-size: 18px; padding: 14px 4px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; font-family: inherit; }
@@ -821,11 +824,11 @@ function render() {
     document.querySelector(`.bowl[data-c="${c}"]`).classList.toggle('mine', myColour === c);
     document.getElementById('cap' + c).textContent = `captured ${P.caps[c]}`;
     document.getElementById('hint' + c).textContent = myColour === c ? '' : 'tap to play';
-    document.getElementById('chips' + c).innerHTML = all.filter(p => p.c === c).map(chip).join('') + bots.filter(r => r.c === c).map(robotChip).join('')
-      + `<span class="addbot" data-add="${c}" title="Add a robot player">+🤖</span>`;
+    fit(document.getElementById('chips' + c), all.filter(p => p.c === c).map(chip).join('') + bots.filter(r => r.c === c).map(robotChip).join('')
+      + `<span class="addbot" data-add="${c}" title="Add a robot player">+🤖</span>`);
   }
   const watchers = all.filter(p => !p.c);
-  document.getElementById('watchers').innerHTML = `<span>${live ? all.length + ' online' : '&nbsp;'}${watchers.length ? ' · watching:' : ''}</span>` + watchers.map(chip).join('');
+  fit(document.getElementById('watchers'), `<span>${live ? all.length + ' online' : '&nbsp;'}${watchers.length ? ' · watching:' : ''}</span>` + watchers.map(chip).join(''));
 
   // notice about people on other games
   const away = others().filter(p => p.g && p.g !== viewing && D.games[p.g]);
@@ -857,7 +860,16 @@ function oneLine(e, text) {
   e.textContent = text; e.style.fontSize = ''; oneLine.w = e.clientWidth;
   for (let f = 13.5; f >= 8 && e.scrollWidth > e.clientWidth; f -= 0.5) e.style.fontSize = f + 'px';
 }
-addEventListener('resize', () => { const e = document.getElementById('estimate'); oneLine(e, e.textContent); drawTimeline(); });
+// fill a fixed-height box, shrinking the text until it all shows
+function fit(e, html) {
+  if (e.html === html && e.clientWidth === e.fitW) return;
+  e.html = html; e.innerHTML = html; e.style.fontSize = ''; e.fitW = e.clientWidth;
+  for (let f = 13.5; f >= 7 && (e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1); f -= 0.5) e.style.fontSize = f + 'px';
+}
+addEventListener('resize', () => {
+  const e = document.getElementById('estimate'); oneLine(e, e.textContent); drawTimeline();
+  for (const id of ['chipsb', 'chipsw', 'watchers']) { const b = document.getElementById(id); fit(b, b.html || ''); }
+});
 function chip(p) {
   const you = p.k === tab, away = p.g !== viewing;
   const info = (p.d === 'm' ? 'On a phone' : 'On a computer') + (away ? ', looking at a different game' : '') + (you ? ' – tap to change your name' : ' – tap to poke');
