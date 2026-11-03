@@ -145,13 +145,13 @@ h1 { font-family: "Playfair Display", Georgia, "Times New Roman", serif; font-we
 }
 /* Training page */
 .viz-root {
-  --q0: #0d366b; --q1: #1c5cab; --q2: #3987e5; --q3: #6da7ec; --q4: #9ec5f4;
+  --q0: #1a9a48; --q1: #6fa52b; --q2: #ee9a26; --q3: #e8622a; --q4: #d0353a;
   --f-lin: #2a78d6; --f-hinge: #eb6834; --f-step: #1baf7a; --f-wash: #4a3aa7; --f-hand: #858585;
   --c-sel: #eb6834; --c-nochange: #8a8880;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) .viz-root {
-    --q0: #cde2fb; --q1: #86b6ef; --q2: #3987e5; --q3: #1f66b8; --q4: #184f95;
+    --q0: #3cc46a; --q1: #a0cf4f; --q2: #f5b24a; --q3: #f07a3e; --q4: #e8545a;
     --f-lin: #3987e5; --f-hinge: #d95926; --f-step: #199e70; --f-wash: #9085e9; --f-hand: #8f8d84;
     --c-sel: #eb6834; --c-nochange: #8f8d84;
   }
@@ -224,6 +224,9 @@ table.t th { color: var(--text-muted); font-weight: 400; border-top: 0; vertical
 table.t th:first-child, table.t td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
 table.t td.c { line-height: 1.25; }
 table.t td:first-child { white-space: normal; min-width: 92px; }
+table.t tr.me td { background: rgba(235, 104, 52, .10); }
+table.t td.best { font-weight: 700; color: var(--q0); }
+#tree text.gbest { font-size: 10px; font-weight: 700; }
 table.t td .m { color: var(--text-secondary); }
 table.t td .s { color: var(--text-muted); font-size: 11.5px; display: block; }
 table.t td .better { color: var(--text-primary); font-weight: 700; }
@@ -258,6 +261,17 @@ table.t .n { color: var(--text-muted); font-size: 11px; }
 .best button span:last-child { color: var(--text-muted); }
 .setting label.opt { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; cursor: pointer; color: var(--text-primary); }
 .setting label.opt input { margin: 2px 0 0; width: 16px; height: 16px; flex: none; accent-color: var(--check); }
+.chiprow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; margin: 0 0 8px; font-size: 12.5px; }
+.card.stack { margin-bottom: 12px; }
+.chead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 10px; }
+.chead .mini { margin: 0 0 4px; }
+.card h3.sec2 { margin-top: 14px; }
+.cnote { display: flex; flex-wrap: wrap; gap: 2px 16px; align-items: center; font-size: 12.5px; margin: 0 0 2px; }
+.cnote span { display: inline-flex; align-items: center; gap: 6px; }
+.cnote i { width: 24px; border-top: 2px solid; display: inline-block; }
+.rowctl.small2 { font-size: 12.5px; gap: 6px; margin: 0 0 6px; }
+.rowctl select { font: inherit; padding: 3px 5px; }
+.card .timeline { margin: 4px 0 8px; }
 @media (max-width: 900px) { .cols2 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 700px) {
   .ramp { width: 110px; }
@@ -298,16 +312,48 @@ table.t .n { color: var(--text-muted); font-size: 11px; }
         <div class="tscroll" id="dscores"></div>
         <p class="small" id="dscoreNote"></p></div>
     </div>
-    <div class="card" style="margin-bottom:12px"><h3 id="fch">Forecasts</h3>
+    <div class="chiprow"><b class="dark-text">Compare with</b><div class="chips" id="chips"></div></div>
+
+    <div class="card stack"><h3>Forecasts against what happened</h3>
+      <div class="cnote"><span><i style="border-color:var(--obs-0);border-top-width:3px"></i>Measured: Beijing city mean</span></div>
+      <div class="cw"><svg id="fsvg" role="img" aria-label="Forecasts and measured PM2.5"></svg><div class="tip" id="ftip"></div></div>
+      <div class="timeline">
+        <button class="play" id="fPlay" aria-label="Play the window forward"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+        <span class="tlabel" id="f1v"></span>
+        <div class="dual"><div class="track"></div><div class="sel" id="fSel"></div>
+          <input type="range" id="f1" step="1" aria-label="Start of the window">
+          <input type="range" id="f2" step="1" aria-label="End of the window: forecasts issued up to here"></div>
+        <span class="tlabel" id="f2v"></span>
+      </div>
+      <div class="rowctl small2"><label for="fEvery">One forecast every</label>
+        <select id="fEvery" aria-label="Hours between the forecasts shown"><option>1</option><option>2</option><option>3</option><option>6</option><option>12</option><option>24</option></select> hours</div>
+      <p class="small">Each line is one forecast: it starts at the hour it was issued (dot, at the PM2.5 measured then), runs 12 hours ahead and fades the further ahead it looks. The vertical line is the last hour a forecast was issued; to its right the strong line shows what happened. Point at a line to make it bold; click or tap to keep it and grey the rest. Times are Beijing time.</p>
+    </div>
+
+    <div class="card stack">
+      <div class="chead"><h3>Score for each hour</h3>
+        <div class="mini" id="scaleTabs" role="group" aria-label="Vertical scale"></div></div>
+      <div class="cw"><svg id="e1svg" role="img" aria-label="Score of each model for each hour"></svg><div class="tip" id="e1tip"></div></div>
+      <div class="timeline">
+        <span class="tlabel" id="e1v"></span>
+        <div class="dual"><div class="track"></div><div class="sel" id="eSel"></div>
+          <input type="range" id="e1" step="1" aria-label="Start of the window">
+          <input type="range" id="e2" step="1" aria-label="End of the window"></div>
+        <span class="tlabel" id="e2v"></span>
+      </div>
+      <h3 class="sec2" id="cumH">Added up</h3>
+      <div class="cw"><svg id="e2svg" role="img" aria-label="Score of each model added up over the days"></svg><div class="tip" id="e2tip"></div></div>
+      <p class="small" id="errExplain"></p>
+    </div>
+
+    <div class="card stack"><h3>Error by hours ahead</h3>
+      <div class="cw"><svg id="lsvg" role="img" aria-label="Error by lead"></svg><div class="tip" id="ltip"></div></div>
+      <p class="small" id="leadNote"></p></div>
+
+    <div class="card stack"><h3 id="fch">Forecasts</h3>
       <div class="rowctl"><label for="leadR">Hours ahead</label><input type="range" id="leadR" min="1" max="12" step="1"><b id="leadv"></b></div>
-      <div class="chips" id="chips"></div>
-      <div class="cw"><svg id="fcsvg" role="img" aria-label="Forecasts and measured PM2.5"></svg><div class="tip" id="fctip"></div></div>
+      <div class="cw"><svg id="fcsvg" role="img" aria-label="Forecasts and measured PM2.5 at one lead"></svg><div class="tip" id="fctip"></div></div>
     </div>
-    <div class="cols2">
-      <div class="card"><h3>Error by hours ahead</h3><div class="cw"><svg id="lsvg" role="img" aria-label="Error by lead"></svg><div class="tip" id="ltip"></div></div></div>
-      <div class="card"><h3>Error by day</h3><div class="cw"><svg id="dsvg" role="img" aria-label="Error by day"></svg><div class="tip" id="dtip"></div></div></div>
-    </div>
-    <p class="small" id="errnote"></p>
   </section>
 
   <div class="foot">
@@ -550,7 +596,7 @@ let G = null;  // geometry of the current drawing
 function layout() {
   const phone = isPhone();
   const wrapW = $("treescroll").clientWidth || (phone ? 366 : 1000);
-  const handX = phone ? 96 : 118, x0 = phone ? 128 : 154, padT = 42, padB = 58, padR = 40;
+  const handX = phone ? 96 : 118, x0 = phone ? 128 : 154, padT = 42, padB = 74, padR = 40;
   const ncol = Math.max(1, maxGen + 1);
   const z = S.zoom;
   const fit = (wrapW - x0 - padR) / ncol;
@@ -640,7 +686,13 @@ function drawTree() {
   // generation axis
   const every = Math.max(1, Math.ceil(26 / G.colW));
   s += '<g class="ax"><line x1="' + (G.x0 - 6) + '" x2="' + (G.W - 8) + '" y1="' + (yAxisBottom + 12) + '" y2="' + (yAxisBottom + 12) + '"/>';
+  // under each generation: the best score among the models alive in it, coloured like the dots
+  const bmode = scoreMode(), everyB = Math.max(1, Math.ceil(34 / G.colW));
+  const bestOf = list => list.reduce((b, m) => { const v = scoreFor(m, bmode); return v != null && v < b ? v : b; }, Infinity);
+  const bestText = (x, b) => b < Infinity ? '<text class="gbest" x="' + x + '" y="' + (yAxisBottom + 45) + '" text-anchor="middle" style="fill:' + (S.color === "form" ? "var(--text-secondary)" : rampAt(tOf(b))) + '">' + b.toFixed(3) + "</text>" : "";
+  s += '<text x="2" y="' + (yAxisBottom + 45) + '">Best</text>' + bestText(G.handX, bestOf(HAND));
   for (let g = 0; g <= maxGen; g++) {
+    if (g % everyB === 0) s += bestText(G.X(g), bestOf(EVO.filter(m => m.gen <= g && g <= (m.gen_last == null ? m.gen : m.gen_last))));
     if (g % every) continue;
     s += '<line x1="' + G.X(g) + '" x2="' + G.X(g) + '" y1="' + (yAxisBottom + 12) + '" y2="' + (yAxisBottom + 16) + '"/><text x="' + G.X(g) + '" y="' + (yAxisBottom + 30) + '" text-anchor="middle">' + g + "</text>";
   }
@@ -856,27 +908,29 @@ function computeCur(m) {
 }
 function periodKey(i) { return R.per[i] === S.per ? 0 : -1; }
 function scoreTable(m) {
+  // One number per cell: each model's mean error on the same forecasts (those every model in the
+  // table has, on the chosen days), best first; the best in each column is bold.
   const cols = [["All", -1]].concat(M.bands.map((b, k) => [bandName(k), k]));
-  const cell = (pa, pb, band) => {
-    const r = groupMeans(pa, pb, R, 1, i => R.per[i] === S.per && (band < 0 || R.band[i] === band) ? 0 : -1);
-    return { a: r.a[0], b: r.b[0], n: r.n[0] };
-  };
-  let h = '<table class="t"><thead><tr><th></th>' + cols.map(c => "<th>" + c[0] + "</th>").join("") + "</tr></thead><tbody>";
-  h += '<tr><td><span class="sw2" style="color:var(--c-sel)"></span><b class="dark-text">' + esc(m.id) + "</b></td>" +
-    cols.map(c => { const r = cell(CUR.pen, null, c[1]); return '<td class="c"><span class="dark-text"><b>' + f2(r.a) + '</b></span><span class="s">' + (c[1] < 0 ? r.n + " rows" : "") + "</span></td>"; }).join("") + "</tr>";
-  for (const id of stdIds) {
-    if (id === m.id) continue;
-    h += '<tr><td><span class="sw2" style="color:' + stdColor(id) + '"></span>' + esc(M.standards[id]) + "</td>";
-    for (const c of cols) {
-      const r = cell(CUR.pen, penStd[id], c[1]);
-      if (!r.n) { h += '<td class="c">–</td>'; continue; }
-      const mb = r.a <= r.b;
-      h += '<td class="c"><span class="m' + (mb ? " better" : "") + '" title="' + esc(m.id) + '">' + f2(r.a) + '</span><span class="s' + (mb ? "" : " better") + '" title="' + esc(M.standards[id]) + '">' + f2(r.b) + "</span></td>";
-    }
-    h += "</tr>";
+  const list = [{ name: m.id, pen: CUR.pen, color: "var(--c-sel)", me: true }]
+    .concat(stdIds.filter(id => id !== m.id).map(id => ({ name: M.standards[id], pen: penStd[id], color: stdColor(id) })));
+  const ok = new Uint8Array(R.n);
+  let n = 0;
+  for (let i = 0; i < R.n; i++) {
+    if (R.per[i] !== S.per) continue;
+    if (list.every(e => e.pen[i] === e.pen[i])) { ok[i] = 1; n++; }
   }
+  for (const e of list) e.v = cols.map(c => groupMeans(e.pen, null, R, 1, i => ok[i] && (c[1] < 0 || R.band[i] === c[1]) ? 0 : -1).a[0]);
+  list.sort((a, b) => (finite(a.v[0]) ? a.v[0] : 1e9) - (finite(b.v[0]) ? b.v[0] : 1e9));
+  const best = cols.map((c, k) => Math.min(...list.map(e => finite(e.v[k]) ? e.v[k] : Infinity)));
+  let h = '<table class="t"><thead><tr><th></th>' + cols.map(c => "<th>" + c[0] + "</th>").join("") + "</tr></thead><tbody>";
+  for (const e of list) {
+    h += "<tr" + (e.me ? ' class="me"' : "") + '><td><span class="sw2" style="color:' + e.color + '"></span>' + (e.me ? "<b>" + esc(e.name) + "</b>" : esc(e.name)) + "</td>" +
+      e.v.map((v, k) => "<td" + (finite(v) && v === best[k] ? ' class="best"' : "") + ">" + (finite(v) ? f2(v) : "–") + "</td>").join("") + "</tr>";
+  }
+  SCORE_N = n;
   return h + "</tbody></table>";
 }
+let SCORE_N = 0;
 
 // ---- charts
 function niceMax(v) { if (!(v > 0)) return 1; const st = niceStep(v, 4); return Math.ceil(v / st - 1e-9) * st; }
@@ -960,9 +1014,403 @@ function showChartTip(svg, tip, i) {
   const W = svg.parentNode.clientWidth, tw = tip.offsetWidth;
   tip.style.left = clamp(x + 10 > W - tw - 4 ? x - tw - 10 : x + 10, 2, Math.max(2, W - tw - 2)) + "px"; tip.style.top = "6px";
 }
-function chartHeights() { return isPhone() ? { fc: 250, sm: 220 } : { fc: 300, sm: 250 }; }
-const MODEL_COLOR = "var(--c-sel)";
-function drawForecast() {
+// ---- the time charts, in the format of /aqi/interactive (paths fading ahead) and /aqi/errors (lines with names at their ends)
+const MODEL_COLOR = "var(--c-sel)", GREY = "var(--grey-line)", MAXL = Math.max(...M.leads);
+function el(name, attrs, parent) {
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const pathD = (pts, X, Y, gap) => pts.map((p, i) => (i && (gap == null || p[0] - pts[i - 1][0] <= gap) ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("");
+let measureCtx = null;
+function textW(s, px, bold) {
+  try {
+    measureCtx = measureCtx || document.createElement("canvas").getContext("2d");
+    measureCtx.font = (bold ? "700 " : "400 ") + px + "px " + getComputedStyle($("grapher")).fontFamily;
+    return measureCtx.measureText(s).width;
+  } catch (e) { return s.length * px * 0.55; }
+}
+const labelLines = (name, narrow) => { const k = name.indexOf(" ("); return narrow && k > 0 ? [name.slice(0, k), name.slice(k + 1)] : [name]; };
+const labelSize = narrow => narrow ? 12 : 13;
+const labelWidth = (list, narrow) => list.length ? Math.ceil(Math.max(...list.map(s => Math.max(...labelLines(s.name, narrow).map(t => textW(t, labelSize(narrow), s.bold)))))) : 40;
+const sstamp = h => dayShort(h) + " " + pad(dt(h).getUTCHours()) + ":00";
+const fmtScore = v => v >= 10 ? String(Math.round(v)) : v.toFixed(2);
+
+// Time axis ticks: a label every 3 to 48 hours, depending on the room, and the day in bold at midnight.
+function timeTicks(x0, x1, plotW, narrow) {
+  const per = plotW / Math.max(1, x1 - x0), step = [3, 6, 12, 24, 48].find(s => s * per >= (narrow ? 62 : 74)) || 96, out = [];
+  for (let t = Math.ceil(x0); t <= x1; t++) {
+    const hour = dt(t).getUTCHours();
+    if (step <= 24 ? hour % step : (hour || Math.round((t - Math.ceil(x0)) / 24) % (step / 24))) continue;
+    out.push({ x: t, label: hour === 0 ? dayLong(t) : pad(hour) + ":00", bold: hour === 0 });
+  }
+  return out;
+}
+// Names written to the right of the lines' ends, pushed apart where they collide.
+function endLabels(svg, ends, W, H, m, bar, narrow) {
+  const LH = narrow ? 13 : 14, half = (a, b) => (a.lines.length + b.lines.length) * LH / 2 + 1;
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) ends[i].y = Math.max(ends[i].y, ends[i - 1].y + half(ends[i - 1], ends[i]));
+  for (let i = ends.length - 1; i >= 0; i--) ends[i].y = Math.min(ends[i].y, i === ends.length - 1 ? H - m.b - ends[i].lines.length * LH / 2 : ends[i + 1].y - half(ends[i], ends[i + 1]));
+  for (const e of ends) {
+    const lx = Math.min(e.x + 6, W - m.r + 5), top = e.y - (e.lines.length - 1) * LH / 2 + 4;
+    if (bar) el("line", { x1: lx, x2: lx + 10, y1: e.y, y2: e.y, stroke: e.shown ? e.color : GREY, "stroke-width": 3, "stroke-linecap": "round" }, svg);
+    e.lines.forEach((t, j) => {
+      el("text", { x: lx + (bar ? 14 : 0), y: top + j * LH, style: "font-size:" + labelSize(narrow) + "px;font-weight:" + (e.bold ? 700 : 400) + ";fill:" + (e.shown ? (bar ? "var(--text-primary)" : e.color) : GREY) }, svg).textContent = t;
+    });
+  }
+}
+// One line drawn bold, in its full colour, with a ring of the page colour round it.
+function emph(layer, it, X, Y) {
+  el("path", { d: it.d, stroke: "var(--surface)", "stroke-width": 6.5 }, layer);
+  el("path", { d: it.d, stroke: it.color, "stroke-width": 3.3 }, layer);
+  if (it.dot) el("circle", { cx: X(it.dot[0]), cy: Y(it.dot[1]), r: 4, fill: it.color, stroke: "var(--surface)", "stroke-width": 1.5 }, layer);
+}
+// Point at a line: it goes bold and a tip says what it is. Click or tap: keep it (c.pins) and grey the rest.
+function wireChart(c) {
+  const go = (ev, click) => {
+    const box = c.svg.getBoundingClientRect(), mx = ev.clientX - box.left, my = ev.clientY - box.top;
+    const reach = (click && ev.pointerType && ev.pointerType !== "mouse" ? 34 : 24) ** 2;
+    let best = null, bd = reach;
+    for (const h of c.hits || []) { const d = (h.x - mx) ** 2 + (h.y - my) ** 2; if (d < bd) { bd = d; best = h; } }
+    if (c.hover) c.hover.innerHTML = "";
+    if (!best) { c.tip.style.display = "none"; return; }
+    const it = best.item;
+    if (click) { c.pins.has(it.key) ? c.pins.delete(it.key) : c.pins.add(it.key); c.redraw(); }
+    else emph(c.hover, it, c.X, c.Y);
+    const tip = c.tip;
+    tip.innerHTML = c.describe(best) + '<br><span class="k">' + (c.pins.has(it.key) ? "picked: click again to release" : "click to keep it highlighted") + "</span>";
+    tip.style.display = "block";
+    const left = best.x + 14 + tip.offsetWidth > box.width ? best.x - 14 - tip.offsetWidth : best.x + 14;
+    tip.style.left = Math.max(0, left) + "px";
+    tip.style.top = Math.max(0, best.y - tip.offsetHeight - 10) + "px";
+  };
+  c.svg.addEventListener("mousemove", ev => go(ev, false));
+  c.svg.addEventListener("mouseleave", () => { if (c.hover) c.hover.innerHTML = ""; c.tip.style.display = "none"; });
+  c.svg.addEventListener("click", ev => go(ev, true));
+}
+function chartBox(c, H) {
+  const svg = c.svg;
+  svg.innerHTML = ""; c.hits = []; c.hover = null; c.tip.style.display = "none";
+  const W = svg.parentNode.clientWidth;
+  if (!W) return 0;
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.setAttribute("height", H);
+  return W;
+}
+function addShades(svg, shades, X, m, H, x0, x1, o_bottom) {
+  for (const sh of shades || []) {
+    const a = Math.max(sh.x0, x0), b = Math.min(sh.x1, x1);
+    if (!(b > a)) continue;
+    el("rect", { class: "shade2", x: X(a).toFixed(1), y: m.t, width: Math.max(1, X(b) - X(a)).toFixed(1), height: H - m.t - m.b }, svg);
+    el("text", { class: "shlab", x: (X(a) + 4).toFixed(1), y: o_bottom ? H - m.b - 6 : m.t + 11 }, svg).textContent = sh.label;
+  }
+}
+
+// ---- rows by issue hour, and the measured line
+const ISS = Float64Array.from(R.target, (t, i) => t - R.lead[i]);  // issue hour of each row
+const ISSUES = [...new Set(ISS)].sort((a, b) => a - b);
+const rowAt = new Map();  // issue hour -> row index by lead
+for (let i = 0; i < R.n; i++) {
+  let a = rowAt.get(ISS[i]);
+  if (!a) rowAt.set(ISS[i], a = new Int32Array(MAXL + 1).fill(-1));
+  a[R.lead[i]] = i;
+}
+const obsMap = new Map();  // hour -> measured city PM2.5: `now` at issue hours, `y` at target hours
+for (let i = 0; i < R.n; i++) if (R.now[i] === R.now[i]) obsMap.set(ISS[i], R.now[i]);
+for (let i = 0; i < R.n; i++) if (R.y[i] === R.y[i]) obsMap.set(R.target[i], R.y[i]);
+const OBS = [...obsMap].sort((a, b) => a[0] - b[0]);
+const HELD0 = M.heldout_days.length ? hoursOf(M.heldout_days.slice().sort()[0] + "T00:00") : Infinity;
+const heldShade = x1 => HELD0 < x1 ? [{ x0: HELD0, x1, label: "held out" }] : [];
+
+// ---- window state
+const F = { t1: 0, t2: 0, every: 3, pins: new Set(), playing: null };  // forecasts chart: forecasts issued from t1 to t2
+const E = { t1: null, t2: null, log: false, pins: new Set() };         // errors: target hours t1 to t2
+function defaultWindows() {
+  stopPlay();
+  F.t2 = ISSUES[ISSUES.length - 1]; F.t1 = Math.max(ISSUES[0], F.t2 - 48);  // the last 2 days of the data
+  F.every = [1, 2, 3, 6, 12, 24].find(e => (F.t2 - F.t1) / e <= 16) || 24;
+  F.pins.clear(); E.pins.clear(); E.t1 = E.t2 = null; E.log = false;
+}
+const FC = { svg: $("fsvg"), tip: $("ftip"), pins: F.pins, redraw: () => drawFC() };
+const EA = { svg: $("e1svg"), tip: $("e1tip"), pins: E.pins, redraw: () => drawErr() };
+const EB = { svg: $("e2svg"), tip: $("e2tip"), pins: E.pins, redraw: () => drawErr() };
+const EL = { svg: $("lsvg"), tip: $("ltip"), pins: E.pins, redraw: () => drawErr() };
+
+function chartHeights() { return isPhone() ? { fc: 250, err: 250, sm: 230 } : { fc: 300, err: 290, sm: 260 }; }
+
+// ---- forecasts against what happened
+function fcModels() {  // the standard models that are ticked, then the selected one (drawn last, on top)
+  const out = [];
+  for (const id of stdIds) if (S.show.has(id) && id !== CUR.m.id) out.push({ id, name: M.standards[id], color: stdColor(id), w: 1.4, pred: R.std[id] });
+  out.push({ id: CUR.m.id, name: CUR.m.id, color: MODEL_COLOR, w: 2.2, pred: CUR.pred, sel: true });
+  return out;
+}
+function drawFC() {
+  const c = FC, svg = c.svg, H = chartHeights().fc, W = chartBox(c, H);
+  if (!W) return;
+  const narrow = W < 520, mods = fcModels().map(x => ({ ...x, bold: x.sel }));
+  const m = { l: 36, r: labelWidth(mods, narrow) + 12, t: 24, b: 26 };
+  const x0 = F.t1, x1 = F.t2 + MAXL;
+  const anchor = ISSUES.filter(t => t <= F.t2).pop();  // the newest forecast shown: the others are counted back from it
+  const lines = [];
+  for (const md of mods) {
+    md.newest = null;
+    for (const t of ISSUES) {
+      if (t < F.t1 || t > F.t2 || (anchor - t) % F.every) continue;
+      const rows = rowAt.get(t), first = rows.find(i => i >= 0);
+      const pts = [[t, R.now[first]]];  // the dot: the PM2.5 measured when it was issued
+      for (let l = 1; l <= MAXL; l++) { const i = rows[l]; if (i >= 0 && md.pred[i] === md.pred[i]) pts.push([t + l, md.pred[i]]); }
+      if (pts.length < 2) continue;
+      md.newest = { key: "fc|" + md.id + "|" + t, name: md.name, color: md.color, w: md.w, t, pts, dot: pts[0], sel: md.sel };
+      lines.push(md.newest);
+    }
+  }
+  for (const k of [...c.pins]) if (k !== "obs" && !lines.some(l => l.key === k)) c.pins.delete(k);  // a picked line that is no longer shown
+  const obs = OBS.filter(p => p[0] >= x0 && p[0] <= x1);
+  let top = 0;
+  for (const l of lines) for (const p of l.pts) top = Math.max(top, p[1]);
+  for (const p of obs) top = Math.max(top, p[1]);
+  const step = niceStep(Math.max(top * 1.05, 20), 5), ymax = Math.ceil(Math.max(top * 1.05, 20) / step - 1e-9) * step;
+  const X = t => m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r), Y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  c.X = X; c.Y = Y;
+  const grid = el("g", { class: "gr" }, svg);
+  for (const v of niceTicks(0, ymax, 5)) {
+    if (v) el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v) }, grid);
+    el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = v;
+  }
+  addShades(svg, heldShade(x1), X, m, H, x0, x1);
+  const axis = el("g", { class: "ax" }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0) }, axis);
+  for (const t of timeTicks(x0, x1, W - m.l - m.r, narrow)) {
+    el("line", { x1: X(t.x), x2: X(t.x), y1: Y(0), y2: Y(0) + 5 }, axis);
+    el("text", { x: X(t.x), y: Y(0) + 19, "text-anchor": "middle", style: t.bold ? "fill:var(--text-primary);font-weight:700" : "" }, svg).textContent = t.label;
+  }
+  el("text", { x: 2, y: 11, style: "font-size:11px" }, svg).textContent = "PM2.5, µg/m³";
+
+  const picking = c.pins.size > 0, base = el("g", {}, svg), defs = el("defs", {}, svg), pinned = [];
+  lines.forEach((l, n) => {
+    l.d = pathD(l.pts, X, Y);
+    if (c.pins.has(l.key)) pinned.push(l);
+    else {
+      let stroke = GREY;
+      if (!picking) {  // full colour where it was issued, faint 12 hours on
+        const gid = "fade-" + n, g = el("linearGradient", { id: gid, gradientUnits: "userSpaceOnUse", x1: X(l.t), x2: X(l.t + MAXL), y1: 0, y2: 0 }, defs);
+        el("stop", { offset: 0, style: "stop-color:" + l.color + ";stop-opacity:1" }, g);
+        el("stop", { offset: 1, style: "stop-color:" + l.color + ";stop-opacity:0.15" }, g);
+        stroke = "url(#" + gid + ")";
+      }
+      el("path", { d: l.d, stroke, "stroke-width": picking ? 1.1 : l.w, opacity: picking ? 0.6 : 1 }, base);
+      el("circle", { cx: X(l.t), cy: Y(l.pts[0][1]), r: l.sel ? 3 : 2.5, fill: picking ? GREY : l.color }, base);
+    }
+    for (const p of l.pts) c.hits.push({ x: X(p[0]), y: Y(p[1]), item: l, p });
+  });
+  const ob = { key: "obs", name: "Measured", color: "var(--obs-0)", pts: obs, d: pathD(obs, X, Y, 1.5) };
+  if (obs.length) {
+    if (c.pins.has("obs")) pinned.push(ob);
+    else {
+      if (!picking) el("path", { d: ob.d, stroke: "var(--surface)", "stroke-width": 5 }, base);
+      el("path", { d: ob.d, stroke: picking ? GREY : ob.color, "stroke-width": picking ? 1.1 : 2.6, opacity: picking ? 0.6 : 1 }, base);
+    }
+    for (const p of obs) c.hits.push({ x: X(p[0]), y: Y(p[1]), item: ob, p });
+  }
+  // the last hour a forecast was issued; to its right the forecasts run on and the measured line shows what happened
+  el("line", { x1: X(F.t2), x2: X(F.t2), y1: m.t - 4, y2: Y(0), stroke: "var(--rule)", "stroke-width": 1.5 }, svg);
+  el("text", { x: X(F.t2) - 5, y: m.t + 8, "text-anchor": "end", style: "fill:var(--text-primary);font-weight:700;font-size:12px;paint-order:stroke;stroke:var(--surface);stroke-width:4px" }, svg)
+    .textContent = F.t2 === ISSUES[ISSUES.length - 1] ? "Latest forecast" : "Forecast issued " + (narrow ? sstamp(F.t2) : stamp(F.t2));
+  const topLayer = el("g", {}, svg);
+  for (const it of pinned) emph(topLayer, it, X, Y);
+  c.hover = el("g", {}, svg);
+  const ends = mods.filter(md => md.newest).map(md => {
+    const e = md.newest.pts[md.newest.pts.length - 1];
+    return { y: Y(e[1]), x: X(e[0]), lines: labelLines(md.name, narrow), color: md.color, bold: md.sel, shown: !picking || [...c.pins].some(k => k.startsWith("fc|" + md.id + "|")) };
+  });
+  endLabels(svg, ends, W, H, m, false, narrow);
+  if (!lines.length && !obs.length) el("text", { x: (m.l + W - m.r) / 2, y: m.t + 34, "text-anchor": "middle" }, svg).textContent = "No forecasts in this time range.";
+  svg.setAttribute("aria-label", "Forecasts of PM2.5 and what was measured, forecasts issued " + stamp(F.t1) + " to " + stamp(F.t2));
+  c.describe = h => {
+    const it = h.item;
+    if (it.key === "obs") return "<b>Measured</b><br><span class=\"k\">Beijing city mean, " + stamp(h.p[0]) + ":</span> <b>" + Math.round(h.p[1]) + "</b>";
+    const lead = h.p[0] - it.t, mv = obsMap.get(h.p[0]), sw = '<span class="sw" style="background:' + it.color + '"></span>';
+    if (!lead) return sw + "<b>" + esc(it.name) + '</b> <span class="k">issued ' + stamp(it.t) + ";<br>measured then:</span> <b>" + Math.round(h.p[1]) + "</b>";
+    return sw + "<b>" + esc(it.name) + '</b> <span class="k">issued ' + stamp(it.t) + '</span><br><span class="k">for ' + stamp(h.p[0]) + " (+" + lead + " h):</span> <b>" + Math.round(h.p[1]) + "</b>" +
+      (mv != null ? '<br><span class="k">measured:</span> <b>' + Math.round(mv) + '</b> <span class="k">(forecast ' + (h.p[1] - mv >= 0 ? "+" : "−") + Math.abs(Math.round(h.p[1] - mv)) + ")</span>" : "");
+  };
+}
+function syncFC() {
+  const lo = ISSUES[0], hi = ISSUES[ISSUES.length - 1];
+  for (const id of ["f1", "f2"]) { $(id).min = lo; $(id).max = hi; }
+  $("f1").value = F.t1; $("f2").value = F.t2;
+  $("f1v").textContent = sstamp(F.t1); $("f2v").textContent = F.t2 === hi ? "Latest" : sstamp(F.t2);
+  const f = t => (t - lo) / Math.max(1, hi - lo) * 100;
+  $("fSel").style.left = f(F.t1) + "%"; $("fSel").style.width = (f(F.t2) - f(F.t1)) + "%";
+  $("fEvery").value = F.every;
+  drawFC();
+}
+// Play: the end of the window walks forward an hour at a time, as on /aqi/interactive.
+const PLAY_ICON = '<svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg>', PAUSE_ICON = '<svg viewBox="0 0 12 12"><path d="M2 1h3v10H2zM7 1h3v10H7z"/></svg>';
+function startPlay() {
+  const hi = ISSUES[ISSUES.length - 1];
+  if (F.t2 >= hi) F.t2 = Math.min(hi, F.t1 + 1);
+  F.playing = setInterval(() => { if (F.t2 >= hi) return stopPlay(); F.t2 += 1; syncFC(); }, 220);
+  $("fPlay").innerHTML = PAUSE_ICON;
+  syncFC();
+}
+function stopPlay() {
+  if (F.playing) clearInterval(F.playing);
+  F.playing = null;
+  $("fPlay").innerHTML = PLAY_ICON;
+}
+
+// ---- the same forecasts for every model: a forecast counts only if all the models here made one
+let HR = null;
+function buildHourly() {
+  const m = CUR.m;
+  const mods = [{ key: m.id, name: m.id, color: MODEL_COLOR, sel: true, pen: CUR.pen }]
+    .concat(stdIds.filter(id => id !== m.id).map(id => ({ key: id, name: M.standards[id], color: stdColor(id), pen: penStd[id] })));
+  const ok = new Uint8Array(R.n);
+  let nok = 0, t0 = Infinity, t1 = -Infinity;
+  for (let i = 0; i < R.n; i++) {
+    if (!mods.every(x => x.pen[i] === x.pen[i])) continue;
+    ok[i] = 1; nok++;
+    if (R.target[i] < t0) t0 = R.target[i];
+    if (R.target[i] > t1) t1 = R.target[i];
+  }
+  if (!nok) t0 = t1 = hoursOf(M.selection_days[0] + "T00:00");  // nothing in common: an empty graph
+  const nh = t1 - t0 + 1, cnt = new Int32Array(nh);
+  for (const x of mods) x.sum = new Float64Array(nh);
+  for (let i = 0; i < R.n; i++) {
+    if (!ok[i]) continue;
+    const k = R.target[i] - t0;
+    cnt[k]++;
+    for (const x of mods) x.sum[k] += x.pen[i];
+  }
+  const ref = new Float64Array(nh);  // what the reference forecast adds up to: 1 for each hour scored
+  let r = 0;
+  for (let k = 0; k < nh; k++) { if (cnt[k]) r++; ref[k] = r; }
+  for (const x of mods) {
+    x.sc = new Float64Array(nh); x.cum = new Float64Array(nh);
+    let c = 0;
+    for (let k = 0; k < nh; k++) { x.sc[k] = cnt[k] ? x.sum[k] / cnt[k] : NaN; if (cnt[k]) c += x.sc[k]; x.cum[k] = c; }
+  }
+  HR = { mods, ok, nok, t0, t1, nh, cnt, ref };
+}
+
+// ---- lines with names at their ends (/aqi/errors): x is a time (hours) or a lead
+function plotLines(c, o) {
+  const svg = c.svg, H = o.H, W = chartBox(c, H);
+  if (!W) return;
+  c.o = o;
+  const narrow = W < 520, series = o.series.filter(s => s.pts.length);
+  const m = { l: 40, r: labelWidth(series, narrow) + 22, t: 18, b: 26 };
+  const refPts = o.ref ? o.ref.pts : [];
+  let hs = o.minHi || 1, hr = 0;
+  for (const s of series) for (const p of s.pts) if (p[1] > hs) hs = p[1];
+  const clipped = o.clipHi != null && hs > o.clipHi;
+  if (clipped) hs = o.clipHi;
+  for (const p of refPts) if (p[1] > hr) hr = p[1];
+  const hi = Math.max(hs, hr);
+  const log = o.log && o.logMin != null;
+  let y0, y1, Y, ticks = [];
+  if (log) {  // whole decades top and bottom
+    let small = Infinity;
+    for (const s of series) for (const p of s.pts) if (p[1] > 0 && p[1] < small) small = p[1];
+    for (const p of refPts) if (p[1] > 0 && p[1] < small) small = p[1];
+    y0 = 10 ** Math.floor(Math.log10(Math.max(o.logMin, isFinite(small) ? small : o.logMin)));
+    y1 = 10 ** Math.ceil(Math.log10(Math.max(hi, y0 * 10)));
+    const l0 = Math.log10(y0), l1 = Math.log10(y1);
+    Y = v => H - m.b - (Math.log10(Math.min(Math.max(v, y0), y1)) - l0) / (l1 - l0) * (H - m.t - m.b);
+    for (let d = y0; d <= y1 * 1.0001; d *= 10) for (const k of l1 - l0 > 3 ? [1] : [1, 2, 5]) if (d * k <= y1 * 1.0001) ticks.push(+(d * k).toPrecision(2));
+  } else {
+    const step = niceStep(hi, 5);
+    y0 = 0; y1 = Math.ceil(hi / step + 0.15) * step;
+    Y = v => H - m.b - (Math.min(Math.max(v, y0), y1) - y0) / (y1 - y0) * (H - m.t - m.b);
+    for (let v = 0; v <= y1 + 1e-9; v += step) ticks.push(+v.toFixed(10));
+  }
+  m.l = Math.max(40, 14 + 7 * Math.max(...ticks.map(v => String(v).length)));
+  const X = x => m.l + (x - o.x0) / Math.max(1e-9, o.x1 - o.x0) * (W - m.l - m.r);
+  c.X = X; c.Y = Y;
+  const grid = el("g", { class: "gr" }, svg);
+  for (const v of ticks) {
+    if (Math.abs(v - y0) > 1e-9) el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v) }, grid);
+    el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = v;
+  }
+  addShades(svg, o.shades, X, m, H, o.x0, o.x1, o.shadeBottom);
+  const axis = el("g", { class: "ax" }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: Y(y0), y2: Y(y0) }, axis);
+  let lastX = -1e9;
+  for (const t of o.xTicks(W - m.l - m.r, narrow)) {
+    const px = X(t.x);
+    el("line", { x1: px, x2: px, y1: Y(y0), y2: Y(y0) + 5 }, axis);
+    if (px - lastX < (o.minGap || 0)) continue;
+    lastX = px;
+    el("text", { x: px, y: Y(y0) + 19, "text-anchor": "middle", style: t.bold ? "fill:var(--text-primary);font-weight:700" : "" }, svg).textContent = t.label;
+  }
+  if (o.ref && refPts.length) {
+    el("path", { d: pathD(refPts, X, Y), stroke: "var(--text-secondary)", "stroke-width": 1.5, "stroke-dasharray": "5 4" }, svg);
+    const at = o.ref.align === "left" ? [m.l + 4, "start"] : [W - m.r, "end"];
+    const ry = Y(o.ref.align === "left" ? refPts[0][1] : refPts[refPts.length - 1][1]) - 5;
+    el("text", { x: at[0], y: ry, "text-anchor": at[1], style: "fill:var(--text-muted);font-size:11.5px" }, svg).textContent = narrow && o.ref.short ? o.ref.short : o.ref.label;
+  }
+  el("text", { x: m.l, y: m.t - 5, style: "fill:var(--text-muted);font-size:11.5px" }, svg).textContent = o.label + (clipped ? "   (higher values are cut off)" : "");
+  const picking = c.pins.size > 0, base = el("g", {}, svg), top = el("g", {}, svg), ends = [];
+  for (const s of series) {
+    s.d = pathD(s.pts, X, Y, o.maxGap);
+    if (c.pins.has(s.key)) emph(top, s, X, Y);
+    else el("path", { d: s.d, stroke: picking ? GREY : s.color, "stroke-width": picking ? 1.2 : s.w, opacity: picking ? 0.6 : 1 }, base);
+    for (const p of s.pts) c.hits.push({ x: X(p[0]), y: Y(p[1]), item: s, p });
+    const e = s.pts[s.pts.length - 1];
+    ends.push({ y: Y(e[1]), x: X(e[0]), lines: labelLines(s.name, narrow), color: s.color, bold: s.bold, shown: !picking || c.pins.has(s.key) });
+  }
+  c.hover = el("g", {}, svg);
+  endLabels(svg, ends, W, H, m, true, narrow);
+  if (!series.length) el("text", { x: (m.l + W - m.r) / 2, y: m.t + 40, "text-anchor": "middle" }, svg).textContent = o.empty || "Nothing to show here.";
+  svg.setAttribute("aria-label", o.aria);
+  c.describe = o.describe;
+}
+const swatch = s => '<span class="sw" style="background:' + s.color + '"></span><b>' + esc(s.name) + "</b><br>";
+function drawErr() {
+  if (!HR) return;
+  const hts = chartHeights(), t0 = HR.t0, tEnd = HR.t0 + HR.nh - 1, shown = HR.mods.filter(x => x.sel || S.show.has(x.key));
+  if (E.t1 == null || E.t2 == null || E.t1 < t0 || E.t2 > tEnd || E.t2 - E.t1 < 6) { E.t1 = t0; E.t2 = tEnd; }
+  $("e1").min = $("e2").min = t0; $("e1").max = $("e2").max = tEnd;
+  $("e1").value = E.t1; $("e2").value = E.t2;
+  $("e1v").textContent = sstamp(E.t1); $("e2v").textContent = E.t2 === tEnd ? "Latest" : sstamp(E.t2);
+  const f = t => (t - t0) / Math.max(1, tEnd - t0) * 100;
+  $("eSel").style.left = f(E.t1) + "%"; $("eSel").style.width = (f(E.t2) - f(E.t1)) + "%";
+  for (const b of $("scaleTabs").children) b.setAttribute("aria-pressed", String((b.dataset.k === "log") === E.log));
+  const xt = (pw, narrow) => timeTicks(E.t1, E.t2, pw, narrow), lw = x => x.sel ? 3 : 2;
+  const win = [];
+  for (let k = E.t1 - t0; k <= E.t2 - t0; k++) win.push(k);
+  // (a) the score of each hour
+  const A = shown.map(x => ({ key: x.key, name: x.name, color: x.color, w: lw(x), bold: x.sel, pts: win.filter(k => HR.cnt[k]).map(k => [t0 + k, x.sc[k], HR.cnt[k]]) }));
+  const pooled = [].concat(...A.map(s => s.pts.map(p => p[1]))).sort((a, b) => a - b);
+  const p95 = pooled.length ? pooled[Math.floor(pooled.length * 0.95)] : 1;
+  plotLines(EA, { H: hts.err, x0: E.t1, x1: E.t2, xTicks: xt, series: A, maxGap: 3, log: E.log, logMin: 0.01, clipHi: Math.max(1.5, p95), minHi: 1,
+    label: "↑ worse", ref: { pts: [[E.t1, 1], [E.t2, 1]], label: "1 = as bad as the reference forecast", short: "1 = reference forecast" },
+    shades: heldShade(E.t2), aria: "Score of each model for each hour, " + stamp(E.t1) + " to " + stamp(E.t2),
+    describe: h => swatch(h.item) + '<span class="k">for ' + stamp(h.p[0]) + ":</span> <b>" + fmtScore(h.p[1]) + '</b><br><span class="k">mean of the ' + h.p[2] + " forecast" + (h.p[2] === 1 ? "" : "s") + " made for that hour</span>" });
+  // (b) added up since the first hour scored
+  const B = shown.map(x => ({ key: x.key, name: x.name, color: x.color, w: lw(x), bold: x.sel, pts: win.map(k => [t0 + k, x.cum[k], HR.ref[k]]) }));
+  plotLines(EB, { H: hts.err, x0: E.t1, x1: E.t2, xTicks: xt, series: B, maxGap: 3, log: E.log, logMin: 0.1, minHi: 1,
+    label: "↑ worse", ref: { pts: win.map(k => [t0 + k, HR.ref[k]]), label: "as bad as the reference forecast all along", short: "reference forecast all along" }, shadeBottom: true,
+    shades: heldShade(E.t2), aria: "Score of each model added up since " + stamp(t0) + ", " + stamp(E.t1) + " to " + stamp(E.t2),
+    describe: h => swatch(h.item) + '<span class="k">' + stamp(t0) + " to " + stamp(h.p[0]) + ":</span> <b>" + fmtScore(h.p[1]) + '</b><br><span class="k">the reference forecast: ' + Math.round(h.p[2]) + " (1 for each of the " + Math.round(h.p[2]) + " hours)</span>" });
+  // by hours ahead, on the selection or the held-out days
+  const li = new Map(M.leads.map((l, k) => [l, k]));
+  const Lser = shown.map(x => {
+    const sm = new Float64Array(M.leads.length), n = new Int32Array(M.leads.length);
+    for (let i = 0; i < R.n; i++) if (HR.ok[i] && R.per[i] === S.per) { const k = li.get(R.lead[i]); sm[k] += x.pen[i]; n[k]++; }
+    return { key: x.key, name: x.name, color: x.color, w: lw(x), bold: x.sel, pts: M.leads.map((l, k) => n[k] ? [l, sm[k] / n[k], n[k]] : null).filter(Boolean) };
+  });
+  plotLines(EL, { H: hts.sm, x0: M.leads[0], x1: MAXL, xTicks: () => M.leads.map(l => ({ x: l, label: l + " h" })), minGap: 30, series: Lser, minHi: 1.05,
+    label: "↑ worse", ref: { pts: [[M.leads[0], 1], [MAXL, 1]], label: "1 = as bad as the reference forecast", short: "1 = reference forecast", align: "left" },
+    aria: "Score of each model by hours ahead",
+    describe: h => swatch(h.item) + '<span class="k">' + h.p[0] + (h.p[0] === 1 ? " hour" : " hours") + " ahead:</span> <b>" + fmtScore(h.p[1]) + '</b><br><span class="k">mean of ' + h.p[2] + " forecasts</span>" });
+}
+
+// ---- the forecasts at one lead (the lead slider)
+function drawFixed() {
   const m = CUR.m, L = S.lead, idx = byLead[L] || [];
   $("leadv").textContent = L + (L === 1 ? " hour" : " hours");
   $("fch").textContent = "Forecasts " + L + (L === 1 ? " hour" : " hours") + " ahead, against what was measured";
@@ -975,41 +1423,21 @@ function drawForecast() {
   const shades = hr.length ? [{ x0: Math.min(...hr) - 0.5, x1: Math.max(...hr) + 0.5, label: "held out" }] : [];
   drawChart($("fcsvg"), $("fctip"), { H: chartHeights().fc, xv, series, shades, xTicks: xTicksForDays(xv), xFmt: stamp, vFmt: v => v.toFixed(0) + " µg/m³", yTitle: "PM2.5, µg/m³" });
 }
-function errSeries(keyFn, nk) {
-  const own = groupMeans(CUR.pen, null, R, nk, keyFn).a;
-  const out = [{ id: CUR.m.id, name: CUR.m.id, color: MODEL_COLOR, w: 2.6, marker: true, v: own, z: 2 }];
-  for (const id of stdIds) {
-    if (!S.show.has(id) || id === CUR.m.id) continue;
-    out.push({ id, name: M.standards[id], color: stdColor(id), w: 1.5, dash: STD_DASH[id], marker: true, v: groupMeans(CUR.pen, penStd[id], R, nk, keyFn).b, z: 0 });
-  }
-  return out;
-}
-function drawErrors() {
-  const hts = chartHeights();
-  const leads = M.leads, nl = leads.length;
-  const lseries = errSeries(i => R.per[i] === S.per ? leads.indexOf(R.lead[i]) : -1, nl);
-  drawChart($("lsvg"), $("ltip"), { H: hts.sm, xv: leads, series: lseries, xTicks: leads.map(l => ({ x: l, label: l + " h" })),
-    xFmt: x => x + (x === 1 ? " hour ahead" : " hours ahead"), vFmt: v => v.toFixed(2), yTitle: "Mean penalty", ref: 1, refLabel: "1 = reference forecast", yMin0: 1.05 });
-  const di = new Map(ALLDAYS.map((d, k) => [d, k]));
-  const dseries = errSeries(i => di.get(R.day[i]), ALLDAYS.length);
-  const dxs = ALLDAYS.map((d, k) => k);
-  const shades = [];
-  ALLDAYS.forEach((d, k) => { if (HELDD.has(d)) shades.push({ x0: k - 0.5, x1: k + 0.5, label: shades.length ? "" : "held out" }); });
-  drawChart($("dsvg"), $("dtip"), { H: hts.sm, xv: dxs, xDom: [-0.5, ALLDAYS.length - 0.5], series: dseries, shades, xTicks: ALLDAYS.map((d, k) => ({ x: k, label: dayKeyShort(d) })),
-    xFmt: x => dayKeyShort(ALLDAYS[x]) + " (issued)", vFmt: v => v.toFixed(2), yTitle: "Mean penalty", ref: 1, refLabel: "1 = reference forecast", yMin0: 1.05 });
-}
+function drawAll() { syncFC(); drawErr(); drawFixed(); }
 function renderChips() {
   $("chips").innerHTML = '<label style="cursor:default"><span class="sw2" style="color:var(--obs-0)"></span>Measured</label><label style="cursor:default"><span class="sw2" style="color:' + MODEL_COLOR + '"></span><b>' + esc(CUR.m.id) + "</b></label>" +
     stdIds.filter(id => id !== CUR.m.id).map(id => '<label><input type="checkbox" data-std="' + id + '"' + (S.show.has(id) ? " checked" : "") + '><span class="sw2" style="color:' + stdColor(id) + '"></span>' + esc(M.standards[id]) + "</label>").join("");
   for (const cb of $("chips").querySelectorAll("input")) cb.onchange = () => {
     if (cb.checked) S.show.add(cb.dataset.std); else S.show.delete(cb.dataset.std);
-    drawForecast(); drawErrors();
+    drawAll();
   };
 }
 function renderPanel() {
   const m = byId.get(S.sel);
   if (!m) return;
   computeCur(m);
+  buildHourly();
+  F.pins.clear(); E.pins.clear();
   $("dname").textContent = m.id;
   let b = "";
   if (m.id === WIN.id) b += '<span class="badge win">winner</span>';
@@ -1020,17 +1448,23 @@ function renderPanel() {
   renderForm(m);
   renderScores();
   renderChips();
-  drawForecast();
-  drawErrors();
+  $("cumH").textContent = "Added up since " + dayShort(HR.t0);
+  const skipped = R.n - HR.nok, nm = HR.mods.length;
+  $("errExplain").textContent = "Each hour's score is the mean, over the forecasts made for that hour (one from each of the " + MAXL + " hours before it), of ((forecast − measured) / s)², " +
+    "where s is how far out the reference forecast is at that lead. 1 is as bad as the reference forecast; lower is better. " +
+    "In the lower graph the scores are added up from the first hour; the dashed line is the reference forecast, which adds 1 for every hour. " +
+    "Every model is scored on the same forecasts: one counts only if all " + nm + " models made it" + (skipped ? " (" + skipped + " of " + R.n + " do not count)" : "") +
+    ", and the first hours of " + dayShort(HR.t0) + " have fewer than " + MAXL + " forecasts.";
+  drawAll();
 }
 function renderScores() {
   const m = CUR.m;
   $("dscores").innerHTML = scoreTable(m);
-  $("dscoreNote").textContent = "In each cell: " + m.id + " (top) and the other model (below), on the rows both have a forecast for; the better one is in bold. The first row is " + m.id + " on all its rows. " +
-    (S.per === 0 ? M.selection_days.length : M.heldout_days.length) + " days.";
+  $("dscoreNote").textContent = "Mean error of each model on the same " + SCORE_N + " forecasts (the ones every model here made, " +
+    (S.per === 0 ? M.selection_days.length + " selection" : M.heldout_days.length + " held-out") + " days), best first. Lower is better; 1 = as bad as the reference forecast. Bold: best in that column.";
   for (const b of $("perTabs").children) b.setAttribute("aria-pressed", String(+b.dataset.k === S.per));
-  $("errnote").textContent = "Error = mean of ((forecast − measured) / s)², where s is the reference error at that lead; 1 is as bad as the reference forecast. Both charts above use the " +
-    (S.per === 0 ? "selection" : "held-out") + " days for 'by hours ahead' and every day for 'by day'. Other models are compared with " + m.id + " on the rows both have.";
+  $("leadNote").textContent = "Mean score by how far ahead the forecast was made, on the " + (S.per === 0 ? "selection" : "held-out") +
+    " days (choose in Scores above), every model on the same forecasts.";
 }
 function renderForm(m) {
   $("dform").innerHTML = formulaCard(m);
@@ -1077,9 +1511,8 @@ function syncControls() {
   $("zoomOut").disabled = S.zoom === ZOOMS[0]; $("zoomIn").disabled = S.zoom === ZOOMS[ZOOMS.length - 1];
 }
 function setColor(k) { S.color = k; syncControls(); recolor(); writeHash(); }
-function recolor() {
-  const needLayout = S.arrange === "score";
-  if (needLayout) { drawTree(); } else { computeScale(); paintDots(); }
+function recolor() {  // the dots, and the best score under each generation, change with the colour
+  drawTree();
   drawKey();
 }
 function setArrange(k) { S.arrange = k; syncControls(); drawTree(); drawKey(); writeHash(); }
@@ -1117,7 +1550,7 @@ function buildMenus() {
   };
   for (const [k, label] of [[0, "Selection days"], [1, "Held-out days"]]) {
     const b = document.createElement("button");
-    b.textContent = label; b.dataset.k = k; b.onclick = () => { S.per = k; renderScores(); drawErrors(); writeHash(); };
+    b.textContent = label; b.dataset.k = k; b.onclick = () => { S.per = k; renderScores(); drawErr(); writeHash(); };
     $("perTabs").appendChild(b);
   }
   $("openMenu").onclick = () => openDrawer(true);
@@ -1126,16 +1559,44 @@ function buildMenus() {
   document.addEventListener("keydown", e => { if (e.key === "Escape") openDrawer(false); });
   $("reset").onclick = () => {
     Object.assign(S, DEFAULT, { show: new Set(DEFAULT.show) });
+    defaultWindows();
     syncControls(); drawTree(); drawKey(); renderPanel(); writeHash(); centreOn(byId.get(S.sel));
   };
   $("zoomIn").onclick = () => setZoom(1); $("zoomOut").onclick = () => setZoom(-1);
-  $("leadR").oninput = e => { S.lead = +e.target.value; drawForecast(); writeHash(); };
+  $("leadR").oninput = e => { S.lead = +e.target.value; drawFixed(); writeHash(); };
+  // the charts: hover, click and the window sliders
+  for (const c of [FC, EA, EB, EL]) wireChart(c);
+  for (const id of ["f1", "f2"]) {
+    $(id).oninput = e => {
+      stopPlay();
+      F[id === "f1" ? "t1" : "t2"] = +e.target.value;
+      const lo = ISSUES[0], hi = ISSUES[ISSUES.length - 1];
+      if (F.t1 > F.t2 - 1) { if (id === "f1") F.t2 = Math.min(hi, F.t1 + 1); else F.t1 = Math.max(lo, F.t2 - 1); }
+      syncFC();
+    };
+  }
+  $("fPlay").onclick = () => F.playing ? stopPlay() : startPlay();
+  $("fEvery").onchange = e => { F.every = +e.target.value; syncFC(); };
+  for (const id of ["e1", "e2"]) {
+    $(id).oninput = e => {
+      E[id === "e1" ? "t1" : "t2"] = +e.target.value;
+      const lo = HR.t0, hi = HR.t0 + HR.nh - 1;
+      if (E.t1 > E.t2 - 6) { if (id === "e1") E.t2 = Math.min(hi, E.t1 + 6); else E.t1 = Math.max(lo, E.t2 - 6); }
+      drawErr();
+    };
+  }
+  for (const [k, label] of [["linear", "Linear"], ["log", "Log"]]) {
+    const b = document.createElement("button");
+    b.textContent = label; b.dataset.k = k; b.onclick = () => { E.log = k === "log"; drawErr(); };
+    $("scaleTabs").appendChild(b);
+  }
   $("full").onclick = () => document.fullscreenElement ? document.exitFullscreen() : $("grapher").requestFullscreen && $("grapher").requestFullscreen();
 }
 
 function init() {
   readHash();
   loadRamp();
+  defaultWindows();
   buildMenus();
   setupTree();
   syncControls();
@@ -1153,7 +1614,7 @@ function init() {
     timer = setTimeout(() => {
       if (window.innerWidth === lastW) return;
       lastW = window.innerWidth;
-      drawTree(); drawKey(); drawForecast(); drawErrors();
+      drawTree(); drawKey(); drawAll();
     }, 150);
   });
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { loadRamp(); paintDots(); drawKey(); });
