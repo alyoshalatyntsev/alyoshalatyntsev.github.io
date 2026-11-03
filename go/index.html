@@ -44,6 +44,11 @@
   #boardwrap { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }
   svg { display: block; }
   #board { width: 100%; height: 100%; }
+  #boardwrap { position: relative; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }   /* a long press marks a point, so no callout or text selection */
+  #marks { position: absolute; inset: 0; pointer-events: none; }
+  .mark { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); border: 3px solid #e53935; background: rgba(229,57,53,.22);
+    box-shadow: 0 0 10px 3px rgba(229,57,53,.55); animation: mark 3.2s ease-out forwards; }
+  @keyframes mark { 0% { opacity: 0; scale: .3; } 8% { opacity: 1; scale: 1.15; } 16% { scale: 1; } 65% { opacity: 1; } 100% { opacity: 0; scale: 1.1; } }
   #board * { pointer-events: none; }   /* the board is redrawn as the analysis runs: clicks must land on the svg itself, not on a line that is about to vanish */
   #estimate { text-align: center; font-size: 14px; color: #1565c0; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 4px; }
   #counted { text-align: center; font-size: 14px; color: #3b2a14; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; }
@@ -95,7 +100,7 @@
     <div class="bowl" data-c="w"><div class="bhead"><span class="stone w"></span><b>White</b><span class="hint" id="hintw"></span><span class="cap" id="capw"></span></div><div class="chips" id="chipsw"></div></div>
   </div>
   <div id="watchers"></div>
-  <div id="boardwrap"><svg id="board"></svg></div>
+  <div id="boardwrap"><svg id="board"></svg><div id="marks"></div></div>
   <div id="estimate"></div>
   <div id="counted"></div>
   <div id="buttons">
@@ -416,6 +421,11 @@ function onLive(snap) {
   }
   const g = D.games[viewing], key = viewing + ':' + toArr(g.moves).length;
   G = g; S = replay(g);
+  for (const p of others()) if (p.mark && marked[p.k] !== p.mark.i) {
+    const seen = p.k in marked; marked[p.k] = p.mark.i;
+    if (seen && p.mark.g === viewing) showMark(p.mark.p);   // marks already there when the page opened are old news
+  }
+  for (const p of others()) if (!(p.k in marked)) marked[p.k] = null;
   for (const p of others()) if (p.poke && p.poke.to === tab && poked[p.k] !== p.poke.i) {
     poked[p.k] = p.poke.i;
     const loud = actx && actx.state === 'running', at = Date.now(), wake = loud ? null : soundReady();
@@ -459,6 +469,24 @@ function poke(k) {
   poke.t = Date.now();
   presRef.child('poke').set({ to: k, i: poke.t }).catch(() => {});
   dark[k] = poke.t + 500; render(); setTimeout(render, 520);   // their name goes darker for a moment
+}
+
+// ---------- mark: shift+click a point (or long-press it on a phone) and it glows red for a moment on everyone's board ----------
+// The mark rides in the marker's own presence entry, like a poke: {p: the point, g: the game, i: an id}.
+const marked = {};
+function mark(p) {
+  if (Date.now() - (mark.t || 0) < 300) return;
+  mark.t = Date.now(); showMark(p);
+  if (live && online) presRef.child('mark').set({ p, g: viewing, i: mark.t }).catch(() => {});
+}
+function showMark(p) {
+  if (!G || p < 0 || p >= G.size * G.size) return;
+  const n = G.size, V = n + 1, m = document.createElement('div');
+  m.className = 'mark';
+  m.style.left = (1 + p % n) / V * 100 + '%'; m.style.top = (1 + Math.floor(p / n)) / V * 100 + '%';
+  m.style.width = m.style.height = 1.5 / V * 100 + '%';
+  m.addEventListener('animationend', () => m.remove());
+  document.getElementById('marks').appendChild(m);
 }
 // One pig snort, as an mp3 in base64 (cut from "Pig - Snort 5" by JarredGibb on freesound.org, public domain).
 const GRUNT = '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';
@@ -936,9 +964,22 @@ function pointAt(ev) {
   const x = Math.round((ev.clientX - r.left) / r.width * V - 1), y = Math.round((ev.clientY - r.top) / r.height * V - 1);
   return x < 0 || y < 0 || x >= n || y >= n ? null : y * n + x;
 }
+// a press held still for half a second on a touch screen marks the point instead of playing it
+const press = { timer: null, clientX: 0, clientY: 0, fired: 0 };
+svg.addEventListener('pointerdown', ev => {
+  if (ev.pointerType === 'mouse' && ev.shiftKey) ev.preventDefault();   // shift+click would otherwise select text
+  clearTimeout(press.timer); press.timer = null;
+  if (ev.pointerType === 'mouse' || !G) return;
+  press.clientX = ev.clientX; press.clientY = ev.clientY;
+  press.timer = setTimeout(() => { press.timer = null; const p = pointAt(press); if (p !== null) { press.fired = Date.now(); ghost = null; render(); mark(p); } }, 500);
+});
+svg.addEventListener('pointermove', ev => { if (press.timer && Math.hypot(ev.clientX - press.clientX, ev.clientY - press.clientY) > 10) { clearTimeout(press.timer); press.timer = null; } });
+for (const t of ['pointerup', 'pointercancel']) svg.addEventListener(t, () => { clearTimeout(press.timer); press.timer = null; });
 svg.addEventListener('click', ev => {
   if (!G) return;
+  if (Date.now() - press.fired < 1500) { press.fired = 0; return; }   // the click that ends a long press
   const p = pointAt(ev); if (p === null) return;
+  if (ev.shiftKey) { mark(p); return; }
   if (cloud) {
     if (!takeBack(p)) playHere(p);
     hoverP = null; render(); requestOwn(); return;
@@ -960,6 +1001,7 @@ svg.addEventListener('mousemove', ev => {
 // right-click the stone that was just played to take it back
 svg.addEventListener('contextmenu', ev => {
   if (!G) return;
+  if (press.timer || Date.now() - press.fired < 1500) { ev.preventDefault(); return; }   // phones send a long press here too: it marks, never undoes
   const p = pointAt(ev); if (p === null) return;
   if (cloud) {
     if (takeBack(p)) { ev.preventDefault(); render(); requestOwn(); }
