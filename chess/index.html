@@ -35,7 +35,7 @@
   .chip.poke { cursor: pointer; }
   .chip.poked { filter: brightness(.7); }
   #watchers { font-size: 14px; color: #555; margin-bottom: 6px; height: 22px; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; align-items: center; }
-  #boardwrap { width: 100%; aspect-ratio: 1; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }
+  #boardwrap { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }   /* the Go board's wood */
   svg { display: block; }
   #board { width: 100%; height: 100%; cursor: pointer; }
   #boardwrap { position: relative; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }   /* a long press marks a square, so no callout or text selection */
@@ -51,14 +51,14 @@
   button:active { transform: translateY(1px); }
   button:disabled { opacity: .4; }
   button.on { background: #1565c0; color: #fff; }
-  #timeline { display: none; height: 84px; margin: 0 0 18px; border-radius: 10px; background: #d6c8ab; box-shadow: 0 1px 3px rgba(0,0,0,.25); touch-action: pan-y; cursor: pointer; user-select: none; }
+  #timeline { display: none; height: 84px; margin: 0 0 18px; border-radius: 10px; background: #e2c47f; box-shadow: 0 1px 3px rgba(0,0,0,.25); touch-action: pan-y; cursor: pointer; user-select: none; }
   #timeline svg { width: 100%; height: 100%; }
   #others { margin-top: 28px; }
   #others h3 { font-size: 15px; color: #666; font-weight: 600; margin: 0 0 8px; }
   #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   #newtile { display: flex; align-items: center; gap: 14px; cursor: pointer; margin: 0 0 18px; padding: 8px; border-radius: 10px; border: 2px dashed #b9a987; }
   #newtile.off { display: none; }   /* in Analysis the timeline sits in its place */
-  #newtile svg { width: 64px; height: 64px; opacity: .45; border-radius: 4px; }
+  #newtile svg { width: 64px; height: 64px; opacity: .45; background: #dcb35c; border-radius: 4px; }
   #newtile .plus { font-size: 40px; font-weight: 300; line-height: 1; color: #555; }
   #newtile .nt { font-size: 20px; font-weight: 600; color: #444; }
   .thumb { cursor: pointer; border-radius: 8px; padding: 5px; }
@@ -66,7 +66,7 @@
   .thumb svg, .thumb .tl { opacity: .5; }
   .thumb.live svg, .thumb.live .tl { opacity: 1; }
   .bd { background: #f3ede2; border-radius: 4px; overflow: hidden; }
-  .thumb svg { display: block; width: 100%; aspect-ratio: 1; }
+  .thumb svg { display: block; width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 4px; }
   #more { display: none; margin-top: 14px; font-size: 15px; color: #666; font-weight: 600; cursor: pointer; }   /* like the Other games heading */
   .tl { font-size: 12px; color: #444; margin-top: 3px; line-height: 1.3; }
   #credit { margin-top: 36px; font-size: 11px; color: #a09682; text-align: center; }
@@ -95,7 +95,6 @@
   <div id="estimate"></div>
   <div id="counted"></div>
   <div id="buttons">
-    <button id="flip">Flip board</button>
     <button id="undo">Undo</button>
     <button id="cloud">Analysis</button>
   </div>
@@ -151,7 +150,6 @@ let myAnimal = ls.get('goAnimal') === null ? -1 : +ls.get('goAnimal');
 let myName = ls.get('goName') || '';
 let myColour = ls.get('chessColour');      // null = never chosen, '' = just watching
 let viewing = ls.get('chessGame');
-let flipOn = false;                         // the Flip board button: turns the board round from how this colour normally sees it
 
 const NAME = { w: 'White', b: 'Black' };
 const other = c => c === 'w' ? 'b' : 'w';
@@ -212,8 +210,11 @@ function legal(P) {
       }
     }
   }
-  return out.filter(m => !inCheck(make(P, m), c));
+  return out.filter(m => b[m.to].toLowerCase() !== 'k' && !inCheck(make(P, m), c));   // kings are never taken: a side that moves twice could otherwise reach one
 }
+// As on the Go page, either side may move whenever it likes; moving out of turn is as if the other side had skipped its move
+// (so an en passant chance lapses). P as colour c would see it:
+function as(P, c) { return P.turn === c ? P : { ...P, turn: c, ep: -1 }; }
 // the position after move m (which must be legal)
 function make(P, m) {
   const b = P.board.slice(), x = b[m.f], t = x.toLowerCase(), c = P.turn;
@@ -261,7 +262,7 @@ const toArr = m => (Array.isArray(m) ? m : m ? Object.values(m) : []).filter(Boo
 function replay(g, notes = true) {
   let P = startPos(); const sans = [], keys = [key(P)];
   for (const m of toArr(g.moves)) {
-    const L = legal(P), x = L.find(o => same(o, m)); if (!x) continue;
+    P = as(P, m.c); const L = legal(P), x = L.find(o => same(o, m)); if (!x) continue;
     if (notes) { sans.push(san(P, x, L)); }
     P = make(P, x);
     if (notes) keys.push(key(P));
@@ -269,8 +270,8 @@ function replay(g, notes = true) {
   return { ...P, sans, keys, status: status(P) };
 }
 function material(b) { let v = 0; for (const x of b) if (x) v += (side(x) === 'w' ? 1 : -1) * VALUE[x.toLowerCase()]; return v; }
-// "12. Nf3" or "12… Nf6" for the k-th move of a game (k from 1)
-function moveLabel(k, s) { return `${Math.ceil(k / 2)}${k % 2 ? '.' : '…'} ${s}`; }
+// "White Nf3 · move 12" for the k-th move of a game (k from 1), by colour c: moves are counted one by one, since a side may move twice
+function moveLabel(k, s, c) { return `${NAME[c]} ${s} · move ${k}`; }
 
 // ---------- state ----------
 let D = null, G = null, S = null, first = true, lastSnap = null, live = false, cached = null, online = false;
@@ -369,8 +370,9 @@ function showMark(p) {
   if (!G || p < 0 || p >= 64) return;
   const [x, y] = place(p), m = document.createElement('div');
   m.className = 'mark';
-  m.style.left = (x + 0.5) / 8 * 100 + '%'; m.style.top = (y + 0.5) / 8 * 100 + '%';
-  m.style.width = m.style.height = 1.05 / 8 * 100 + '%';
+  const V = 8 + 2 * EDGE;
+  m.style.left = (x + 0.5) / V * 100 + '%'; m.style.top = (y + 0.5) / V * 100 + '%';
+  m.style.width = m.style.height = 1.05 / V * 100 + '%';
   m.addEventListener('animationend', () => m.remove());
   document.getElementById('marks').appendChild(m);
 }
@@ -429,7 +431,7 @@ function submit(mv) {
   if (!live) return;
   R.child(`games/${viewing}/moves`).transaction(cur => {
     const list = toArr(cur), P = replay({ moves: list }, false);
-    if (P.status || P.turn !== mv.c || !legal(P).some(o => same(o, mv))) return undefined;
+    if (P.status || !legal(as(P, mv.c)).some(o => same(o, mv))) return undefined;
     const m = { c: mv.c, f: mv.f, to: mv.to, t: TS }; if (mv.pr) m.pr = mv.pr;
     list.push(m); return list;
   });
@@ -458,7 +460,7 @@ function buildStates() {
   let P = startPos(); const ok = [];
   states = [{ ...P, san: '' }];
   for (const m of line) {
-    const L = legal(P), x = L.find(o => same(o, m)); if (!x) continue;
+    P = as(P, m.c); const L = legal(P), x = L.find(o => same(o, m)); if (!x) continue;
     const s = san(P, x, L); P = make(P, x);
     ok.push(m); states.push({ ...P, san: s });
   }
@@ -496,7 +498,7 @@ function drawTimeline() {
   s += `<path d="${area}" fill="#fafafa" clip-path="url(#tlw)"/><path d="${area}" fill="#111" fill-opacity=".85" clip-path="url(#tlb)"/>`;
   s += `<path d="M${steps.map(xy).join(' L')}" fill="none" stroke="#3b2a14" stroke-width="1.2" stroke-linejoin="round"/>`;
   if (fork < L) { const i = steps.findIndex(([k]) => k >= fork); s += `<path d="M${steps.slice(Math.max(0, i)).map(xy).join(' L')}" fill="none" stroke="#1565c0" stroke-width="2.5" stroke-linejoin="round"/>`; }
-  const cx = x(at), text = at ? moveLabel(at, states[at].san) : 'start', right = cx > W - 80;
+  const cx = x(at), text = at ? moveLabel(at, states[at].san, line[at - 1].c) : 'start', right = cx > W - 140;
   s += `<line x1="${TX}" y1="${mid}" x2="${W - TX}" y2="${mid}" stroke="#3b2a14" stroke-opacity=".5"/>`;
   s += `<line x1="${cx}" y1="0" x2="${cx}" y2="${H}" stroke="#1565c0" stroke-width="2" stroke-opacity=".7"/>`;
   s += `<text x="${right ? cx - 6 : cx + 6}" y="13" font-size="12" fill="#0d47a1" text-anchor="${right ? 'end' : 'start'}">${esc(text)}</text>`;
@@ -519,45 +521,45 @@ addEventListener('keydown', ev => {
 
 // ---------- rendering ----------
 const svg = document.getElementById('board');
-const LIGHT = '#f0d9b5', DARK = '#b58863';
-// Black's player sees the board from Black's side; Flip board turns it round
-function flipped() { return (myColour === 'b') !== flipOn; }
-// where square q is drawn on this device: [column, row] from the top left
-function place(q, flip = flipped()) { const r = q >> 3, f = q & 7; return flip ? [7 - f, 7 - r] : [f, r]; }
-// draws position P into the svg s; o: { flip, last: the move to show, sel, dots: where the picked-up piece can go, check: a king's square, coords, mine: moves after the fork }
+// squares in two woods that go with the Go board's (#dcb35c), which also shows as a frame EDGE squares wide round them
+const LIGHT = '#efd9a7', DARK = '#c2924a', EDGE = 0.34;
+// where square q is drawn, in squares from the top left of the frame; White always at the bottom
+function place(q) { return [EDGE + (q & 7), EDGE + (q >> 3)]; }
+// draws position P into the svg s; o: { last: the move to show, trial: it was made in Analysis, sel, dots: where the picked-up piece can go, check: a king's square, coords }
 function drawBoard(s, P, o = {}) {
-  const sq = (q, fill) => { const [x, y] = place(q, o.flip); return `<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}"/>`; };
+  const sq = (q, fill) => { const [x, y] = place(q); return `<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}"/>`; };
   let h = '';
   for (let q = 0; q < 64; q++) h += sq(q, ((q >> 3) + (q & 7)) & 1 ? DARK : LIGHT);
   if (o.last) for (const q of [o.last.f, o.last.to]) h += sq(q, o.trial ? 'rgba(66,135,245,.45)' : 'rgba(255,221,51,.5)');
   if (o.sel !== undefined && o.sel !== null) h += sq(o.sel, 'rgba(20,110,40,.5)');
   if (o.check >= 0) h += sq(o.check, 'url(#chk)');
   if (o.coords) for (let i = 0; i < 8; i++) {
-    const fq = o.flip ? 7 - i : i, rq = o.flip ? i + 1 : 8 - i;   // the file letter along the bottom, the rank number down the left
-    h += `<text x="${i + 0.96}" y="7.95" font-size=".2" text-anchor="end" font-weight="700" fill="${(i + 7) & 1 ? LIGHT : DARK}">${'abcdefgh'[fq]}</text>`;
-    h += `<text x=".04" y="${i + 0.21}" font-size=".2" font-weight="700" fill="${i & 1 ? LIGHT : DARK}">${rq}</text>`;
+    // the file letters along the bottom of the frame, the rank numbers down its left
+    h += `<text x="${EDGE + i + 0.5}" y="${8 + EDGE * 1.72}" font-size=".22" text-anchor="middle" fill="#3b2a14">${'abcdefgh'[i]}</text>`;
+    h += `<text x="${EDGE / 2}" y="${EDGE + i + 0.58}" font-size=".22" text-anchor="middle" fill="#3b2a14">${8 - i}</text>`;
   }
-  P.board.forEach((x, q) => { if (!x) return; const [cx, cy] = place(q, o.flip); h += `<use href="#${side(x)}${x.toUpperCase()}" x="${cx}" y="${cy}" width="1" height="1"/>`; });
+  P.board.forEach((x, q) => { if (!x) return; const [cx, cy] = place(q); h += `<use href="#${side(x)}${x.toUpperCase()}" x="${cx}" y="${cy}" width="1" height="1"/>`; });
   for (const q of o.dots || []) {
-    const [x, y] = place(q, o.flip);
+    const [x, y] = place(q);
     h += P.board[q] ? `<circle cx="${x + 0.5}" cy="${y + 0.5}" r=".45" fill="none" stroke="rgba(20,85,30,.5)" stroke-width=".08"/>`
       : `<circle cx="${x + 0.5}" cy="${y + 0.5}" r=".15" fill="rgba(20,85,30,.5)"/>`;
   }
-  s.setAttribute('viewBox', '0 0 8 8');
+  h = `<rect x="${EDGE - 0.02}" y="${EDGE - 0.02}" width="8.04" height="8.04" fill="#3b2a14" opacity=".55"/>` + h;   // a thin dark line round the squares
+  s.setAttribute('viewBox', `0 0 ${8 + 2 * EDGE} ${8 + 2 * EDGE}`);
   s.innerHTML = h;
 }
 
 // The title says so while it is your move in the real game.
 function updateTab(turn) { document.title = turn ? 'Your turn · Chess' : 'Chess'; }
 // the side that may move pieces on this board: in Analysis whoever is to move, otherwise you
-function mover() { return cloud ? toMove() : myColour; }
+function mover() { return cloud ? toMove() : myColour; }   // in Analysis the sides take turns
 function render() {
   if (!G) return;
   const P = cloud ? states[at] : S, fork = cloud ? forkAt() : 0;
   const lm = cloud ? line[at - 1] : lastMove();
   if (sel !== null && side(P.board[sel]) !== mover()) sel = null;
-  const dots = sel !== null ? legal(P).filter(m => m.f === sel).map(m => m.to) : [];
-  drawBoard(svg, P, { flip: flipped(), last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1, coords: true });
+  const dots = sel !== null ? legal(as(P, mover())).filter(m => m.f === sel).map(m => m.to) : [];
+  drawBoard(svg, P, { last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1, coords: true });
 
   // banner
   const B = document.getElementById('banner'), sub = document.getElementById('sub'), st = cloud ? status(P) : S.status;
@@ -598,18 +600,17 @@ function render() {
   if (away.length) {
     const games = [...new Set(away.map(p => p.g))];
     N.innerHTML = games.map(g => { const ps = away.filter(p => p.g === g), n = toArr(D.games[g].moves).length;
-      return `${ps.map(label).join(', ')} ${ps.length > 1 ? 'are' : 'is'} on a different game (${n ? 'move ' + Math.ceil(n / 2) : 'not started'}) <button data-go="${g}">Go there</button>`; }).join('<br>')
+      return `${ps.map(label).join(', ')} ${ps.length > 1 ? 'are' : 'is'} on a different game (${n ? 'move ' + n : 'not started'}) <button data-go="${g}">Go there</button>`; }).join('<br>')
       + `<br><button id="snap">Bring everyone to this game</button>`;
     N.style.display = 'block';
   } else N.style.display = 'none';
 
   const sans = cloud ? null : S.sans, n = cloud ? at : sans.length;
-  oneLine(document.getElementById('estimate'), !n ? (cloud ? 'The start' : 'No moves yet') : (cloud ? 'Move ' : 'Last move: ') + moveLabel(n, cloud ? states[at].san : sans[n - 1]));
+  oneLine(document.getElementById('estimate'), !n ? (cloud ? 'The start' : 'No moves yet') : (cloud ? '' : 'Last move: ') + moveLabel(n, cloud ? states[at].san : sans[n - 1], cloud ? line[at - 1].c : lastMove().c));
   const v = cloud ? material(P.board) : 0, ce = document.getElementById('counted');
   ce.style.display = cloud ? '' : 'none';
   oneLine(ce, cloud ? (v ? `Material: ${v > 0 ? 'White' : 'Black'} is ${Math.abs(v)} ahead` : 'Material: even') : '');
 
-  document.getElementById('flip').classList.toggle('on', flipOn);
   document.getElementById('undo').disabled = cloud ? at <= fork : !live || !toArr(G.moves).length;
   const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Analysis'; cb.classList.toggle('on', cloud);
   document.getElementById('newtile').classList.toggle('off', cloud);
@@ -657,7 +658,7 @@ function renderGrid() {
     const last = lastPlayed(g), when = last ? new Date(last).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
     const over = { mate: ' · checkmate', stalemate: ' · stalemate', dead: ' · draw' }[P.status] || '';
     const t = document.createElement('div'); t.className = 'tl';
-    t.innerHTML = `${m.length ? Math.ceil(m.length / 2) + (m.length > 2 ? ' moves' : ' move') : 'Not started'}${over}<br>${when}${ppl.length ? '<br>' + ppl.map(label).join(' ') : ''}`;
+    t.innerHTML = `${m.length ? m.length + (m.length > 1 ? ' moves' : ' move') : 'Not started'}${over}<br>${when}${ppl.length ? '<br>' + ppl.map(label).join(' ') : ''}`;
     d.appendChild(t); grid.appendChild(d);
   }
 }
@@ -665,12 +666,12 @@ renderGrid.shown = 9;
 function el(tag, attrs, parent) { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
 
 // ---------- input ----------
-// Tap a piece to pick it up (its moves show as dots), then tap where it goes.
+// Tap a piece of your colour to pick it up (its moves show as dots), then tap where it goes: whenever you like, as on the Go page.
 function pointAt(ev) {
   const r = svg.getBoundingClientRect();
-  const x = Math.floor((ev.clientX - r.left) / r.width * 8), y = Math.floor((ev.clientY - r.top) / r.height * 8);
+  const V = 8 + 2 * EDGE, x = Math.floor((ev.clientX - r.left) / r.width * V - EDGE), y = Math.floor((ev.clientY - r.top) / r.height * V - EDGE);
   if (x < 0 || y < 0 || x > 7 || y > 7) return null;
-  return flipped() ? (7 - y) * 8 + 7 - x : y * 8 + x;
+  return y * 8 + x;
 }
 // a press held still for half a second on a touch screen marks the square instead of picking up a piece
 const press = { timer: null, clientX: 0, clientY: 0, fired: 0 };
@@ -695,7 +696,7 @@ svg.addEventListener('click', ev => {
   const P = cloud ? states[at] : S, c = mover();
   // a picked-up piece goes where it is told, if it can
   if (sel !== null) {
-    const ms = legal(P).filter(m => m.f === sel && m.to === q);
+    const ms = legal(as(P, c)).filter(m => m.f === sel && m.to === q);
     if (ms.length) {
       const go = m => { sel = null; if (cloud) playHere(m); else submit({ c, ...m }); render(); };
       if (ms.length > 1) promote(c, pr => go(ms.find(m => m.pr === pr))); else go(ms[0]);
@@ -704,7 +705,6 @@ svg.addEventListener('click', ev => {
   }
   if (side(P.board[q]) === c && q !== sel) {
     if (!cloud && gameOver()) { sel = null; render(); flash('This game is over – press New game for another.'); return; }
-    if (!cloud && P.turn !== c) { sel = null; render(); flash('Wait for the other player’s move.'); return; }
     sel = q; render(); return;
   }
   if (sel === null && P.board[q] && !cloud && side(P.board[q]) !== c) flash(`That’s ${NAME[side(P.board[q])]}’s piece.`);
@@ -745,7 +745,6 @@ function dialog(msg, buttons) {
   document.getElementById('dialog').style.display = 'flex';
 }
 
-document.getElementById('flip').onclick = () => { flipOn = !flipOn; render(); };
 document.getElementById('undo').onclick = () => {
   if (cloud) { if (at > forkAt()) { line = line.slice(0, at - 1); at--; buildStates(); } render(); return; }
   if (!live) return;
