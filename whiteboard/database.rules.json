@@ -76,6 +76,110 @@
         }
       }
     },
+    "chess": {
+      ".read": true,
+      "current": {
+        ".write": true,
+        ".validate": "newData.isString() && newData.val().length < 40"
+      },
+      "snap": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['g', 'by', 't'])"
+      },
+      "presence": {
+        "$tab": {
+          ".write": true,
+          ".validate": "$tab.length < 40 && newData.hasChildren(['a', 'c', 'g'])"
+        }
+      },
+      "games": {
+        "$g": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['created'])",
+          "created": {
+            ".validate": "newData.isNumber()"
+          },
+          "moves": {
+            "$i": {
+              ".validate": "newData.hasChildren(['c', 'f', 'to']) && (newData.child('c').val() === 'w' || newData.child('c').val() === 'b')",
+              "c": {
+                ".validate": "newData.val() === 'w' || newData.val() === 'b'"
+              },
+              "f": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 64"
+              },
+              "to": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 64"
+              },
+              "pr": {
+                ".validate": "newData.val() === 'q' || newData.val() === 'r' || newData.val() === 'b' || newData.val() === 'n'"
+              },
+              "t": {
+                ".validate": "newData.isNumber()"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "chesstest": {
+      ".read": true,
+      "current": {
+        ".write": true,
+        ".validate": "newData.isString() && newData.val().length < 40"
+      },
+      "snap": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['g', 'by', 't'])"
+      },
+      "presence": {
+        "$tab": {
+          ".write": true,
+          ".validate": "$tab.length < 40 && newData.hasChildren(['a', 'c', 'g'])"
+        }
+      },
+      "games": {
+        "$g": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['created'])",
+          "created": {
+            ".validate": "newData.isNumber()"
+          },
+          "moves": {
+            "$i": {
+              ".validate": "newData.hasChildren(['c', 'f', 'to']) && (newData.child('c').val() === 'w' || newData.child('c').val() === 'b')",
+              "c": {
+                ".validate": "newData.val() === 'w' || newData.val() === 'b'"
+              },
+              "f": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 64"
+              },
+              "to": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 64"
+              },
+              "pr": {
+                ".validate": "newData.val() === 'q' || newData.val() === 'r' || newData.val() === 'b' || newData.val() === 'n'"
+              },
+              "t": {
+                ".validate": "newData.isNumber()"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
     "whiteboards": {
       "$room": {
         ".read": "$room.matches(/^[a-f0-9]{32}$/) && (!data.hasChild('lastActive') || data.child('lastActive').val() > now - 31536000000)",

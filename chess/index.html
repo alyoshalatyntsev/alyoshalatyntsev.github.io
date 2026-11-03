@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Chess</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: #f3ede2; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color: #222; }
+  #app { max-width: 720px; margin: 0 auto; padding: 10px 12px 40px; }
+  @media (min-width: 600px) { #app { max-width: max(440px, min(720px, calc(100vh - 312px))); } }
+  #banner { font-size: 28px; font-weight: 700; text-align: center; padding: 14px 10px; border-radius: 14px; margin-bottom: 8px; }
+  #banner.turn { background: #2e7d32; color: #fff; }
+  #banner.wait { background: #d8d2c6; color: #555; }
+  #banner.alert { background: #e65100; color: #fff; }
+  #banner.trial { background: #1565c0; color: #fff; }
+  #sub { text-align: center; font-size: 16px; margin: 0 0 6px; min-height: 20px; }
+  #notice { display: none; text-align: center; font-size: 15px; background: #fff3cd; border-radius: 10px; padding: 8px; margin-bottom: 8px; }
+  #notice button { font-size: 14px; padding: 5px 10px; margin: 3px; border-radius: 8px; flex: none; }
+  #bowls { display: flex; gap: 8px; margin-bottom: 6px; }
+  .bowl { flex: 1; min-width: 0; background: rgba(255,255,255,.55); border: 3px solid transparent; border-radius: 12px; padding: 6px 8px; cursor: pointer; }
+  .bowl.mine { border-color: #2e7d32; background: #fff; }
+  .bhead { display: flex; align-items: center; gap: 6px; font-size: 16px; height: 24px; white-space: nowrap; overflow: hidden; }
+  .king { width: 24px; height: 24px; flex: none; }
+  .cap { color: #666; font-size: 13px; margin-left: auto; flex: none; display: flex; align-items: center; }
+  .cap svg { width: 16px; height: 16px; }
+  .cap span { margin: 0 3px 0 -1px; }
+  .hint { color: #2e7d32; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* fixed heights, so people coming and going never move the board: fit() shrinks the text instead */
+  @media (max-width: 420px) { .hint { display: none; } .bhead { gap: 5px; } .cap svg { width: 13px; height: 13px; } }   /* the banner says 'Tap White or Black' anyway */
+  .chips { margin-top: 4px; height: 42px; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 3px; font-size: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 99px; background: #eee8dc; font-size: 1em; line-height: 1.2; white-space: nowrap; }
+  .chip.you { background: #ffd54f; font-weight: 700; cursor: pointer; }
+  .chip.away { opacity: .5; }
+  .chip.poke { cursor: pointer; }
+  .chip.poked { filter: brightness(.7); }
+  #watchers { font-size: 14px; color: #555; margin-bottom: 6px; height: 22px; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; align-items: center; }
+  #boardwrap { width: 100%; aspect-ratio: 1; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }
+  svg { display: block; }
+  #board { width: 100%; height: 100%; cursor: pointer; }
+  #boardwrap { position: relative; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }   /* a long press marks a square, so no callout or text selection */
+  #marks { position: absolute; inset: 0; pointer-events: none; }
+  .mark { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); border: 3px solid #e53935; background: rgba(229,57,53,.22);
+    box-shadow: 0 0 10px 3px rgba(229,57,53,.55); animation: mark 3.2s ease-out forwards; }
+  @keyframes mark { 0% { opacity: 0; scale: .3; } 8% { opacity: 1; scale: 1.15; } 16% { scale: 1; } 65% { opacity: 1; } 100% { opacity: 0; scale: 1.1; } }
+  #board * { pointer-events: none; }   /* the board is redrawn all the time: clicks must land on the svg itself, not on a square that is about to vanish */
+  #estimate { text-align: center; font-size: 14px; color: #1565c0; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 4px; }
+  #counted { text-align: center; font-size: 14px; color: #3b2a14; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; }
+  #buttons { display: flex; gap: 8px; margin-top: 8px; }
+  button { flex: 1; font-size: 18px; padding: 14px 4px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; font-family: inherit; }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: .4; }
+  button.on { background: #1565c0; color: #fff; }
+  #timeline { display: none; height: 84px; margin: 0 0 18px; border-radius: 10px; background: #d6c8ab; box-shadow: 0 1px 3px rgba(0,0,0,.25); touch-action: pan-y; cursor: pointer; user-select: none; }
+  #timeline svg { width: 100%; height: 100%; }
+  #others { margin-top: 28px; }
+  #others h3 { font-size: 15px; color: #666; font-weight: 600; margin: 0 0 8px; }
+  #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  #newtile { display: flex; align-items: center; gap: 14px; cursor: pointer; margin: 0 0 18px; padding: 8px; border-radius: 10px; border: 2px dashed #b9a987; }
+  #newtile.off { display: none; }   /* in Analysis the timeline sits in its place */
+  #newtile svg { width: 64px; height: 64px; opacity: .45; border-radius: 4px; }
+  #newtile .plus { font-size: 40px; font-weight: 300; line-height: 1; color: #555; }
+  #newtile .nt { font-size: 20px; font-weight: 600; color: #444; }
+  .thumb { cursor: pointer; border-radius: 8px; padding: 5px; }
+  /* the tile keeps its full colour; on quiet games the board fades over .bd, the page colour, so the tile can't tint it */
+  .thumb svg, .thumb .tl { opacity: .5; }
+  .thumb.live svg, .thumb.live .tl { opacity: 1; }
+  .bd { background: #f3ede2; border-radius: 4px; overflow: hidden; }
+  .thumb svg { display: block; width: 100%; aspect-ratio: 1; }
+  #more { display: none; margin-top: 14px; font-size: 15px; color: #666; font-weight: 600; cursor: pointer; }   /* like the Other games heading */
+  .tl { font-size: 12px; color: #444; margin-top: 3px; line-height: 1.3; }
+  #credit { margin-top: 36px; font-size: 11px; color: #a09682; text-align: center; }
+  #credit a { color: inherit; }
+  #dialog { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+  #dialog .box { background: #fff; border-radius: 16px; padding: 22px; max-width: 420px; width: 100%; text-align: center; }
+  #dialog p { font-size: 20px; margin: 0 0 18px; }
+  #dialog .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #dialog button { background: #eee; }
+  #dialog button.primary { background: #2e7d32; color: #fff; }
+  #dialog button .pic { display: block; line-height: 1; margin: 0 auto 4px; width: 44px; height: 44px; }
+  #dialog .row button.cancel { flex: 1 0 100%; margin-top: 6px; padding: 8px; background: none; box-shadow: none; color: #777; font-weight: 400; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="banner" class="wait">Connecting…</div>
+  <div id="sub"></div>
+  <div id="notice"></div>
+  <div id="bowls">
+    <div class="bowl" data-c="w"><div class="bhead"><svg class="king" viewBox="0 0 45 45"><use href="#wK"/></svg><b>White</b><span class="hint" id="hintw"></span><span class="cap" id="capw"></span></div><div class="chips" id="chipsw"></div></div>
+    <div class="bowl" data-c="b"><div class="bhead"><svg class="king" viewBox="0 0 45 45"><use href="#bK"/></svg><b>Black</b><span class="hint" id="hintb"></span><span class="cap" id="capb"></span></div><div class="chips" id="chipsb"></div></div>
+  </div>
+  <div id="watchers"></div>
+  <div id="boardwrap"><svg id="board"></svg><div id="marks"></div></div>
+  <div id="estimate"></div>
+  <div id="counted"></div>
+  <div id="buttons">
+    <button id="flip">Flip board</button>
+    <button id="undo">Undo</button>
+    <button id="cloud">Analysis</button>
+  </div>
+  <div id="others">
+    <div id="timeline"><svg id="tlsvg"></svg></div>
+    <div id="newtile"><span class="plus">+</span><svg id="newsvg"></svg><span class="nt">New game</span></div>
+    <h3 id="othersh">Other games (tap one to look at it)</h3><div id="grid"></div>
+    <div id="more">See more older games</div>
+  </div>
+  <div id="credit">Pieces by <a href="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces" target="_blank" rel="noopener">Cburnett</a>, CC BY-SA 3.0</div>
+</div>
+<div id="dialog"><div class="box"><p id="dmsg"></p><div class="row" id="dbtns"></div></div></div>
+<!-- the pieces (Cburnett's set from Wikimedia Commons, CC BY-SA 3.0), drawn on a 45×45 square; #chk is the red glow under a king in check -->
+<svg width="0" height="0" style="position: absolute"><defs>
+<symbol id="wK" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path stroke-linejoin="miter" d="M22.5 11.63V6M20 8h5"/><path fill="#fff" stroke-linecap="butt" stroke-linejoin="miter" d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/><path fill="#fff" d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/></g></symbol>
+<symbol id="bK" viewBox="0 0 45 45"><g style="fill:none; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;"><path d="M 22.5,11.63 L 22.5,6" style="fill:none; stroke:#000000; stroke-linejoin:miter;"/><path d="M 22.5,25 C 22.5,25 27,17.5 25.5,14.5 C 25.5,14.5 24.5,12 22.5,12 C 20.5,12 19.5,14.5 19.5,14.5 C 18,17.5 22.5,25 22.5,25" style="fill:#000000;fill-opacity:1; stroke-linecap:butt; stroke-linejoin:miter;"/><path d="M 12.5,37 C 18,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19.5 C 34.5,13 25,16 22.5,23.5 L 22.5,27 L 22.5,23.5 C 20,16 10.5,13 6.5,19.5 C 3.5,25.5 12.5,30 12.5,30 L 12.5,37" style="fill:#000000; stroke:#000000;"/><path d="M 20,8 L 25,8" style="fill:none; stroke:#000000; stroke-linejoin:miter;"/><path d="M 32,29.5 C 32,29.5 40.5,25.5 38.03,19.85 C 34.15,14 25,18 22.5,24.5 L 22.5,26.6 L 22.5,24.5 C 20,18 10.85,14 6.97,19.85 C 4.5,25.5 13,29.5 13,29.5" style="fill:none; stroke:#ffffff;"/><path d="M 12.5,30 C 18,27 27,27 32.5,30 M 12.5,33.5 C 18,30.5 27,30.5 32.5,33.5 M 12.5,37 C 18,34 27,34 32.5,37" style="fill:none; stroke:#ffffff;"/></g></symbol>
+<symbol id="wQ" viewBox="0 0 45 45"><g style="fill:#ffffff;stroke:#000000;stroke-width:1.5;stroke-linejoin:round"><path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/><path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/><path d="M 11.5,30 C 15,29 30,29 33.5,30" style="fill:none"/><path d="M 12,33.5 C 18,32.5 27,32.5 33,33.5" style="fill:none"/><circle cx="6" cy="12" r="2"/><circle cx="14" cy="9" r="2"/><circle cx="22.5" cy="8" r="2"/><circle cx="31" cy="9" r="2"/><circle cx="39" cy="12" r="2"/></g></symbol>
+<symbol id="bQ" viewBox="0 0 45 45"><g style="fill:#000000;stroke:#000000;stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round"><path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z" style="stroke-linecap:butt;fill:#000000"/><path d="m 9,26 c 0,2 1.5,2 2.5,4 1,1.5 1,1 0.5,3.5 -1.5,1 -1,2.5 -1,2.5 -1.5,1.5 0,2.5 0,2.5 6.5,1 16.5,1 23,0 0,0 1.5,-1 0,-2.5 0,0 0.5,-1.5 -1,-2.5 -0.5,-2.5 -0.5,-2 0.5,-3.5 1,-2 2.5,-2 2.5,-4 -8.5,-1.5 -18.5,-1.5 -27,0 z"/><path d="M 11.5,30 C 15,29 30,29 33.5,30"/><path d="m 12,33.5 c 6,-1 15,-1 21,0"/><circle cx="6" cy="12" r="2"/><circle cx="14" cy="9" r="2"/><circle cx="22.5" cy="8" r="2"/><circle cx="31" cy="9" r="2"/><circle cx="39" cy="12" r="2"/><path d="M 11,38.5 A 35,35 1 0 0 34,38.5" style="fill:none; stroke:#000000;stroke-linecap:butt;"/><g style="fill:none; stroke:#ffffff;"><path d="M 11,29 A 35,35 1 0 1 34,29"/><path d="M 12.5,31.5 L 32.5,31.5"/><path d="M 11.5,34.5 A 35,35 1 0 0 33.5,34.5"/><path d="M 10.5,37.5 A 35,35 1 0 0 34.5,37.5"/></g></g></symbol>
+<symbol id="wR" viewBox="0 0 45 45"><g style="opacity:1; fill:#ffffff; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"><path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z " style="stroke-linecap:butt;"/><path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z " style="stroke-linecap:butt;"/><path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14" style="stroke-linecap:butt;"/><path d="M 34,14 L 31,17 L 14,17 L 11,14"/><path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17" style="stroke-linecap:butt; stroke-linejoin:miter;"/><path d="M 31,29.5 L 32.5,32 L 12.5,32 L 14,29.5"/><path d="M 11,14 L 34,14" style="fill:none; stroke:#000000; stroke-linejoin:miter;"/></g></symbol>
+<symbol id="bR" viewBox="0 0 45 45"><g style="opacity:1; fill:#000000; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"><path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z " style="stroke-linecap:butt;"/><path d="M 12.5,32 L 14,29.5 L 31,29.5 L 32.5,32 L 12.5,32 z " style="stroke-linecap:butt;"/><path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z " style="stroke-linecap:butt;"/><path d="M 14,29.5 L 14,16.5 L 31,16.5 L 31,29.5 L 14,29.5 z " style="stroke-linecap:butt;stroke-linejoin:miter;"/><path d="M 14,16.5 L 11,14 L 34,14 L 31,16.5 L 14,16.5 z " style="stroke-linecap:butt;"/><path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14 L 11,14 z " style="stroke-linecap:butt;"/><path d="M 12,35.5 L 33,35.5 L 33,35.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;"/><path d="M 13,31.5 L 32,31.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;"/><path d="M 14,29.5 L 31,29.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;"/><path d="M 14,16.5 L 31,16.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;"/><path d="M 11,14 L 34,14" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;"/></g></symbol>
+<symbol id="wB" viewBox="0 0 45 45"><g style="opacity:1; fill:none; fill-rule:evenodd; fill-opacity:1; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.6)"><g style="fill:#ffffff; stroke:#000000; stroke-linecap:butt;"><path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.65,38.99 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/><path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/><path d="M 25 8 A 2.5 2.5 0 1 1  20,8 A 2.5 2.5 0 1 1  25 8 z"/></g><path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" style="fill:none; stroke:#000000; stroke-linejoin:miter;"/></g></symbol>
+<symbol id="bB" viewBox="0 0 45 45"><g style="opacity:1; fill:none; fill-rule:evenodd; fill-opacity:1; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.6)"><g style="fill:#000000; stroke:#000000; stroke-linecap:butt;"><path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.65,38.99 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/><path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/><path d="M 25 8 A 2.5 2.5 0 1 1  20,8 A 2.5 2.5 0 1 1  25 8 z"/></g><path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" style="fill:none; stroke:#ffffff; stroke-linejoin:miter;"/></g></symbol>
+<symbol id="wN" viewBox="0 0 45 45"><g style="opacity:1; fill:none; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"><path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" style="fill:#ffffff; stroke:#000000;"/><path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" style="fill:#ffffff; stroke:#000000;"/><path d="M 9.5 25.5 A 0.5 0.5 0 1 1 8.5,25.5 A 0.5 0.5 0 1 1 9.5 25.5 z" style="fill:#000000; stroke:#000000;"/><path d="M 15 15.5 A 0.5 1.5 0 1 1  14,15.5 A 0.5 1.5 0 1 1  15 15.5 z" transform="matrix(0.866,0.5,-0.5,0.866,9.693,-5.173)" style="fill:#000000; stroke:#000000;"/></g></symbol>
+<symbol id="bN" viewBox="0 0 45 45"><g style="opacity:1; fill:none; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"><path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" style="fill:#000000; stroke:#000000;"/><path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" style="fill:#000000; stroke:#000000;"/><path d="M 9.5 25.5 A 0.5 0.5 0 1 1 8.5,25.5 A 0.5 0.5 0 1 1 9.5 25.5 z" style="fill:#ffffff; stroke:#ffffff;"/><path d="M 15 15.5 A 0.5 1.5 0 1 1  14,15.5 A 0.5 1.5 0 1 1  15 15.5 z" transform="matrix(0.866,0.5,-0.5,0.866,9.693,-5.173)" style="fill:#ffffff; stroke:#ffffff;"/><path d="M 24.55,10.4 L 24.1,11.85 L 24.6,12 C 27.75,13 30.25,14.49 32.5,18.75 C 34.75,23.01 35.75,29.06 35.25,39 L 35.2,39.5 L 37.45,39.5 L 37.5,39 C 38,28.94 36.62,22.15 34.25,17.66 C 31.88,13.17 28.46,11.02 25.06,10.5 L 24.55,10.4 z " style="fill:#ffffff; stroke:none;"/></g></symbol>
+<symbol id="wP" viewBox="0 0 45 45"><path d="m 22.5,9 c -2.21,0 -4,1.79 -4,4 0,0.89 0.29,1.71 0.78,2.38 C 17.33,16.5 16,18.59 16,21 c 0,2.03 0.94,3.84 2.41,5.03 C 15.41,27.09 11,31.58 11,39.5 H 34 C 34,31.58 29.59,27.09 26.59,26.03 28.06,24.84 29,23.03 29,21 29,18.59 27.67,16.5 25.72,15.38 26.21,14.71 26.5,13.89 26.5,13 c 0,-2.21 -1.79,-4 -4,-4 z" style="opacity:1; fill:#ffffff; fill-opacity:1; fill-rule:nonzero; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:miter; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;"/></symbol>
+<symbol id="bP" viewBox="0 0 45 45"><path d="m 22.5,9 c -2.21,0 -4,1.79 -4,4 0,0.89 0.29,1.71 0.78,2.38 C 17.33,16.5 16,18.59 16,21 c 0,2.03 0.94,3.84 2.41,5.03 C 15.41,27.09 11,31.58 11,39.5 H 34 C 34,31.58 29.59,27.09 26.59,26.03 28.06,24.84 29,23.03 29,21 29,18.59 27.67,16.5 25.72,15.38 26.21,14.71 26.5,13.89 26.5,13 c 0,-2.21 -1.79,-4 -4,-4 z" style="opacity:1; fill:#000000; fill-opacity:1; fill-rule:nonzero; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:miter; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;"/></symbol>
+<radialGradient id="chk"><stop offset="0" stop-color="#ff1a1a" stop-opacity=".95"/><stop offset=".45" stop-color="#e01010" stop-opacity=".6"/><stop offset="1" stop-color="#c00" stop-opacity="0"/></radialGradient>
+</defs></svg>
+
+<script>
+const CONFIG = {
+  apiKey: "AIzaSyDf2aZioehr3Owb9bf4gmRjgRii0i5Ctbc",
+  authDomain: "project-0cbb7d36-56e5-441e-8fe.firebaseapp.com",
+  databaseURL: "https://project-0cbb7d36-56e5-441e-8fe-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "project-0cbb7d36-56e5-441e-8fe",
+  appId: "1:531740406755:web:fe0ee4c37001a9d4e966d6"
+};
+// ask for the position over plain HTTP straight away: it arrives well before the live connection is up (see "quick start" at the end)
+const early = fetch(CONFIG.databaseURL + '/chess.json').then(r => r.ok ? r.json() : null).catch(() => null);
+let DB, R, TS, presRef;   // set at the bottom of the page, once the Firebase scripts have loaded
+const ls = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+
+// ---------- who am I ----------
+// the device, animal and name are shared with the Go page (same site), so people look the same on both
+const ANIMALS = [['🦊','Fox'],['🐼','Panda'],['🐸','Frog'],['🐯','Tiger'],['🐨','Koala'],['🦉','Owl'],['🐢','Turtle'],['🐧','Penguin'],['🐙','Octopus'],['🦁','Lion'],['🐰','Rabbit'],['🦔','Hedgehog']];
+let me = ls.get('goDevice');
+if (!me) { me = Math.random().toString(36).slice(2) + Date.now().toString(36); ls.set('goDevice', me); }
+const tab = me.slice(0, 20) + '-' + Math.random().toString(36).slice(2, 7);
+let myAnimal = ls.get('goAnimal') === null ? -1 : +ls.get('goAnimal');
+let myName = ls.get('goName') || '';
+let myColour = ls.get('chessColour');      // null = never chosen, '' = just watching
+let viewing = ls.get('chessGame');
+let flipOn = false;                         // the Flip board button: turns the board round from how this colour normally sees it
+
+const NAME = { w: 'White', b: 'Black' };
+const other = c => c === 'w' ? 'b' : 'w';
+const coarse = matchMedia('(pointer: coarse)').matches;
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+// ---------- rules engine ----------
+// Squares are numbered 0 (a8) to 63 (h1), row by row from Black's side. Pieces are letters, upper case for White (KQRBNP),
+// lower case for Black, '' for an empty square. A position is { board, turn, castle (the rights left, as in 'KQkq'),
+// ep (the square a pawn could be taken en passant on, or -1), half (moves since a capture or pawn move), caps (pieces each side has taken) }.
+const START = 'rnbqkbnrpppppppp' + '.'.repeat(32) + 'PPPPPPPPRNBQKBNR';
+const KN = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]], KG = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+const ROOK = [[-1, 0], [1, 0], [0, -1], [0, 1]], BISH = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+const VALUE = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+const side = x => !x ? '' : x === x.toUpperCase() ? 'w' : 'b';
+const on = (r, f) => r >= 0 && r < 8 && f >= 0 && f < 8;
+const sqName = s => 'abcdefgh'[s & 7] + (8 - (s >> 3));
+function startPos() { return { board: [...START].map(ch => ch === '.' ? '' : ch), turn: 'w', castle: 'KQkq', ep: -1, half: 0, caps: { w: [], b: [] } }; }
+// is square s attacked by colour c?
+function attacked(b, s, c) {
+  const r = s >> 3, f = s & 7, has = (rr, ff, t) => on(rr, ff) && b[rr * 8 + ff] === (c === 'w' ? t.toUpperCase() : t);
+  const pr = c === 'w' ? r + 1 : r - 1;   // White's pawns take towards row 0, Black's towards row 7
+  if (has(pr, f - 1, 'p') || has(pr, f + 1, 'p')) return true;
+  for (const [dr, df] of KN) if (has(r + dr, f + df, 'n')) return true;
+  for (const [dr, df] of KG) if (has(r + dr, f + df, 'k')) return true;
+  for (const [dirs, ts] of [[ROOK, 'rq'], [BISH, 'bq']]) for (const [dr, df] of dirs) {
+    let rr = r + dr, ff = f + df;
+    while (on(rr, ff) && !b[rr * 8 + ff]) { rr += dr; ff += df; }
+    if (on(rr, ff)) { const x = b[rr * 8 + ff]; if (side(x) === c && ts.includes(x.toLowerCase())) return true; }
+  }
+  return false;
+}
+function kingAt(P, c) { return P.board.indexOf(c === 'w' ? 'K' : 'k'); }
+function inCheck(P, c = P.turn) { return attacked(P.board, kingAt(P, c), other(c)); }
+// every legal move, as { f: from, to } plus pr (the piece a pawn becomes: q r b n) when a pawn reaches the far side
+function legal(P) {
+  const b = P.board, c = P.turn, out = [];
+  const add = (f, to) => { if ((b[f] === 'P' && to < 8) || (b[f] === 'p' && to >= 56)) for (const pr of 'qrbn') out.push({ f, to, pr }); else out.push({ f, to }); };
+  for (let s = 0; s < 64; s++) {
+    const x = b[s]; if (side(x) !== c) continue;
+    const t = x.toLowerCase(), r = s >> 3, f = s & 7, free = (rr, ff) => on(rr, ff) && side(b[rr * 8 + ff]) !== c;
+    if (t === 'p') {
+      const d = c === 'w' ? -1 : 1;
+      if (on(r + d, f) && !b[s + 8 * d]) { add(s, s + 8 * d); if (r === (c === 'w' ? 6 : 1) && !b[s + 16 * d]) add(s, s + 16 * d); }
+      for (const df of [-1, 1]) if (on(r + d, f + df)) { const to = s + 8 * d + df; if ((b[to] && side(b[to]) !== c) || to === P.ep) add(s, to); }
+    } else if (t === 'n' || t === 'k') {
+      for (const [dr, df] of t === 'n' ? KN : KG) if (free(r + dr, f + df)) add(s, s + 8 * dr + df);
+      // castling: the king goes two squares towards the rook; not out of, through or into check
+      if (t === 'k' && s === (c === 'w' ? 60 : 4) && !inCheck(P)) {
+        const rook = c === 'w' ? 'R' : 'r', o = other(c);
+        if (P.castle.includes(c === 'w' ? 'K' : 'k') && !b[s + 1] && !b[s + 2] && b[s + 3] === rook && !attacked(b, s + 1, o)) add(s, s + 2);
+        if (P.castle.includes(c === 'w' ? 'Q' : 'q') && !b[s - 1] && !b[s - 2] && !b[s - 3] && b[s - 4] === rook && !attacked(b, s - 1, o)) add(s, s - 2);
+      }
+    } else {
+      for (const [dr, df] of t === 'r' ? ROOK : t === 'b' ? BISH : ROOK.concat(BISH)) {
+        let rr = r + dr, ff = f + df;
+        while (on(rr, ff)) { const q = rr * 8 + ff; if (side(b[q]) === c) break; add(s, q); if (b[q]) break; rr += dr; ff += df; }
+      }
+    }
+  }
+  return out.filter(m => !inCheck(make(P, m), c));
+}
+// the position after move m (which must be legal)
+function make(P, m) {
+  const b = P.board.slice(), x = b[m.f], t = x.toLowerCase(), c = P.turn;
+  let took = b[m.to];
+  if (t === 'p' && m.to === P.ep && !took) { const q = m.to + (c === 'w' ? 8 : -8); took = b[q]; b[q] = ''; }   // en passant
+  b[m.to] = m.pr ? (c === 'w' ? m.pr.toUpperCase() : m.pr) : x; b[m.f] = '';
+  if (t === 'k' && Math.abs(m.to - m.f) === 2) { const k = m.to > m.f, rf = k ? m.f + 3 : m.f - 4; b[k ? m.f + 1 : m.f - 1] = b[rf]; b[rf] = ''; }   // castling moves the rook too
+  let castle = P.castle;
+  if (x === 'K') castle = castle.replace(/[KQ]/g, '');
+  if (x === 'k') castle = castle.replace(/[kq]/g, '');
+  for (const [q, ch] of [[63, 'K'], [56, 'Q'], [7, 'k'], [0, 'q']]) if (m.f === q || m.to === q) castle = castle.replace(ch, '');
+  return { board: b, turn: other(c), castle, ep: t === 'p' && Math.abs(m.to - m.f) === 16 ? (m.f + m.to) / 2 : -1,
+    half: t === 'p' || took ? 0 : P.half + 1, caps: took ? { ...P.caps, [c]: P.caps[c].concat(took) } : P.caps };
+}
+const same = (a, b) => a.f === b.f && a.to === b.to && (a.pr || '') === (b.pr || '');
+// the move in standard notation, e.g. Nf3, exd5, O-O, e8=Q+; L is legal(P)
+function san(P, m, L) {
+  const x = P.board[m.f], t = x.toLowerCase(), N = make(P, m);
+  let s;
+  if (t === 'k' && Math.abs(m.to - m.f) === 2) s = m.to > m.f ? 'O-O' : 'O-O-O';
+  else {
+    const cap = !!P.board[m.to] || (t === 'p' && m.to === P.ep);
+    if (t === 'p') s = (cap ? 'abcdefgh'[m.f & 7] + 'x' : '') + sqName(m.to) + (m.pr ? '=' + m.pr.toUpperCase() : '');
+    else {
+      // say which piece when two of the same kind could go there
+      const rivals = L.filter(o => o.to === m.to && o.f !== m.f && P.board[o.f] === x);
+      let d = '';
+      if (rivals.length) d = !rivals.some(o => (o.f & 7) === (m.f & 7)) ? 'abcdefgh'[m.f & 7] : !rivals.some(o => (o.f >> 3) === (m.f >> 3)) ? String(8 - (m.f >> 3)) : sqName(m.f);
+      s = t.toUpperCase() + d + (cap ? 'x' : '') + sqName(m.to);
+    }
+  }
+  if (inCheck(N)) s += legal(N).length ? '+' : '#';
+  return s;
+}
+const key = P => P.board.map(x => x || '.').join('') + P.turn + P.castle + P.ep;
+// how the game stands: '' (still going), 'mate', 'stalemate', or 'dead' (nobody has enough pieces left to checkmate)
+function status(P) {
+  if (!legal(P).length) return inCheck(P) ? 'mate' : 'stalemate';
+  const rest = P.board.filter(x => x && x.toLowerCase() !== 'k');
+  if (!rest.length || (rest.length === 1 && 'nb'.includes(rest[0].toLowerCase()))) return 'dead';
+  return '';
+}
+const toArr = m => (Array.isArray(m) ? m : m ? Object.values(m) : []).filter(Boolean);
+// the position after a game's moves, with how it stands; notes: also each move's notation (sans) and each position's key (for repeats)
+function replay(g, notes = true) {
+  let P = startPos(); const sans = [], keys = [key(P)];
+  for (const m of toArr(g.moves)) {
+    const L = legal(P), x = L.find(o => same(o, m)); if (!x) continue;
+    if (notes) { sans.push(san(P, x, L)); }
+    P = make(P, x);
+    if (notes) keys.push(key(P));
+  }
+  return { ...P, sans, keys, status: status(P) };
+}
+function material(b) { let v = 0; for (const x of b) if (x) v += (side(x) === 'w' ? 1 : -1) * VALUE[x.toLowerCase()]; return v; }
+// "12. Nf3" or "12… Nf6" for the k-th move of a game (k from 1)
+function moveLabel(k, s) { return `${Math.ceil(k / 2)}${k % 2 ? '.' : '…'} ${s}`; }
+
+// ---------- state ----------
+let D = null, G = null, S = null, first = true, lastSnap = null, live = false, cached = null, online = false;
+let cloud = false, sel = null;   // sel: the square of the piece picked up, waiting for where it goes
+
+function onLive(snap) {
+  live = true;
+  D = snap.val() || {}; D.games = D.games || {}; D.presence = D.presence || {};
+  const c = JSON.stringify({ games: D.games, current: D.current || null });
+  if (c !== cached) ls.set('chessCache', cached = c);
+  const sk = D.snap ? D.snap.g + ':' + D.snap.t : null;
+  if (!first && sk && sk !== lastSnap && D.snap.by !== tab && D.games[D.snap.g]) {
+    lastSnap = sk; switchTo(D.snap.g); flash(`${who(D.snap.by)} brought everyone to this game.`); return;
+  }
+  lastSnap = sk;
+  if (!viewing || !D.games[viewing]) {
+    const ids = sortedGames();
+    viewing = D.current && D.games[D.current] ? D.current : ids[0] || null;
+    if (!viewing) { createGame(); return; }
+    ls.set('chessGame', viewing);
+  }
+  if (first) {
+    first = false;
+    if (myAnimal < 0 || myAnimal >= ANIMALS.length) {
+      const used = new Set(others().map(p => p.a));
+      const free = ANIMALS.map((_, i) => i).filter(i => !used.has(i));
+      myAnimal = free.length ? free[Math.floor(Math.random() * free.length)] : Math.floor(Math.random() * ANIMALS.length);
+      ls.set('goAnimal', myAnimal);
+    }
+    if (myColour === null) {
+      const taken = new Set(others().map(p => p.c));
+      myColour = !taken.has('w') ? 'w' : !taken.has('b') ? 'b' : '';
+      ls.set('chessColour', myColour);
+    }
+    DB.ref('.info/connected').on('value', s => { online = !!s.val(); if (online) { presRef.onDisconnect().remove(); writePresence(); } });
+  }
+  const g = D.games[viewing], k = viewing + ':' + toArr(g.moves).length;
+  G = g; S = replay(g);
+  for (const p of others()) if (p.poke && p.poke.to === tab && poked[p.k] !== p.poke.i) {
+    poked[p.k] = p.poke.i;
+    const loud = actx && actx.state === 'running', at = Date.now(), wake = loud ? null : soundReady();
+    if (loud) grunt(); else if (wake && wake.then) wake.then(() => { if (Date.now() - at < 1500) grunt(); }, () => {});
+    flash(`🐷 ${label(p)} poked you` + (!loud ? ' (tap for sound)' : myColour && !gameOver() && nextColour() === myColour ? ' – it’s your turn!' : '!'));
+  }
+  for (const p of others()) if (p.mark && marked[p.k] !== p.mark.i) {
+    const seen = p.k in marked; marked[p.k] = p.mark.i;
+    if (seen && p.mark.g === viewing) showMark(p.mark.p);   // marks already there when the page opened are old news
+  }
+  for (const p of others()) if (!(p.k in marked)) marked[p.k] = null;
+  if (k !== render.key) { render.key = k; if (!cloud) sel = null; if (cloud) followGame(); }
+  render();
+}
+
+function writePresence() {
+  if (first) return;
+  presRef.set({ a: myAnimal, n: myName.slice(0, 20), c: myColour || '', g: viewing || '', d: coarse ? 'm' : 'd', t: TS });
+}
+function everyone() { return Object.entries(D.presence).map(([k, v]) => ({ ...v, k })); }
+function others() { return everyone().filter(p => p.k !== tab); }
+function label(p) { const A = ANIMALS[p.a] || ANIMALS[0]; return A[0] + ' ' + esc(p.n || A[1]); }
+function who(k) { const p = D.presence[k]; return p ? label(p) : 'Someone'; }
+// when a game was last played: each move carries a time t
+function lastPlayed(g) { const m = toArr(g.moves); for (let i = m.length - 1; i >= 0; i--) if (m[i].t) return m[i].t; return g.created || 0; }
+function sortedGames() { return Object.keys(D.games).sort((a, b) => lastPlayed(D.games[b]) - lastPlayed(D.games[a])); }
+// each game keeps one pale colour for its tile (as on the Go page). Games take these in the order they were created, and each is about 150 degrees of hue
+// on from the last, so games within 6 of each other differ clearly: at least 110 degrees side by side and above or below, 70 for 5 apart.
+const PASTELS = ['#efde9d', '#dbeefe', '#fec0b3', '#a8f4fc', '#ffc4db', '#a7f1d2', '#f5e4fe', '#bddf93', '#dde3fe', '#ffcd9e', '#bde4ff', '#ffe4e1', '#73e6eb', '#ffd8eb', '#9eebc3', '#ead3fe', '#e4f2c6', '#c0cffe', '#fedec5', '#a8e0ff', '#fed1d0', '#bdf9f7', '#ffb7e3', '#bdf4cf', '#e1cdfe', '#dae6a5', '#e2ebff', '#ffc29b', '#c3ecfe', '#fec7ca', '#9af1e9', '#ffe1f6', '#9fe5ac', '#e8dffe', '#d9de94', '#ccdffe', '#fee5d9', '#82e0ff', '#fedade', '#8becdd', '#ffcaf8', '#d4f6d3', '#d2c9ff', '#ebe8ae', '#bddafe', '#ffd3c2', '#c9f4ff', '#ffbccb', '#aef6e4', '#f9c2fa', '#c2ecb6', '#e9e9ff', '#e0d380', '#d1e7fe', '#ffc9ba', '#99eefd', '#fee3eb', '#83e8c9', '#f7d8fe', '#bfe6a5', '#d8dbff'];
+// games of up to 4 moves can be deleted (see prune), so they don't use up a place in the order: deleting one leaves the others' colours alone
+function gameColours() {
+  const out = {}, L = PASTELS.length; let n = 0, short = 0;
+  for (const id of Object.keys(D.games).sort((a, b) => (D.games[a].created || 0) - (D.games[b].created || 0)))
+    out[id] = toArr(D.games[id].moves).length > 4 ? PASTELS[n++ % L] : PASTELS[(n + 30 + 7 * short++) % L];
+  return out;
+}
+
+// ---------- poke: tap someone's name and their page grunts ----------
+// The poke rides in the poker's own presence entry ({to: their tab, i: an id}), so it goes away with them.
+const poked = {}, dark = {};
+let actx = null, gruntBuf = null;
+function poke(k) {
+  if (!live || !online || !D.presence[k] || Date.now() - (poke.t || 0) < 800) return;
+  poke.t = Date.now();
+  presRef.child('poke').set({ to: k, i: poke.t }).catch(() => {});
+  dark[k] = poke.t + 500; render(); setTimeout(render, 520);   // their name goes darker for a moment
+}
+
+// ---------- mark: shift+click a square (or long-press it on a phone) and it glows red for a moment on everyone's board ----------
+// The mark rides in the marker's own presence entry, like a poke: {p: the square, g: the game, i: an id}.
+const marked = {};
+function mark(p) {
+  if (Date.now() - (mark.t || 0) < 300) return;
+  mark.t = Date.now(); showMark(p);
+  if (live && online) presRef.child('mark').set({ p, g: viewing, i: mark.t }).catch(() => {});
+}
+function showMark(p) {
+  if (!G || p < 0 || p >= 64) return;
+  const [x, y] = place(p), m = document.createElement('div');
+  m.className = 'mark';
+  m.style.left = (x + 0.5) / 8 * 100 + '%'; m.style.top = (y + 0.5) / 8 * 100 + '%';
+  m.style.width = m.style.height = 1.05 / 8 * 100 + '%';
+  m.addEventListener('animationend', () => m.remove());
+  document.getElementById('marks').appendChild(m);
+}
+// One pig snort, as an mp3 in base64 (cut from "Pig - Snort 5" by JarredGibb on freesound.org, public domain).
+const GRUNT = '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';
+// The grunt is decoded straight away, but browsers only let a page make sound once it has been tapped or typed in:
+// each tap or key press wakes the sound up, and a poke tries to as well (some browsers allow it).
+try {
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  const p = actx.decodeAudioData(Uint8Array.from(atob(GRUNT), ch => ch.charCodeAt(0)).buffer, buf => { gruntBuf = buf; }, () => {});
+  if (p && p.catch) p.catch(() => {});
+} catch (e) {}
+function soundReady() {
+  try { if (actx && actx.state !== 'running') { const p = actx.resume(); if (p && p.catch) p.catch(() => {}); return p; } } catch (e) {}
+}
+for (const ev of ['click', 'keydown', 'touchend']) addEventListener(ev, soundReady, true);
+function grunt() {
+  if (!actx || !gruntBuf) return;
+  const s = actx.createBufferSource(); s.buffer = gruntBuf; s.connect(actx.destination); s.start();
+}
+
+function switchTo(id) {
+  viewing = id; ls.set('chessGame', id);
+  stopAnalysis(); sel = null;
+  G = D.games[id]; S = replay(G); render.key = id + ':' + toArr(G.moves).length;
+  writePresence(); render();
+}
+
+function createGame() {
+  if (!live) return;
+  const ref = R.child('games').push(), leaving = viewing;
+  viewing = ref.key; ls.set('chessGame', viewing);
+  stopAnalysis(); sel = null;
+  ref.set({ created: TS });
+  R.child('current').set(ref.key);
+  if (D) prune(ref.key, leaving);
+  writePresence();
+}
+// keep the 1000 most recent games with more than 4 moves (plus any game someone else is looking at);
+// the whole lot is downloaded each time the page opens
+function prune(newId, leaving) {
+  const busy = new Set(others().map(p => p.g));
+  let kept = 0;
+  for (const id of sortedGames()) {
+    if (id === newId || !D.games[id]) continue;
+    if (toArr(D.games[id].moves).length > 4 && kept < 1000) kept++;
+    else if (!busy.has(id)) R.child('games/' + id).remove();
+  }
+}
+
+function lastMove() { const m = toArr(G.moves); return m.length ? m[m.length - 1] : null; }
+function nextColour() { return S.turn; }
+function gameOver() { return !!S.status; }
+
+function submit(mv) {
+  if (!live) return;
+  R.child(`games/${viewing}/moves`).transaction(cur => {
+    const list = toArr(cur), P = replay({ moves: list }, false);
+    if (P.status || P.turn !== mv.c || !legal(P).some(o => same(o, mv))) return undefined;
+    const m = { c: mv.c, f: mv.f, to: mv.to, t: TS }; if (mv.pr) m.pr = mv.pr;
+    list.push(m); return list;
+  });
+}
+
+// ---------- analysis: a copy of the game that can be rewound, and branched by making a move ----------
+// line = the moves being looked at, at = how many of them are on the board, states[k] = the position after k of them (with the k-th move's notation).
+// Moves made in Analysis go on the line after the current move and cut off the moves that came after it.
+// Nothing here is written anywhere: turning Analysis off and on again starts from the real game.
+let line = [], at = 0, states = null, branched = false, lineGame = null;
+function startAnalysis() {
+  cloud = true; sel = null;
+  line = toArr(G.moves).slice(); at = line.length; branched = false; lineGame = viewing;
+  buildStates();
+}
+function stopAnalysis() { cloud = false; sel = null; line = []; at = 0; states = null; }
+// the real game moved on (or was undone): follow it, unless moves have been made here
+function followGame() {
+  if (lineGame !== viewing) { stopAnalysis(); return; }
+  if (branched) return;
+  const end = at === line.length;
+  line = toArr(G.moves).slice(); at = end ? line.length : Math.min(at, line.length);
+  buildStates();
+}
+function buildStates() {
+  let P = startPos(); const ok = [];
+  states = [{ ...P, san: '' }];
+  for (const m of line) {
+    const L = legal(P), x = L.find(o => same(o, m)); if (!x) continue;
+    const s = san(P, x, L); P = make(P, x);
+    ok.push(m); states.push({ ...P, san: s });
+  }
+  line = ok; at = Math.min(at, line.length);
+}
+// how many moves at the start of the line are the real game's
+function forkAt() { const m = toArr(G.moves); let i = 0; while (i < line.length && i < m.length && same(line[i], m[i])) i++; return i; }
+function toMove() { return states[at].turn; }
+function setAt(k) {
+  k = Math.max(0, Math.min(line.length, k));
+  if (k === at) return;
+  at = k; sel = null; render();
+}
+function playHere(m) {
+  const x = { c: toMove(), f: m.f, to: m.to }; if (m.pr) x.pr = m.pr;
+  line = line.slice(0, at); line.push(x); at++; branched = true; buildStates();
+}
+
+// The graph that takes the New game tile's place in Analysis: White's lead in material (pawn 1, knight and bishop 3, rook 5, queen 9) after each move.
+const tl = document.getElementById('tlsvg'), TX = 12;   // TX: room at each end for the dot
+let tlDrag = false;
+function drawTimeline() {
+  document.getElementById('timeline').style.display = cloud ? 'block' : 'none';
+  if (!cloud || !states) return;
+  const W = tl.clientWidth, H = tl.clientHeight; if (!W || !H) return;
+  const L = line.length, mid = H / 2, fork = forkAt(), x = k => L ? TX + (W - 2 * TX) * k / L : W - TX;
+  const pts = states.map((st, k) => [k, material(st.board)]); let top = 4;
+  for (const [, v] of pts) top = Math.max(top, Math.abs(v));
+  const y = v => mid - v / top * (mid - 4), xy = ([k, v]) => x(k).toFixed(1) + ',' + y(v).toFixed(1);
+  // a step for each move: material only changes when something is taken
+  const steps = []; for (let i = 0; i < pts.length; i++) { if (i) steps.push([pts[i][0], pts[i - 1][1]]); steps.push(pts[i]); }
+  let s = `<defs><clipPath id="tlw"><rect width="${W}" height="${mid}"/></clipPath><clipPath id="tlb"><rect y="${mid}" width="${W}" height="${mid}"/></clipPath></defs>`;
+  // white where White is ahead, black where Black is; the line is blue after the moves made here
+  const area = `M${x(0).toFixed(1)},${mid} L${steps.map(xy).join(' L')} L${x(L).toFixed(1)},${mid}Z`;
+  s += `<path d="${area}" fill="#fafafa" clip-path="url(#tlw)"/><path d="${area}" fill="#111" fill-opacity=".85" clip-path="url(#tlb)"/>`;
+  s += `<path d="M${steps.map(xy).join(' L')}" fill="none" stroke="#3b2a14" stroke-width="1.2" stroke-linejoin="round"/>`;
+  if (fork < L) { const i = steps.findIndex(([k]) => k >= fork); s += `<path d="M${steps.slice(Math.max(0, i)).map(xy).join(' L')}" fill="none" stroke="#1565c0" stroke-width="2.5" stroke-linejoin="round"/>`; }
+  const cx = x(at), text = at ? moveLabel(at, states[at].san) : 'start', right = cx > W - 80;
+  s += `<line x1="${TX}" y1="${mid}" x2="${W - TX}" y2="${mid}" stroke="#3b2a14" stroke-opacity=".5"/>`;
+  s += `<line x1="${cx}" y1="0" x2="${cx}" y2="${H}" stroke="#1565c0" stroke-width="2" stroke-opacity=".7"/>`;
+  s += `<text x="${right ? cx - 6 : cx + 6}" y="13" font-size="12" fill="#0d47a1" text-anchor="${right ? 'end' : 'start'}">${esc(text)}</text>`;
+  s += `<circle cx="${cx}" cy="${mid}" r="8" fill="#1565c0" stroke="#fff" stroke-width="2.5"/>`;
+  tl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  tl.innerHTML = s;
+}
+function seek(ev) {
+  const r = tl.getBoundingClientRect();
+  setAt(Math.round((ev.clientX - r.left - TX) / (r.width - 2 * TX) * line.length));
+}
+tl.addEventListener('pointerdown', ev => { if (!cloud) return; tlDrag = true; try { tl.setPointerCapture(ev.pointerId); } catch (e) {} seek(ev); });
+tl.addEventListener('pointermove', ev => { if (tlDrag) seek(ev); });
+for (const t of ['pointerup', 'pointercancel']) tl.addEventListener(t, () => { tlDrag = false; });
+addEventListener('keydown', ev => {
+  if (!cloud || ev.altKey || ev.ctrlKey || ev.metaKey || /INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+  if (ev.key === 'ArrowLeft') { ev.preventDefault(); setAt(at - 1); }
+  else if (ev.key === 'ArrowRight') { ev.preventDefault(); setAt(at + 1); }
+});
+
+// ---------- rendering ----------
+const svg = document.getElementById('board');
+const LIGHT = '#f0d9b5', DARK = '#b58863';
+// Black's player sees the board from Black's side; Flip board turns it round
+function flipped() { return (myColour === 'b') !== flipOn; }
+// where square q is drawn on this device: [column, row] from the top left
+function place(q, flip = flipped()) { const r = q >> 3, f = q & 7; return flip ? [7 - f, 7 - r] : [f, r]; }
+// draws position P into the svg s; o: { flip, last: the move to show, sel, dots: where the picked-up piece can go, check: a king's square, coords, mine: moves after the fork }
+function drawBoard(s, P, o = {}) {
+  const sq = (q, fill) => { const [x, y] = place(q, o.flip); return `<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}"/>`; };
+  let h = '';
+  for (let q = 0; q < 64; q++) h += sq(q, ((q >> 3) + (q & 7)) & 1 ? DARK : LIGHT);
+  if (o.last) for (const q of [o.last.f, o.last.to]) h += sq(q, o.trial ? 'rgba(66,135,245,.45)' : 'rgba(255,221,51,.5)');
+  if (o.sel !== undefined && o.sel !== null) h += sq(o.sel, 'rgba(20,110,40,.5)');
+  if (o.check >= 0) h += sq(o.check, 'url(#chk)');
+  if (o.coords) for (let i = 0; i < 8; i++) {
+    const fq = o.flip ? 7 - i : i, rq = o.flip ? i + 1 : 8 - i;   // the file letter along the bottom, the rank number down the left
+    h += `<text x="${i + 0.96}" y="7.95" font-size=".2" text-anchor="end" font-weight="700" fill="${(i + 7) & 1 ? LIGHT : DARK}">${'abcdefgh'[fq]}</text>`;
+    h += `<text x=".04" y="${i + 0.21}" font-size=".2" font-weight="700" fill="${i & 1 ? LIGHT : DARK}">${rq}</text>`;
+  }
+  P.board.forEach((x, q) => { if (!x) return; const [cx, cy] = place(q, o.flip); h += `<use href="#${side(x)}${x.toUpperCase()}" x="${cx}" y="${cy}" width="1" height="1"/>`; });
+  for (const q of o.dots || []) {
+    const [x, y] = place(q, o.flip);
+    h += P.board[q] ? `<circle cx="${x + 0.5}" cy="${y + 0.5}" r=".45" fill="none" stroke="rgba(20,85,30,.5)" stroke-width=".08"/>`
+      : `<circle cx="${x + 0.5}" cy="${y + 0.5}" r=".15" fill="rgba(20,85,30,.5)"/>`;
+  }
+  s.setAttribute('viewBox', '0 0 8 8');
+  s.innerHTML = h;
+}
+
+// The title says so while it is your move in the real game.
+function updateTab(turn) { document.title = turn ? 'Your turn · Chess' : 'Chess'; }
+// the side that may move pieces on this board: in Analysis whoever is to move, otherwise you
+function mover() { return cloud ? toMove() : myColour; }
+function render() {
+  if (!G) return;
+  const P = cloud ? states[at] : S, fork = cloud ? forkAt() : 0;
+  const lm = cloud ? line[at - 1] : lastMove();
+  if (sel !== null && side(P.board[sel]) !== mover()) sel = null;
+  const dots = sel !== null ? legal(P).filter(m => m.f === sel).map(m => m.to) : [];
+  drawBoard(svg, P, { flip: flipped(), last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1, coords: true });
+
+  // banner
+  const B = document.getElementById('banner'), sub = document.getElementById('sub'), st = cloud ? status(P) : S.status;
+  if (!flash.on) sub.textContent = '';
+  const ended = { mate: `Checkmate – ${NAME[other(P.turn)]} wins`, stalemate: 'Stalemate – a draw', dead: 'A draw – not enough pieces left' }[st];
+  if (cloud) {
+    B.className = 'trial'; B.textContent = 'Analysis';
+    if (!flash.on && ended) sub.textContent = ended;
+  } else if (!live) { B.className = 'wait'; B.textContent = 'Connecting…'; }
+  else if (ended) { B.className = 'alert'; B.textContent = ended; if (!flash.on) sub.textContent = 'Press New game for another.'; }
+  else if (!myColour) { B.className = 'wait'; B.textContent = 'Tap White or Black to play'; }
+  else if (nextColour() === myColour) {
+    B.className = 'turn'; B.textContent = 'Your turn';
+    if (!flash.on) {
+      const rep = S.keys.filter(k => k === S.keys[S.keys.length - 1]).length;
+      sub.textContent = inCheck(S) ? 'Check!' : rep >= 3 ? 'This position has come up three times: you may call it a draw.'
+        : S.half >= 100 ? '50 moves without a capture or pawn move: you may call it a draw.' : sel !== null ? 'Now tap where it goes' : '';
+    }
+  } else { B.className = 'wait'; B.textContent = 'Waiting for other player'; }
+  updateTab(live && !gameOver() && !!myColour && nextColour() === myColour);
+
+  // people, and the pieces each side has taken
+  const all = everyone();
+  for (const c of ['w', 'b']) {
+    document.querySelector(`.bowl[data-c="${c}"]`).classList.toggle('mine', myColour === c);
+    const taken = P.caps[c], groups = 'qrbnp'.split('').map(t => [t, taken.filter(x => x.toLowerCase() === t).length]).filter(([, n]) => n);
+    const capHtml = groups.map(([t, n]) => `<svg viewBox="0 0 45 45"><use href="#${other(c)}${t.toUpperCase()}"/></svg>${n > 1 ? `<span>${n}</span>` : ''}`).join('');
+    const ce = document.getElementById('cap' + c); if (ce.html !== capHtml) { ce.html = capHtml; ce.innerHTML = capHtml; }
+    document.getElementById('hint' + c).textContent = myColour === c ? '' : 'tap to play';
+    fit(document.getElementById('chips' + c), all.filter(p => p.c === c).map(chip).join(''));
+  }
+  const watchers = all.filter(p => !p.c);
+  fit(document.getElementById('watchers'), `<span>${live ? all.length + ' online' : '&nbsp;'}${watchers.length ? ' · watching:' : ''}</span>` + watchers.map(chip).join(''));
+
+  // notice about people on other games
+  const away = others().filter(p => p.g && p.g !== viewing && D.games[p.g]);
+  const N = document.getElementById('notice');
+  if (away.length) {
+    const games = [...new Set(away.map(p => p.g))];
+    N.innerHTML = games.map(g => { const ps = away.filter(p => p.g === g), n = toArr(D.games[g].moves).length;
+      return `${ps.map(label).join(', ')} ${ps.length > 1 ? 'are' : 'is'} on a different game (${n ? 'move ' + Math.ceil(n / 2) : 'not started'}) <button data-go="${g}">Go there</button>`; }).join('<br>')
+      + `<br><button id="snap">Bring everyone to this game</button>`;
+    N.style.display = 'block';
+  } else N.style.display = 'none';
+
+  const sans = cloud ? null : S.sans, n = cloud ? at : sans.length;
+  oneLine(document.getElementById('estimate'), !n ? (cloud ? 'The start' : 'No moves yet') : (cloud ? 'Move ' : 'Last move: ') + moveLabel(n, cloud ? states[at].san : sans[n - 1]));
+  const v = cloud ? material(P.board) : 0, ce = document.getElementById('counted');
+  ce.style.display = cloud ? '' : 'none';
+  oneLine(ce, cloud ? (v ? `Material: ${v > 0 ? 'White' : 'Black'} is ${Math.abs(v)} ahead` : 'Material: even') : '');
+
+  document.getElementById('flip').classList.toggle('on', flipOn);
+  document.getElementById('undo').disabled = cloud ? at <= fork : !live || !toArr(G.moves).length;
+  const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Analysis'; cb.classList.toggle('on', cloud);
+  document.getElementById('newtile').classList.toggle('off', cloud);
+  drawTimeline();
+  renderGrid();
+}
+// keep a line of text on one line: shrink it until it fits
+function oneLine(e, text) {
+  if (e.textContent === text && e.clientWidth === e.lineW) return;
+  e.textContent = text; e.style.fontSize = ''; e.lineW = e.clientWidth;
+  for (let f = 13.5; f >= 8 && e.scrollWidth > e.clientWidth; f -= 0.5) e.style.fontSize = f + 'px';
+}
+// fill a fixed-height box, shrinking the text until it all shows
+function fit(e, html) {
+  if (e.html === html && e.clientWidth === e.fitW) return;
+  e.html = html; e.innerHTML = html; e.style.fontSize = ''; e.fitW = e.clientWidth;
+  for (let f = 13.5; f >= 7 && (e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1); f -= 0.5) e.style.fontSize = f + 'px';
+}
+addEventListener('resize', () => {
+  for (const id of ['estimate', 'counted']) { const e = document.getElementById(id); oneLine(e, e.textContent); }
+  drawTimeline();
+  for (const id of ['chipsb', 'chipsw', 'watchers']) { const b = document.getElementById(id); fit(b, b.html || ''); }
+});
+function chip(p) {
+  const you = p.k === tab, away = p.g !== viewing;
+  const info = (p.d === 'm' ? 'On a phone' : 'On a computer') + (away ? ', looking at a different game' : '') + (you ? ' – tap to change your name' : ' – tap to poke');
+  return `<span class="chip${you ? ' you' : ' poke'}${away ? ' away' : ''}${dark[p.k] > Date.now() ? ' poked' : ''}" title="${info}" ${you ? 'data-you="1"' : `data-poke="${esc(p.k)}"`}>${label(p)}${you ? ' (you)' : ''} ${p.d === 'm' ? '📱' : '💻'}</span>`;
+}
+// 9 games at first, 9 more each time "See more older games" is tapped
+function renderGrid() {
+  const all = sortedGames().filter(id => id !== viewing), ids = all.slice(0, renderGrid.shown);
+  document.getElementById('more').style.display = all.length > ids.length ? 'block' : 'none';
+  const busy = {}; for (const p of others()) (busy[p.g] = busy[p.g] || []).push(p);
+  const cols = gameColours();
+  const key = ids.map(id => id + ':' + toArr(D.games[id].moves).length + ':' + cols[id] + ':' + (busy[id] || []).map(p => p.a + p.n).join()).join('|');
+  if (key === renderGrid.key) return;
+  renderGrid.key = key;
+  const grid = document.getElementById('grid'); grid.innerHTML = '';
+  document.getElementById('othersh').style.display = ids.length ? 'block' : 'none';
+  for (const id of ids) {
+    const g = D.games[id], P = replay(g, false), ppl = busy[id] || [], m = toArr(g.moves);
+    const d = document.createElement('div'); d.className = 'thumb' + (ppl.length ? ' live' : ''); d.dataset.id = id; d.style.background = cols[id];
+    const bd = document.createElement('div'); bd.className = 'bd'; d.appendChild(bd);
+    drawBoard(el('svg', {}, bd), P, { last: m[m.length - 1] });
+    const last = lastPlayed(g), when = last ? new Date(last).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const over = { mate: ' · checkmate', stalemate: ' · stalemate', dead: ' · draw' }[P.status] || '';
+    const t = document.createElement('div'); t.className = 'tl';
+    t.innerHTML = `${m.length ? Math.ceil(m.length / 2) + (m.length > 2 ? ' moves' : ' move') : 'Not started'}${over}<br>${when}${ppl.length ? '<br>' + ppl.map(label).join(' ') : ''}`;
+    d.appendChild(t); grid.appendChild(d);
+  }
+}
+renderGrid.shown = 9;
+function el(tag, attrs, parent) { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+
+// ---------- input ----------
+// Tap a piece to pick it up (its moves show as dots), then tap where it goes.
+function pointAt(ev) {
+  const r = svg.getBoundingClientRect();
+  const x = Math.floor((ev.clientX - r.left) / r.width * 8), y = Math.floor((ev.clientY - r.top) / r.height * 8);
+  if (x < 0 || y < 0 || x > 7 || y > 7) return null;
+  return flipped() ? (7 - y) * 8 + 7 - x : y * 8 + x;
+}
+// a press held still for half a second on a touch screen marks the square instead of picking up a piece
+const press = { timer: null, clientX: 0, clientY: 0, fired: 0 };
+svg.addEventListener('pointerdown', ev => {
+  if (ev.pointerType === 'mouse' && ev.shiftKey) ev.preventDefault();   // shift+click would otherwise select text
+  clearTimeout(press.timer); press.timer = null;
+  if (ev.pointerType === 'mouse' || !G) return;
+  press.clientX = ev.clientX; press.clientY = ev.clientY;
+  press.timer = setTimeout(() => { press.timer = null; const p = pointAt(press); if (p !== null) { press.fired = Date.now(); mark(p); } }, 500);
+});
+svg.addEventListener('pointermove', ev => { if (press.timer && Math.hypot(ev.clientX - press.clientX, ev.clientY - press.clientY) > 10) { clearTimeout(press.timer); press.timer = null; } });
+for (const t of ['pointerup', 'pointercancel']) svg.addEventListener(t, () => { clearTimeout(press.timer); press.timer = null; });
+svg.addEventListener('click', ev => {
+  if (!G) return;
+  if (Date.now() - press.fired < 1500) { press.fired = 0; return; }   // the click that ends a long press
+  const q = pointAt(ev); if (q === null) return;
+  if (ev.shiftKey) { mark(q); return; }
+  if (!cloud) {
+    if (!live) return;
+    if (!myColour) { flash('First tap White or Black above the board to choose your colour.'); return; }
+  }
+  const P = cloud ? states[at] : S, c = mover();
+  // a picked-up piece goes where it is told, if it can
+  if (sel !== null) {
+    const ms = legal(P).filter(m => m.f === sel && m.to === q);
+    if (ms.length) {
+      const go = m => { sel = null; if (cloud) playHere(m); else submit({ c, ...m }); render(); };
+      if (ms.length > 1) promote(c, pr => go(ms.find(m => m.pr === pr))); else go(ms[0]);
+      return;
+    }
+  }
+  if (side(P.board[q]) === c && q !== sel) {
+    if (!cloud && gameOver()) { sel = null; render(); flash('This game is over – press New game for another.'); return; }
+    if (!cloud && P.turn !== c) { sel = null; render(); flash('Wait for the other player’s move.'); return; }
+    sel = q; render(); return;
+  }
+  if (sel === null && P.board[q] && !cloud && side(P.board[q]) !== c) flash(`That’s ${NAME[side(P.board[q])]}’s piece.`);
+  sel = null; render();
+});
+function promote(c, then) {
+  dialog('The pawn becomes a…', [['Queen', () => then('q'), true, { pic: c + 'Q' }], ['Rook', () => then('r'), false, { pic: c + 'R' }],
+    ['Bishop', () => then('b'), false, { pic: c + 'B' }], ['Knight', () => then('n'), false, { pic: c + 'N' }], ['Cancel', () => { sel = null; render(); }, false, { cls: 'cancel' }]]);
+}
+// right-click the piece that has just moved to take the move back
+svg.addEventListener('contextmenu', ev => {
+  if (!G) return;
+  if (press.timer || Date.now() - press.fired < 1500) { ev.preventDefault(); return; }   // phones send a long press here too: it marks, never undoes
+  const q = pointAt(ev); if (q === null) return;
+  if (cloud) {
+    if (at > forkAt() && line[at - 1].to === q) { ev.preventDefault(); line = line.slice(0, at - 1); at--; buildStates(); render(); }
+    return;
+  }
+  const lm = lastMove();
+  if (!live || !lm || lm.to !== q) return;
+  ev.preventDefault();
+  R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur), m = l[l.length - 1]; if (!m || m.to !== q) return undefined; l.pop(); return l; });
+});
+
+function flash(msg) {
+  const sub = document.getElementById('sub'); sub.textContent = msg; sub.style.color = '#c62828'; flash.on = true;
+  clearTimeout(flash.t); flash.t = setTimeout(() => { sub.style.color = ''; flash.on = false; render(); }, 2500);
+}
+// buttons: [text, what it does, primary, { pic: a piece to show on it, cls }]
+function dialog(msg, buttons) {
+  document.getElementById('dmsg').textContent = msg;
+  const row = document.getElementById('dbtns'); row.innerHTML = '';
+  for (const [text, fn, primary, opt = {}] of buttons) {
+    const b = document.createElement('button'); b.textContent = text; b.className = (primary ? 'primary ' : '') + (opt.cls || '');
+    if (opt.pic) b.insertAdjacentHTML('afterbegin', `<svg class="pic" viewBox="0 0 45 45"><use href="#${opt.pic}"/></svg>`);
+    b.onclick = () => { document.getElementById('dialog').style.display = 'none'; fn && fn(); }; row.appendChild(b);
+  }
+  document.getElementById('dialog').style.display = 'flex';
+}
+
+document.getElementById('flip').onclick = () => { flipOn = !flipOn; render(); };
+document.getElementById('undo').onclick = () => {
+  if (cloud) { if (at > forkAt()) { line = line.slice(0, at - 1); at--; buildStates(); } render(); return; }
+  if (!live) return;
+  R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur); l.pop(); return l; });
+};
+document.getElementById('cloud').onclick = () => {
+  if (!G) return;
+  if (cloud) stopAnalysis(); else startAnalysis();
+  render();
+  // on a laptop the board fills the screen, so the timeline starts just below it: scroll it into view
+  if (cloud) document.getElementById('timeline').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+};
+drawBoard(document.getElementById('newsvg'), startPos());
+document.getElementById('newtile').onclick = () => live && !cloud && dialog('Start a new game? This one is kept at the bottom of the page.', [
+  ['New game', () => createGame(), true], ['Cancel']]);
+document.querySelectorAll('.bowl').forEach(b => b.onclick = () => {
+  const c = b.dataset.c;
+  myColour = myColour === c ? '' : c; ls.set('chessColour', myColour);
+  sel = null; writePresence(); render();
+});
+document.getElementById('app').addEventListener('click', ev => {
+  const t = ev.target;
+  if (t.closest('[data-you]')) {
+    ev.stopPropagation();
+    const n = prompt('Your name (shown to the other player):', myName);
+    if (n !== null) { myName = n.trim().slice(0, 20); ls.set('goName', myName); writePresence(); }
+    return;
+  }
+  const pk = t.closest('[data-poke]');
+  if (pk) { ev.stopPropagation(); poke(pk.dataset.poke); return; }
+  if (t.dataset.go) { switchTo(t.dataset.go); return; }
+  if (t.id === 'more') { renderGrid.shown += 9; renderGrid(); return; }
+  if (t.id === 'snap') { if (live) R.child('snap').set({ g: viewing, by: tab, t: TS }); return; }
+  const th = t.closest('.thumb'); if (th) { switchTo(th.dataset.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+}, true);
+
+// ---------- quick start ----------
+// While the live connection comes up, show the position this device saw last, then the one fetched over HTTP.
+// This is only a picture: nothing can be played, and nothing is written, until the live data arrives (`live`).
+function preview(d) {
+  if (live || !d || !d.games || !viewing) return;
+  const g = d.games[viewing]; if (!g || !g.created) return;
+  D = { games: d.games, presence: {}, current: d.current };
+  G = g; S = replay(g); render();
+}
+try { preview(JSON.parse(ls.get('chessCache'))); } catch (e) {}
+early.then(preview).catch(() => {});
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp(CONFIG);
+DB = firebase.database(); R = DB.ref('chess'); TS = firebase.database.ServerValue.TIMESTAMP;
+presRef = R.child('presence/' + tab);
+R.on('value', onLive);
+</script>
+</body>
+</html>
