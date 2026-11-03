@@ -52,6 +52,9 @@
   #board * { pointer-events: none; }   /* the board is redrawn all the time: clicks must land on the svg itself, not on a square that is about to vanish */
   #estimate { text-align: center; font-size: 14px; color: #1565c0; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 4px; }
   #counted { text-align: center; font-size: 14px; color: #3b2a14; height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; }
+  /* in Analysis: how the game is going, as White's share (white) of a bar, the rest Black's */
+  #bal { display: block; width: min(320px, 80%); height: 10px; margin: 4px auto 0; border-radius: 5px; background: #111; border: 1px solid #3b2a14; overflow: hidden; }
+  #bal i { display: block; height: 100%; background: #fafafa; transition: width .4s; }
   #buttons { display: flex; gap: 8px; margin-top: 8px; }
   button { flex: 1; font-size: 18px; padding: 14px 4px; border-radius: 12px; border: 0; background: #fff; color: #222; box-shadow: 0 1px 3px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; font-family: inherit; }
   button:active { transform: translateY(1px); }
@@ -175,7 +178,6 @@ const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;'
 const START = 'rnbqkbnrpppppppp' + '.'.repeat(32) + 'PPPPPPPPRNBQKBNR';
 const KN = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]], KG = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 const ROOK = [[-1, 0], [1, 0], [0, -1], [0, 1]], BISH = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
-const VALUE = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 const side = x => !x ? '' : x === x.toUpperCase() ? 'w' : 'b';
 const on = (r, f) => r >= 0 && r < 8 && f >= 0 && f < 8;
 const sqName = s => 'abcdefgh'[s & 7] + (8 - (s >> 3));
@@ -281,7 +283,6 @@ function replay(g, notes = true) {
   }
   return { ...P, sans, keys, status: status(P) };
 }
-function material(b) { let v = 0; for (const x of b) if (x) v += (side(x) === 'w' ? 1 : -1) * VALUE[x.toLowerCase()]; return v; }
 // "White Nf3 · move 12" for the k-th move of a game (k from 1), by colour c: moves are counted one by one, since a side may move twice
 function moveLabel(k, s, c) { return `${NAME[c]} ${s} · move ${k}`; }
 
@@ -496,17 +497,15 @@ function standing(st) {
   if (e.mate !== null) return Math.sign(e.mate) || (st.turn === 'w' ? -1 : 1);
   return 2 / (1 + Math.exp(-0.00368 * e.cp)) - 1;   // the usual way of turning a lead in pawns into chances
 }
-// the words under the board in Analysis
+// the words under the board in Analysis: roughly how it is going for each side, and each side's share out of 100 (no moves)
 function verdict(P) {
   const s = status(P);
   if (s === 'mate') return `Checkmate: ${NAME[other(P.turn)]} has won`;
   if (s) return 'A draw';
   if (ana && ana.failed) return ana.failed;
-  const e = evals.get(fen(P)); if (!e) return 'The engine is thinking…';
-  const m = e.best && fromUci(P, e.best), best = m ? ' · best ' + san(P, m, legal(P)) : '';
-  if (e.mate !== null) return (e.mate ? `${e.mate > 0 ? 'White' : 'Black'} mates in ${Math.abs(e.mate)}` : 'Mate') + best;
-  const v = e.cp / 100;
-  return (Math.abs(v) < 0.3 ? 'About even' : `${v > 0 ? 'White' : 'Black'} is ahead by ${Math.abs(v).toFixed(1)}`) + best + ` · depth ${e.depth}`;
+  const v = standing(P); if (v === undefined) return 'Looking at the position…';
+  const a = Math.abs(v), who = v > 0 ? 'White' : 'Black', w = Math.round(50 + 50 * v);
+  return (a < 0.15 ? 'About even' : a < 0.4 ? `A little better for ${who}` : a < 0.75 ? `Better for ${who}` : `${who} is winning`) + ` · White ${w} – Black ${100 - w}`;
 }
 
 // ---------- robots ----------
@@ -717,12 +716,6 @@ function drawBoard(s, P, o = {}) {
   if (o.sel !== undefined && o.sel !== null) h += sq(o.sel, 'rgba(20,110,40,.5)');
   if (o.check >= 0) h += sq(o.check, 'url(#chk)');
   P.board.forEach((x, q) => { if (!x) return; const [cx, cy] = place(q); h += `<use href="#${side(x)}${x.toUpperCase()}" x="${cx}" y="${cy}" width="1" height="1"/>`; });
-  if (o.arrow) {
-    const [x1, y1] = place(o.arrow.f), [x2, y2] = place(o.arrow.to), dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
-    const ex = x2 + 0.5 - ux * 0.3, ey = y2 + 0.5 - uy * 0.3;   // the head stops short of the middle of the square
-    h += `<line x1="${x1 + 0.5}" y1="${y1 + 0.5}" x2="${ex}" y2="${ey}" stroke="rgba(21,101,192,.7)" stroke-width=".16" stroke-linecap="round"/>`;
-    h += `<polygon points="${ex + ux * 0.28},${ey + uy * 0.28} ${ex - uy * 0.22},${ey + ux * 0.22} ${ex + uy * 0.22},${ey - ux * 0.22}" fill="rgba(21,101,192,.7)"/>`;
-  }
   for (const q of o.dots || []) {
     const [x, y] = place(q);
     h += P.board[q] ? `<circle cx="${x + 0.5}" cy="${y + 0.5}" r=".45" fill="none" stroke="rgba(20,85,30,.5)" stroke-width=".08"/>`
@@ -743,8 +736,7 @@ function render() {
   const lm = cloud ? line[at - 1] : lastMove();
   if (sel !== null && side(P.board[sel]) !== mover()) sel = null;
   const dots = sel !== null ? legal(as(P, mover())).filter(m => m.f === sel).map(m => m.to) : [];
-  const best = cloud && sel === null ? (evals.get(fen(P)) || {}).best : null, arrow = best ? fromUci(P, best) : null;
-  drawBoard(svg, P, { last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1, arrow });
+  drawBoard(svg, P, { last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1 });
 
   // banner
   const B = document.getElementById('banner'), sub = document.getElementById('sub'), st = cloud ? status(P) : S.status;
@@ -791,12 +783,12 @@ function render() {
     N.style.display = 'block';
   } else N.style.display = 'none';
 
-  // under the board: the last move; in Analysis the engine's view first, then the move on the board and the material
-  const n = cloud ? at : S.sans.length, said = !n ? (cloud ? 'The start' : 'No moves yet') : moveLabel(n, cloud ? states[at].san : S.sans[n - 1], cloud ? line[at - 1].c : lastMove().c);
-  oneLine(document.getElementById('estimate'), cloud ? verdict(P) : n ? 'Last move: ' + said : said);
-  const v = cloud ? material(P.board) : 0, ce = document.getElementById('counted');
+  // under the board: the last move; in Analysis how it is going instead, in words and as a bar
+  const n = cloud ? at : S.sans.length, said = !n ? 'No moves yet' : 'Last move: ' + moveLabel(n, S.sans[n - 1], lastMove().c);
+  oneLine(document.getElementById('estimate'), cloud ? verdict(P) : said);
+  const ce = document.getElementById('counted'), v = cloud ? standing(P) : undefined;
   ce.style.display = cloud ? '' : 'none';
-  oneLine(ce, cloud ? `${said} · material ${v ? `${v > 0 ? 'White' : 'Black'} +${Math.abs(v)}` : 'even'}` : '');
+  if (cloud) { if (!ce.querySelector('#bal')) ce.innerHTML = '<span id="bal"><i></i></span>'; ce.querySelector('i').style.width = (v === undefined ? 50 : 50 + 50 * v).toFixed(1) + '%'; }
 
   document.getElementById('undo').disabled = cloud ? at <= fork : !live || !toArr(G.moves).length;
   const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Analysis'; cb.classList.toggle('on', cloud);
@@ -819,7 +811,7 @@ function fit(e, html) {
   for (let f = 13.5; f >= 7 && (e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1); f -= 0.5) e.style.fontSize = f + 'px';
 }
 addEventListener('resize', () => {
-  for (const id of ['estimate', 'counted']) { const e = document.getElementById(id); oneLine(e, e.textContent); }
+  { const e = document.getElementById('estimate'); oneLine(e, e.textContent); }
   drawTimeline();
   for (const id of ['chipsb', 'chipsw', 'watchers']) { const b = document.getElementById(id); fit(b, b.html || ''); }
 });
