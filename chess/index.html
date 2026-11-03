@@ -34,6 +34,12 @@
   .chip.away { opacity: .5; }
   .chip.poke { cursor: pointer; }
   .chip.poked { filter: brightness(.7); }
+  .addbot { font-size: .93em; padding: 1px 7px; border-radius: 99px; background: #dbe7f6; color: #0d47a1; cursor: pointer; white-space: nowrap; }
+  .chip.bot { background: #dbe7f6; cursor: pointer; }
+  .chip.bot.paused { opacity: .5; }
+  .chip.bot small { font-size: .8em; color: #0d47a1; }
+  .chip .kill { margin-left: 2px; padding: 0 4px; border-radius: 99px; color: #555; font-weight: 700; }
+  .chip .kill:hover { background: rgba(0,0,0,.12); }
   #watchers { font-size: 14px; color: #555; margin-bottom: 6px; height: 22px; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; align-items: center; }
   #boardwrap { width: 100%; aspect-ratio: 1; background: #dcb35c; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25); touch-action: manipulation; }   /* the Go board's wood */
   svg { display: block; }
@@ -78,6 +84,12 @@
   #dialog button { background: #eee; }
   #dialog button.primary { background: #2e7d32; color: #fff; }
   #dialog button .pic { display: block; line-height: 1; margin: 0 auto 4px; width: 44px; height: 44px; }
+  #dialog button .epic { display: block; font-size: 26px; line-height: 1.2; }
+  #dialog .row.many button { flex: 1 0 15%; padding: 8px 2px; font-size: 16px; }
+  #dpic { font-size: 46px; line-height: 1.1; margin: -6px 0 6px; }
+  #dscale { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; color: #777; margin: -6px 2px 8px; }
+  #dscale i { flex: 1; height: 2px; background: linear-gradient(90deg, #ddd, #777); position: relative; }
+  #dscale i::after { content: ''; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left: 7px solid #777; border-right: 0; }
   #dialog .row button.cancel { flex: 1 0 100%; margin-top: 6px; padding: 8px; background: none; box-shadow: none; color: #777; font-weight: 400; }
 </style>
 </head>
@@ -104,9 +116,9 @@
     <h3 id="othersh">Other games (tap one to look at it)</h3><div id="grid"></div>
     <div id="more">See more older games</div>
   </div>
-  <div id="credit">Pieces by <a href="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces" target="_blank" rel="noopener">Cburnett</a>, CC BY-SA 3.0</div>
+  <div id="credit">Pieces by <a href="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces" target="_blank" rel="noopener">Cburnett</a>, CC BY-SA 3.0 · engine: <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">Stockfish</a> via <a href="https://github.com/nmrugg/stockfish.js" target="_blank" rel="noopener">Stockfish.js</a>, GPL 3 (<a href="engine/COPYING.txt" target="_blank" rel="noopener">licence</a>)</div>
 </div>
-<div id="dialog"><div class="box"><p id="dmsg"></p><div class="row" id="dbtns"></div></div></div>
+<div id="dialog"><div class="box"><div id="dpic"></div><p id="dmsg"></p><div id="dscale"></div><div class="row" id="dbtns"></div></div></div>
 <!-- the pieces (Cburnett's set from Wikimedia Commons, CC BY-SA 3.0), drawn on a 45×45 square; #chk is the red glow under a king in check -->
 <svg width="0" height="0" style="position: absolute"><defs>
 <symbol id="wK" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path stroke-linejoin="miter" d="M22.5 11.63V6M20 8h5"/><path fill="#fff" stroke-linecap="butt" stroke-linejoin="miter" d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/><path fill="#fff" d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/></g></symbol>
@@ -321,7 +333,8 @@ function onLive(snap) {
     if (seen && p.mark.g === viewing) showMark(p.mark.p);   // marks already there when the page opened are old news
   }
   for (const p of others()) if (!(p.k in marked)) marked[p.k] = null;
-  if (k !== render.key) { render.key = k; if (!cloud) sel = null; if (cloud) followGame(); }
+  if (k !== render.key) { render.key = k; rob.ver++; if (!cloud) sel = null; if (cloud) followGame(); }
+  for (const [k, v] of Object.entries(D.presence)) if (v.bot && !D.games[v.g]) R.child('presence/' + k).remove();   // robots of deleted games
   render();
 }
 
@@ -329,7 +342,8 @@ function writePresence() {
   if (first) return;
   presRef.set({ a: myAnimal, n: myName.slice(0, 20), c: myColour || '', g: viewing || '', d: coarse ? 'm' : 'd', t: TS });
 }
-function everyone() { return Object.entries(D.presence).map(([k, v]) => ({ ...v, k })); }
+// people only: robots live in presence too (see "robots" below)
+function everyone() { return Object.entries(D.presence).filter(([, v]) => !v.bot).map(([k, v]) => ({ ...v, k })); }
 function others() { return everyone().filter(p => p.k !== tab); }
 function label(p) { const A = ANIMALS[p.a] || ANIMALS[0]; return A[0] + ' ' + esc(p.n || A[1]); }
 function who(k) { const p = D.presence[k]; return p ? label(p) : 'Someone'; }
@@ -339,11 +353,11 @@ function sortedGames() { return Object.keys(D.games).sort((a, b) => lastPlayed(D
 // each game keeps one pale colour for its tile (as on the Go page). Games take these in the order they were created, and each is about 150 degrees of hue
 // on from the last, so games within 6 of each other differ clearly: at least 110 degrees side by side and above or below, 70 for 5 apart.
 const PASTELS = ['#efde9d', '#dbeefe', '#fec0b3', '#a8f4fc', '#ffc4db', '#a7f1d2', '#f5e4fe', '#bddf93', '#dde3fe', '#ffcd9e', '#bde4ff', '#ffe4e1', '#73e6eb', '#ffd8eb', '#9eebc3', '#ead3fe', '#e4f2c6', '#c0cffe', '#fedec5', '#a8e0ff', '#fed1d0', '#bdf9f7', '#ffb7e3', '#bdf4cf', '#e1cdfe', '#dae6a5', '#e2ebff', '#ffc29b', '#c3ecfe', '#fec7ca', '#9af1e9', '#ffe1f6', '#9fe5ac', '#e8dffe', '#d9de94', '#ccdffe', '#fee5d9', '#82e0ff', '#fedade', '#8becdd', '#ffcaf8', '#d4f6d3', '#d2c9ff', '#ebe8ae', '#bddafe', '#ffd3c2', '#c9f4ff', '#ffbccb', '#aef6e4', '#f9c2fa', '#c2ecb6', '#e9e9ff', '#e0d380', '#d1e7fe', '#ffc9ba', '#99eefd', '#fee3eb', '#83e8c9', '#f7d8fe', '#bfe6a5', '#d8dbff'];
-// games of up to 4 moves can be deleted (see prune), so they don't use up a place in the order: deleting one leaves the others' colours alone
+// games not yet started by both sides can be deleted (see prune), so they don't use up a place in the order: deleting one leaves the others' colours alone
 function gameColours() {
   const out = {}, L = PASTELS.length; let n = 0, short = 0;
   for (const id of Object.keys(D.games).sort((a, b) => (D.games[a].created || 0) - (D.games[b].created || 0)))
-    out[id] = toArr(D.games[id].moves).length > 4 ? PASTELS[n++ % L] : PASTELS[(n + 30 + 7 * short++) % L];
+    out[id] = started(D.games[id]) ? PASTELS[n++ % L] : PASTELS[(n + 30 + 7 * short++) % L];
   return out;
 }
 
@@ -394,10 +408,178 @@ function grunt() {
   const s = actx.createBufferSource(); s.buffer = gruntBuf; s.connect(actx.destination); s.start();
 }
 
+// ---------- the engine: Stockfish 19 (the lite, single-threaded web build in engine/, 1.9 MB, downloaded once per device) ----------
+// It runs in a Web Worker in this browser, and nothing it works out is written anywhere. Analysis and the robots each have their own copy.
+const ENGINE = 'engine/stockfish-19-lite-single.js';
+function fen(P) {
+  let s = '';
+  for (let r = 0; r < 8; r++) {
+    let e = 0;
+    for (let f = 0; f < 8; f++) { const x = P.board[r * 8 + f]; if (!x) e++; else { if (e) s += e; e = 0; s += x; } }
+    if (e) s += e; if (r < 7) s += '/';
+  }
+  return `${s} ${P.turn} ${P.castle || '-'} ${P.ep >= 0 ? sqName(P.ep) : '-'} ${Math.min(P.half, 99)} 1`;
+}
+// the legal move that the engine's e2e4 / e7e8q means, or null
+function fromUci(P, u) {
+  const at = t => (8 - +t[1]) * 8 + 'abcdefgh'.indexOf(t[0]), f = at(u.slice(0, 2)), to = at(u.slice(2, 4)), pr = u[4] || '';
+  return u && u.length >= 4 ? legal(P).find(o => o.f === f && o.to === to && (o.pr || '') === pr) || null : null;
+}
+// An engine takes one job at a time: { fen, go (how long to think), opts (setoption lines), onInfo (each report), onDone (its move) }.
+// A new job stops the one running; the stopped job's move is thrown away.
+function makeEngine() {
+  const e = { w: null, job: null, next: null, failed: '' };
+  try { e.w = new Worker(ENGINE); } catch (x) { e.failed = 'The engine could not start in this browser'; return e; }
+  e.w.onmessage = ev => {
+    const line = String(ev.data), j = e.job;
+    if (j && line.startsWith('info') && / pv /.test(line) && / score /.test(line) && !/bound/.test(line)) {
+      const sc = line.match(/ score (cp|mate) (-?\d+)/), d = +(line.match(/ depth (\d+)/) || [0, 0])[1];
+      j.onInfo && j.onInfo({ depth: d, cp: sc[1] === 'cp' ? +sc[2] : null, mate: sc[1] === 'mate' ? +sc[2] : null, pv: line.split(' pv ')[1].split(' ') });
+    } else if (line.startsWith('bestmove')) {
+      e.job = null;
+      if (j && !j.stopped && j.onDone) j.onDone(line.split(' ')[1]);
+      engineNext(e);
+    }
+  };
+  e.w.onerror = () => { e.failed = 'The engine could not start in this browser'; const j = e.job; e.job = null; if (j && j.onFail) j.onFail(e.failed); render(); };
+  e.w.postMessage('uci'); e.w.postMessage('setoption name Hash value 16');
+  return e;
+}
+function think(e, job) {
+  e.next = job;
+  if (!e.job) engineNext(e);
+  else if (!e.job.stopped) { e.job.stopped = true; e.w.postMessage('stop'); }
+}
+function engineNext(e) {
+  const j = e.next; if (!j || e.failed) return;
+  e.next = null; e.job = j;
+  for (const o of j.opts || []) e.w.postMessage(o);
+  e.w.postMessage('position fen ' + j.fen); e.w.postMessage('go ' + j.go);
+}
+
+// What Analysis knows: position (its FEN) -> { cp: White's lead in hundredths of a pawn, or mate: moves to mate (> 0 White mates, < 0 Black),
+// depth, best: the engine's move, deep: it has had its full think }. The position on the board gets a second's think;
+// then the other positions of the line get a quick one each (every 16th move first, then every 8th, ...), for the graph.
+const evals = new Map(), DEEP = 'movetime 1200', QUICK = 'depth 10';
+let ana = null, anaWant = '', anaDraw = 0;
+function pumpEval() {
+  if (!cloud || !states) return;
+  if (!ana) ana = makeEngine();
+  if (ana.failed) return;
+  let k = at, go = DEEP;
+  if (status(states[at]) || (evals.get(fen(states[at])) || {}).deep) {
+    const L = line.length, seen = new Uint8Array(L + 1), order = [L]; seen[L] = 1;
+    for (let s = 16; s >= 1; s >>= 1) for (let i = 0; i <= L; i += s) if (!seen[i]) { seen[i] = 1; order.push(i); }
+    k = order.find(i => !status(states[i]) && !evals.has(fen(states[i]))); go = QUICK;
+    if (k === undefined) return;
+  }
+  const P = states[k], f = fen(P), want = f + '|' + go;
+  if (want === anaWant && (ana.job || ana.next)) return;   // already on it
+  anaWant = want;
+  const white = v => P.turn === 'w' ? v : -v;   // the engine scores for the side to move
+  think(ana, { fen: f, go,
+    onInfo: r => {
+      const old = evals.get(f);
+      if (old && old.depth > r.depth) return;
+      evals.set(f, { cp: r.cp === null ? null : white(r.cp), mate: r.mate === null ? null : white(r.mate), depth: r.depth, best: r.pv[0], deep: old && old.deep });
+      if (Date.now() - anaDraw > 120) { anaDraw = Date.now(); render(); }   // at most about 8 times a second
+    },
+    onDone: () => { anaWant = ''; const o = evals.get(f); if (o && go === DEEP) o.deep = true; if (!o) evals.set(f, { cp: 0, mate: null, depth: 0, best: '', deep: true }); render(); } });
+}
+function stopEval() { if (ana && ana.job && !ana.job.stopped) { ana.job.stopped = true; ana.w.postMessage('stop'); } if (ana) ana.next = null; anaWant = ''; }
+// how a position stands for the graph, from -1 (Black winning) to 1 (White winning), or undefined if not known yet
+function standing(st) {
+  const s = status(st);
+  if (s === 'mate') return st.turn === 'w' ? -1 : 1;
+  if (s) return 0;
+  const e = evals.get(fen(st)); if (!e) return undefined;
+  if (e.mate !== null) return Math.sign(e.mate) || (st.turn === 'w' ? -1 : 1);
+  return 2 / (1 + Math.exp(-0.00368 * e.cp)) - 1;   // the usual way of turning a lead in pawns into chances
+}
+// the words under the board in Analysis
+function verdict(P) {
+  const s = status(P);
+  if (s === 'mate') return `Checkmate: ${NAME[other(P.turn)]} has won`;
+  if (s) return 'A draw';
+  if (ana && ana.failed) return ana.failed;
+  const e = evals.get(fen(P)); if (!e) return 'The engine is thinking…';
+  const m = e.best && fromUci(P, e.best), best = m ? ' · best ' + san(P, m, legal(P)) : '';
+  if (e.mate !== null) return (e.mate ? `${e.mate > 0 ? 'White' : 'Black'} mates in ${Math.abs(e.mate)}` : 'Mate') + best;
+  const v = e.cp / 100;
+  return (Math.abs(v) < 0.3 ? 'About even' : `${v > 0 ? 'White' : 'Black'} is ahead by ${Math.abs(v).toFixed(1)}`) + best + ` · depth ${e.depth}`;
+}
+
+// ---------- robots ----------
+// A robot plays one colour with the engine, held back to the strength it was given. Like on the Go page it is a presence entry tagged with its game:
+// { a: -1, c: its colour, g: its game, bot: its strength, on: playing (or paused), run: the device that runs it, t }.
+// It runs in the browser of the device that added or last resumed it, while that device has its game open.
+// The strengths on offer, with a picture each (as on the Go page): the weaker ones by Stockfish's skill level, the others by its rating.
+const LEVELS = [['beginner', '🍼', 'Skill Level', 0], ['novice', '🧸', 'Skill Level', 3], ['casual', '🎒', 'Skill Level', 6], ['1400', '📚', 'Elo', 1400],
+  ['1600', '🎓', 'Elo', 1600], ['1800', '🥋', 'Elo', 1800], ['2000', '🥉', 'Elo', 2000], ['2200', '🥈', 'Elo', 2200], ['2500', '🥇', 'Elo', 2500], ['max', '🏆', 'Skill Level', 20]];
+function levelOpts(name) {
+  const [, , kind, v] = LEVELS.find(l => l[0] === name) || LEVELS[3];
+  return kind === 'Elo' ? ['setoption name Skill Level value 20', 'setoption name UCI_LimitStrength value true', `setoption name UCI_Elo value ${v}`]
+    : ['setoption name UCI_LimitStrength value false', `setoption name Skill Level value ${v}`];
+}
+const rob = { e: null, busy: null, ver: 0, err: '' };
+function robots(g) { return D ? Object.entries(D.presence).filter(([, v]) => v.bot && v.g === g).map(([k, v]) => ({ ...v, k })) : []; }
+function pauseRobots(g, c) { for (const r of robots(g)) if (r.c === c && r.on) R.child(`presence/${r.k}/on`).set(false); }
+function addRobot(c) {
+  if (!live) return;
+  dialog(`How strong should ${NAME[c]}’s robot be?`, [...LEVELS.map(([r, pic]) => [r, () => {
+    pauseRobots(viewing, c); rob.err = '';
+    R.child('presence/bot-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).set({ a: -1, c, g: viewing, n: '', bot: r, on: true, run: me, t: TS });
+  }, r === '1400', { emoji: pic }]), ['Cancel', null, false, { cls: 'cancel' }]], { pic: '🤖♟️', scale: ['weaker', 'stronger'] });   // 1400, a club player, is the suggestion
+}
+// tap a robot to pause it; tap a paused one to have it play again, from this device
+function toggleRobot(k) {
+  const r = D.presence[k]; if (!r || !live) return;
+  if (r.on) { R.child(`presence/${k}/on`).set(false); return; }
+  pauseRobots(r.g, r.c); rob.err = ''; rob.busy = null;
+  R.child('presence/' + k).update({ on: true, run: me });
+}
+function robotChip(r) {
+  const mine = r.run === me, here = mine || Object.keys(D.presence).some(k => !D.presence[k].bot && k.startsWith(String(r.run).slice(0, 20)));
+  let state = '', info = `Plays at strength ${r.bot}. Tap to pause it, × to remove it.`;
+  if (!r.on) { state = 'paused'; info = 'Paused. Tap to have it play again (it then runs on this device), × to remove it.'; }
+  else if (mine && rob.err) { state = 'stuck'; info = rob.err + ' – tap twice to try again.'; }
+  else if (!here) { state = 'away'; info = 'It runs on the device that started it, which isn’t here. Tap it twice to run it on this one.'; }
+  else if (!gameOver() && nextColour() === r.c) state = 'thinking';
+  return `<span class="chip bot${r.on ? '' : ' paused'}" data-bot="${esc(r.k)}" title="${esc(info)}">🤖 ${esc(r.bot)}${state ? ` <small>${state}</small>` : ''}<span class="kill" data-kill="${esc(r.k)}" title="Remove this robot">×</span></span>`;
+}
+// called after every render: if it is the turn of a robot this device runs, think and play
+function driveRobots() {
+  if (!live || !G || gameOver()) return;
+  const c = nextColour(), r = robots(viewing).find(r => r.on && r.c === c && r.run === me);
+  if (!r) return;
+  const key = rob.ver + ':' + r.k;
+  if (rob.busy === key) return;
+  rob.busy = key;
+  robotPlay(r, key).catch(e => { rob.err = e && e.message || String(e); flash('Robot: ' + rob.err); render(); });
+}
+async function robotPlay(r, key) {
+  const gid = viewing, ver = rob.ver, P = S, len = toArr(G.moves).length, start = Date.now();
+  if (!rob.e) rob.e = makeEngine();
+  if (rob.e.failed) throw new Error(rob.e.failed);
+  const u = await new Promise((ok, bad) => think(rob.e, { fen: fen(P), go: r.bot === 'max' ? 'movetime 1500' : 'movetime 600', opts: levelOpts(r.bot), onDone: ok, onFail: m => bad(new Error(m)) }));
+  // not instantly, so a human can see what happened: at least 0.7 s, or 3 s a move when two robots play each other
+  const vsRobot = robots(gid).some(o => o.on && o.c === other(r.c)), wait = (vsRobot ? 3000 : 700) - (Date.now() - start);
+  if (wait > 0) await new Promise(ok => setTimeout(ok, wait));
+  const now = D.presence[r.k], m = fromUci(P, u);
+  if (rob.busy !== key || rob.ver !== ver || viewing !== gid || toArr(G.moves).length !== len || !now || !now.on || now.run !== me || !m) { if (rob.busy === key) rob.busy = null; return; }
+  R.child(`games/${gid}/moves`).transaction(cur => {
+    const list = toArr(cur); if (list.length !== len) return undefined;
+    const Q = replay({ moves: list }, false);
+    if (Q.status || !legal(as(Q, r.c)).some(o => same(o, m))) return undefined;
+    const x = { c: r.c, f: m.f, to: m.to, t: TS }; if (m.pr) x.pr = m.pr;
+    list.push(x); return list;
+  });
+}
+
 function switchTo(id) {
   viewing = id; ls.set('chessGame', id);
   stopAnalysis(); sel = null;
-  G = D.games[id]; S = replay(G); render.key = id + ':' + toArr(G.moves).length;
+  G = D.games[id]; S = replay(G); render.key = id + ':' + toArr(G.moves).length; rob.ver++;
   writePresence(); render();
 }
 
@@ -411,14 +593,16 @@ function createGame() {
   if (D) prune(ref.key, leaving);
   writePresence();
 }
-// keep the 1000 most recent games with more than 4 moves (plus any game someone else is looking at);
+// a game is kept once White and Black have each made a move (moves since undone don't count)
+function started(g) { const m = toArr(g.moves); return m.some(x => x.c === 'w') && m.some(x => x.c === 'b'); }
+// keep the 1000 most recent started games (plus any game someone else is looking at);
 // the whole lot is downloaded each time the page opens
 function prune(newId, leaving) {
   const busy = new Set(others().map(p => p.g));
   let kept = 0;
   for (const id of sortedGames()) {
     if (id === newId || !D.games[id]) continue;
-    if (toArr(D.games[id].moves).length > 4 && kept < 1000) kept++;
+    if (started(D.games[id]) && kept < 1000) kept++;
     else if (!busy.has(id)) R.child('games/' + id).remove();
   }
 }
@@ -447,7 +631,7 @@ function startAnalysis() {
   line = toArr(G.moves).slice(); at = line.length; branched = false; lineGame = viewing;
   buildStates();
 }
-function stopAnalysis() { cloud = false; sel = null; line = []; at = 0; states = null; }
+function stopAnalysis() { cloud = false; sel = null; line = []; at = 0; states = null; stopEval(); }
 // the real game moved on (or was undone): follow it, unless moves have been made here
 function followGame() {
   if (lineGame !== viewing) { stopAnalysis(); return; }
@@ -479,7 +663,7 @@ function playHere(m) {
   line = line.slice(0, at); line.push(x); at++; branched = true; buildStates();
 }
 
-// The graph that takes the New game tile's place in Analysis: White's lead in material (pawn 1, knight and bishop 3, rook 5, queen 9) after each move.
+// The graph that takes the New game tile's place in Analysis: how each position stands, by the engine (see standing), after each move.
 const tl = document.getElementById('tlsvg'), TX = 12;   // TX: room at each end for the dot
 let tlDrag = false;
 function drawTimeline() {
@@ -487,17 +671,16 @@ function drawTimeline() {
   if (!cloud || !states) return;
   const W = tl.clientWidth, H = tl.clientHeight; if (!W || !H) return;
   const L = line.length, mid = H / 2, fork = forkAt(), x = k => L ? TX + (W - 2 * TX) * k / L : W - TX;
-  const pts = states.map((st, k) => [k, material(st.board)]); let top = 4;
-  for (const [, v] of pts) top = Math.max(top, Math.abs(v));
-  const y = v => mid - v / top * (mid - 4), xy = ([k, v]) => x(k).toFixed(1) + ',' + y(v).toFixed(1);
-  // a step for each move: material only changes when something is taken
-  const steps = []; for (let i = 0; i < pts.length; i++) { if (i) steps.push([pts[i][0], pts[i - 1][1]]); steps.push(pts[i]); }
+  const steps = []; states.forEach((st, k) => { const v = standing(st); if (v !== undefined) steps.push([k, v]); });
+  const y = v => mid - v * (mid - 4), xy = ([k, v]) => x(k).toFixed(1) + ',' + y(v).toFixed(1);
   let s = `<defs><clipPath id="tlw"><rect width="${W}" height="${mid}"/></clipPath><clipPath id="tlb"><rect y="${mid}" width="${W}" height="${mid}"/></clipPath></defs>`;
   // white where White is ahead, black where Black is; the line is blue after the moves made here
-  const area = `M${x(0).toFixed(1)},${mid} L${steps.map(xy).join(' L')} L${x(L).toFixed(1)},${mid}Z`;
-  s += `<path d="${area}" fill="#fafafa" clip-path="url(#tlw)"/><path d="${area}" fill="#111" fill-opacity=".85" clip-path="url(#tlb)"/>`;
-  s += `<path d="M${steps.map(xy).join(' L')}" fill="none" stroke="#3b2a14" stroke-width="1.2" stroke-linejoin="round"/>`;
-  if (fork < L) { const i = steps.findIndex(([k]) => k >= fork); s += `<path d="M${steps.slice(Math.max(0, i)).map(xy).join(' L')}" fill="none" stroke="#1565c0" stroke-width="2.5" stroke-linejoin="round"/>`; }
+  if (steps.length) {
+    const area = `M${x(steps[0][0]).toFixed(1)},${mid} L${steps.map(xy).join(' L')} L${x(steps[steps.length - 1][0]).toFixed(1)},${mid}Z`;
+    s += `<path d="${area}" fill="#fafafa" clip-path="url(#tlw)"/><path d="${area}" fill="#111" fill-opacity=".85" clip-path="url(#tlb)"/>`;
+    s += `<path d="M${steps.map(xy).join(' L')}" fill="none" stroke="#3b2a14" stroke-width="1.2" stroke-linejoin="round"/>`;
+  }
+  if (steps.length && fork < L) { const i = steps.findIndex(([k]) => k >= fork); s += `<path d="M${steps.slice(Math.max(0, i)).map(xy).join(' L')}" fill="none" stroke="#1565c0" stroke-width="2.5" stroke-linejoin="round"/>`; }
   const cx = x(at), text = at ? moveLabel(at, states[at].san, line[at - 1].c) : 'start', right = cx > W - 140;
   s += `<line x1="${TX}" y1="${mid}" x2="${W - TX}" y2="${mid}" stroke="#3b2a14" stroke-opacity=".5"/>`;
   s += `<line x1="${cx}" y1="0" x2="${cx}" y2="${H}" stroke="#1565c0" stroke-width="2" stroke-opacity=".7"/>`;
@@ -534,6 +717,12 @@ function drawBoard(s, P, o = {}) {
   if (o.sel !== undefined && o.sel !== null) h += sq(o.sel, 'rgba(20,110,40,.5)');
   if (o.check >= 0) h += sq(o.check, 'url(#chk)');
   P.board.forEach((x, q) => { if (!x) return; const [cx, cy] = place(q); h += `<use href="#${side(x)}${x.toUpperCase()}" x="${cx}" y="${cy}" width="1" height="1"/>`; });
+  if (o.arrow) {
+    const [x1, y1] = place(o.arrow.f), [x2, y2] = place(o.arrow.to), dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
+    const ex = x2 + 0.5 - ux * 0.3, ey = y2 + 0.5 - uy * 0.3;   // the head stops short of the middle of the square
+    h += `<line x1="${x1 + 0.5}" y1="${y1 + 0.5}" x2="${ex}" y2="${ey}" stroke="rgba(21,101,192,.7)" stroke-width=".16" stroke-linecap="round"/>`;
+    h += `<polygon points="${ex + ux * 0.28},${ey + uy * 0.28} ${ex - uy * 0.22},${ey + ux * 0.22} ${ex + uy * 0.22},${ey - ux * 0.22}" fill="rgba(21,101,192,.7)"/>`;
+  }
   for (const q of o.dots || []) {
     const [x, y] = place(q);
     h += P.board[q] ? `<circle cx="${x + 0.5}" cy="${y + 0.5}" r=".45" fill="none" stroke="rgba(20,85,30,.5)" stroke-width=".08"/>`
@@ -554,7 +743,8 @@ function render() {
   const lm = cloud ? line[at - 1] : lastMove();
   if (sel !== null && side(P.board[sel]) !== mover()) sel = null;
   const dots = sel !== null ? legal(as(P, mover())).filter(m => m.f === sel).map(m => m.to) : [];
-  drawBoard(svg, P, { last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1 });
+  const best = cloud && sel === null ? (evals.get(fen(P)) || {}).best : null, arrow = best ? fromUci(P, best) : null;
+  drawBoard(svg, P, { last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1, arrow });
 
   // banner
   const B = document.getElementById('banner'), sub = document.getElementById('sub'), st = cloud ? status(P) : S.status;
@@ -573,18 +763,19 @@ function render() {
       sub.textContent = inCheck(S) ? 'Check!' : rep >= 3 ? 'This position has come up three times: you may call it a draw.'
         : S.half >= 100 ? '50 moves without a capture or pawn move: you may call it a draw.' : sel !== null ? 'Now tap where it goes' : '';
     }
-  } else { B.className = 'wait'; B.textContent = 'Waiting for other player'; }
+  } else { B.className = 'wait'; B.textContent = robots(viewing).some(r => r.on && r.c === nextColour()) ? 'Robot is thinking…' : 'Waiting for other player'; }
   updateTab(live && !gameOver() && !!myColour && nextColour() === myColour);
 
   // people, and the pieces each side has taken
-  const all = everyone();
+  const all = everyone(), bots = robots(viewing);
   for (const c of ['w', 'b']) {
     document.querySelector(`.bowl[data-c="${c}"]`).classList.toggle('mine', myColour === c);
     const taken = P.caps[c], groups = 'qrbnp'.split('').map(t => [t, taken.filter(x => x.toLowerCase() === t).length]).filter(([, n]) => n);
     const capHtml = groups.map(([t, n]) => `<svg viewBox="0 0 45 45"><use href="#${other(c)}${t.toUpperCase()}"/></svg>${n > 1 ? `<span>${n}</span>` : ''}`).join('');
     const ce = document.getElementById('cap' + c); if (ce.html !== capHtml) { ce.html = capHtml; ce.innerHTML = capHtml; }
     document.getElementById('hint' + c).textContent = myColour === c ? '' : 'tap to play';
-    fit(document.getElementById('chips' + c), all.filter(p => p.c === c).map(chip).join(''));
+    fit(document.getElementById('chips' + c), all.filter(p => p.c === c).map(chip).join('') + bots.filter(r => r.c === c).map(robotChip).join('')
+      + `<span class="addbot" data-add="${c}" title="Add a robot player">+🤖</span>`);
   }
   const watchers = all.filter(p => !p.c);
   fit(document.getElementById('watchers'), `<span>${live ? all.length + ' online' : '&nbsp;'}${watchers.length ? ' · watching:' : ''}</span>` + watchers.map(chip).join(''));
@@ -600,17 +791,20 @@ function render() {
     N.style.display = 'block';
   } else N.style.display = 'none';
 
-  const sans = cloud ? null : S.sans, n = cloud ? at : sans.length;
-  oneLine(document.getElementById('estimate'), !n ? (cloud ? 'The start' : 'No moves yet') : (cloud ? '' : 'Last move: ') + moveLabel(n, cloud ? states[at].san : sans[n - 1], cloud ? line[at - 1].c : lastMove().c));
+  // under the board: the last move; in Analysis the engine's view first, then the move on the board and the material
+  const n = cloud ? at : S.sans.length, said = !n ? (cloud ? 'The start' : 'No moves yet') : moveLabel(n, cloud ? states[at].san : S.sans[n - 1], cloud ? line[at - 1].c : lastMove().c);
+  oneLine(document.getElementById('estimate'), cloud ? verdict(P) : n ? 'Last move: ' + said : said);
   const v = cloud ? material(P.board) : 0, ce = document.getElementById('counted');
   ce.style.display = cloud ? '' : 'none';
-  oneLine(ce, cloud ? (v ? `Material: ${v > 0 ? 'White' : 'Black'} is ${Math.abs(v)} ahead` : 'Material: even') : '');
+  oneLine(ce, cloud ? `${said} · material ${v ? `${v > 0 ? 'White' : 'Black'} +${Math.abs(v)}` : 'even'}` : '');
 
   document.getElementById('undo').disabled = cloud ? at <= fork : !live || !toArr(G.moves).length;
   const cb = document.getElementById('cloud'); cb.textContent = cloud ? 'Hide' : 'Analysis'; cb.classList.toggle('on', cloud);
   document.getElementById('newtile').classList.toggle('off', cloud);
   drawTimeline();
   renderGrid();
+  pumpEval();
+  driveRobots();
 }
 // keep a line of text on one line: shrink it until it fits
 function oneLine(e, text) {
@@ -728,13 +922,18 @@ function flash(msg) {
   const sub = document.getElementById('sub'); sub.textContent = msg; sub.style.color = '#c62828'; flash.on = true;
   clearTimeout(flash.t); flash.t = setTimeout(() => { sub.style.color = ''; flash.on = false; render(); }, 2500);
 }
-// buttons: [text, what it does, primary, { pic: a piece to show on it, cls }]
-function dialog(msg, buttons) {
+// buttons: [text, what it does, primary, { pic: a piece to show on it, emoji: a picture to show on it, cls }];
+// extra: { pic: big emoji above the question, scale: [left, right] labels for a row of buttons that goes from one to the other }
+function dialog(msg, buttons, extra = {}) {
   document.getElementById('dmsg').textContent = msg;
-  const row = document.getElementById('dbtns'); row.innerHTML = '';
+  const pic = document.getElementById('dpic'), scale = document.getElementById('dscale');
+  pic.textContent = extra.pic || ''; pic.style.display = extra.pic ? '' : 'none';
+  scale.innerHTML = extra.scale ? `<span>${esc(extra.scale[0])}</span><i></i><span>${esc(extra.scale[1])}</span>` : ''; scale.style.display = extra.scale ? '' : 'none';
+  const row = document.getElementById('dbtns'); row.innerHTML = ''; row.classList.toggle('many', buttons.length > 5);
   for (const [text, fn, primary, opt = {}] of buttons) {
     const b = document.createElement('button'); b.textContent = text; b.className = (primary ? 'primary ' : '') + (opt.cls || '');
     if (opt.pic) b.insertAdjacentHTML('afterbegin', `<svg class="pic" viewBox="0 0 45 45"><use href="#${opt.pic}"/></svg>`);
+    if (opt.emoji) { const e = document.createElement('span'); e.className = 'epic'; e.textContent = opt.emoji; b.prepend(e); }
     b.onclick = () => { document.getElementById('dialog').style.display = 'none'; fn && fn(); }; row.appendChild(b);
   }
   document.getElementById('dialog').style.display = 'flex';
@@ -743,7 +942,9 @@ function dialog(msg, buttons) {
 document.getElementById('undo').onclick = () => {
   if (cloud) { if (at > forkAt()) { line = line.slice(0, at - 1); at--; buildStates(); } render(); return; }
   if (!live) return;
-  R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur); l.pop(); return l; });
+  // against a robot, take back its reply too, so that it is your move again
+  const bots = robots(viewing).filter(r => r.on), isBot = c => bots.some(r => r.c === c);
+  R.child(`games/${viewing}/moves`).transaction(cur => { const l = toArr(cur), m = l.pop(); if (m && isBot(m.c) && !isBot(other(m.c)) && l.length) l.pop(); return l; });
 };
 document.getElementById('cloud').onclick = () => {
   if (!G) return;
@@ -768,6 +969,10 @@ document.getElementById('app').addEventListener('click', ev => {
     if (n !== null) { myName = n.trim().slice(0, 20); ls.set('goName', myName); writePresence(); }
     return;
   }
+  const kl = t.closest('[data-kill]'), bt = t.closest('[data-bot]'), ad = t.closest('[data-add]');
+  if (kl) { ev.stopPropagation(); if (live) R.child('presence/' + kl.dataset.kill).remove(); return; }
+  if (bt) { ev.stopPropagation(); toggleRobot(bt.dataset.bot); return; }
+  if (ad) { ev.stopPropagation(); addRobot(ad.dataset.add); return; }
   const pk = t.closest('[data-poke]');
   if (pk) { ev.stopPropagation(); poke(pk.dataset.poke); return; }
   if (t.dataset.go) { switchTo(t.dataset.go); return; }
