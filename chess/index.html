@@ -525,7 +525,7 @@ const svg = document.getElementById('board');
 const LIGHT = '#efd9a7', DARK = '#c2924a', EDGE = 0.34;
 // where square q is drawn, in squares from the top left of the frame; White always at the bottom
 function place(q) { return [EDGE + (q & 7), EDGE + (q >> 3)]; }
-// draws position P into the svg s; o: { last: the move to show, trial: it was made in Analysis, sel, dots: where the picked-up piece can go, check: a king's square, coords }
+// draws position P into the svg s; o: { last: the move to show, trial: it was made in Analysis, sel, dots: where the picked-up piece can go, check: a king's square }
 function drawBoard(s, P, o = {}) {
   const sq = (q, fill) => { const [x, y] = place(q); return `<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}"/>`; };
   let h = '';
@@ -533,11 +533,6 @@ function drawBoard(s, P, o = {}) {
   if (o.last) for (const q of [o.last.f, o.last.to]) h += sq(q, o.trial ? 'rgba(66,135,245,.45)' : 'rgba(255,221,51,.5)');
   if (o.sel !== undefined && o.sel !== null) h += sq(o.sel, 'rgba(20,110,40,.5)');
   if (o.check >= 0) h += sq(o.check, 'url(#chk)');
-  if (o.coords) for (let i = 0; i < 8; i++) {
-    // the file letters along the bottom of the frame, the rank numbers down its left
-    h += `<text x="${EDGE + i + 0.5}" y="${8 + EDGE * 1.72}" font-size=".22" text-anchor="middle" fill="#3b2a14">${'abcdefgh'[i]}</text>`;
-    h += `<text x="${EDGE / 2}" y="${EDGE + i + 0.58}" font-size=".22" text-anchor="middle" fill="#3b2a14">${8 - i}</text>`;
-  }
   P.board.forEach((x, q) => { if (!x) return; const [cx, cy] = place(q); h += `<use href="#${side(x)}${x.toUpperCase()}" x="${cx}" y="${cy}" width="1" height="1"/>`; });
   for (const q of o.dots || []) {
     const [x, y] = place(q);
@@ -559,7 +554,7 @@ function render() {
   const lm = cloud ? line[at - 1] : lastMove();
   if (sel !== null && side(P.board[sel]) !== mover()) sel = null;
   const dots = sel !== null ? legal(as(P, mover())).filter(m => m.f === sel).map(m => m.to) : [];
-  drawBoard(svg, P, { last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1, coords: true });
+  drawBoard(svg, P, { last: lm, trial: cloud && at > fork, sel, dots, check: inCheck(P) ? kingAt(P, P.turn) : -1 });
 
   // banner
   const B = document.getElementById('banner'), sub = document.getElementById('sub'), st = cloud ? status(P) : S.status;
