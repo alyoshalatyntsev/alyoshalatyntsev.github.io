@@ -137,6 +137,7 @@
       <div id="chips" title="Click: show or hide a type. Shift+click: only that type."></div>
       <div id="opts">
         <button class="tog" id="zhOn">中文</button>
+        <button class="tog on" id="fogOn" title="Hide the parts of Beijing not explored yet under fog">Fog</button>
         <button class="tog" id="blocksOn">Blocks</button>
         <button class="tog on" id="mallsOn">Malls</button>
 
@@ -358,6 +359,13 @@ $("q").oninput = () => render();
 $("zhOn").onclick = () => { $("zhOn").classList.toggle("on"); render(); };
 $("mallsOn").onclick = () => { $("mallsOn").classList.toggle("on"); if (ready) map.setLayoutProperty("malls", "visibility", $("mallsOn").classList.contains("on") ? "visible" : "none"); };
 $("blocksOn").onclick = () => blocks(!$("blocksOn").classList.contains("on"));
+$("fogOn").classList.toggle("on", fogWanted());
+$("fogOn").onclick = () => {
+  const on = !$("fogOn").classList.contains("on");
+  $("fogOn").classList.toggle("on", on);
+  try { localStorage.setItem("mapFog", on ? "1" : "0"); } catch (e) {}
+  fogUpdate();
+};
 
 setInterval(() => { if (when !== "span") render(); }, 5 * 60000);
 
@@ -626,6 +634,205 @@ function layers() {   // (re)fill the area and mall layers from the data
   map.getSource("districts").setData(fc(LABELS.map(l => ({ type: "Feature", properties: { text: l.text }, geometry: { type: "Point", coordinates: [l.lon, l.lat] } }))));
   map.getSource("routes").setData(fc(ROUTES.map(r => ({ type: "Feature", properties: { name: r.name }, geometry: { type: "LineString", coordinates: r.path } }))));
   map.getSource("malls").setData(fc(MALLS.map(m => ({ type: "Feature", properties: { name: m.name }, geometry: { type: "Point", coordinates: [m.lon, m.lat] } }))));
+  fogUpdate();
+}
+
+// ---- fog of war ----
+// Unexplored Beijing lies under a light grey fog. It is clear around every place I have been to (not the ones still marked ?,
+// not chain branches), around every explored area and along every path, and fades out softly, with an uneven edge.
+// The fog is painted once into a canvas in Web Mercator (so it lines up with the map) and laid on the map as an image: above
+// the base map, its names and the coloured areas, below my markers and names. Outside the canvas the fog goes on as a plain fill.
+// Repainted only when the places, areas or paths change, never per frame.
+const FOG = {
+  rgb: [220, 219, 214], alpha: 0.97,                    // light warm grey, nearly opaque: streets and names under it cannot be read
+  box: [116.10, 39.70, 116.75, 40.15], width: 1536,      // canvas: west, south, east, north; pixels across (about 36 m each)
+  place: [350, 700, 130],     // each: fully clear up to (m), fog again from (m), how far the noise may move the edge (m)
+  area: [100, 400, 90],       // distance counted from the area's outline (inside it is always clear)
+  path: [100, 300, 90],       // distance counted from the line
+  seed: [11, 23, 37, 51],
+};
+function fogWanted() { try { return localStorage.getItem("mapFog") !== "0"; } catch (e) { return true; } }
+let fogSig = "", fogBusy = "", fogToken = 0;
+
+// distance in metres from the nearest seed (m: 0 on seeds, huge elsewhere): Felzenszwalb's two passes
+function edt(m, w, h, metres) {
+  const n = Math.max(w, h), f = new Float64Array(n), d = new Float64Array(n), v = new Int32Array(n), z = new Float64Array(n + 1);
+  const run = len => {
+    let k = 0;
+    v[0] = 0; z[0] = -1e30; z[1] = 1e30;
+    for (let q = 1; q < len; q++) {
+      let s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
+      while (s <= z[k]) { k--; s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]); }
+      k++; v[k] = q; z[k] = s; z[k + 1] = 1e30;
+    }
+    k = 0;
+    for (let q = 0; q < len; q++) { while (z[k + 1] < q) k++; d[q] = (q - v[k]) * (q - v[k]) + f[v[k]]; }
+  };
+  for (let x = 0; x < w; x++) { for (let y = 0; y < h; y++) f[y] = m[y * w + x]; run(h); for (let y = 0; y < h; y++) m[y * w + x] = d[y]; }
+  for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) f[x] = m[y * w + x]; run(w); for (let x = 0; x < w; x++) m[y * w + x] = d[x]; }
+  const out = new Float32Array(w * h);
+  for (let i = 0; i < out.length; i++) out[i] = Math.sqrt(m[i]) * metres;
+  return out;
+}
+// smooth value noise (0..1) tied to places on the ground, with a fixed seed so nothing shimmers or moves between builds:
+// a table of random values, and for each pixel along an axis its lattice cell, the next cell and the smoothed place inside the cell
+function noiseTable(seed) {
+  const t = new Float32Array(65536);
+  for (let i = 0, s = seed; i < t.length; i++) {
+    s = (s + 0x6D2B79F5) | 0;
+    let r = Math.imul(s ^ (s >>> 15), 1 | s);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    t[i] = ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  }
+  return t;
+}
+function noiseAxis(wavelength, n, origin, step, rowShift) {
+  const cell = new Uint16Array(n), next = new Uint16Array(n), u = new Float32Array(n);
+  for (let k = 0; k < n; k++) {
+    const p = (origin + (k + 0.5) * step) / wavelength, f = Math.floor(p), w = p - f;
+    cell[k] = (f & 255) << rowShift; next[k] = ((f + 1) & 255) << rowShift; u[k] = w * w * w * (w * (w * 6 - 15) + 10);
+  }
+  return { cell, next, u };
+}
+
+// the places, areas and paths that clear the fog
+function fogInputs() {
+  const places = PLACES.filter(p => !p.explore && !p.chain && !p.isArea && !p.noMarker).map(p => [p.lon, p.lat]);
+  const areas = AREAS.filter(a => a.level !== "explore").map(a => a.polygon);
+  const paths = ROUTES.map(r => r.path);
+  return { places, areas, paths };
+}
+
+async function fogBuild() {
+  const { places, areas, paths } = fogInputs();
+  const sig = JSON.stringify([places, areas, paths]);
+  if (sig === fogSig && map.getLayer("fog-img")) return fogShow(true);
+  if (sig === fogBusy) return;
+  fogBusy = sig;
+  const mine = ++fogToken, pause = () => new Promise(r => setTimeout(r));
+  // the canvas covers central Beijing, wider if the data reaches outside
+  let [x0, y0, x1, y1] = FOG.box;
+  const all = places.concat(areas.flat(), paths.flat());
+  for (const [lo, la] of all) { x0 = Math.min(x0, lo - 0.05); x1 = Math.max(x1, lo + 0.05); y0 = Math.min(y0, la - 0.05); y1 = Math.max(y1, la + 0.05); }
+  y0 = Math.max(y0, -80); y1 = Math.min(y1, 80);
+  const rad = Math.PI / 180, merc = la => Math.log(Math.tan(Math.PI / 4 + la * rad / 2));
+  const X0 = x0 * rad, X1 = x1 * rad, Y0 = merc(y0), Y1 = merc(y1);
+  const W = FOG.width, H = Math.round(W * (Y1 - Y0) / (X1 - X0));
+  const R = 6378137 * Math.cos(40 * rad), dx = (X1 - X0) / W, dy = (Y1 - Y0) / H, mpp = dx * R;     // ground metres per pixel
+  const px = (lo, la) => [(lo * rad - X0) / dx, (Y1 - merc(la)) / dy];
+  const [pc, po, pa] = FOG.place, [ac, ao, aa] = FOG.area, [rc, ro, ra] = FOG.path;
+
+  // the window of the canvas that can be clear at all: around everything explored (everywhere else is plain fog)
+  const reach = Math.ceil(Math.max(po + pa, ao + aa, ro + ra) / mpp) + 2;
+  let wx0 = W, wy0 = H, wx1 = 0, wy1 = 0;
+  for (const [lo, la] of all) { const [x, y] = px(lo, la); wx0 = Math.min(wx0, x); wx1 = Math.max(wx1, x); wy0 = Math.min(wy0, y); wy1 = Math.max(wy1, y); }
+  wx0 = Math.max(0, Math.floor(wx0) - reach); wy0 = Math.max(0, Math.floor(wy0) - reach);
+  wx1 = Math.min(W, Math.ceil(wx1) + reach); wy1 = Math.min(H, Math.ceil(wy1) + reach);
+  if (!all.length) wx0 = wy0 = wx1 = wy1 = 0;          // nothing explored: fog everywhere
+  const ww = wx1 - wx0, wh = wy1 - wy0;
+
+  // distance from the places, from the areas and from the paths, in metres, on a grid of half the canvas's size
+  const S = 2, gw = Math.ceil(ww / S), gh = Math.ceil(wh / S);
+  const cv = document.createElement("canvas");
+  cv.width = gw; cv.height = gh;
+  const g = cv.getContext("2d", { willReadFrequently: true });
+  const field = draw => {
+    if (!gw || !gh) return null;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, gw, gh);
+    g.fillStyle = g.strokeStyle = "#000"; g.lineWidth = 2 * S; g.lineJoin = g.lineCap = "round";
+    draw();
+    const a = g.getImageData(0, 0, gw, gh).data, m = new Float64Array(gw * gh);
+    let any = false;
+    for (let i = 0; i < m.length; i++) if (a[i * 4 + 3] > 30) any = true; else m[i] = 1e9;
+    return any ? edt(m, gw, gh, mpp * S) : null;
+  };
+  const shape = draw => { g.setTransform(1 / S, 0, 0, 1 / S, -wx0 / S, -wy0 / S); draw(); };
+  const trace = ring => { ring.forEach(([lo, la], i) => { const [x, y] = px(lo, la); i ? g.lineTo(x, y) : g.moveTo(x, y); }); };
+  const dP = field(() => { for (const [lo, la] of places) { const [x, y] = px(lo, la); g.fillRect(Math.floor((x - wx0) / S), Math.floor((y - wy0) / S), 1, 1); } });
+  await pause(); if (mine !== fogToken) return;
+  const dA = field(() => shape(() => { g.beginPath(); for (const r of areas) { trace(r); g.closePath(); } g.fill(); }));
+  await pause(); if (mine !== fogToken) return;
+  const dR = field(() => shape(() => { for (const r of paths) { g.beginPath(); trace(r); g.stroke(); } }));
+  await pause(); if (mine !== fogToken) return;
+
+  // noise: two layers move the edge (a big wobble and a smaller one), two make the cloud in the fog
+  const noise = [[FOG.seed[0], 1500], [FOG.seed[1], 650], [FOG.seed[2], 1100], [FOG.seed[3], 420]].map(([seed, wl]) =>
+    ({ t: noiseTable(seed), c: noiseAxis(wl, W, X0 * R, mpp, 0), r: noiseAxis(wl, H, Y1 * R, -mpp, 8) }));
+  const [e0, e1, c0, c1] = noise;
+  // value noise of one layer at pixel (x, y): the four table values around it, blended by the smoothed position
+  const sample = (n, x, y) => {
+    const t = n.t, cx = n.c.cell[x], nx = n.c.next[x], cy = n.r.cell[y], ny = n.r.next[y], ux = n.c.u[x], uy = n.r.u[y];
+    const a = t[cx + cy], b = t[nx + cy], d = t[cx + ny], e = t[nx + ny];
+    return a + (b - a) * ux + (d - a) * uy + (a - b - d + e) * ux * uy;
+  };
+  // the cloud, at half size, as -1..1; it dies away towards the edge of the canvas, so the plain fill outside matches
+  const cw = Math.ceil(W / 2), ch = Math.ceil(H / 2), cloud = new Float32Array(cw * ch);
+  for (let y = 0, i = 0; y < ch; y++) {
+    const yy = Math.min(2 * y, H - 1);
+    for (let x = 0; x < cw; x++, i++) {
+      const xx = Math.min(2 * x, W - 1), v = (0.55 * sample(c0, xx, yy) + 0.45 * sample(c1, xx, yy) - 0.5) * 3;
+      cloud[i] = v > 1 ? 1 : v < -1 ? -1 : v;
+    }
+    if (y % 400 === 399) { await pause(); if (mine !== fogToken) return; }
+  }
+
+  // each pixel: how clear it is (the fade by distance, the edge moved by the noise), then the fog's colour and opacity with a faint cloud
+  const img = new ImageData(W, H), out = img.data, [fr, fg, fb] = FOG.rgb, far = 1e7, a255 = 255 * FOG.alpha;
+  const fade = (d, c, o) => { const t = d <= c ? 0 : d >= o ? 1 : (d - c) / (o - c); return 1 - t * t * (3 - 2 * t); };
+  const reachP = po + pa, reachA = ao + aa, reachR = ro + ra;
+  const gi = new Int32Array(ww), gf = new Float32Array(ww);       // where each column of the window falls on the distance grid
+  for (let x = 0; x < ww; x++) { const u = Math.min(Math.max((x + 0.5) / S - 0.5, 0), gw - 1), i = Math.min(Math.floor(u), Math.max(gw - 2, 0)); gi[x] = i; gf[x] = u - i; }
+  const exf = new Float32Array(W);
+  for (let x = 0; x < W; x++) exf[x] = Math.min(1, Math.min(x, W - 1 - x) / 150);
+  let o = 0;
+  for (let y = 0; y < H; y++) {
+    const inY = y >= wy0 && y < wy1, eyf = Math.min(1, Math.min(y, H - 1 - y) / 150), cy = (y >> 1) * cw;
+    let gj = 0, fy = 0;
+    if (inY) { const v = Math.min(Math.max((y - wy0 + 0.5) / S - 0.5, 0), gh - 1); gj = Math.min(Math.floor(v), Math.max(gh - 2, 0)); fy = v - gj; }
+    for (let x = 0; x < W; x++, o += 4) {
+      let clear = 0;
+      if (inY && x >= wx0 && x < wx1) {
+        const wxi = x - wx0, a = gj * gw + gi[wxi], b = a + 1, c = a + gw, d = c + 1, fx = gf[wxi];
+        const w00 = (1 - fx) * (1 - fy), w10 = fx * (1 - fy), w01 = (1 - fx) * fy, w11 = fx * fy;
+        const dp = dP ? dP[a] * w00 + dP[b] * w10 + dP[c] * w01 + dP[d] * w11 : far;
+        const da = dA ? dA[a] * w00 + dA[b] * w10 + dA[c] * w01 + dA[d] * w11 : far;
+        const dr = dR ? dR[a] * w00 + dR[b] * w10 + dR[c] * w01 + dR[d] * w11 : far;
+        if (dp < reachP || da < reachA || dr < reachR) {
+          const e = 0.6 * sample(e0, x, y) + 0.4 * sample(e1, x, y), n = Math.max(-1, Math.min(1, (e - 0.5) * 3.4));   // -1..1
+          clear = Math.max(fade(dp + pa * n, pc, po), fade(da + aa * n, ac, ao), fade(dr + ra * n, rc, ro));
+        }
+      }
+      const k = cloud[cy + (x >> 1)] * (exf[x] < eyf ? exf[x] : eyf), lum = 1 + 0.02 * k;
+      out[o] = fr * lum; out[o + 1] = fg * lum; out[o + 2] = fb * lum;
+      out[o + 3] = a255 * (1 + 0.01 * k) * (1 - clear);
+    }
+    if (y % 256 === 255) { await pause(); if (mine !== fogToken) return; }
+  }
+  if (mine !== fogToken || !fogWanted()) return;
+
+  const cvs = document.createElement("canvas");
+  cvs.width = W; cvs.height = H;
+  cvs.getContext("2d").putImageData(img, 0, 0);
+  // remove the old fog, lay the new one under my markers: the plain fill for everything outside the canvas, the canvas inside
+  for (const id of ["fog-img", "fog-out"]) if (map.getLayer(id)) map.removeLayer(id);
+  for (const id of ["fog-canvas", "fog-edge"]) if (map.getSource(id)) map.removeSource(id);
+  const below = map.getLayer("routes") ? "routes" : undefined;
+  map.addSource("fog-edge", { type: "geojson", maxzoom: 14, data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [
+    [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]], [[x0, y1], [x1, y1], [x1, y0], [x0, y0], [x0, y1]]] } } });
+  map.addLayer({ id: "fog-out", type: "fill", source: "fog-edge", paint: {
+    "fill-color": "rgb(" + FOG.rgb.join(",") + ")", "fill-opacity": Math.round(255 * FOG.alpha) / 255, "fill-antialias": false } }, below);
+  map.addSource("fog-canvas", { type: "canvas", canvas: cvs, animate: false, coordinates: [[x0, y1], [x1, y1], [x1, y0], [x0, y0]] });
+  map.addLayer({ id: "fog-img", type: "raster", source: "fog-canvas", paint: { "raster-resampling": "linear", "raster-fade-duration": 0, "raster-opacity": 1 } }, below);
+  if (map.getLayer("temples-outer")) map.moveLayer("temples-outer", below);     // far-out temples stay findable in the fog
+  fogSig = sig; fogBusy = "";
+}
+function fogShow(on) {
+  for (const id of ["fog-img", "fog-out"]) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+}
+function fogUpdate() {
+  if (!ready) return;
+  if (!fogWanted()) { fogToken++; fogBusy = ""; return fogShow(false); }
+  if (PLACES.length || AREAS.length) fogBuild().catch(e => { fogBusy = ""; console.error(e); });
 }
 
 // blocks and sub-blocks (cut out of the road network), loaded when first asked for
