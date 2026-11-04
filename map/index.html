@@ -644,7 +644,7 @@ function layers() {   // (re)fill the area and mall layers from the data
 // the base map, its names and the coloured areas, below my markers and names. Outside the canvas the fog goes on as a plain fill.
 // Repainted only when the places, areas or paths change, never per frame.
 const FOG = {
-  rgb: [220, 219, 214], alpha: 0.97,                    // light warm grey, nearly opaque: streets and names under it cannot be read
+  rgb: [62, 64, 70], alpha: 0.28,                       // dark grey, mostly see-through: a colour cue, the map under it stays usable
   box: [116.10, 39.70, 116.75, 40.15], width: 1536,      // canvas: west, south, east, north; pixels across (about 36 m each)
   place: [350, 700, 130],     // each: fully clear up to (m), fog again from (m), how far the noise may move the edge (m)
   area: [100, 400, 90],       // distance counted from the area's outline (inside it is always clear)
@@ -698,7 +698,10 @@ function noiseAxis(wavelength, n, origin, step, rowShift) {
 // the places, areas and paths that clear the fog
 function fogInputs() {
   const places = PLACES.filter(p => !p.explore && !p.chain && !p.isArea && !p.noMarker).map(p => [p.lon, p.lat]);
-  const areas = AREAS.filter(a => a.level !== "explore").map(a => a.polygon);
+  // of the campuses only Tsinghua, PKU and the Chinese Academy of Sciences at Zhongguancun are known; the rest stay fogged
+  const knownCampus = a => a.id === "tsinghua" || a.id === "pku" || (a.id === "campus-中国科学院大学" &&
+    a.polygon.flat(Infinity).every((v, i) => i % 2 ? v > 39.97 && v < 40.0 : v > 116.30 && v < 116.35));
+  const areas = AREAS.filter(a => a.level !== "explore" && (a.level !== "campus" || knownCampus(a))).map(a => a.polygon);
   const paths = ROUTES.map(r => r.path);
   return { places, areas, paths };
 }
