@@ -141,7 +141,9 @@ const tab = me.slice(0, 20) + '-' + Math.random().toString(36).slice(2, 7);
 let myAnimal = ls.get('goAnimal') === null ? -1 : +ls.get('goAnimal');
 let myName = ls.get('goName') || '';
 let myColour = ls.get('goColour');      // null = never chosen, '' = just watching
-let viewing = ls.get('goGame');
+// A link like /go#<game id> opens that game; plain /go opens the game this device last looked at, as before.
+const linked = () => { try { return decodeURIComponent(location.hash.slice(1)); } catch (e) { return ''; } };
+let viewing = linked() || ls.get('goGame');
 
 const NAME = { b: 'Black', w: 'White' };
 const other = c => c === 'b' ? 'w' : 'b';
@@ -404,6 +406,7 @@ function onLive(snap) {
     if (!viewing) { createGame(19); return; }
     ls.set('goGame', viewing);
   }
+  if (first) ls.set('goGame', viewing); // a shared link counts as looking at that game
   if (first) {
     first = false;
     if (myAnimal < 0 || myAnimal >= ANIMALS.length) {
@@ -830,6 +833,7 @@ function stone(x, y, c, parent, opacity) {
 function updateTab(turn) { document.title = turn ? 'Your turn · Go' : 'Go'; }
 function render() {
   if (!G) return;
+  if (viewing && linked() !== viewing) history.replaceState(null, '', location.pathname + location.search + '#' + viewing);
   const n = G.size, V = n + 1;
   const P = cloud ? states[at] : S, fork = cloud ? forkAt() : 0;
   const hasOwn = cloud && own && own.length === n * n;
@@ -1088,6 +1092,11 @@ function preview(d) {
 }
 try { preview(JSON.parse(ls.get('goCache'))); } catch (e) {}
 early.then(preview).catch(() => {});
+addEventListener('hashchange', () => {
+  const id = linked();
+  if (live && id !== viewing && D.games[id]) switchTo(id);
+  else render(); // not a game (or not loaded yet): render puts the current game's id back in the address bar
+});
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
