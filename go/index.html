@@ -455,7 +455,7 @@ function sortedGames() { return Object.keys(D.games).sort((a, b) => lastPlayed(D
 // each game keeps one pale colour for its tile. Games take these in the order they were created, and each is about 150 degrees of hue
 // on from the last, so games within 6 of each other differ clearly: at least 110 degrees side by side and above or below, 70 for 5 apart.
 const PASTELS = ['#efde9d', '#dbeefe', '#fec0b3', '#a8f4fc', '#ffc4db', '#a7f1d2', '#f5e4fe', '#bddf93', '#dde3fe', '#ffcd9e', '#bde4ff', '#ffe4e1', '#73e6eb', '#ffd8eb', '#9eebc3', '#ead3fe', '#e4f2c6', '#c0cffe', '#fedec5', '#a8e0ff', '#fed1d0', '#bdf9f7', '#ffb7e3', '#bdf4cf', '#e1cdfe', '#dae6a5', '#e2ebff', '#ffc29b', '#c3ecfe', '#fec7ca', '#9af1e9', '#ffe1f6', '#9fe5ac', '#e8dffe', '#d9de94', '#ccdffe', '#fee5d9', '#82e0ff', '#fedade', '#8becdd', '#ffcaf8', '#d4f6d3', '#d2c9ff', '#ebe8ae', '#bddafe', '#ffd3c2', '#c9f4ff', '#ffbccb', '#aef6e4', '#f9c2fa', '#c2ecb6', '#e9e9ff', '#e0d380', '#d1e7fe', '#ffc9ba', '#99eefd', '#fee3eb', '#83e8c9', '#f7d8fe', '#bfe6a5', '#d8dbff'];
-// games of up to 4 moves can be deleted (see prune), so they don't use up a place in the order: deleting one leaves the others' colours alone
+// short games use a separate colour sequence, so their tiles keep the existing colours
 function gameColours() {
   const out = {}, L = PASTELS.length; let n = 0, short = 0;
   for (const id of Object.keys(D.games).sort((a, b) => (D.games[a].created || 0) - (D.games[b].created || 0)))
@@ -636,15 +636,15 @@ function createGame(size) {
   if (D) prune(ref.key, leaving);
   writePresence();
 }
-// keep the 1000 most recent games with more than 4 stones (plus any game someone else is looking at);
+// keep the 1000 most recent games with at least one move (plus any game someone else is looking at);
 // a game takes about 2 KB, and the whole lot is downloaded each time the page opens
 function prune(newId, leaving) {
   const busy = new Set(others().map(p => p.g));
   let kept = 0;
   for (const id of sortedGames()) {
     if (id === newId || !D.games[id]) continue;
-    const stones = replay(D.games[id]).board.filter(Boolean).length;
-    if (stones > 4 && kept < 1000) kept++;
+    const moves = toArr(D.games[id].moves).length;
+    if (moves > 0 && kept < 1000) kept++;
     else if (!busy.has(id)) R.child('games/' + id).remove();
   }
 }
