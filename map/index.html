@@ -316,20 +316,39 @@ async function start() {
   if (!localStorage.getItem("mapToken") && !LOCAL) return askToken();
   $("gate").style.display = "none";
   if (!map) makeMap();
-  const old = FILES.map(kept);
-  if (old[0] && old[1]) setData(old.map(o => o ? o.data : {}));      // draw what this browser already has
-  try {
-    const fresh = await Promise.all(FILES.map(get));
-    if (JSON.stringify(fresh) !== JSON.stringify(old.map(o => o ? o.data : {}))) setData(fresh);
-    get("photos.json").then(p => { PHOTOS = Object.assign(p, PHOTOS); }).catch(() => {});   // pictures of the inside, loaded last
+  // Start with the small places file. Decoration and optional layers must not
+  // hold up the map; reuse each cached file while checking its version.
+  const data = FILES.map(() => ({}));
+  let frame = null;
+  const draw = () => {
+    if (!data[0].places || frame !== null) return;
+    frame = requestAnimationFrame(() => { frame = null; setData(data); });
+  };
+  const primary = kept(FILES[0]);
+  if (primary) { data[0] = primary.data; draw(); }
+  const tasks = FILES.map(async (file, i) => {
+    const cached = i ? kept(file) : primary;
+    if (cached) { data[i] = cached.data; draw(); }
+    try {
+      const fresh = await get(file);
+      if (JSON.stringify(fresh) !== JSON.stringify(data[i])) {
+        data[i] = fresh; draw();
+      }
+    } catch (e) {
+      if (i === 0) {
+        if (e === 401 || e === 403 || e === 404) askToken(e === 401 ? "That token was not accepted." : "That token cannot read the map data.");
+        else if (!PLACES.length) askToken("Could not reach GitHub. Try again.");
+      }
+    }
+  });
+  // Photos are only used in open cards, never on the initial map.
+  Promise.allSettled(tasks).then(() => {
+    get("photos.json").then(p => { PHOTOS = Object.assign(p, PHOTOS); }).catch(() => {});
     get("temple_photos.json").then(p => {
       for (const uid in p) PHOTOS["temple:" + uid] = LOGOS["temple:" + uid] = p[uid];
       render();
     }).catch(() => {});
-  } catch (e) {
-    if (e === 401 || e === 403 || e === 404) askToken(e === 401 ? "That token was not accepted." : "That token cannot read the map data.");
-    else if (!PLACES.length) askToken("Could not reach GitHub. Try again.");
-  }
+  });
 }
 
 // ---- controls ----
@@ -953,6 +972,8 @@ function click(e) {
   if (dot) return showPopup(byId[dot.properties.id]);
   const temple = map.queryRenderedFeatures(e.point, { layers: ["temples", "temples-outer"] })[0];
   if (temple) return showPopup(byId[temple.properties.id]);
+  const name = map.queryRenderedFeatures(e.point, { layers: ["labels"] })[0];
+  if (name) return showPopup(byId[name.properties.id]);
   const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "malls", "areas"] })[0];
   if (!named) return;
   const a = named.layer.id === "areas" ? AREAS[named.properties.i] : null;
@@ -1019,7 +1040,7 @@ function makeMap() {
   map.addControl(button("&#9678;", "My location", () => { if (me) map.easeTo({ center: me, zoom: Math.max(map.getZoom(), 14) }); }), "top-right");
 
   map.on("click", click);
-  map.on("load", () => {
+  map.on("style.load", () => {
     for (const id of ["highway-shield-non-us", "highway-shield-us-interstate", "road_shield_us"])
       if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
     const under = ["tunnel_motorway_casing", "highway_path", "highway_minor"].find(id => map.getLayer(id));
@@ -1083,7 +1104,7 @@ function makeMap() {
     map.addLayer({ id: "sketch-line", type: "line", source: "sketch", filter: ["!=", ["geometry-type"], "Point"], paint: { "line-color": "#2b2b2a", "line-width": 2 } });
     map.addLayer({ id: "sketch-pts", type: "circle", source: "sketch", filter: ["==", ["geometry-type"], "Point"],
       paint: { "circle-radius": 4, "circle-color": "#fff", "circle-stroke-color": "#2b2b2a", "circle-stroke-width": 2 } });
-    for (const id of ["dots", "rings"]) {
+    for (const id of ["dots", "rings", "labels"]) {
       map.on("mouseenter", id, () => { if (!mode) map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", id, () => { if (!mode) map.getCanvas().style.cursor = ""; });
     }
