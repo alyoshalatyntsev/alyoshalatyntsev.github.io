@@ -560,6 +560,7 @@
       else {
         sendGesture();
         if (done.changedOnce) remember(originals);
+        if (done.press) { selected.clear(); if (done.press.hit) selected.add(done.press.hit); }
       }
       dirty = true;
     } else if (done && !cancel && ['rect', 'lasso'].includes(done.kind)) completeSelection();
@@ -614,6 +615,11 @@
     const text = selectedText(); if (!text) return null;
     for (const [handle, q] of Object.entries(Text.handles(boundsFor(...text), view.zoom))) if (Ink.distance(p, q) * view.zoom <= (touch ? 20 : 13)) return { id: text[0], handle };
     return null;
+  }
+  // A selection drags from anywhere in its combined box plus a margin, not only from its ink.
+  function inSelectionArea(p, touch = false) {
+    const boxes = [...selected].map(id => [id, objects.get(id)]).filter(([, obj]) => isVisible(obj)).map(([id, obj]) => boundsFor(id, obj));
+    return boxes.length > 0 && inside(p, pointBounds(boxes.flatMap(b => [[b[0], b[1]], [b[2], b[3]]])), (touch ? 48 : 28) / view.zoom);
   }
   function showEraser(pos, r) {
     eraserVisual = { x: pos[0], y: pos[1], r };
@@ -804,6 +810,10 @@
         selected.clear(); selected.add(hit); gesture = { kind: 'textTap', id: hit, at: [e.clientX, e.clientY] }; renderSoon(); return;
       }
       if (!freehand) noteTap(e, hit);
+      if (!freehand && !e.shiftKey && !selected.has(hit) && inSelectionArea(p, e.pointerType === 'touch')) {
+        // A click that never drags still deselects, or picks whatever is under it.
+        startMove(p); gesture.press = { hit, slop: e.pointerType === 'touch' ? 10 : 4 }; renderSoon(); return;
+      }
       if (!e.shiftKey && (!hit || !selected.has(hit))) selected.clear();
       if (hit) { selected.add(hit); startMove(p); }
       else gesture = freehand ? { kind: 'lasso', points: [p], returnTool: tool === 'lasso' ? 'select' : tool } : { kind: 'rect', start: p, end: p };
@@ -830,7 +840,11 @@
       const p = world(event);
       if (gesture?.kind === 'rect' || gesture?.kind === 'textBox') gesture.end = p;
       else if (gesture?.kind === 'lasso') { if (Ink.distance(p, gesture.points.at(-1)) * view.zoom >= 2) gesture.points.push(p); }
-      else if (gesture?.kind === 'move') { gesture.delta = [p[0] - gesture.start[0], p[1] - gesture.start[1]]; gesture.changed = true; gesture.changedOnce ||= gesture.delta.some(Boolean); }
+      else if (gesture?.kind === 'move') {
+        if (gesture.press && Ink.distance(p, gesture.start) * view.zoom < gesture.press.slop) continue;
+        gesture.press = null;
+        gesture.delta = [p[0] - gesture.start[0], p[1] - gesture.start[1]]; gesture.changed = true; gesture.changedOnce ||= gesture.delta.some(Boolean);
+      }
       else if (gesture?.kind === 'resize') {
         if (Ink.distance(p, gesture.start) * view.zoom > .5 || gesture.changedOnce) {
           const at = gesture.anchor.map((v, i) => v + p[i] - gesture.start[i]);
@@ -861,7 +875,7 @@
     hover = e.pointerType === 'mouse' && e.target === canvas ? [e.clientX, e.clientY] : e.pointerType === 'mouse' ? null : hover;
     if (pointer === null && e.target === canvas && !editing) {
       const handle = ['select', 'text'].includes(tool) && handleAt(world(e));
-      canvas.style.cursor = space || tool === 'hand' ? 'grab' : handle ? Text.cursor(handle.handle) : tool === 'text' ? 'text' : tool === 'select' ? hitAt(world(e)) ? 'move' : 'default' : 'crosshair';
+      canvas.style.cursor = space || tool === 'hand' ? 'grab' : handle ? Text.cursor(handle.handle) : tool === 'text' ? 'text' : tool === 'select' ? hitAt(world(e)) || inSelectionArea(world(e)) ? 'move' : 'default' : 'crosshair';
     }
   });
   function endPointer(e, cancel = false) {
