@@ -256,11 +256,38 @@
   }
   function floating(id) { return active?.id === id || editing?.id === id || gesture?.kind === 'move' && selected.has(id) || gesture?.kind === 'resize' && gesture.id === id; }
   function renderCursors() {
+    const toolbar = $('toolbar').getBoundingClientRect();
     for (const [id, cursor] of remoteCursors) {
       const element = cursorElements.get(id); if (!element) continue;
       const x = (cursor.x - view.x) * view.zoom, y = (cursor.y - view.y) * view.zoom;
-      element.hidden = x < -8 || y < -8 || x > screenW + 8 || y > screenH + 8;
-      if (!element.hidden) element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      element.hidden = screenW <= 0 || screenH <= 0 || !Number.isFinite(x) || !Number.isFinite(y);
+      if (element.hidden) continue;
+      const offscreen = x < 0 || y < 0 || x > screenW || y > screenH;
+      element.classList.toggle('offscreen', offscreen);
+      element.setAttribute('aria-label', `${cursor.name} cursor${offscreen ? ', off screen' : ''}`);
+      element.title = `${cursor.name} is ${offscreen ? 'off screen in this direction' : 'here'}`;
+      if (!offscreen) {
+        element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        continue;
+      }
+      // Intersect the ray from the viewport centre with its inset edges.
+      // Recomputed on every camera render, including pan, zoom and resize.
+      const cx = screenW / 2, cy = screenH / 2, angle = Math.atan2(y - cy, x - cx);
+      const dx = Math.cos(angle), dy = Math.sin(angle), inset = Math.min(20, cx, cy);
+      let distance = Math.min((cx - inset) / Math.abs(dx), (cy - inset) / Math.abs(dy));
+      // Keep left-edge indicators out from behind the floating tool palette.
+      const hitX = cx + dx * distance, hitY = cy + dy * distance;
+      if (dx < 0 && hitX < toolbar.right + 20 && hitY > toolbar.top - 40 && hitY < toolbar.bottom + 40 && toolbar.right + 20 < cx) {
+        distance = Math.min(distance, (cx - toolbar.right - 20) / -dx);
+      }
+      const edgeX = cx + dx * distance, edgeY = cy + dy * distance;
+      element.style.transform = `translate3d(${edgeX}px, ${edgeY}px, 0)`;
+      element.style.setProperty('--cursor-angle', `${angle}rad`);
+      const label = element.querySelector('.collaborator-label'), width = label.offsetWidth, height = label.offsetHeight;
+      const labelX = Math.max(8, Math.min(screenW - width - 8, edgeX - width / 2 - dx * (width / 2 + 24)));
+      const labelY = Math.max(8, Math.min(screenH - height - 8, edgeY - height / 2 - dy * (height / 2 + 24)));
+      element.style.setProperty('--label-x', `${labelX - edgeX}px`);
+      element.style.setProperty('--label-y', `${labelY - edgeY}px`);
     }
   }
   function removeCursor(id) {

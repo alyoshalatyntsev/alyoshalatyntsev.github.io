@@ -86,3 +86,7 @@ input[type="color"] { width: 32px; height: 24px; padding: 0; border: 1px solid #
 .collaborator-cursor[hidden] { display: none; }
 .collaborator-cursor::before { content: ""; position: absolute; left: 0; top: 0; width: 18px; height: 18px; background: var(--cursor-color); clip-path: polygon(0 0, 100% 0, 0 100%); filter: drop-shadow(0 1px 1px #0002); }
 .collaborator-label { display: inline-flex; align-items: center; margin: 8px 0 0 10px; padding: 5px 11px; border-radius: 18px; background: var(--cursor-color); color: #fff; font-size: 12px; font-weight: 600; line-height: 17px; letter-spacing: .01em; box-shadow: 0 1px 3px #0003; }
+
+.collaborator-cursor.offscreen::before { left: -10px; top: -10px; width: 20px; height: 20px; clip-path: polygon(100% 50%, 0 0, 0 100%); transform: rotate(var(--cursor-angle)); }
+.collaborator-cursor.offscreen .collaborator-label { position: absolute; left: 0; top: 0; margin: 0; max-width: calc(100vw - 16px); transform: translate(var(--label-x), var(--label-y)); }
+.collaborator-cursor.offscreen .collaborator-name { overflow: hidden; text-overflow: ellipsis; }
