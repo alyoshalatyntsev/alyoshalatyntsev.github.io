@@ -83,6 +83,12 @@
   .pop img.photo { width: 100%; border-radius: 6px; display: block; margin-bottom: 6px; }
   .pop small { color: #6b6a65; display: block; }
   .pop .q { color: #a04a00; }
+  .trip-summary { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .item .trip-summary { padding: 0 6px 4px 28px; }
+  .trip-basis { margin: 4px 8px 8px; color: #6b6a65; font-size: 11px; }
+  .trip-detail { margin-top: 6px; font-size: 11px; line-height: 1.45; color: #6b6a65; }
+  .trip-detail a { color: #28647c; }
+  #opts { flex-wrap: wrap; }
   .maplibregl-popup-content { padding: 10px 12px; border-radius: 8px; }
   #addMenu { display: none; position: absolute; top: 44px; left: 10px; z-index: 6; background: #fff; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.1); overflow: hidden; }
   #addMenu button { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 8px 14px 8px 11px; border: 0; background: none; font: inherit; cursor: pointer; }
@@ -136,6 +142,7 @@
     <div id="bottom">
       <div id="chips" title="Click: show or hide a type. Shift+click: only that type."></div>
       <div id="opts">
+        <button class="tog" id="tripsOn" title="Train trips from Beijing">🚆 Trips</button>
         <button class="tog" id="zhOn">中文</button>
         <button class="tog on" id="fogOn" title="Hide the parts of Beijing not explored yet under fog">Fog</button>
         <button class="tog" id="blocksOn">Blocks</button>
@@ -352,7 +359,7 @@ async function start() {
 }
 
 // ---- controls ----
-const logo = (p, key) => LOGOS[key || p.id]
+const logo = (p, key) => p.train ? "<span class='logo' aria-hidden='true'>🚆</span>" : LOGOS[key || p.id]
   ? "<img class='logo' alt='' src='" + LOGOS[key || p.id] + "'>"
   : "<span class='logo ph' style='--c:" + color(p) + "'>" + esc(p.name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 1).toUpperCase()) + "</span>";
 
@@ -442,17 +449,53 @@ function eventLine(p) {
   return h;
 }
 
+function trainTime(minutes) {
+  const rounded = Math.max(5, Math.round(minutes / 5) * 5), h = Math.floor(rounded / 60), m = rounded % 60;
+  return h ? h + "h" + (m ? String(m).padStart(2, "0") : "") : m + "m";
+}
+function trainLabel(p, icon = true) {
+  return p.train ? (icon ? "🚆 " : "") + trainTime(p.train.minutes) + " · ~" + Math.round(p.train.fare_cny / 10) * 10 + "元" : "";
+}
+function travelLink(url, title) {
+  try { const u = new URL(url); if (u.protocol !== "https:" || !/(^|\.)ctrip\.com$/.test(u.hostname)) return ""; }
+  catch (_) { return ""; }
+  return "<a target='_blank' rel='noopener noreferrer' href='" + esc(url).replace(/'/g, "&#39;") + "'>" + title + "</a>";
+}
+function trainDetails(p) {
+  if (!p.train) return "";
+  const t = p.train;
+  return "<div class='trip-detail'>" + esc(t.from + " → " + t.to) + "<br>"
+    + esc(t.service + " · " + t.minutes + " min · " + t.fare_cny + "元") + "<br>"
+    + "Second class · one way · local transfers extra<br>"
+    + esc("Checked " + t.checked + "; sample " + t.sample_date) + "<br>"
+    + travelLink(t.source, "Ctrip trains") + " · " + travelLink(p.sight_source, "Sights") + "</div>";
+}
+let beforeTrips = null;
+$("tripsOn").onclick = () => {
+  if (!cats || !map) return;
+  if (cats.size === 1 && cats.has("train-trip")) cats = beforeTrips || new Set(order);
+  else {
+    beforeTrips = new Set(cats); cats = new Set(["train-trip"]); $("q").value = "";
+    folded.delete("train-trip");
+    const trips = PLACES.filter(p => p.train);
+    if (trips.length) map.fitBounds(trips.reduce((b, p) => b.extend([p.lon, p.lat]), new maplibregl.LngLatBounds()), { padding: 70, maxZoom: 7 });
+  }
+  chips(); render();
+};
+
 function showPopup(p) {
   let h = "<div class='pop'>";
   if (PHOTOS[p.id]) h += "<img class='photo' alt='' src='" + PHOTOS[p.id] + "'>";
   h += "<b>" + esc(p.name) + "</b>";
   if (p.name_zh) h += "<small>" + esc(p.name_zh) + "</small>";
+  if (p.train) h += "<div class='trip-summary'>" + esc(trainLabel(p)) + "</div>";
   if (hoursLine(p)) h += "<div>" + hoursLine(p) + "</div>";
   h += eventLine(p);
   if (p.address) h += "<small>" + esc(p.address) + "</small>";
   if (p.located === "approx") h += "<small><i>approximate position</i></small>";
   if (p.notes) h += "<small>" + esc(p.notes) + "</small>";
   if (p.check) h += "<small class='q'>" + esc(p.check) + "</small>";
+  h += trainDetails(p);
   popup.setLngLat([p.lon, p.lat]).setHTML(h + "</div>").addTo(map);
 }
 
@@ -540,12 +583,13 @@ function item(p, title, sub, logoKey, dim, single, double) {
   d.style.background = band(p, at().day);
   if (hoursText(p)) hoverHours(d, hoursText(p));
   d.innerHTML = "<div class='row'>" + logo(p, logoKey) + "<b>" + esc(title) + "</b>" + (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
+  if (p.train) d.innerHTML += "<div class='trip-summary'>" + esc(trainLabel(p)) + "</div>";
   if (isOpenTab) {
     const m = document.createElement("div");
     m.className = "more";
     m.innerHTML = (PHOTOS[p.id] ? "<img alt='' src='" + PHOTOS[p.id] + "'>" : "")
       + (p.name_zh ? "<div>" + esc(p.name_zh) + "</div>" : "") + (hoursLine(p) ? "<div>" + hoursLine(p) + "</div>" : "")
-      + (p.notes ? "<div>" + esc(p.notes) + "</div>" : "");
+      + (p.notes ? "<div>" + esc(p.notes) + "</div>" : "") + trainDetails(p);
     m.onclick = m.ondblclick = e => e.stopPropagation();   // the text in an open tab can be selected and copied
     d.appendChild(m);
   }
@@ -568,17 +612,18 @@ const centre = p => {
 };
 const zoomIn = p => {
   expanded = expanded === p.id ? null : p.id;
-  map.easeTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 16) });
+  map.easeTo({ center: [p.lon, p.lat], zoom: p.train ? 10 : Math.max(map.getZoom(), 16) });
   showPopup(p);
   render();
 };
 
 function render() {
   if (!cats) return;
+  $("tripsOn").classList.toggle("on", cats.size === 1 && cats.has("train-trip"));
   const q = $("q").value.trim().toLowerCase(), t = at(), zh = $("zhOn").classList.contains("on");
   const a = $("s1").value * 60 + 15, b = $("s2").value * 60 + 15;
   $("timeText").textContent = when === "span" ? (a === b ? hhmm(a) : hhmm(Math.min(a, b)) + "-" + hhmm(Math.max(a, b))) : hhmm(t.a);
-  const text = p => [p.name, p.name_zh, p.area, p.address, CATEGORIES[catKey(p)].label, p.chain].join(" ").toLowerCase();
+  const text = p => [p.name, p.name_zh, p.area, p.address, p.train ? p.notes : "", CATEGORIES[catKey(p)].label, p.chain].join(" ").toLowerCase();
   const shown = PLACES.filter(p => cats.has(catKey(p)) && (!q || text(p).includes(q)));
   // not open at the chosen time: greyed out, in the list and on the map, never removed
   const dim = new Set(when === "any" ? [] : shown.filter(p => isOpen(p, t.day, t.a, t.b) === false).map(p => p.id));
@@ -591,7 +636,7 @@ function render() {
     properties: { id: p.id, k: p.small ? 0.5 : 1, shut: dim.has(p.id), outer: !!p.outer }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } }))));
   if (ready) map.getSource("places").setData(fc(shown.filter(p => !p.isArea && !p.noMarker).map(p => ({
     type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-    properties: { id: p.id, name: p.name, color: color(p), chain: !!p.chain, faint: p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
+    properties: { id: p.id, name: p.name, trip: !!p.train, journey: trainLabel(p, false), color: color(p), chain: !!p.chain, faint: !p.train && p.located === "approx", shut: dim.has(p.id), explore: !!p.explore } }))));
 
   const list = $("list"), scroll = list.scrollTop;
   list.textContent = "";
@@ -608,7 +653,13 @@ function render() {
     };
     list.appendChild(h);
     if (folded.has(key)) continue;
-    for (const p of here.filter(p => !p.chain).sort((x, y) => x.name.localeCompare(y.name)))
+    if (key === "train-trip") {
+      const basis = document.createElement("div"); basis.className = "trip-basis";
+      basis.textContent = "From Beijing · fast direct trains · approx. one-way second class"; list.appendChild(basis);
+    }
+    for (const p of here.filter(p => !p.chain).sort((x, y) => key === "train-trip"
+      ? Number(/North/.test(y.area)) - Number(/North/.test(x.area)) || x.train.minutes - y.train.minutes
+      : x.name.localeCompare(y.name)))
       list.appendChild(item(p, p.name, zh ? p.name_zh : "", null, dim.has(p.id), () => centre(p), () => zoomIn(p)));
     const chains = {};
     for (const p of here.filter(p => p.chain)) (chains[p.chain] = chains[p.chain] || []).push(p);
@@ -972,7 +1023,7 @@ function click(e) {
   if (dot) return showPopup(byId[dot.properties.id]);
   const temple = map.queryRenderedFeatures(e.point, { layers: ["temples", "temples-outer"] })[0];
   if (temple) return showPopup(byId[temple.properties.id]);
-  const name = map.queryRenderedFeatures(e.point, { layers: ["labels"] })[0];
+  const name = map.queryRenderedFeatures(e.point, { layers: ["labels", "trip-labels"] })[0];
   if (name) return showPopup(byId[name.properties.id]);
   const named = map.queryRenderedFeatures(e.point, { layers: ["routes", "malls", "areas"] })[0];
   if (!named) return;
@@ -1090,11 +1141,23 @@ function makeMap() {
       "circle-opacity": ["case", ["get", "faint"], 0.4, 1],
       "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
     } });
-    map.addLayer({ id: "labels", type: "symbol", source: "places", minzoom: 12, filter: ["!", ["get", "chain"]], layout: {   // names: unexplored and closed ones give way first
+    map.addLayer({ id: "labels", type: "symbol", source: "places", minzoom: 12, filter: ["all", ["!", ["get", "chain"]], ["!", ["get", "trip"]]], layout: {   // names: unexplored and closed ones give way first
       "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 12, 10.5, 15, 12.5],
       "text-padding": 6, "symbol-sort-key": ["case", ["get", "explore"], 2, ["get", "shut"], 1, 0],
       "text-variable-anchor": ["left", "right", "top", "bottom"], "text-radial-offset": 0.9, "text-justify": "auto",
     }, paint: { "text-color": ["case", ["any", ["get", "shut"], ["get", "explore"]], "#a3a29c", "#2b2b2a"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
+    // A small train drawing is an image, so it does not depend on emoji glyphs in the map font.
+    const trainCanvas = document.createElement("canvas"); trainCanvas.width = trainCanvas.height = 40;
+    const tc = trainCanvas.getContext("2d"); tc.scale(2, 2); tc.strokeStyle = "#28647c"; tc.fillStyle = "#fff"; tc.lineWidth = 1.5;
+    tc.beginPath(); tc.roundRect(4, 2, 12, 14, 3); tc.fill(); tc.stroke();
+    tc.strokeRect(6, 5, 8, 5); tc.beginPath(); tc.moveTo(7, 16); tc.lineTo(5, 19); tc.moveTo(13, 16); tc.lineTo(15, 19); tc.moveTo(6, 18); tc.lineTo(14, 18); tc.stroke();
+    tc.fillStyle = "#28647c"; for (const x of [7, 13]) { tc.beginPath(); tc.arc(x, 13, 1, 0, Math.PI * 2); tc.fill(); }
+    map.addImage("trip-train", tc.getImageData(0, 0, 40, 40), { pixelRatio: 2 });
+    map.addLayer({ id: "trip-labels", type: "symbol", source: "places", minzoom: 4, filter: ["get", "trip"], layout: {
+      "text-field": ["format", ["get", "name"], {}, "\n", {}, ["image", "trip-train"], {}, ["concat", " ", ["get", "journey"]], { "font-scale": 0.9 }],
+      "text-font": ["Noto Sans Bold"], "text-size": 12, "text-padding": 5,
+      "text-variable-anchor": ["top", "bottom", "left", "right"], "text-radial-offset": 1, "text-justify": "auto",
+    }, paint: { "text-color": "#204a5a", "text-halo-color": "#ffffff", "text-halo-width": 2 } });
     map.addLayer({ id: "explore-q", type: "symbol", source: "places", filter: ["get", "explore"], layout: {
       "text-field": "?", "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 10, 15, 14, 21],
       "text-allow-overlap": true, "text-ignore-placement": true },
@@ -1104,7 +1167,7 @@ function makeMap() {
     map.addLayer({ id: "sketch-line", type: "line", source: "sketch", filter: ["!=", ["geometry-type"], "Point"], paint: { "line-color": "#2b2b2a", "line-width": 2 } });
     map.addLayer({ id: "sketch-pts", type: "circle", source: "sketch", filter: ["==", ["geometry-type"], "Point"],
       paint: { "circle-radius": 4, "circle-color": "#fff", "circle-stroke-color": "#2b2b2a", "circle-stroke-width": 2 } });
-    for (const id of ["dots", "rings", "labels"]) {
+    for (const id of ["dots", "rings", "labels", "trip-labels"]) {
       map.on("mouseenter", id, () => { if (!mode) map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", id, () => { if (!mode) map.getCanvas().style.cursor = ""; });
     }
